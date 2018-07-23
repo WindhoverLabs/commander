@@ -1,0 +1,87 @@
+html(lang='en-us')
+  head
+    meta(charset='utf-8')
+    meta(http-equiv="X-UA-Compatible" content="IE=edge,chrome=1")
+    meta(name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0")
+
+    title Commander
+
+    link(rel="stylesheet" type="text/css" href="/scripts/semantic-ui/dist/components/reset.css")
+    link(rel="stylesheet" type="text/css" href="/scripts/semantic-ui/dist/components/site.css")
+
+    link(rel="stylesheet" type="text/css" href="/scripts/semantic-ui/dist/components/container.css")
+    link(rel="stylesheet" type="text/css" href="/scripts/semantic-ui/dist/components/grid.css")
+    link(rel="stylesheet" type="text/css" href="/scripts/semantic-ui/dist/components/header.css")
+    link(rel="stylesheet" type="text/css" href="/scripts/semantic-ui/dist/components/image.css")
+    link(rel="stylesheet" type="text/css" href="/scripts/semantic-ui/dist/components/menu.css")
+
+    link(rel="stylesheet" type="text/css" href="/scripts/semantic-ui/dist/components/divider.css")
+    link(rel="stylesheet" type="text/css" href="/scripts/semantic-ui/dist/components/list.css")
+    link(rel="stylesheet" type="text/css" href="/scripts/semantic-ui/dist/components/segment.css")
+    link(rel="stylesheet" type="text/css" href="/scripts/semantic-ui/dist/components/dropdown.css")
+    link(rel="stylesheet" type="text/css" href="/scripts/semantic-ui/dist/components/icon.css")
+
+    link(rel="stylesheet" type="text/css" href="/css/commander.css")
+
+  body
+    .ui.fixed.inverted.menu
+      #top-menu-bar.ui.container
+        a.header.item(href="#")
+          img#logo(src='/img/Commander-Mark-White.png')
+          | Commander
+
+        div.ui.simple.dropdown.item
+          | Views
+          i.dropdown.icon
+          div.menu
+            a.item(href="#") Heads Up Display
+            a.item(href="#") Mission Planner
+            div.item
+              i.dropdown.icon
+              | User Created
+              div.menu
+                a.item(href="#") Karthik's
+                a.item(href="#") Matt's
+
+
+        div.ui.simple.dropdown.item
+          | Widgets 
+          i.dropdown.icon
+          div.menu
+            div.item Widget 1
+            div.item Widget 2
+            div.item Widget 3
+            div.item
+              i.dropdown.icon
+              | Core Services
+              div.menu
+                div.item Widget 1
+                div.item Widget 2
+                div.item Widget 3
+                div.item Widget 4
+                div.item Widget 5
+            div.item
+              i.dropdown.icon
+              | Applications
+              div.menu
+                div.item Actuator Motor Control
+                div.item Battery
+                div.item Checksum
+                div.item Position Estimator
+                div.item
+                  i.dropdown.icon
+                  | Applications
+                  div.menu
+                    div.item Widget 1
+                    div.item Widget 2
+
+
+    .ui.main.text.container
+      p Put Content Here
+
+
+    div.ui.inverted.vertical.footer.segment
+      div.ui.center.aligned.container
+        img.ui.centered.mini.image(src="/img/Windhover-Mark-White.png")
+        | Windhover Labs
+        div.ui.inverted.section.divider
