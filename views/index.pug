@@ -22,6 +22,12 @@ html(lang='en-us')
     link(rel="stylesheet" type="text/css" href="/scripts/semantic-ui/dist/components/icon.css")
 
     link(rel="stylesheet" type="text/css" href="/css/commander.css")
+    
+    script(type="text/javascript" src="//code.jquery.com/jquery-1.11.1.min.js")
+    script(type="text/javascript" src="//golden-layout.com/files/latest/js/goldenlayout.min.js")
+    link(type="text/css" rel="stylesheet" href="//golden-layout.com/files/latest/css/goldenlayout-base.css")
+    link(type="text/css" rel="stylesheet" href="//golden-layout.com/files/latest/css/goldenlayout-dark-theme.css")
+    
 
   body
     .ui.fixed.inverted.menu
@@ -77,9 +83,113 @@ html(lang='en-us')
 
 
     .ui.main.text.container
-      p Put Content Here
+      button.ui.primary.button(onClick="loadTest('testpage1');") Load Test 1
+      button.ui.primary.button(onClick="loadTest('testpage2');") Load Test 2
+      
+      #wrapper
+        ul#menuContainer
+        #layoutContainer
+        #main-content
+      
+      script.
+        var loadTest = function(pageName) {
+          $('#main-content').load(pageName, function () {
+            console.log('Load complete');
+          });
+        };
+        
+        var config = {
+          settings: {
+            selectionEnabled: true
+          },
+          content: [{
+            type: 'row',
+            content: [{
+              type:'component',
+              componentName: 'example',
+              componentState: { text: 'Component 1' }
+            },
+            {
+              type:'component',
+              componentName: 'example',
+              componentState: { text: 'Component 2' }
+            }]
+          }]
+        };
+        
+        
+        
+        
+        
+        
+        
+        var myLayout = new window.GoldenLayout( config, $('#layoutContainer')  );
+        
+        myLayout.registerComponent( 'example', function( container, state ){
+          container.getElement().html( '<h2>' + state.text + '</h2>' );
+        });
+        
+        myLayout.init();
+        
+        var addMenuItem = function( title, text ) {
+          var element = $( '<li>' + text + '</li>' );
+          $( '#menuContainer' ).append( element );
 
+          var newItemConfig = {
+            title: title,
+            type: 'component',
+            componentName: 'example',
+            componentState: { text: text }
+          };
+          
+          myLayout.createDragSource( element, newItemConfig );
+          
+          element.click(function(){
+            if( myLayout.selectedItem === null ) {
+              alert( 'No item selected' );
+            } else {
+              myLayout.selectedItem.addChild( newItemConfig );
+            }
+          });
+          
+        };
 
+        addMenuItem( 'Add me!', 'You\'ve added me!' );
+        addMenuItem( 'Me too!', 'You\'ve added me too!' );
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
     div.ui.inverted.vertical.footer.segment
       div.ui.center.aligned.container
         img.ui.centered.mini.image(src="/img/Windhover-Mark-White.png")
