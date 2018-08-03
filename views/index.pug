@@ -5,7 +5,7 @@ html(lang='en-us')
     meta(name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0")
 
     title Commander
-
+    <!--Semantic libraries not needed-->
     link(rel="stylesheet" type="text/css" href="/scripts/semantic-ui/dist/components/reset.css")
     link(rel="stylesheet" type="text/css" href="/scripts/semantic-ui/dist/components/site.css")
 
@@ -27,13 +27,16 @@ html(lang='en-us')
     script(type="text/javascript" src="//golden-layout.com/files/latest/js/goldenlayout.min.js")
     link(type="text/css" rel="stylesheet" href="//golden-layout.com/files/latest/css/goldenlayout-base.css")
     link(type="text/css" rel="stylesheet" href="//golden-layout.com/files/latest/css/goldenlayout-dark-theme.css")
+    <!--Jqtree is a Jquery widget for displaying tree structures  -->
+    script(type="text/javascript" src="/scripts/jqtree/tree.jquery.js")
+    link(type="text/css" rel="stylesheet" href="/scripts/jqtree/jqtree.css")
     
 
   body
     .ui.fixed.inverted.menu
       #top-menu-bar.ui.container
         a.header.item(href="#")
-          img#logo(src='/img/Commander-Mark-White.png')
+          img#logo(src='/img/Windhover-Mark-White.png')
           | Commander
 
         div.ui.simple.dropdown.item
@@ -80,24 +83,34 @@ html(lang='en-us')
                   div.menu
                     div.item Widget 1
                     div.item Widget 2
-
-
+                    
     .ui.main.text.container
-      button.ui.primary.button(onClick="loadTest('testpage1');") Load Test 1
-      button.ui.primary.button(onClick="loadTest('testpage2');") Load Test 2
-      
       #wrapper
-        ul#menuContainer
+        div#menuContainer
         #layoutContainer
         #main-content
-      
+
       script.
-        var loadTest = function(pageName) {
-          $('#main-content').load(pageName, function () {
-            console.log('Load complete');
-          });
-        };
-        
+        /* Workspace folders and files should be stored like the following structure */
+        var dirData = [
+          {
+            name: "Test 1",
+            type: "folder",
+            children: [
+              { name : "General", type: "file", path: "testpage1"},
+              { name : "HK", type: "file", path: "testpage2"}
+            ]
+          },
+          {
+            name: "Test 2",
+            type: "folder",
+            children: [
+              { name : "General", type: "file", path: "testpage1"},
+              { name : "HK", type: "file", path: "testpage2"}
+            ]
+          }
+        ];
+        /* Inital config of layout */
         var config = {
           settings: {
             selectionEnabled: true
@@ -116,80 +129,103 @@ html(lang='en-us')
             }]
           }]
         };
-        
-        
-        
-        
-        
-        
-        
-        var myLayout = new window.GoldenLayout( config, $('#layoutContainer')  );
-        
+        /* Create Layout */
+        var myLayout = new window.GoldenLayout( config, $('#layoutContainer'));
+        /* Register Component in layout */
         myLayout.registerComponent( 'example', function( container, state ){
           container.getElement().html( '<h2>' + state.text + '</h2>' );
         });
-        
         myLayout.init();
-        
-        var addMenuItem = function( title, text ) {
-          var element = $( '<li>' + text + '</li>' );
+        /* This event is fired when a component is created, which renders selected page onto created component */
+        myLayout.on("itemCreated", (item) => {
+          
+          if(item.type=="component")
+          {
+            if(item.hasOwnProperty("config"))
+            {
+              var link = undefined;
+              var id = undefined;
+              if(item.config.hasOwnProperty("id"))
+              {
+                id = item.config.id;
+              }
+              if(item.config.hasOwnProperty("componentState"))
+              {
+                if(item.config.componentState.hasOwnProperty("link"))
+                {
+                  link = item.config.componentState.link;
+                }
+              }
+              if(id!=undefined && link!=undefined)
+              {
+                item.container._contentElement.load("/"+link);
+                item.container._contentElement.css("overflow","auto");
+              }
+            }
+          }
+        });
+        /* Will add dragable item to menu - NOT USING THIS FUNC*/
+        /* var addMenuItem = function( id, title, link) {
+          var element = $( '<li title="'+title+'">' + title + '</li>' );
           $( '#menuContainer' ).append( element );
 
           var newItemConfig = {
+            id: id,
             title: title,
             type: 'component',
             componentName: 'example',
-            componentState: { text: text }
+            componentState: { text: "text" , link: link}
           };
           
           myLayout.createDragSource( element, newItemConfig );
-          
+
           element.click(function(){
             if( myLayout.selectedItem === null ) {
               alert( 'No item selected' );
             } else {
-              myLayout.selectedItem.addChild( newItemConfig );
+              myLayout.selectedItem.addChild( newItemConfig );          
             }
-          });
-          
-        };
 
-        addMenuItem( 'Add me!', 'You\'ve added me!' );
-        addMenuItem( 'Me too!', 'You\'ve added me too!' );
+          });
+        };
+        addMenuItem( 'Test_1', 'Test 1', 'testpage1' );
+        addMenuItem( 'Test_2', 'Test 2', 'testpage2' ); */
+        
+        /* Initialize jqtree widget */         
+        $('#menuContainer').tree({
+          data:dirData,
+        });
+        /* Handle jqtree click event */
+        $('#menuContainer').on(
+            'tree.click',
+            function(e){
+              if(e.node.type=="file"){
+                var element = e.node.element;
+                var newItemConfig = {
+                  id: e.node.name,
+                  title: e.node.name,
+                  type: 'component',
+                  componentName: 'example',
+                  componentState: { text: "text" , link: e.node.path}
+                };
+                myLayout.createDragSource( element, newItemConfig );
+                element.click(function(){
+                  if( myLayout.selectedItem === null ) {
+                    alert( 'No item selected' );
+                  } else {
+                    myLayout.selectedItem.addChild( newItemConfig );          
+                  }
+                });
+                
+              }
+            }
+        );
         
         
         
         
         
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
+
     div.ui.inverted.vertical.footer.segment
       div.ui.center.aligned.container
         img.ui.centered.mini.image(src="/img/Windhover-Mark-White.png")

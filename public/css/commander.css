@@ -12,7 +12,15 @@ body {
   color: #ffffff;
 }
 
-
+.ui.text.container{
+  max-width: 100% !important;
+}
+.ui.container{
+  width: 95%;
+}
+.lm_goldenlayout {
+    background: #353535 !important;
+}
 
 .ui.menu .item img.logo {
   margin-right: 1.5em;
@@ -33,13 +41,6 @@ body {
 }
 
 
-    
-    
-    
-    
-    
-    
-  
 
 h2{
   font: 14px Arial, sans-serif;
@@ -66,18 +67,19 @@ html, body{
 }
 
 #menuContainer{
-  width: 20%;
+  width: 9.5%;
   height: 100%;
   position:absolute;
   top: 0;
   left: 0;
   background: #222;
+  padding: 1%;
 }
 
 #menuContainer li{
   cursor: move;
-  border-bottom: 1px solid #000;
-  border-top: 1px solid #333;
+  /* border-bottom: 1px solid #000;
+  border-top: 1px solid #333; */
   cursor: pointer;
   padding: 10px 5px;
   color: #BBB;
@@ -90,12 +92,37 @@ html, body{
   color: #CCC;
 }
 
+.menuico{
+  float:right;
+}
+
 #layoutContainer{
-  width: 80%;
+  width: 95%;
   height: 100%;
   position:absolute;
   top: 0;
-  left: 20%;
+  left: 10%;
   box-shadow: -3px 0px 9px 0px rgba( 0, 0, 0, 0.4 );
 }
 
+/* Table css */
+.table-condensed.table > tbody > tr > td,
+.table-condensed.table > tbody > tr > th,
+.table-condensed.table > tfoot > tr > td,
+.table-condensed.table > tfoot > tr > th,
+.table-condensed.table > thead > tr > td,
+.table-condensed.table > thead > tr > th {
+  padding: 5px 10px !important;
+  border: 1px solid green;
+}
+
+.widget-body>footer>button {
+  padding: 5px 10px !important;
+  border: 5px solid #222;
+}
+
+.row.row-fluid{
+  padding: 5% !important;
+  overflow: auto;
+
+}
