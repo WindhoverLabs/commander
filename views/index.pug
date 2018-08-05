@@ -5,25 +5,25 @@ html(lang='en-us')
     meta(name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0")
 
     title Commander
-    <!--Semantic libraries not needed-->
-    link(rel="stylesheet" type="text/css" href="/scripts/semantic-ui/dist/components/reset.css")
-    link(rel="stylesheet" type="text/css" href="/scripts/semantic-ui/dist/components/site.css")
 
-    link(rel="stylesheet" type="text/css" href="/scripts/semantic-ui/dist/components/container.css")
-    link(rel="stylesheet" type="text/css" href="/scripts/semantic-ui/dist/components/grid.css")
-    link(rel="stylesheet" type="text/css" href="/scripts/semantic-ui/dist/components/header.css")
-    link(rel="stylesheet" type="text/css" href="/scripts/semantic-ui/dist/components/image.css")
-    link(rel="stylesheet" type="text/css" href="/scripts/semantic-ui/dist/components/menu.css")
+    script(type="text/javascript" src="/scripts/jquery/dist/jquery.js")
+    script(type="text/javascript" src="/scripts/bootstrap/dist/js/bootstrap.js")
+    script(type="text/javascript" src="/scripts/svg.js/dist/svg.js")
+    script(type="text/javascript" src="/js/crew-display.js")
+    script(type="text/javascript" src='/scripts/wolfy87-eventemitter/EventEmitter.js')
+    script(type="text/javascript" src='/scripts/socket.io-client/dist/socket.io.js')
+    script(type="text/javascript" src='/trickcomm.js/client.js')
+    script.
+      var session = new TrickComm();
 
-    link(rel="stylesheet" type="text/css" href="/scripts/semantic-ui/dist/components/divider.css")
-    link(rel="stylesheet" type="text/css" href="/scripts/semantic-ui/dist/components/list.css")
-    link(rel="stylesheet" type="text/css" href="/scripts/semantic-ui/dist/components/segment.css")
-    link(rel="stylesheet" type="text/css" href="/scripts/semantic-ui/dist/components/dropdown.css")
-    link(rel="stylesheet" type="text/css" href="/scripts/semantic-ui/dist/components/icon.css")
-
-    link(rel="stylesheet" type="text/css" href="/css/commander.css")
+      console.log('Waiting to connect');
+      session.on('connect', function() {
+          console.log('Connected');
+      });
     
-    script(type="text/javascript" src="//code.jquery.com/jquery-1.11.1.min.js")
+    link(rel="stylesheet" type="text/css" href="/scripts/bootstrap/dist/css/bootstrap.css")
+    link(rel="stylesheet" type="text/css" href="/css/commander.css")
+
     script(type="text/javascript" src="//golden-layout.com/files/latest/js/goldenlayout.min.js")
     link(type="text/css" rel="stylesheet" href="//golden-layout.com/files/latest/css/goldenlayout-base.css")
     link(type="text/css" rel="stylesheet" href="//golden-layout.com/files/latest/css/goldenlayout-dark-theme.css")
@@ -33,6 +33,32 @@ html(lang='en-us')
     
 
   body
+    nav.navbar.navbar-expand-lg.navbar-light.bg-light
+      a.navbar-brand(href="#") Navbar
+      button.navbar-toggler(type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation")
+        span.navbar-toggler-icon
+
+      #navbarSupportedContent.collapse.navbar-collapse
+        ul.navbar-nav.mr-auto
+          li.nav-item.active
+            a.nav-link(href="#") Home 
+              span.sr-only (current)
+          li.nav-item
+            a.nav-link(href="#") Link
+          li.nav-item.dropdown
+            a#navbarDropdown.nav-link.dropdown-toggle(href="#" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false")
+              Dropdown
+            .dropdown-menu(aria-labelledby="navbarDropdown")
+              a.dropdown-item(href="#") Action
+              a.dropdown-item(href="#") Another action
+              .dropdown-divider
+              .dropdown-item(href="#") Something else here
+          li.nav-item
+            a.nav-link.disabled(href="#") Disabled
+        form.form-inline.my-2.my-lg-0
+          input.form-control.mr-sm-2(type="search" placeholder="Search" aria-label="Search")
+          button.btn.btn-outline-success.my-2.my-sm-0(type="submit") Search
+  
     .ui.fixed.inverted.menu
       #top-menu-bar.ui.container
         a.header.item(href="#")

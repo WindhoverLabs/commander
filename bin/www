@@ -3,7 +3,8 @@
 /**
  * Module dependencies.
  */
-
+ 
+var browserSync = require('browser-sync');
 var app = require('../app');
 var debug = require('debug')('commander:server');
 var http = require('http');
@@ -15,11 +16,21 @@ var http = require('http');
 var port = normalizePort(process.env.PORT || '3000');
 app.set('port', port);
 
+const isProduction = 'production' === process.env.NODE_ENV;
+app.set('etag', isProduction);
+
 /**
  * Create HTTP server.
  */
 
 var server = http.createServer(app);
+
+/**
+ * Socket.io
+ */
+
+var io     = app.io
+io.attach( server );
 
 /**
  * Listen on provided port, on all network interfaces.
@@ -87,4 +98,16 @@ function onListening() {
     ? 'pipe ' + addr
     : 'port ' + addr.port;
   debug('Listening on ' + bind);
+  
+  if(!isProduction) {
+    // https://ponyfoo.com/articles/a-browsersync-primer#inside-a-node-application
+    browserSync({
+      files: ['**/*.{html,js,css,pug}'],
+      online: false,
+      open: false,
+      port: port + 1,
+      proxy: 'localhost:' + port,
+      ui: false
+    });
+  }
 }
