@@ -11,12 +11,15 @@ body {
   background-color:  #034e8e;
   color: #ffffff;
 }
-
+.container{
+  padding-left: 0px !important;
+  padding-right: 0px !important;
+}
 .ui.text.container{
   max-width: 100% !important;
 }
 .ui.container{
-  width: 95%;
+  width: 100%;
 }
 .lm_goldenlayout {
     background: #353535 !important;
@@ -27,8 +30,8 @@ body {
 }
 
 .main.container {
-  margin-top: 7em;
-  background-color:  #034e8e;
+  margin-top: 3.6em;
+  background-color:  #353535;
 }
 
 .wireframe {
@@ -71,9 +74,11 @@ html, body{
   height: 100%;
   position:absolute;
   top: 0;
-  left: 0;
-  background: #222;
+  left: -9%;
+  background: #f8f9fa;
   padding: 1%;
+  z-index: 4;
+
 }
 
 #menuContainer li{
@@ -83,12 +88,12 @@ html, body{
   cursor: pointer;
   padding: 10px 5px;
   color: #BBB;
-  background: #1a1a1a;
+  background: #289ea7;
   font: 12px Arial, sans-serif;
 }
 
 #menuContainer li:hover{
-  background: #111;
+  background: #11767d;
   color: #CCC;
 }
 
@@ -97,11 +102,11 @@ html, body{
 }
 
 #layoutContainer{
-  width: 90%;
+  width: 99%;
   height: 100%;
   position:absolute;
   top: 0;
-  left: 10%;
+  left: 1%;
   box-shadow: -3px 0px 9px 0px rgba( 0, 0, 0, 0.4 );
 }
 
@@ -125,4 +130,32 @@ html, body{
   padding: 5% !important;
   overflow: auto;
 
+}
+
+.centercontainer{
+  display: block;
+  width: -moz-fit-content; /* Firefox */
+  width: fit-content; /* Chrome */
+  margin-left: auto;
+  margin-right: auto;
+}
+.ui.centered.mini.image{
+  width:50px !important;
+  padding-right: 5px !important
+}
+
+.hover-input{
+    z-index: 1;
+    position: absolute;
+    width: 20%;
+    margin: 3px;
+    display: none;
+}
+
+.wh-navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 2;
 }

@@ -14,102 +14,41 @@ html(lang='en-us')
     script(type="text/javascript" src='/scripts/socket.io-client/dist/socket.io.js')
     script(type="text/javascript" src='/trickcomm.js/client.js')
     script.
-      var session = new TrickComm();
+      /* var session = new TrickComm();
 
       console.log('Waiting to connect');
       session.on('connect', function() {
           console.log('Connected');
-      });
+      }); */
     
     link(rel="stylesheet" type="text/css" href="/scripts/bootstrap/dist/css/bootstrap.css")
     link(rel="stylesheet" type="text/css" href="/css/commander.css")
+    link(rel="stylesheet" type="text/css" href="/scripts/font-awesome/css/font-awesome.css")
 
     script(type="text/javascript" src="//golden-layout.com/files/latest/js/goldenlayout.min.js")
     link(type="text/css" rel="stylesheet" href="//golden-layout.com/files/latest/css/goldenlayout-base.css")
     link(type="text/css" rel="stylesheet" href="//golden-layout.com/files/latest/css/goldenlayout-dark-theme.css")
+    
     <!--Jqtree is a Jquery widget for displaying tree structures  -->
     script(type="text/javascript" src="/scripts/jqtree/tree.jquery.js")
     link(type="text/css" rel="stylesheet" href="/scripts/jqtree/jqtree.css")
     
 
   body
-    nav.navbar.navbar-expand-lg.navbar-light.bg-light
-      a.navbar-brand(href="#") Navbar
+    nav.navbar.navbar-expand-lg.navbar-light.bg-light.wh-navbar
+      a.navbar-brand(href="#") Commander
       button.navbar-toggler(type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation")
         span.navbar-toggler-icon
-
       #navbarSupportedContent.collapse.navbar-collapse
         ul.navbar-nav.mr-auto
-          li.nav-item.active
-            a.nav-link(href="#") Home 
-              span.sr-only (current)
-          li.nav-item
-            a.nav-link(href="#") Link
           li.nav-item.dropdown
-            a#navbarDropdown.nav-link.dropdown-toggle(href="#" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false")
+            a#layoutTopLink.nav-link.dropdown-toggle(href="#", role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false") Layouts
               Dropdown
-            .dropdown-menu(aria-labelledby="navbarDropdown")
-              a.dropdown-item(href="#") Action
-              a.dropdown-item(href="#") Another action
-              .dropdown-divider
-              .dropdown-item(href="#") Something else here
-          li.nav-item
-            a.nav-link.disabled(href="#") Disabled
-        form.form-inline.my-2.my-lg-0
-          input.form-control.mr-sm-2(type="search" placeholder="Search" aria-label="Search")
-          button.btn.btn-outline-success.my-2.my-sm-0(type="submit") Search
-  
-    .ui.fixed.inverted.menu
-      #top-menu-bar.ui.container
-        a.header.item(href="#")
-          img#logo(src='/img/Windhover-Mark-White.png')
-          | Commander
-
-        div.ui.simple.dropdown.item
-          | Views
-          i.dropdown.icon
-          div.menu
-            a.item(href="#") Heads Up Display
-            a.item(href="#") Mission Planner
-            div.item
-              i.dropdown.icon
-              | User Created
-              div.menu
-                a.item(href="#") Karthik's
-                a.item(href="#") Matt's
-
-
-        div.ui.simple.dropdown.item
-          | Widgets 
-          i.dropdown.icon
-          div.menu
-            div.item Widget 1
-            div.item Widget 2
-            div.item Widget 3
-            div.item
-              i.dropdown.icon
-              | Core Services
-              div.menu
-                div.item Widget 1
-                div.item Widget 2
-                div.item Widget 3
-                div.item Widget 4
-                div.item Widget 5
-            div.item
-              i.dropdown.icon
-              | Applications
-              div.menu
-                div.item Actuator Motor Control
-                div.item Battery
-                div.item Checksum
-                div.item Position Estimator
-                div.item
-                  i.dropdown.icon
-                  | Applications
-                  div.menu
-                    div.item Widget 1
-                    div.item Widget 2
-                    
+            #layoutList.dropdown-menu(aria-labelledby="layoutTopLink")
+          li.nav-item  
+              button.btn.btn-default(onclick="SaveLayout()" onmouseover="GetLayoutName()" ) Save
+              input#layoutName.hover-input.form-control(type="text" placeholder="(Optional) Enter layout name")
+              
     .ui.main.text.container
       #wrapper
         div#menuContainer
@@ -146,133 +85,186 @@ html(lang='en-us')
             content: [{
               type:'component',
               componentName: 'example',
-              componentState: { text: 'Component 1' }
+              componentState: { text: 'Component 1'}
             },
             {
               type:'component',
               componentName: 'example',
-              componentState: { text: 'Component 2' }
+              componentState: { text: 'Component 2'}
             }]
           }]
         };
         /* Create Layout */
-        var myLayout;
-        var savedState = localStorage.getItem( 'savedState' );
-
-        if( savedState !== null ) {
-          myLayout = new window.GoldenLayout( JSON.parse( savedState ), $('#layoutContainer') );
-          console.log("Loading from saved state!")
-        } else {
-          myLayout = new window.GoldenLayout( config, $('#layoutContainer'));
-          console.log("No saved state!")
-        }
-        /* var myLayout = new window.GoldenLayout( config, $('#layoutContainer')); */
-        /* Register Component in layout */
-        myLayout.registerComponent( 'example', function( container, state ){
-          container.getElement().html( '<h2>' + state.text + '</h2>' );
-        });
-        myLayout.init();
-        /* This event is fired when a component is created, which renders selected page onto created component */
-        myLayout.on("itemCreated", (item) => {
-          
-          if(item.type=="component")
-          {
-            if(item.hasOwnProperty("config"))
-            {
-              var link = undefined;
-              var id = undefined;
-              if(item.config.hasOwnProperty("id"))
-              {
-                id = item.config.id;
-              }
-              if(item.config.hasOwnProperty("componentState"))
-              {
-                if(item.config.componentState.hasOwnProperty("link"))
-                {
-                  link = item.config.componentState.link;
-                }
-              }
-              if(id!=undefined && link!=undefined)
-              {
-                item.container._contentElement.load("/"+link);
-                item.container._contentElement.css("overflow","auto");
-              }
-            }
-          }
-        });
-        /* Initialize jqtree widget */         
+        var myLayout = new window.GoldenLayout( config, $('#layoutContainer'));
+        /* Create navigation tree */         
         $('#menuContainer').tree({
           data:dirData,
         });
-        /* Making file items in our tree dragable */
-        $('#menuContainer').tree(
-          'getNodeByCallback',
-          function(node) {
-              if (node.type =="file") {
-                  // Node is found; return true
-                  var newItemConfig = {
-                    id: node.name,
-                    title: node.name,
-                    type: 'component',
-                    componentName: 'example',
-                    componentState: { text: "text" , link: node.path}
-                  };
-                  
-                  myLayout.createDragSource( node.element, newItemConfig );
-                  console.log(node.element);
-                  /* node.element.on("click", () => {
-                    console.log(node.element);
-                  }); */
-                  node.element.click(function(){
-                    console.log(node.element);
-                    /* if( myLayout.selectedItem === null ) {
-                      alert( 'No item selected' );
-                    } else {
-                      myLayout.selectedItem.addChild( newItemConfig );          
-                    } */
-                  });
-                  
-                  return true;
-              }
-              else {
-                  // Node not found; continue searching
-                  return false;
-              }
-          }
-        );
-        /* Making file items in our tree respond to click 
-        with shortcut page load */
-        $('#menuContainer').on(
-            'tree.click',
-            function(e){
-              if(e.node.type=="file"){
-                var element = e.node.element;
-                var newItemConfig = {
-                  id: e.node.name,
-                  title: e.node.name,
-                  type: 'component',
-                  componentName: 'example',
-                  componentState: { text: "text" , link: e.node.path}
-                };
-                if( myLayout.selectedItem === null ) {
-                  alert( 'No item selected' );
-                } else {
-                  myLayout.selectedItem.addChild( newItemConfig );          
+
+        function InitLayout(mlyt){
+          /* Register Component in layout */
+          mlyt.registerComponent( 'example', function( container, state ){
+
+            if( state.link ) {
+              container.getElement().load( "/"+state.link);
+            }
+            else{
+              container.getElement().html( '<h2>Unable to retrieve previous state.</h2>' );
+            }
+            
+            $(window).on("LayoutSaved",() => {
+              container.extendState({
+                  link: container._config.componentState.link
+                });
+              });
+          });
+          /* Initalize layout */
+          mlyt.init();
+          /* This event is fired when a component is created, which renders selected page onto created component */
+          mlyt.on("itemCreated", (item) => {
+            
+            if(item.type=="component")
+            {
+              if(item.hasOwnProperty("config"))
+              {
+                var link = undefined;
+                var id = undefined;
+                if(item.config.hasOwnProperty("id"))
+                {
+                  id = item.config.id;
+                }
+                if(item.config.hasOwnProperty("componentState"))
+                {
+                  if(item.config.componentState.hasOwnProperty("link"))
+                  {
+                    link = item.config.componentState.link;
+                  }
+                }
+                if(id!=undefined && link!=undefined)
+                {
+                  item.container._contentElement.load("/"+link);
+                  item.container._contentElement.css("overflow","auto");
                 }
               }
             }
-        );
-        /* Save state on stateChanged event */
-        myLayout.on( 'stateChanged', () => {
-          //now save the state
-          var state = JSON.stringify( myLayout.toConfig() );
-          localStorage.setItem( 'savedState', state );
-          console.log("State changes saved!")
-        });
-        
+          });
+          /* Making file items in our tree dragable */
+          $('#menuContainer').tree(
+            'getNodeByCallback',
+            function(node) {
+                if (node.type =="file") {
+                    // Node is found; return true
+                    var newItemConfig = {
+                      id: node.name,
+                      title: node.name,
+                      type: 'component',
+                      componentName: 'example',
+                      componentState: { text: "text" , link: node.path}
+                    };
+                    
+                    myLayout.createDragSource( node.element, newItemConfig );
+                    console.log(node.element);
+                    /* node.element.on("click", () => {
+                      console.log(node.element);
+                    }); */
+                    node.element.click(function(){
+                      console.log(node.element);
+                      /* if( myLayout.selectedItem === null ) {
+                        alert( 'No item selected' );
+                      } else {
+                        myLayout.selectedItem.addChild( newItemConfig );          
+                      } */
+                    });
+                    
+                    return true;
+                }
+                else {
+                    // Node not found; continue searching
+                    return false;
+                }
+            }
+          );
+          /* Making file items in our tree respond to click 
+          with shortcut page load */
+          $('#menuContainer').on(
+              'tree.click',
+              function(e){
+                if(e.node.type=="file"){
+                  var element = e.node.element;
+                  var newItemConfig = {
+                    id: e.node.name,
+                    title: e.node.name,
+                    type: 'component',
+                    componentName: 'example',
+                    componentState: { text: "text" , link: e.node.path}
+                  };
+                  if( myLayout.selectedItem === null ) {
+                    alert( 'No item selected' );
+                  } else {
+                    myLayout.selectedItem.addChild( newItemConfig );          
+                  }
+                }
+              }
+          );
+        }
+        /* Initialize data */
+        InitLayout(myLayout);
 
+        $(window).on("LayoutSaved",(e,p1) => {
+          $("#layoutList").append("<a class=\"dropdown-item\" onclick=\"LoadLayout('"+p1+"')\">"+p1+"</a>");
+          });
+        function GetLayoutName() {
+          $(".hover-input").css("display","block");
+          /* 10 sec to timeout and reset to display:none */
+          setTimeout(function(){ 
+            $(".hover-input").css("display","none");
+            }, 10000);
+        }
+        function SaveLayout() {
+          /* now save the state */
+          let layoutIn = $("#layoutName");
+          let name = "LAYOUT_"
+          if(layoutIn.val() != "")
+          {
+            name += layoutIn.val()+"_"
+          }  
+          /* add timestamp */
+          name += Date.now();  
+          /* stringify state config */
+          let state = JSON.stringify( myLayout.toConfig() );
+          localStorage.setItem( name, state );
+          console.log("State changes saved as ", name);
+          /* clean-up */
+          $(".hover-input").css("display","none");
+          $(".hover-input").val('');
+          $(window).trigger("LayoutSaved",[name]);
+        }
+        function LoadLayout(key){
+          /* if a layout exists, destroy it */
+          myLayout.destroy()
+          /* retrieve and load saved layout */
+          var savedState = localStorage.getItem( key );
+          if( savedState !== null ) {
+            myLayout = new window.GoldenLayout( JSON.parse( savedState ), $('#layoutContainer') );
+            InitLayout(myLayout);
+          }
+          else{
+            console.err("Layout cannot be loaded.")
+          }
+        }
+        $("#menuContainer").mouseenter(()=>{
+          $("#menuContainer").animate({left: "0%"});
+          });
+          
+        $("#menuContainer").mouseleave(()=>{
+          $("#menuContainer").animate({left: "-9%"});
+          });
+        
+        
+        
+        
     div.ui.inverted.vertical.footer.segment
-      div.ui.center.aligned.container
+      div.centercontainer
         img.ui.centered.mini.image(src="/img/Windhover-Mark-White.png")
         | Windhover Labs
         div.ui.inverted.section.divider

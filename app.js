@@ -12,8 +12,8 @@
 *    notice, this list of conditions and the following disclaimer in
 *    the documentation and/or other materials provided with the
 *    distribution.
-* 3. Neither the name Windhover Labs nor the names of its 
-*    contributors may be used to endorse or promote products derived 
+* 3. Neither the name Windhover Labs nor the names of its
+*    contributors may be used to endorse or promote products derived
 *    from this software without specific prior written permission.
 *
 * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
@@ -39,6 +39,8 @@ var logger = require('morgan');
 var socket_io = require( "socket.io" );
 
 var indexRouter = require('./routes/index');
+var test1 = require('./routes/testpage1');
+var test2 = require('./routes/testpage2');
 
 var app = express();
 
@@ -58,7 +60,8 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/scripts', express.static(__dirname + '/node_modules/'));
 
 app.use('/', indexRouter);
-
+app.use('/testpage1', test1);
+app.use('/testpage2', test2);
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
     next(createError(404));
@@ -108,19 +111,19 @@ io.on('connection', function(socket) {
 		console.log('Client: disconnect');
 		trickComm.disconnect();
 	});
-	
+
 	var tlmBypass = function(msg) {
 	    socket.volatile.emit('updateTelem', msg);
 	};
 
 	var trickComm = new TrickComm();
 	trickComm.connect({port: TRICK_SIM_PORT, host: TRICK_SIM_ADDRESS, tlmBypass: tlmBypass});
-	  
+
 	var service = {
 	    subscribe: trickComm.subscribe,
 	    unsubscribe: trickComm.unsubscribe
 	};
-	  
+
 	var client;
 	// exposes all methods
 	//for (method in service) {
