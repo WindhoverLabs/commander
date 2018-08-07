@@ -1,6 +1,11 @@
 body {
-  background-color:  #034e8e;
+  background-color:  #fff;
   color: #ffffff;
+
+}
+html,body {
+  max-height:97% !important;
+  height:97% !important;
 }
 
 #top-menu-bar {
@@ -30,7 +35,7 @@ body {
 }
 
 .main.container {
-  margin-top: 3.6em;
+  margin-top: 41px;
   background-color:  #353535;
 }
 
@@ -70,12 +75,12 @@ html, body{
 }
 
 #menuContainer{
-  width: 9.5%;
+  width: 10%;
   height: 100%;
   position:absolute;
   top: 0;
-  left: -9%;
-  background: #f8f9fa;
+  left: -10%;
+  background: #fff;
   padding: 1%;
   z-index: 4;
 
@@ -86,28 +91,49 @@ html, body{
   /* border-bottom: 1px solid #000;
   border-top: 1px solid #333; */
   cursor: pointer;
-  padding: 10px 5px;
+  padding: 7px 3px;
   color: #BBB;
-  background: #289ea7;
   font: 12px Arial, sans-serif;
 }
 
+
+#menuToggle{
+  position: absolute;
+  top: 20px;
+  left: -8px;
+  z-index: 10;
+  color: white;
+}
+
+.btn-circle {
+  width: 30px;
+  height: 30px;
+  text-align: center;
+  padding: 6px 0;
+  font-size: 12px;
+  line-height: 1.42;
+  border-radius: 15px;
+}
+
 #menuContainer li:hover{
-  background: #11767d;
   color: #CCC;
 }
 
-.menuico{
-  float:right;
+#menuIcon{
+  -moz-transition: all 500ms ease;
+  -o-transition: all 500ms ease;
+  -webkit-transition: all 500ms ease;
+  transition: all 500ms ease;
 }
 
 #layoutContainer{
-  width: 99%;
+  width: 100%;
   height: 100%;
   position:absolute;
   top: 0;
-  left: 1%;
-  box-shadow: -3px 0px 9px 0px rgba( 0, 0, 0, 0.4 );
+  left: 0;
+  box-shadow: -3px 0px 9px 0px rgba( 0, 0, 0, 0.4);
+  padding:7px;
 }
 
 /* Table css */
@@ -152,10 +178,30 @@ html, body{
     display: none;
 }
 
-.wh-navbar {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  z-index: 2;
+.wh-nav-btn{
+  margin-bottom:unset;
+  margin-left: 5px;
+  margin-right: 5px;
+}
+
+.modal-content{
+  background: #343a40;
+}
+.modal-header{
+  border-bottom: unset;
+}
+.modal-footer{
+  border-top: unset;
+}
+.rotate-right-left {
+    -moz-transform: rotate(180deg);
+    -o-transform: rotate(180deg);
+    -webkit-transform: rotate(180deg);
+    transform: rotate(180deg);
+}
+.rotate-left-right {
+    -moz-transform: rotate(0deg);
+    -o-transform: rotate(0deg);
+    -webkit-transform: rotate(0deg);
+    transform: rotate(0deg);
 }

@@ -5,14 +5,15 @@ html(lang='en-us')
     meta(name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0")
 
     title Commander
-
+    script(type="text/javascript" src="/scripts/popper.js/dist/umd/popper.min.js")
     script(type="text/javascript" src="/scripts/jquery/dist/jquery.js")
-    script(type="text/javascript" src="/scripts/bootstrap/dist/js/bootstrap.js")
+    script(type="text/javascript" src="/scripts/bootstrap/dist/js/bootstrap.min.js")
     script(type="text/javascript" src="/scripts/svg.js/dist/svg.js")
     script(type="text/javascript" src="/js/crew-display.js")
     script(type="text/javascript" src='/scripts/wolfy87-eventemitter/EventEmitter.js')
     script(type="text/javascript" src='/scripts/socket.io-client/dist/socket.io.js')
     script(type="text/javascript" src='/trickcomm.js/client.js')
+    script(type="text/javascript" src='/js/util.js')
     script.
       /* var session = new TrickComm();
 
@@ -21,37 +22,57 @@ html(lang='en-us')
           console.log('Connected');
       }); */
     
-    link(rel="stylesheet" type="text/css" href="/scripts/bootstrap/dist/css/bootstrap.css")
+    link(rel="stylesheet" type="text/css" href="/scripts/bootstrap/dist/css/bootstrap.min.css")
     link(rel="stylesheet" type="text/css" href="/css/commander.css")
-    link(rel="stylesheet" type="text/css" href="/scripts/font-awesome/css/font-awesome.css")
-
+    link(rel="stylesheet" type="text/css" href="/scripts/font-awesome/css/font-awesome.min.css")
+    
     script(type="text/javascript" src="//golden-layout.com/files/latest/js/goldenlayout.min.js")
     link(type="text/css" rel="stylesheet" href="//golden-layout.com/files/latest/css/goldenlayout-base.css")
     link(type="text/css" rel="stylesheet" href="//golden-layout.com/files/latest/css/goldenlayout-dark-theme.css")
-    
+
     <!--Jqtree is a Jquery widget for displaying tree structures  -->
     script(type="text/javascript" src="/scripts/jqtree/tree.jquery.js")
     link(type="text/css" rel="stylesheet" href="/scripts/jqtree/jqtree.css")
     
 
   body
-    nav.navbar.navbar-expand-lg.navbar-light.bg-light.wh-navbar
-      a.navbar-brand(href="#") Commander
-      button.navbar-toggler(type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation")
-        span.navbar-toggler-icon
+    div#genericInputModal.modal.fade(tabindex="-1" role="dialog" aria-labelledby="genericInputModal" aria-hidden="true")
+      div.modal-dialog(role="document")
+        div.modal-content
+          div.modal-header
+            h5.modal-title#modalTitle Title Placeholder
+            button(type="button" class="close" data-dismiss="modal" aria-label="Close" style="color:white")
+              span(aria-hidden="true") &times;
+          div.modal-body
+            form#modalForm
+          div.modal-footer
+            button#modalSubmit.btn.btn-outline-primary(type="submit" data-dismiss="modal") OK
+            button.btn.btn-outline-secondary(type="button" data-dismiss="modal") Close    
+    nav.navbar.fixed-top.navbar-expand-lg.navbar-dark.bg-dark(style="max-height:40px;box-shadow: 0px -23px 80px #fff;")
+      a.navbar-brand(href="#")
+        img(src="/img/Windhover-Mark-White.png" width="30" style="margin:8px" class="d-inline-block align-top" alt="")
+        | Commander
       #navbarSupportedContent.collapse.navbar-collapse
         ul.navbar-nav.mr-auto
           li.nav-item.dropdown
-            a#layoutTopLink.nav-link.dropdown-toggle(href="#", role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false") Layouts
-              Dropdown
-            #layoutList.dropdown-menu(aria-labelledby="layoutTopLink")
-          li.nav-item  
-              button.btn.btn-default(onclick="SaveLayout()" onmouseover="GetLayoutName()" ) Save
-              input#layoutName.hover-input.form-control(type="text" placeholder="(Optional) Enter layout name")
-              
+            a.nav-link.dropdown-toggle(href="#", role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false") Default Instance
+            div.dropdown-menu(aria-labelledby="instanceDropdown")
+              a.dropdown-item(href="#") TYPHOON_480H/SITL
+              a.dropdown-item(href="#") OCPOC/DEFAULT
+              a.dropdown-item(href="#") BEBOP2/SITL
+              a.dropdown-item(href="#") BEBOP2/DEFAULT
+        ul.wh-nav-btn(data-toggle="tooltip" data-placement="bottom" title="Load page layout")
+            button.btn.btn-outline-primary( data-toggle="modal" data-target="#genericInputModal" data-title="Load Layout" data-submit="LoadLayout" data-custom='[{"label":"Load Layout", "type":"dropdown", "getItem":"GetStoredLayoutList"}]') 
+              i.fa.fa-cubes
+        ul.wh-nav-btn(data-toggle="tooltip" data-placement="bottom" title="Save page layout")
+            button.btn.btn-outline-primary(data-toggle="modal" data-target="#genericInputModal" data-title="Save Layout" data-submit="SaveLayout" data-custom='[{"label":"Save Layout", "type":"field" }]') 
+              i.fa.fa-save 
     .ui.main.text.container
       #wrapper
-        div#menuContainer
+        div#menuWrapper
+          button#menuToggle.btn.btn-primary.btn-circle
+            i#menuIcon.fa.fa-arrow-right
+          div#menuContainer
         #layoutContainer
         #main-content
 
@@ -99,6 +120,7 @@ html(lang='en-us')
         /* Create navigation tree */         
         $('#menuContainer').tree({
           data:dirData,
+          selectable: false,
         });
 
         function InitLayout(mlyt){
@@ -209,62 +231,120 @@ html(lang='en-us')
         }
         /* Initialize data */
         InitLayout(myLayout);
-
-        $(window).on("LayoutSaved",(e,p1) => {
-          $("#layoutList").append("<a class=\"dropdown-item\" onclick=\"LoadLayout('"+p1+"')\">"+p1+"</a>");
-          });
-        function GetLayoutName() {
-          $(".hover-input").css("display","block");
-          /* 10 sec to timeout and reset to display:none */
-          setTimeout(function(){ 
-            $(".hover-input").css("display","none");
-            }, 10000);
-        }
+          
+        $("#genericInputModal").on('show.bs.modal',(e) => {
+            let btn = $(e.relatedTarget);
+            console.log(btn)
+            let title = btn.data('title');
+            let submit = btn.data('submit');
+            let custom = btn.data('custom');
+            let item = "";
+            let inputsIds = []
+            /* set title */
+            $('#modalTitle').text(title);
+             
+            /* set custom data */
+            for(let e in custom){
+              switch(custom[e].type){
+                case "field":
+                  item = "<div class='form-group'>"
+                  +"<label class='col-form-label' id=labelField"+e+" for=inputField"+e+">"+custom[e].label+"</label>"
+                  +"<input class='form-control' type='text' id=inputField"+e+">"
+                  +"</div>"
+                  inputsIds.push("inputField"+e)
+                  $('#modalForm').append(item);
+                  break;
+                case "dropdown":
+                  item = "<div class='form-group'>"
+                  +"<label class='col-form-label' id=labelField"+e+" for=inputField"+e+">"+custom[e].label+"</label>"
+                  +"<select class='custom-select mr-sm-2'id=select"+e+">"
+                  +"<option selected>Choose..</option>"
+                  +"</select>"
+                  +"</div>"
+                  $('#modalForm').append(item)
+                  inputsIds.push("select"+e)
+                  var options = window[custom[e].getItem].call()
+                  for(let i in options){
+                    let html = "<option value="+i+">"+options[i]+"<option>"
+                    $('#select'+e).append(html)
+                  }
+                  break;
+                default:
+                  console.log("Unknown data passed as attribute");
+              }
+            }
+            
+            /* set submit action */
+            $('#modalSubmit')[0].onclick = window[submit];
+            console.log(title);
+            console.log(submit);
+            console.log(custom);
+        });
+        
+        $("#genericInputModal").on('hidden.bs.modal',(e) => {
+            /* replace title */
+            $("#modalTitle").text('Title Placeholder');
+            /* Remove all attached children*/
+            $("#modalForm").empty();
+            /* Unset submit action */
+            $('#modalSubmit')[0].onclick = null;
+        });
+        
         function SaveLayout() {
           /* now save the state */
-          let layoutIn = $("#layoutName");
+          let form = $("[id='inputField0']");
           let name = "LAYOUT_"
-          if(layoutIn.val() != "")
+          if(form.val() != "")
           {
-            name += layoutIn.val()+"_"
+            name += form.val()+"_"
           }  
           /* add timestamp */
           name += Date.now();  
           /* stringify state config */
           let state = JSON.stringify( myLayout.toConfig() );
           localStorage.setItem( name, state );
-          console.log("State changes saved as ", name);
-          /* clean-up */
-          $(".hover-input").css("display","none");
-          $(".hover-input").val('');
-          $(window).trigger("LayoutSaved",[name]);
+          console.log(name + " stored")
         }
-        function LoadLayout(key){
+        
+        function LoadLayout(){
           /* if a layout exists, destroy it */
           myLayout.destroy()
           /* retrieve and load saved layout */
+          let formVal = $("[id='select0']").val();
+          let key = GetStoredLayoutList()[formVal];
           var savedState = localStorage.getItem( key );
           if( savedState !== null ) {
             myLayout = new window.GoldenLayout( JSON.parse( savedState ), $('#layoutContainer') );
             InitLayout(myLayout);
           }
           else{
-            console.err("Layout cannot be loaded.")
+            console.log("Layout cannot be loaded.")
           }
         }
-        $("#menuContainer").mouseenter(()=>{
-          $("#menuContainer").animate({left: "0%"});
-          });
-          
-        $("#menuContainer").mouseleave(()=>{
-          $("#menuContainer").animate({left: "-9%"});
-          });
         
         
         
         
-    div.ui.inverted.vertical.footer.segment
-      div.centercontainer
-        img.ui.centered.mini.image(src="/img/Windhover-Mark-White.png")
-        | Windhover Labs
-        div.ui.inverted.section.divider
+        var menuOpen = false;
+        $("#menuToggle").click(()=>{
+          if(!menuOpen){
+            $("#menuToggle").animate({left: "9%"});
+            $("#menuContainer").animate({left: "0%"});  
+            $("#menuIcon").removeClass("rotate-left-right");
+            $("#menuIcon").addClass("rotate-right-left");
+            menuOpen = true;
+          }
+          else{
+            $("#menuToggle").animate({left: "-8px"});
+            $("#menuContainer").animate({left: "-10%"});
+            $("#menuIcon").addClass("rotate-left-right");
+            $("#menuIcon").removeClass("rotate-right-left");
+            menuOpen = false;
+          }
+
+        });
+ 
+        $(function () {
+          $('[data-toggle="tooltip"]').tooltip()
+        })
+    nav.navbar.fixed-bottom.navbar-expand-lg.navbar-dark.bg-dark(style="max-height:10px;box-shadow: 0px -1px 2px #fff;")    

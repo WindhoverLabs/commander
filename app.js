@@ -58,7 +58,7 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/scripts', express.static(__dirname + '/node_modules/'));
-
+app.use('/js', express.static(__dirname + '/public/js/'));
 app.use('/', indexRouter);
 app.use('/testpage1', test1);
 app.use('/testpage2', test2);
