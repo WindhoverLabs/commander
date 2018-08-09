@@ -8,12 +8,12 @@ html(lang='en-us')
     script(type="text/javascript" src="/scripts/popper.js/dist/umd/popper.min.js")
     script(type="text/javascript" src="/scripts/jquery/dist/jquery.js")
     script(type="text/javascript" src="/scripts/bootstrap/dist/js/bootstrap.min.js")
+    script(type="text/javascript" src="/scripts/patternfly-bootstrap-treeview/dist/bootstrap-treeview.min.js")
     script(type="text/javascript" src="/scripts/svg.js/dist/svg.js")
     script(type="text/javascript" src="/js/crew-display.js")
     script(type="text/javascript" src='/scripts/wolfy87-eventemitter/EventEmitter.js')
     script(type="text/javascript" src='/scripts/socket.io-client/dist/socket.io.js')
     script(type="text/javascript" src='/trickcomm.js/client.js')
-    script(type="text/javascript" src='/js/util.js')
     script.
       /* var session = new TrickComm();
 
@@ -75,27 +75,9 @@ html(lang='en-us')
           div#menuContainer
         #layoutContainer
         #main-content
-
+      script(type="text/javascript" src='/js/util.js')  
       script.
-        /* Workspace folders and files should be stored like the following structure */
-        var dirData = [
-          {
-            name: "Test 1",
-            type: "folder",
-            children: [
-              { name : "General", type: "file", path: "testpage1"},
-              { name : "HK", type: "file", path: "testpage2"}
-            ]
-          },
-          {
-            name: "Test 2",
-            type: "folder",
-            children: [
-              { name : "General", type: "file", path: "testpage1"},
-              { name : "HK", type: "file", path: "testpage2"}
-            ]
-          }
-        ];
+
         /* Inital config of layout */
         var config = {
           settings: {
@@ -117,11 +99,6 @@ html(lang='en-us')
         };
         /* Create Layout */
         var myLayout = new window.GoldenLayout( config, $('#layoutContainer'));
-        /* Create navigation tree */         
-        $('#menuContainer').tree({
-          data:dirData,
-          selectable: false,
-        });
 
         function InitLayout(mlyt){
           /* Register Component in layout */
@@ -229,6 +206,7 @@ html(lang='en-us')
               }
           );
         }
+
         /* Initialize data */
         InitLayout(myLayout);
           
@@ -264,8 +242,9 @@ html(lang='en-us')
                   $('#modalForm').append(item)
                   inputsIds.push("select"+e)
                   var options = window[custom[e].getItem].call()
+                  console.log(options);
                   for(let i in options){
-                    let html = "<option value="+i+">"+options[i]+"<option>"
+                    let html = "<option value="+i+">"+options[i]+"</option>"
                     $('#select'+e).append(html)
                   }
                   break;
@@ -276,9 +255,7 @@ html(lang='en-us')
             
             /* set submit action */
             $('#modalSubmit')[0].onclick = window[submit];
-            console.log(title);
-            console.log(submit);
-            console.log(custom);
+
         });
         
         $("#genericInputModal").on('hidden.bs.modal',(e) => {
@@ -347,4 +324,8 @@ html(lang='en-us')
         $(function () {
           $('[data-toggle="tooltip"]').tooltip()
         })
+        $(window).resize(() => {
+            console.log("resize-event");
+            myLayout.updateSize();
+        })    
     nav.navbar.fixed-bottom.navbar-expand-lg.navbar-dark.bg-dark(style="max-height:10px;box-shadow: 0px -1px 2px #fff;")    

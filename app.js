@@ -116,13 +116,13 @@ io.on('connection', function(socket) {
 	    socket.volatile.emit('updateTelem', msg);
 	};
 
-	var trickComm = new TrickComm();
-	trickComm.connect({port: TRICK_SIM_PORT, host: TRICK_SIM_ADDRESS, tlmBypass: tlmBypass});
-
-	var service = {
-	    subscribe: trickComm.subscribe,
-	    unsubscribe: trickComm.unsubscribe
-	};
+	// var trickComm = new TrickComm();
+	// trickComm.connect({port: TRICK_SIM_PORT, host: TRICK_SIM_ADDRESS, tlmBypass: tlmBypass});
+  //
+	// var service = {
+	//     subscribe: trickComm.subscribe,
+	//     unsubscribe: trickComm.unsubscribe
+	// };
 
 	var client;
 	// exposes all methods
