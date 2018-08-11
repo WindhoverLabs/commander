@@ -102,7 +102,12 @@ function onListening() {
   if(!isProduction) {
     // https://ponyfoo.com/articles/a-browsersync-primer#inside-a-node-application
     browserSync({
-      files: ['**/*.{html,js,css,pug}'],
+      files: [
+        'app.js',
+        'package.json', 
+        'public/**/*', 
+        'routes/**/*', 
+        'views/**/*'],
       online: false,
       open: false,
       port: port + 1,
