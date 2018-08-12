@@ -42,7 +42,14 @@ var indexRouter = require('./routes/index');
 var test1 = require('./routes/testpage1');
 var test2 = require('./routes/testpage2');
 
+var TmTcServer = require('./tmtc-server');
+const dgram = require('dgram');
+const server = dgram.createSocket('udp4');
+var Parser = require("binary-parser").Parser;
+
 var app = express();
+
+const config = require('./config.js');
 
 //Socket.io
 var io = socket_io();
@@ -109,7 +116,7 @@ io.on('connection', function(socket) {
 
 	socket.on('disconnect', function(socket) {
 		console.log('Client: disconnect');
-		trickComm.disconnect();
+		//trickComm.disconnect();
 	});
 
 	var tlmBypass = function(msg) {
@@ -144,6 +151,29 @@ io.on('connection', function(socket) {
 	//};
 });
 
+var tmtc = new TmTcServer(config);
 
+
+
+
+
+
+server.on('error', (err) => {
+  console.log(`server error:\n${err.stack}`);
+  server.close();
+});
+
+server.on('message', (msg, rinfo) => {
+  //console.log(`server got: ${msg} from ${rinfo.address}:${rinfo.port}`);
+  tmtc.processMessage(msg);
+});
+
+server.on('listening', () => {
+  const address = server.address();
+  console.log(`server listening ${address.address}:${address.port}`);
+});
+
+console.log('Stating UDP listener');
+server.bind(5011);
 
 module.exports = app;
