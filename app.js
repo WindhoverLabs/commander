@@ -46,6 +46,8 @@ var TmTcServer = require('./tmtc-server');
 const dgram = require('dgram');
 const server = dgram.createSocket('udp4');
 var Parser = require("binary-parser").Parser;
+var fs = require('fs');
+const util = require('util');
 
 var app = express();
 
@@ -152,10 +154,6 @@ io.on('connection', function(socket) {
 });
 
 var tmtc = new TmTcServer(config);
-
-
-
-
 
 
 server.on('error', (err) => {

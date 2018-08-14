@@ -43,7 +43,7 @@ const config = {
     tlmPort:                   5011,
     cmdPort:                   5010,
     msgDefs: [
-    	{file: '/home/mbenson/git/commander-new/cdd/cfe.js'}
+    	{file: './output.json'}
     ]
 }
 

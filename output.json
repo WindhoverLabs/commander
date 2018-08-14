@@ -1,0 +1,272 @@
+{
+  "file": "airliner",
+  "little_endian": true,
+  "symbols": [
+    {
+      "name": "CFE_ES_HkPacket_t",
+      "msgID": 2048,
+      "bit_size": 1248,
+      "fields": [
+        {
+          "name": "TlmHeader",
+          "bit_offset": 0,
+          "bit_size": 96,
+          "array": true,
+          "count": 12,
+          "type": {
+            "name": "unsigned char",
+            "bit_size": 8,
+            "base_type": "unsigned char"
+          }
+        },
+        {
+          "name": "Payload",
+          "bit_offset": 96,
+          "bit_size": 1152,
+          "fields": [
+            {
+              "name": "CmdCounter",
+              "bit_offset": 0,
+              "bit_size": 8,
+              "base_type": "unsigned char"
+            },
+            {
+              "name": "ErrCounter",
+              "bit_offset": 8,
+              "bit_size": 8,
+              "base_type": "unsigned char"
+            },
+            {
+              "name": "CFECoreChecksum",
+              "bit_offset": 16,
+              "bit_size": 16,
+              "base_type": "short unsigned int"
+            },
+            {
+              "name": "CFEMajorVersion",
+              "bit_offset": 32,
+              "bit_size": 8,
+              "base_type": "unsigned char"
+            },
+            {
+              "name": "CFEMinorVersion",
+              "bit_offset": 40,
+              "bit_size": 8,
+              "base_type": "unsigned char"
+            },
+            {
+              "name": "CFERevision",
+              "bit_offset": 48,
+              "bit_size": 8,
+              "base_type": "unsigned char"
+            },
+            {
+              "name": "CFEMissionRevision",
+              "bit_offset": 56,
+              "bit_size": 8,
+              "base_type": "unsigned char"
+            },
+            {
+              "name": "OSALMajorVersion",
+              "bit_offset": 64,
+              "bit_size": 8,
+              "base_type": "unsigned char"
+            },
+            {
+              "name": "OSALMinorVersion",
+              "bit_offset": 72,
+              "bit_size": 8,
+              "base_type": "unsigned char"
+            },
+            {
+              "name": "OSALRevision",
+              "bit_offset": 80,
+              "bit_size": 8,
+              "base_type": "unsigned char"
+            },
+            {
+              "name": "OSALMissionRevision",
+              "bit_offset": 88,
+              "bit_size": 8,
+              "base_type": "unsigned char"
+            },
+            {
+              "name": "SysLogBytesUsed",
+              "bit_offset": 96,
+              "bit_size": 32,
+              "base_type": "long unsigned int"
+            },
+            {
+              "name": "SysLogSize",
+              "bit_offset": 128,
+              "bit_size": 32,
+              "base_type": "long unsigned int"
+            },
+            {
+              "name": "SysLogEntries",
+              "bit_offset": 160,
+              "bit_size": 32,
+              "base_type": "long unsigned int"
+            },
+            {
+              "name": "SysLogMode",
+              "bit_offset": 192,
+              "bit_size": 32,
+              "base_type": "long unsigned int"
+            },
+            {
+              "name": "ERLogIndex",
+              "bit_offset": 224,
+              "bit_size": 32,
+              "base_type": "long unsigned int"
+            },
+            {
+              "name": "ERLogEntries",
+              "bit_offset": 256,
+              "bit_size": 32,
+              "base_type": "long unsigned int"
+            },
+            {
+              "name": "RegisteredCoreApps",
+              "bit_offset": 288,
+              "bit_size": 32,
+              "base_type": "long unsigned int"
+            },
+            {
+              "name": "RegisteredExternalApps",
+              "bit_offset": 320,
+              "bit_size": 32,
+              "base_type": "long unsigned int"
+            },
+            {
+              "name": "RegisteredTasks",
+              "bit_offset": 352,
+              "bit_size": 32,
+              "base_type": "long unsigned int"
+            },
+            {
+              "name": "RegisteredLibs",
+              "bit_offset": 384,
+              "bit_size": 32,
+              "base_type": "long unsigned int"
+            },
+            {
+              "name": "ResetType",
+              "bit_offset": 416,
+              "bit_size": 32,
+              "base_type": "long unsigned int"
+            },
+            {
+              "name": "ResetSubtype",
+              "bit_offset": 448,
+              "bit_size": 32,
+              "base_type": "long unsigned int"
+            },
+            {
+              "name": "ProcessorResets",
+              "bit_offset": 480,
+              "bit_size": 32,
+              "base_type": "long unsigned int"
+            },
+            {
+              "name": "MaxProcessorResets",
+              "bit_offset": 512,
+              "bit_size": 32,
+              "base_type": "long unsigned int"
+            },
+            {
+              "name": "BootSource",
+              "bit_offset": 544,
+              "bit_size": 32,
+              "base_type": "long unsigned int"
+            },
+            {
+              "name": "PerfState",
+              "bit_offset": 576,
+              "bit_size": 32,
+              "base_type": "long unsigned int"
+            },
+            {
+              "name": "PerfMode",
+              "bit_offset": 608,
+              "bit_size": 32,
+              "base_type": "long unsigned int"
+            },
+            {
+              "name": "PerfTriggerCount",
+              "bit_offset": 640,
+              "bit_size": 32,
+              "base_type": "long unsigned int"
+            },
+            {
+              "name": "PerfFilterMask",
+              "bit_offset": 672,
+              "bit_size": 128,
+              "array": true,
+              "count": 4,
+              "type": {
+                "name": "long unsigned int",
+                "bit_size": 32,
+                "base_type": "long unsigned int"
+              }
+            },
+            {
+              "name": "PerfTriggerMask",
+              "bit_offset": 800,
+              "bit_size": 128,
+              "array": true,
+              "count": 4,
+              "type": {
+                "name": "long unsigned int",
+                "bit_size": 32,
+                "base_type": "long unsigned int"
+              }
+            },
+            {
+              "name": "PerfDataStart",
+              "bit_offset": 928,
+              "bit_size": 32,
+              "base_type": "long unsigned int"
+            },
+            {
+              "name": "PerfDataEnd",
+              "bit_offset": 960,
+              "bit_size": 32,
+              "base_type": "long unsigned int"
+            },
+            {
+              "name": "PerfDataCount",
+              "bit_offset": 992,
+              "bit_size": 32,
+              "base_type": "long unsigned int"
+            },
+            {
+              "name": "PerfDataToWrite",
+              "bit_offset": 1024,
+              "bit_size": 32,
+              "base_type": "long unsigned int"
+            },
+            {
+              "name": "HeapBytesFree",
+              "bit_offset": 1056,
+              "bit_size": 32,
+              "base_type": "long unsigned int"
+            },
+            {
+              "name": "HeapBlocksFree",
+              "bit_offset": 1088,
+              "bit_size": 32,
+              "base_type": "long unsigned int"
+            },
+            {
+              "name": "HeapMaxBlockSize",
+              "bit_offset": 1120,
+              "bit_size": 32,
+              "base_type": "long unsigned int"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

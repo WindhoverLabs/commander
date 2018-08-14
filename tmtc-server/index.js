@@ -37,6 +37,8 @@ var Parser = require("binary-parser").Parser;
 const net = require('net');
 var events = require('events');
 var Emitter = require('events').EventEmitter;
+var fs = require('fs');
+const util = require('util');
 
 var emit = Emitter.prototype.emit;
 
@@ -82,6 +84,7 @@ function TmTcServer(options) {
           .uint32('seconds')
           .uint16('subseconds')
           .buffer('payload', {readUntil: 'eof'});
+        this.headerLength = 96;
     	break;
     	  
       case 'CFE_SB_TIME_32_32_SUBS':
@@ -90,7 +93,8 @@ function TmTcServer(options) {
           .uint32('seconds')
           .uint32('subseconds')
           .buffer('payload', {readUntil: 'eof'});
-    	  break;
+        this.headerLength = 98;
+    	break;
     	  
       case 'CFE_SB_TIME_32_32_M_20':
         this.ccsdsTlmSecHdr = new Parser()
@@ -98,16 +102,19 @@ function TmTcServer(options) {
           .uint32('seconds')
           .uint32('subseconds')
           .buffer('payload', {readUntil: 'eof'});
-    	  break;
+        this.headerLength = 98;
+    	break;
     	  
       default:
-	      break;
+	    break;
     }
     
     for(var i = 0; i < options.msgDefs.length; ++i) {
-    	require(options.msgDefs[i].file);
+    	this.parseMsgDefFile(options.msgDefs[i].file);
     }
 };
+
+
 
 /**
  * Inherits from `EventEmitter`.
@@ -125,7 +132,7 @@ TmTcServer.prototype.processMessage = function (buffer) {
     
 	message.priHdr = this.ccsdsPriHdr.parse(buffer);
 	
-	if(message.pktType == 0) {
+	if(message.priHdr.pktType == 0) {
 		/* This is a telemetry message. */
 		message.secHdr = this.ccsdsTlmSecHdr.parse(message.priHdr.payload);
 		message.secHdr.time = this.cfeTimeToJsTime(message.secHdr.seconds, message.secHdr.subseconds)
@@ -144,17 +151,105 @@ TmTcServer.prototype.processMessage = function (buffer) {
 
     if(typeof parser !== 'undefined') {
     	message.payload = parser.parse(message.payload);
-    	console.log('***************************************');
-    	console.log(message);
+        console.log(util.inspect(message, {showHidden: false, depth: null}));
     }
 };
 
 
 
-TmTcServer.prototype.addMessageParser = function (msgID, parser)
-{
+TmTcServer.prototype.addMessageParser = function (msgID, parser) {
 	this.parsers[msgID] = parser;
 }
+
+
+
+TmTcServer.prototype.parseMsgDefFile = function (filePath) {
+	var bitPosition = 0;
+
+	var msgDef = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+
+	var parser = new Parser();
+	if(msgDef.little_endian == true) {
+		parser.endianess('little');
+	} else {
+		parser.endianess('big');
+	}
+
+	for(var i = 0; i < msgDef.symbols.length; ++i) {
+		var symbol = msgDef.symbols[i];
+				
+		if(typeof symbol.msgID !== 'undefined') {
+			for(var j=0; j < symbol.fields.length; ++j) {
+				if(msgDef.little_endian == true) {
+  		    	    bitPosition = this.parseFieldDef(parser, symbol.fields[j], bitPosition, 'le');
+				} else {
+					bitPosition = this.parseFieldDef(parser, symbol.fields[j], bitPosition, 'be');
+  		    	}
+			}
+
+	        this.addMessageParser(symbol.msgID, parser);
+		}
+	};
+}
+
+
+
+TmTcServer.prototype.parseFieldDef = function (parser, field, bitPosition, endian) {
+	if(typeof field.array !== 'undefined') {
+		console.log(field.name);
+		if(bitPosition >= this.headerLength) {
+			switch(field.type.base_type) {
+ 		        case 'unsigned char':
+ 		        	parser.array(field.name, {
+ 		               type: 'uint8',
+ 		               length: field.count
+ 		            });
+ 		        	break;
+ 		        	
+ 		        case 'short unsigned int':
+ 		        	parser.array(field.name, {
+  		               type: 'uint16' + endian,
+  		               length: field.count
+  		            });
+ 		        	break;
+ 		        	
+			    case 'long unsigned int':
+			    	parser.array(field.name, {
+  		               type: 'uint32' + endian,
+  		               length: field.count
+  		            });
+ 		        	break;
+			}
+		}
+		bitPosition += (field.type.bit_size * field.count);
+	} else if(Array.isArray(field.fields)) {
+		for(var i=0; i < field.fields.length; ++i) {
+	    	bitPosition = this.parseFieldDef(parser, field.fields[i], bitPosition, endian);
+		}
+	} else {
+		console.log(field.name);
+		if(bitPosition >= this.headerLength) {
+			switch(field.base_type) {
+		        case 'unsigned char':
+		        	parser.uint8(field.name);
+		        	break;
+		        	
+		        case 'short unsigned int':
+		        	parser.uint16(field.name);
+		        	break;
+		        	
+		        case 'long unsigned int':
+		        	parser.uint32(field.name);
+		        	break;
+		    }
+		}
+		bitPosition += field.bit_size;
+	}
+	
+	return bitPosition;
+}
+
+
 
 TmTcServer.prototype.cfeTimeToJsTime = function(seconds, subseconds) {
     var microseconds;
