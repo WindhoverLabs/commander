@@ -13,6 +13,7 @@ html(lang='en-us')
     script(type="text/javascript" src='/scripts/wolfy87-eventemitter/EventEmitter.js')
     script(type="text/javascript" src='/scripts/socket.io-client/dist/socket.io.js')
     script(type="text/javascript" src="//golden-layout.com/files/latest/js/goldenlayout.min.js")
+    script(type="text/javascript" src="/scripts/overlayscrollbars/js/jquery.overlayScrollbars.min.js")
     script.
       /* var session = new TrickComm();
 
@@ -20,6 +21,7 @@ html(lang='en-us')
       session.on('connect', function() {
           console.log('Connected');
       }); */
+    link(rel="stylesheet" type="text/css" href="/scripts/overlayscrollbars/css/OverlayScrollbars.min.css")
     link(rel="stylesheet" type="text/css" href="/scripts/patternfly-bootstrap-treeview/dist/bootstrap-treeview.min.css")
     link(rel="stylesheet" type="text/css" href="/scripts/bootstrap/dist/css/bootstrap.min.css")
     link(rel="stylesheet" type="text/css" href="/css/commander.css")
@@ -52,19 +54,19 @@ html(lang='en-us')
               a.dropdown-item(href="#") ocpoc/default
               a.dropdown-item(href="#") bebop2/sitl
               a.dropdown-item(href="#") bebop2/default
+        ul.wh-nav-btn(data-toggle="tooltip" data-placement="left" title="Show/Hide Side Menu")
+            button#menuToggle.btn.btn-outline-primary(data-toggle="popover" title="Popover title" data-content="<div id= 'menuContainer'></div>")
+              i#menuIcon.fa.fa-bars   
+            div#menuContainer 
         ul.wh-nav-btn(data-toggle="tooltip" data-placement="bottom" title="Load page layout")
             button.btn.btn-outline-primary( data-toggle="modal" data-target="#genericInputModal" data-title="Load Layout" data-submit="LoadLayout" data-custom='[{"label":"Load Layout", "type":"dropdown", "getItem":"GetStoredLayoutList"}]') 
               i.fa.fa-cubes
         ul.wh-nav-btn(data-toggle="tooltip" data-placement="bottom" title="Save page layout")
             button.btn.btn-outline-primary(data-toggle="modal" data-target="#genericInputModal" data-title="Save Layout" data-submit="SaveLayout" data-custom='[{"label":"Save Layout", "type":"field" }]') 
               i.fa.fa-save 
-        ul.wh-nav-btn(data-toggle="tooltip" data-placement="bottom" title="Show/Hide Side Menu")
-            button#menuToggle.btn.btn-outline-primary
-              i#menuIcon.fa.fa-bars      
+  
     div.ui.main.text.container
       #wrapper
-        div#menuWrapper
-          div#menuContainer
         #layoutContainer
         #main-content
     nav.navbar.fixed-bottom.navbar-expand-lg.navbar-dark.bg-dark(style="max-height:10px;box-shadow: 0px -1px 2px #fff;")    

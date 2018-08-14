@@ -1,4 +1,8 @@
 /* App style */
+::-webkit-scrollbar {
+    width: 0px;
+    background: transparent; /* make scrollbar transparent */
+}
 
 body {
   background-color:  #fff;
@@ -59,8 +63,8 @@ html, body {
 #menuContainer {
   width: auto;
   position:absolute;
-  top: 10%;
-  left: -10%;
+  /* top: 10%;
+  left: -10%; */
   z-index: 4;
 }
 
@@ -77,7 +81,6 @@ html, body {
 }
 
 /* Layout */
-
 .container {
   padding-left: 0px !important;
   padding-right: 0px !important;
@@ -140,6 +143,49 @@ html, body {
 
 /* Widget CSS*/
 
+/* color themes */
+:root {
+    --btn-bg-color:     #ffae00;
+    --btn-font-color-d: #343a40;
+    --btn-font-color-l: #fff;
+    --btn-bg-hvr-color: #ffae00b3;
+
+
+    --header-bg-color:  #a06d00 ;
+    --content-bg-color: #25518080;
+
+    --th-bg-color:      #25518080;
+    --td-border-color:  #074486;
+    --td-bg-color:      #2551804d;
+}
+
+header {
+  background: var(--header-bg-color);
+  border-radius: 5px;
+}
+
+header > .widget-icon {
+	display: block;
+	width: 30px;
+	height: 32px;
+	position: relative;
+	float: left;
+	font-size: 111%;
+	line-height: 32px;
+	text-align: center;
+	margin-right: -10px;
+  padding-top:10px;
+  padding-left: 10px;
+}
+
+.row {
+  width:inherit;
+  height: inherit;
+  padding: 1% !important;
+  overflow: auto;
+  margin: unset !important;
+}
+
 .table-condensed.table > tbody > tr > td,
 .table-condensed.table > tbody > tr > th,
 .table-condensed.table > tfoot > tr > td,
@@ -147,28 +193,43 @@ html, body {
 .table-condensed.table > thead > tr > td,
 .table-condensed.table > thead > tr > th {
   padding: 5px 10px !important;
-  border: 1px solid green;
+  border: 1px solid var(--td-border-color) !important;
+  font-size: 12px;
+  background-color: var(--td-bg-color);
 }
 
-.widget-body>footer>button {
-  padding: 5px 10px !important;
-  border: 5px solid #222;
+.table-condensed.table > tbody > tr > th,
+.table-condensed.table > tfoot > tr > th,
+.table-condensed.table > thead > tr > th {
+  background-color: var(--th-bg-color);
+  width: 50%;
 }
 
-.row.row-fluid {
-  padding: 5% !important;
-  overflow: auto;
-
+.widget-graph {
+  background-color: var(--content-bg-color);
 }
 
-.centercontainer {
-  display: block;
-  width: -moz-fit-content; /* Firefox */
-  width: fit-content; /* Chrome */
-  margin-left: auto;
-  margin-right: auto;
+footer > button {
+  padding: 2px 10px !important;
+  margin: 5px;
+  border-radius: 5px !important;
 }
 
+footer > .btn-primary {
+    background-color:  #fff0;
+}
+footer {
+  display: block !important;
+  padding: 10px;
+}
+
+header > button {
+  float:right;
+  font-size: small !important;
+  position: relative;
+  margin: 4px;
+  padding: 4px !important;
+}
 /* Features */
 
 .rotate-right-left {
@@ -183,4 +244,43 @@ html, body {
     -o-transform: rotate(0deg);
     -webkit-transform: rotate(0deg);
     transform: rotate(0deg);
+}
+
+/* buttons */
+.btn-primary,
+.btn-primary:hover {
+  color: var(--btn-font-color-l);
+}
+
+.btn-outline-primary,
+.btn-outline-primary:hover {
+  color: var(--btn-font-color-d);
+}
+
+.btn-primary,
+.btn-outline-primary {
+  background-color: var(--btn-bg-color);
+  border-color: var(--btn-bg-color);
+}
+
+.btn-primary:hover,
+.btn-outline-primary:hover  {
+  background-color: var(--btn-bg-hvr-color);
+  border-color: var(--btn-bg-hvr-color);
+}
+
+.btn-outline-primary:not(:disabled):not(.disabled).active,
+.btn-outline-primary:not(:disabled):not(.disabled):active,
+.show > .btn-outline-primary.dropdown-toggle {
+    color: var(--btn-bg-color);
+    background-color: color: var(--btn-font-color-d);
+    border-color: var(--btn-bg-color);
+}
+
+.btn-outline-primary:not(:disabled):not(.disabled).active:focus,
+.btn-outline-primary:not(:disabled):not(.disabled):active:focus,
+.show > .btn-outline-primary.dropdown-toggle:focus {
+    box-shadow: unset !important;
+
+
 }
