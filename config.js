@@ -40,10 +40,18 @@ const config = {
     CFE_TIME_EPOCH_HOUR:       0,
     CFE_TIME_EPOCH_MINUTE:     0,
     CFE_TIME_EPOCH_SECOND:     0,
-    tlmPort:                   5011,
-    cmdPort:                   5010,
+    binTlmPort:                5011,
+    binCmdPort:                5010,
+    pbTlmPort:                 5012,
+    pbCmdPort:                 5013,
     msgDefs: [
     	{file: './output.json'}
+    ],
+    protoDefs: [
+    	{msg_id: 2048, file: './proto_defs/es_hk.proto'},
+    	{msg_id: 2644, file: './proto_defs/px4_vehicle_global_position_msg.proto'},
+    	{msg_id: 3156, file: './proto_defs/gps_hk.proto'},
+    	{msg_id: 3157, file: './proto_defs/sens_hk.proto'}
     ]
 }
 

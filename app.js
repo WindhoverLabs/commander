@@ -44,7 +44,8 @@ var test2 = require('./routes/testpage2');
 
 var TmTcServer = require('./tmtc-server');
 const dgram = require('dgram');
-const server = dgram.createSocket('udp4');
+const binServer = dgram.createSocket('udp4');
+const pbServer = dgram.createSocket('udp4');
 var Parser = require("binary-parser").Parser;
 var fs = require('fs');
 const util = require('util');
@@ -156,22 +157,44 @@ io.on('connection', function(socket) {
 var tmtc = new TmTcServer(config);
 
 
-server.on('error', (err) => {
-  console.log(`server error:\n${err.stack}`);
+binServer.on('error', (err) => {
+  console.log(`binServer error:\n${err.stack}`);
   server.close();
 });
 
-server.on('message', (msg, rinfo) => {
-  //console.log(`server got: ${msg} from ${rinfo.address}:${rinfo.port}`);
-  tmtc.processMessage(msg);
+binServer.on('message', (msg, rinfo) => {
+  //console.log(`binServer got: ${msg} from ${rinfo.address}:${rinfo.port}`);
+  tmtc.processBinaryMessage(msg);
 });
 
-server.on('listening', () => {
-  const address = server.address();
-  console.log(`server listening ${address.address}:${address.port}`);
+binServer.on('listening', () => {
+  const address = binServer.address();
+  console.log(`binServer listening ${address.address}:${address.port}`);
 });
 
-console.log('Stating UDP listener');
-server.bind(5011);
+console.log('Stating binary UDP listener');
+binServer.bind(config.binTlmPort);
+
+
+
+
+
+pbServer.on('error', (err) => {
+  console.log(`pbServer error:\n${err.stack}`);
+  server.close();
+});
+
+pbServer.on('message', (msg, rinfo) => {
+  //console.log(`pbServer got: ${msg} from ${rinfo.address}:${rinfo.port}`);
+  tmtc.processPBMessage(msg);
+});
+
+pbServer.on('listening', () => {
+  const address = pbServer.address();
+  console.log(`pbServer listening ${address.address}:${address.port}`);
+});
+
+console.log('Stating pb UDP listener');
+pbServer.bind(config.pbTlmPort);
 
 module.exports = app;

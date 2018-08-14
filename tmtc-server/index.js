@@ -39,6 +39,8 @@ var events = require('events');
 var Emitter = require('events').EventEmitter;
 var fs = require('fs');
 const util = require('util');
+var protobuf = require('protobufjs');
+var Promise = require('promise');
 
 var emit = Emitter.prototype.emit;
 
@@ -56,6 +58,9 @@ function (emitter, type) { return emitter.listeners(type).length }
 function TmTcServer(options) {
     this.parsers = {};
     this.options = options;
+    this.cmdDefs = {};
+    this.tlm = {};
+    this.protoDefs = {};
     
     this.ccsdsPriHdr = new Parser()
       .endianess('big')
@@ -114,9 +119,12 @@ function TmTcServer(options) {
     	})
         .buffer('payload', {readUntil: 'eof'});
    
-      
     for(var i = 0; i < options.msgDefs.length; ++i) {
     	this.parseMsgDefFile(options.msgDefs[i].file);
+    }
+   
+    for(var i = 0; i < options.protoDefs.length; ++i) {
+    	this.parseProtoFile(options.protoDefs[i].msg_id, options.protoDefs[i].file);
     }
 };
 
@@ -129,47 +137,34 @@ TmTcServer.prototype.__proto__ = Emitter.prototype;
 
 
 
-TmTcServer.prototype.processMessage = function (buffer) {
+TmTcServer.prototype.processBinaryMessage = function (buffer) {
     var msgID = buffer.readUInt16BE(0);
     
     var parser = this.parsers[msgID];
     
-    //var message = {};
+	var message = this.ccsds.parse(buffer);
+
+    if(typeof parser !== 'undefined') {
+    	message.payload = parser.parse(message.payload);
+    }
+};
+
+
+
+TmTcServer.prototype.processPBMessage = function (buffer) {
+    var msgID = buffer.readUInt16BE(0);
+    
+    var pbRoot = this.protoDefs[msgID];
     
 	var message = this.ccsds.parse(buffer);
-	
-	//console.log(message);
-	
-	//if(message.priHdr.pktType == 0) {
-	//	/* This is a telemetry message. */
-	//	message.secHdr = this.ccsdsTlmSecHdr.parse(message.priHdr.payload);
-	//	message.secHdr.time = this.cfeTimeToJsTime(message.secHdr.seconds, message.secHdr.subseconds)
-	//} else {
-	//	/* This is a command message. */
-	//	message.secHdr = this.ccsdsCmdSecHdr.parse(message.priHdr.payload);
-	//}
-	
-	//delete message.priHdr.payload;
-	//message.payload = message.secHdr.payload;
-	//delete message.secHdr.payload;
-	
-	//if(message.priHdr.length != (message.payload.length + 7)) {
-	//	/* TODO:  Length does not match actual received length. */
-	//}
 
-	//if(msgID == 2053) {
-    if(typeof parser !== 'undefined') {
-    	//console.log('*****************************');
-    	//console.log(msgID);
-    	//console.log(buffer);
-    	//console.log(message);
-    	//console.log(parser.getCode());
-    	//console.log('*****************************');
-    	message.payload = parser.parse(message.payload);
-    	//console.log('*****************************');
-        console.log(util.inspect(message, {showHidden: false, depth: null}));
+    if(typeof pbRoot !== 'undefined') {
+    	var msgName = Object.keys(pbRoot.nested)[0];
+    	var pbMessage = pbRoot.lookupType(msgName);
+    	
+    	message.payload = pbMessage.decode(message.payload);
+    	console.log(message);
     }
-	//}
 };
 
 
@@ -180,9 +175,31 @@ TmTcServer.prototype.addMessageParser = function (msgID, parser) {
 
 
 
+TmTcServer.prototype.addCommandDefinition = function (ops_name) {
+	this.parsers[msgID] = parser;
+}
+
+
+
+TmTcServer.prototype.parseProtoFile = function (msgID, filePath) {
+	var self = this;
+	
+	console.log('Loading ' + filePath);
+	protobuf.load(filePath, function(err, root) {
+		if (err)
+			throw err;
+		
+    	console.log('Loaded ' + filePath);
+		self.protoDefs[msgID] = root;
+	});
+}
+
+
+
 TmTcServer.prototype.parseMsgDefFile = function (filePath) {
 	var msgDef = JSON.parse(fs.readFileSync(filePath, 'utf8'));
 
+	/* Parse the telemetry. */
 	for(var i = 0; i < msgDef.symbols.length; ++i) {
 		var symbol = msgDef.symbols[i];
 		var bitPosition = 0;
@@ -207,6 +224,13 @@ TmTcServer.prototype.parseMsgDefFile = function (filePath) {
 	        this.addMessageParser(symbol.msgID, parser);
 		}
 	};
+
+	/* Parse the command definitions. */
+	for(var key in msgDef.cmds) {
+		if(msgDef.cmds.hasOwnProperty(key)) {
+			//console.log(key, msgDef.cmds[key]);
+		}
+	}
 }
 
 
@@ -398,4 +422,10 @@ TmTcServer.prototype.cfeTimeToJsTime = function(seconds, subseconds) {
     jsDateTime.setMilliseconds(jsDateTime.getMilliseconds() + (microseconds / 1000));
   
     return jsDateTime;
+}
+
+
+
+TmTcServer.prototype.getCommandDef = function (ops_name) {	
+	var retObj = {};
 }
