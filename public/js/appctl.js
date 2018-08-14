@@ -441,12 +441,12 @@ var menuOpen = false;
 function InitMenuState(){
   $("#menuToggle").click(()=>{
     if(!menuOpen){
-      // $("#menuContainer").animate({left: "0%"});
+      $("#menuContainer").animate({left: "0%"});
       $("#menuToggle").addClass("active");
       menuOpen = true;
     }
     else{
-      // $("#menuContainer").animate({left: "-20%"});
+      $("#menuContainer").animate({left: "-20%"});
       $("#menuToggle").removeClass("active");
       menuOpen = false;
     }
