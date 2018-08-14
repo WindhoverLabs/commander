@@ -57,8 +57,6 @@ function TmTcServer(options) {
     this.parsers = {};
     this.options = options;
     
-    console.log(options);
-    
     this.ccsdsPriHdr = new Parser()
       .endianess('big')
       .bit3('version')
@@ -67,23 +65,20 @@ function TmTcServer(options) {
       .bit11('apid')
       .bit2('segment')
       .bit14('sequence')
-      .uint16('length')
-      .buffer('payload', {readUntil: 'eof'});
+      .uint16('length');
     
 	this.ccsdsCmdSecHdr = new Parser()
 	  .endianess('little')
 	  .bit1('reserved')
 	  .bit7('code')
-	  .uint8('checksum')
-      .buffer('payload', {readUntil: 'eof'});
+	  .uint8('checksum');
     
     switch(options.CFE_SB_PACKET_TIME_FORMAT) {
       case 'CFE_SB_TIME_32_16_SUBS':
         this.ccsdsTlmSecHdr = new Parser()
     	  .endianess('little')
           .uint32('seconds')
-          .uint16('subseconds')
-          .buffer('payload', {readUntil: 'eof'});
+          .uint16('subseconds');
         this.headerLength = 96;
     	break;
     	  
@@ -91,8 +86,7 @@ function TmTcServer(options) {
         this.ccsdsTlmSecHdr = new Parser()
     	  .endianess('little')
           .uint32('seconds')
-          .uint32('subseconds')
-          .buffer('payload', {readUntil: 'eof'});
+          .uint32('subseconds');
         this.headerLength = 98;
     	break;
     	  
@@ -100,15 +94,27 @@ function TmTcServer(options) {
         this.ccsdsTlmSecHdr = new Parser()
     	  .endianess('little')
           .uint32('seconds')
-          .uint32('subseconds')
-          .buffer('payload', {readUntil: 'eof'});
+          .uint32('subseconds');
         this.headerLength = 98;
     	break;
     	  
       default:
 	    break;
     }
-    
+
+    this.ccsds = new Parser()
+        .endianess('little')
+        .nest('PriHdr', {type: this.ccsdsPriHdr})
+        .choice('SecHdr', {
+    	    tag: 'PriHdr.pktType',
+    	    choices: {
+    	        0: this.ccsdsTlmSecHdr,
+    	        1: this.ccsdsCmdSecHdr
+    	    }
+    	})
+        .buffer('payload', {readUntil: 'eof'});
+   
+      
     for(var i = 0; i < options.msgDefs.length; ++i) {
     	this.parseMsgDefFile(options.msgDefs[i].file);
     }
@@ -128,31 +134,42 @@ TmTcServer.prototype.processMessage = function (buffer) {
     
     var parser = this.parsers[msgID];
     
-    var message = {};
+    //var message = {};
     
-	message.priHdr = this.ccsdsPriHdr.parse(buffer);
+	var message = this.ccsds.parse(buffer);
 	
-	if(message.priHdr.pktType == 0) {
-		/* This is a telemetry message. */
-		message.secHdr = this.ccsdsTlmSecHdr.parse(message.priHdr.payload);
-		message.secHdr.time = this.cfeTimeToJsTime(message.secHdr.seconds, message.secHdr.subseconds)
-	} else {
-		/* This is a command message. */
-		message.secHdr = this.ccsdsCmdSecHdr.parse(message.priHdr.payload);
-	}
+	//console.log(message);
 	
-	delete message.priHdr.payload;
-	message.payload = message.secHdr.payload;
-	delete message.secHdr.payload;
+	//if(message.priHdr.pktType == 0) {
+	//	/* This is a telemetry message. */
+	//	message.secHdr = this.ccsdsTlmSecHdr.parse(message.priHdr.payload);
+	//	message.secHdr.time = this.cfeTimeToJsTime(message.secHdr.seconds, message.secHdr.subseconds)
+	//} else {
+	//	/* This is a command message. */
+	//	message.secHdr = this.ccsdsCmdSecHdr.parse(message.priHdr.payload);
+	//}
 	
-	if(message.priHdr.length != (message.payload.length + 7)) {
-		/* TODO:  Length does not match actual received length. */
-	}
+	//delete message.priHdr.payload;
+	//message.payload = message.secHdr.payload;
+	//delete message.secHdr.payload;
+	
+	//if(message.priHdr.length != (message.payload.length + 7)) {
+	//	/* TODO:  Length does not match actual received length. */
+	//}
 
+	//if(msgID == 2053) {
     if(typeof parser !== 'undefined') {
+    	//console.log('*****************************');
+    	//console.log(msgID);
+    	//console.log(buffer);
+    	//console.log(message);
+    	//console.log(parser.getCode());
+    	//console.log('*****************************');
     	message.payload = parser.parse(message.payload);
+    	//console.log('*****************************');
         console.log(util.inspect(message, {showHidden: false, depth: null}));
     }
+	//}
 };
 
 
@@ -164,21 +181,21 @@ TmTcServer.prototype.addMessageParser = function (msgID, parser) {
 
 
 TmTcServer.prototype.parseMsgDefFile = function (filePath) {
-	var bitPosition = 0;
-
 	var msgDef = JSON.parse(fs.readFileSync(filePath, 'utf8'));
-
-	var parser = new Parser();
-	if(msgDef.little_endian == true) {
-		parser.endianess('little');
-	} else {
-		parser.endianess('big');
-	}
 
 	for(var i = 0; i < msgDef.symbols.length; ++i) {
 		var symbol = msgDef.symbols[i];
+		var bitPosition = 0;
 				
 		if(typeof symbol.msgID !== 'undefined') {
+    		var parser = new Parser();
+    		
+    		if(msgDef.little_endian == true) {
+    			parser.endianess('little');
+    		} else {
+    			parser.endianess('big');
+    		}
+    		
 			for(var j=0; j < symbol.fields.length; ++j) {
 				if(msgDef.little_endian == true) {
   		    	    bitPosition = this.parseFieldDef(parser, symbol.fields[j], bitPosition, 'le');
@@ -194,58 +211,122 @@ TmTcServer.prototype.parseMsgDefFile = function (filePath) {
 
 
 
-TmTcServer.prototype.parseFieldDef = function (parser, field, bitPosition, endian) {
+TmTcServer.prototype.parseFieldDef = function (parser, field, bitPosition, endian) {	
+	var retObj = {};
+	
 	if(typeof field.array !== 'undefined') {
-		console.log(field.name);
 		if(bitPosition >= this.headerLength) {
-			switch(field.type.base_type) {
- 		        case 'unsigned char':
- 		        	parser.array(field.name, {
- 		               type: 'uint8',
- 		               length: field.count
- 		            });
- 		        	break;
+			if(typeof field.type.base_type !== 'undefined'){
+  			    switch(field.type.base_type) {
+ 		            case 'unsigned char':
+ 		        	    parser.array(field.name, {
+ 		                    type: 'uint8',
+ 		                    length: field.count
+ 		                });
+ 		        	    break;
  		        	
- 		        case 'short unsigned int':
- 		        	parser.array(field.name, {
-  		               type: 'uint16' + endian,
-  		               length: field.count
-  		            });
- 		        	break;
+ 		            case 'char':
+ 		               	parser.string(field.name, {
+ 		               	    encoding: 'ascii',
+ 		                    length: field.count
+ 		                });
+ 		                break;
  		        	
-			    case 'long unsigned int':
-			    	parser.array(field.name, {
-  		               type: 'uint32' + endian,
-  		               length: field.count
-  		            });
- 		        	break;
+ 		            case 'short unsigned int':
+ 		        	    parser.array(field.name, {
+  		                    type: 'uint16' + endian,
+  		                    length: field.count
+  		                });
+ 		        	    break;
+ 		        	
+ 		            case 'short int':
+ 		        	    parser.array(field.name, {
+  		                    type: 'int16' + endian,
+  		                    length: field.count
+  		                });
+ 		        	    break;
+ 		        	
+			        case 'long unsigned int':
+			    	    parser.array(field.name, {
+  		                    type: 'uint32' + endian,
+  		                    length: field.count
+  		                });
+ 		        	    break;
+ 		        	
+			        case 'long int':
+			    	    parser.array(field.name, {
+  		                    type: 'uint32' + endian,
+  		                    length: field.count
+  		                });
+ 		        	    break;
+ 		        	
+ 		            default:
+ 		        	    console.log('Unsupported type');
+		        	    console.log(field);
+ 		                exit(-1);
+  			    }
+			} else {
+				for(var i=0; i < field.type.fields.length; ++i) {
+					//var newParser = new Parser();
+					//if(endian == 'le') {
+					//	newParser.endianess('little');
+					//} else {
+					//	newParser.endianess('big');
+					//}
+			    	//bitPosition = this.parseFieldDef(newParser, field.type.fields[i], bitPosition, endian);
+			    	//parser.nest(field.name, {type: newParser});
+			    	bitPosition = this.parseFieldDef(parser, field.type.fields[i], bitPosition, endian);
+				}
 			}
 		}
 		bitPosition += (field.type.bit_size * field.count);
 	} else if(Array.isArray(field.fields)) {
 		for(var i=0; i < field.fields.length; ++i) {
+			//var newParser = new Parser();
+			//if(endian == 'le') {
+			//	newParser.endianess('little');
+			//} else {
+			//	newParser.endianess('big');
+			//}
+	    	//bitPosition = this.parseFieldDef(newParser, field.fields[i], bitPosition, endian);
+	    	//parser.nest(field.name, {type: newParser});
 	    	bitPosition = this.parseFieldDef(parser, field.fields[i], bitPosition, endian);
 		}
 	} else {
-		console.log(field.name);
 		if(bitPosition >= this.headerLength) {
 			switch(field.base_type) {
 		        case 'unsigned char':
 		        	parser.uint8(field.name);
 		        	break;
 		        	
+		        case 'char':
+		        	parser.int8(field.name);
+		        	break;
+		        	
 		        case 'short unsigned int':
 		        	parser.uint16(field.name);
+		        	break;
+		        	
+		        case 'short int':
+		        	parser.int16(field.name);
 		        	break;
 		        	
 		        case 'long unsigned int':
 		        	parser.uint32(field.name);
 		        	break;
+		        	
+		        case 'long int':
+		        	parser.int32(field.name);
+		        	break;
+ 		        	
+ 		        default:
+ 		        	console.log('Unsupported type ' + field);
+ 		            exit(-1);
 		    }
 		}
 		bitPosition += field.bit_size;
 	}
-	
+
 	return bitPosition;
 }
 
