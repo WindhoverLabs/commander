@@ -1,0 +1,20 @@
+.row.os-theme-dark
+  article.col-xs-12.col-sm-12
+    header
+      span.widget-icon
+        i.fa.fa-table
+      h2 General
+    div.widget-body.table-responsive
+      table.table.table-condensed
+            tbody
+              tr
+                th Cmd Count
+                td
+                  span.sage-tlm(data-sage={tlm:[{name:'/CFS/FLOW/CmdCounter'}]}) ---
+              tr
+                th Error Count
+                td
+                  span(data-sage={tlm:[{name:'/CFS/FLOW/ErrCounter'}]}) ---   
+    footer.btn-group(role="group")
+      button.btn.btn-primary(data-sage={cmd:{name:'/CFS/FLOW/NoOp'}}) No-Op
+      button.btn.btn-primary(data-sage={cmd:{name:'/CFS/FLOW/Reset'}}) Reset      

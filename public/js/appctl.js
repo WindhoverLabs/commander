@@ -5,6 +5,8 @@
    Modal
    Side menu
    ToolTips
+   Popover
+   Scrollbar
    Resize */
 
 /* Directory Listing */
@@ -86,8 +88,8 @@ function fakeDirData(id){
   ];
   let testNode =   {
       "icon": "fa fa-file",
-      "path": "/flow",
-      "text": "flow1",
+      "path": "/flow_general",
+      "text": "FLOW General",
       "size": 4096,
       "mtime": "2018-08-09T15:30:50.247Z",
       "type": "file",
@@ -95,12 +97,12 @@ function fakeDirData(id){
       "selectable":true,
       "checkable":false,
       "ext": "/apps/flow",
-      "path": "testpage1"
+      "path": "flow_general"
     }
   let testNode1 =   {
       "icon": "fa fa-file",
-      "path": "/flow",
-      "text": "flow1",
+      "path": "/flow_hk",
+      "text": "FLOW HK",
       "size": 4096,
       "mtime": "2018-08-09T15:30:50.247Z",
       "type": "file",
@@ -108,12 +110,12 @@ function fakeDirData(id){
       "selectable":true,
       "checkable":false,
       "ext": "/apps/flow",
-      "path": "testpage1"
+      "path": "flow_hk"
     }
   let testNode2 =   {
       "icon": "fa fa-file",
-      "path": "/flow",
-      "text": "flow2",
+      "path": "/flow_general",
+      "text": "FLOW Application Control",
       "size": 4096,
       "mtime": "2018-08-09T15:30:50.247Z",
       "type": "file",
@@ -121,7 +123,46 @@ function fakeDirData(id){
       "selectable":true,
       "checkable":false,
       "ext": "/apps/flow",
-      "path": "testpage2"
+      "path": "flow_appctl"
+    }
+  let testNode3 =   {
+      "icon": "fa fa-file",
+      "path": "/flow_general",
+      "text": "FLOW Diag",
+      "size": 4096,
+      "mtime": "2018-08-09T15:30:50.247Z",
+      "type": "file",
+      "url": "view/apps/flow",
+      "selectable":true,
+      "checkable":false,
+      "ext": "/apps/flow",
+      "path": "flow_diag"
+    }
+  let testNode4 =   {
+      "icon": "fa fa-file",
+      "path": "/flow_general",
+      "text": "FLOW Graph",
+      "size": 4096,
+      "mtime": "2018-08-09T15:30:50.247Z",
+      "type": "file",
+      "url": "view/apps/flow",
+      "selectable":true,
+      "checkable":false,
+      "ext": "/apps/flow",
+      "path": "flow_graph"
+    }
+  let testNode5 =   {
+      "icon": "fa fa-file",
+      "path": "/flow_general",
+      "text": "FLOW",
+      "size": 4096,
+      "mtime": "2018-08-09T15:30:50.247Z",
+      "type": "config",
+      "url": "view/apps/flow",
+      "selectable":true,
+      "checkable":false,
+      "ext": "/apps/flow",
+      "path": "flow_config"
     }
   let result = undefined;
   switch(id){
@@ -129,13 +170,13 @@ function fakeDirData(id){
       result = testData;
       break;
     case 2:
-      result = [testNode1,testNode2];
+      result = [testNode1,testNode2,testNode3,testNode4,testNode];
       break;
     case 3:
-      result = [testNode];
+      result = [testNode5];
       break;
     default:
-      result = [testNode];
+      result = [testNode5];
   }
   return result;
 }
@@ -163,7 +204,6 @@ function NodeRendered(e, node){
       componentState: { text: "text" , link: node.path}
     };
     myLayout.createDragSource( node.$el, newItemConfig );
-    console.log(node.$el);
   }
 }
 /* This function is triggered when a selectable node is selected */
@@ -181,6 +221,20 @@ function NodeSelected(e, node){
     } else {
       myLayout.selectedItem.addChild( newItemConfig );
     }
+  }
+  else if(node.type ==="config"){
+    console.log("config file selected.")
+    $.get('/'+node.path,(response)=>{
+      if( response !== null ) {
+        myLayout.destroy()
+        myLayout = new window.GoldenLayout( response , $('#layoutContainer') );
+        InitLayout(myLayout);
+      }
+      else{
+        console.log("Layout cannot be loaded.")
+      }
+    });
+    InitScrollBar();
   }
 }
 /* This function initializes directory tree */
@@ -241,9 +295,9 @@ function InitLayout(mlyt){
   });
   /* Initalize layout */
   mlyt.init();
+
   /* This event is fired when a component is created, which renders selected page onto created component */
   mlyt.on("itemCreated", (item) => {
-
     if(item.type=="component")
     {
       if(item.hasOwnProperty("config"))
@@ -265,9 +319,13 @@ function InitLayout(mlyt){
         {
           item.container._contentElement.load("/"+link);
           item.container._contentElement.css("overflow","auto");
+
         }
       }
     }
+  });
+  mlyt.on("stateChanged",function(){
+    InitScrollBar();
   });
 }
 /* Save Layout to browser's local storage */
@@ -311,6 +369,7 @@ function LoadLayout(){
   else{
     console.log("Layout cannot be loaded.")
   }
+  InitScrollBar();
 }
 
 /* Modal */
@@ -399,6 +458,35 @@ function InitToolTips(){
   $('[data-toggle="tooltip"]').tooltip();
 }
 
+/* Popover */
+function InitPopover(){
+  $(function () {
+    $('[data-toggle="popover"]').popover()
+  });
+}
+
+/* Scrollbar */
+function InitScrollBar(){
+  /* os-theme-dark class should be added to every pug file in the top element */
+  setTimeout(function(){
+    $('.os-theme-dark').overlayScrollbars({"autoUpdate":true });
+  }, 10);
+  setTimeout(function(){
+    $('.os-theme-dark').overlayScrollbars({"autoUpdate":true });
+  }, 100);
+  setTimeout(function(){
+    $('.os-theme-dark').overlayScrollbars({"autoUpdate":true });
+  }, 250);
+  setTimeout(function(){
+    $('.os-theme-dark').overlayScrollbars({"autoUpdate":true });
+  }, 500);
+  setTimeout(function(){
+    $('.os-theme-dark').overlayScrollbars({"autoUpdate":true });
+  }, 1000);
+
+}
+
+
 /* Resize */
 function InitResizeCtl(){
   $(window).resize(() => {
@@ -415,5 +503,7 @@ $(()=>{
   InitModal();
   InitMenuState();
   InitToolTips();
+  InitPopover();
+  InitScrollBar();
   InitResizeCtl();
 });
