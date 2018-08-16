@@ -7,7 +7,8 @@
    ToolTips
    Popover
    Scrollbar
-   Resize */
+   Resize
+   Widget Generation */
 
 /* Directory Listing */
 /* Workspace folders and files should be stored like the following structure */
@@ -164,6 +165,13 @@ function fakeDirData(id){
       "ext": "/apps/flow",
       "path": "flow_config"
     }
+  let testNode6 = {
+    "icon": "fa fa-gear",
+    "text": "Indicator",
+    "type": "widget",
+    "selectable":true,
+    "checkable":false,
+  }
   let result = undefined;
   switch(id){
     case 1:
@@ -175,6 +183,9 @@ function fakeDirData(id){
     case 3:
       result = [testNode5];
       break;
+    case 4:
+      result = [testNode6];
+      break;
     default:
       result = [testNode5];
   }
@@ -182,14 +193,14 @@ function fakeDirData(id){
 }
 /* Lazy load */
 function onLazyLoad(node, display){
-  let a;
-  if(node.text==="apps"){
-    a = fakeDirData(2);
-  }
-  else{
-    a = fakeDirData(3);
-  }
-  let tree = $('#menuContainer').treeview(true)
+  let a = fakeDirData(2);
+  let tree = $('#panelMenuContainer').treeview(true)
+  tree.addNode(a,node,node.index,{ silent: true} );
+  tree.expandNode(node,{ silent: true, ignoreChildren: true } );
+}
+function LayoutLazyLoad(node, display){
+  let a = fakeDirData(3);
+  let tree = $('#layoutMenuContainer').treeview(true)
   tree.addNode(a,node,node.index,{ silent: true} );
   tree.expandNode(node,{ silent: true, ignoreChildren: true } );
 }
@@ -237,18 +248,63 @@ function NodeSelected(e, node){
     InitScrollBar();
   }
 }
+/* Collapse all items in menu */
+function NodesCollapse(item){
+  $("#"+item+"MenuContainer").treeview('collapseAll', { silent: true });
+}
+/* Widget node initialization logic */
+function WidgetNodeRendered(e, node){
+  let element = node.$el;
+  element.attr("data-toggle","modal")
+  element.attr("data-target","#genericInputModal")
+  element.attr("data-title",node.text)
+  element.attr("data-submit","CreateIndicator");
+  element.attr("data-custom",'[{"label":"Indicator Name", "type":"field" },{"label":"Data Path", "type":"field" }, {"label":"Fontawesome Icon", "type":"field" }]');
+  let clickFunction = element.onclick;
+  console.log(element)
+}
+
 /* This function initializes directory tree */
 function InitTreeView(){
-  $('#menuContainer').treeview({
+  $('#panelMenuContainer').treeview({
       data: fakeDirData(1),
       levels:1,
       backColor: '#343a40',//grey
+      selectedBackColor: "#fff",
+      selectedColor:"#343a40",
+      onhoverColor:"#fff",
       wrapNodeText:true,
       collapseIcon: 'fa fa-minus',
       expandIcon: 'fa fa-plus',
       lazyLoad: onLazyLoad,
       onNodeRendered : NodeRendered,
       onNodeSelected: NodeSelected,
+    });
+
+  $('#layoutMenuContainer').treeview({
+      data: fakeDirData(1),
+      levels:1,
+      backColor: '#343a40',//grey
+      selectedBackColor: "#fff",
+      selectedColor:"#343a40",
+      onhoverColor:"#fff",
+      wrapNodeText:true,
+      collapseIcon: 'fa fa-minus',
+      expandIcon: 'fa fa-plus',
+      lazyLoad: LayoutLazyLoad,
+      onNodeRendered : NodeRendered,
+      onNodeSelected: NodeSelected,
+    });
+
+  $('#widgetMenuContainer').treeview({
+      data: fakeDirData(4),
+      levels:1,
+      backColor: '#343a40',//grey
+      selectedBackColor: "#fff",
+      selectedColor:"#343a40",
+      onhoverColor:"#fff",
+      wrapNodeText:true,
+      onNodeRendered: WidgetNodeRendered,
     });
 }
 
@@ -375,10 +431,15 @@ function LoadLayout(){
 /* Modal */
 /* Initialize modal functionality*/
 function InitModal(){
+  /* Make it draggable*/
+  $(".modal-content").draggable({
+    containment: "document"
+  });
   /* show */
   $("#genericInputModal").on('show.bs.modal',(e) => {
+      HideMenu('widget');
       let btn = $(e.relatedTarget);
-      console.log(btn)
+      console.log(e)
       let title = btn.data('title');
       let submit = btn.data('submit');
       let custom = btn.data('custom');
@@ -435,27 +496,64 @@ function InitModal(){
 }
 
 /* Side menu */
-/* side menu state declare */
-var menuOpen = false;
 /*Initialize menu state change functionality*/
+function ShowMenu(item){
+  $("#"+item+"MenuContainer").addClass("menuShow");
+  $("#"+item+"MenuToggle").addClass("active");
+  $("#"+item+"MenuContainer").data("open",true);
+}
+
+function HideMenu(item){
+  $("#"+item+"MenuContainer").removeClass("menuShow");
+  $("#"+item+"MenuToggle").removeClass("active");
+  $("#"+item+"MenuContainer").data("open",false);
+  NodesCollapse(item);
+}
+
 function InitMenuState(){
-  $("#menuToggle").click(()=>{
-    if(!menuOpen){
-      $("#menuContainer").animate({left: "0%"});
-      $("#menuToggle").addClass("active");
-      menuOpen = true;
+  $("#panelMenuToggle").click(()=>{
+    let open = $("#panelMenuContainer").data("open");
+    if(!open){
+      HideMenu("widget");
+      HideMenu("layout");
+      ShowMenu("panel");
+    }else{
+      HideMenu("panel");
     }
-    else{
-      $("#menuContainer").animate({left: "-20%"});
-      $("#menuToggle").removeClass("active");
-      menuOpen = false;
+  });
+  $("#layoutMenuToggle").click(()=>{
+    let open = $("#layoutMenuContainer").data("open");
+    if(!open){
+      HideMenu("widget");
+      HideMenu("panel");
+      ShowMenu("layout");
+    }else{
+      HideMenu("layout");
+    }
+  });
+  $("#widgetMenuToggle").click(()=>{
+    let open = $("#widgetMenuContainer").data("open");
+    if(!open){
+      HideMenu("layout");
+      HideMenu("panel");
+      ShowMenu("widget");
+    }else{
+      HideMenu("widget");
     }
   });
 }
 
 /* ToolTips */
 function InitToolTips(){
-  $('[data-toggle="tooltip"]').tooltip();
+  $('[data-toggle="tooltip"]').tooltip({
+    "container":"false"
+  });
+  $('[data-toggle="tooltip"]').on('show.bs.tooltip', function (e) {
+    $("#tooltips").text(e.target.dataset.originalTitle);
+  });
+  $('[data-toggle="tooltip"]').on('hide.bs.tooltip', function (e) {
+    $("#tooltips").text("ToolTips");
+  });
 }
 
 /* Popover */
@@ -486,13 +584,52 @@ function InitScrollBar(){
 
 }
 
-
 /* Resize */
 function InitResizeCtl(){
   $(window).resize(() => {
       console.log("resize-event");
       myLayout.updateSize();
   })
+}
+
+/* Draggable */
+function InitDraggable(){
+  // console.log(this);
+  $("#topSnapable").sortable({
+      revert: true
+    });
+  // $(".indicator-draggable").draggable({
+  //   containment: "nav",
+  //   snap: "#topSnapable",
+  //   snapMode: "inner",
+  // });
+}
+
+/* Widget Generation */
+var IndicatorCount = 0
+function CreateIndicator(){
+  if(IndicatorCount < 8){
+    IndicatorCount += 1;
+    let name = $("[id='inputField0']");
+    let data = $("[id='inputField1']");
+    let icon = $("[id='inputField2']");
+    $("#topSnapable").append(
+      "<li class='nav-item indicator-draggable'>"
+          +"<span class='indicator-name'>"+name.val()+"</span>"
+          +"<span class='badge badge-info indicator-val' data-sage="+data.val()+">-</span>"
+          +"<span class='badge badge-light indicator-close' onclick='IndicatorCloseClick.call(this)'>x</span>"
+      +"</li>"
+    );
+    InitDraggable();
+  }
+  else{
+    console.log("Nav real estate - full, sell plots");
+  }
+
+}
+function IndicatorCloseClick(){
+  this.parentNode.remove();
+  IndicatorCount -= 1;
 }
 
 /* appctl main - this script execution starts from here */

@@ -5,13 +5,13 @@
 }
 
 body {
-  background-color:  #fff;
+  background-color:  #353535;
   color: #ffffff;
 }
 
-html,body {
-  max-height:97% !important;
-  height:97% !important;
+body {
+  max-height: calc(100% - 57px) !important;
+  height: calc(100% - 57px) !important;
 }
 
 h2 {
@@ -58,25 +58,75 @@ html, body {
   margin-right: 5px;
 }
 
-/* Navigation Menu Bar - Left */
-
-#menuContainer {
-  width: auto;
-  position:absolute;
-  top: 10%;
-  left: -10%;
-  z-index: 4;
+.indicator-draggable {
+  border: 1px solid #ffae00;
+  padding: 2px;
+  margin: 2px 4px;
+  border-radius: 3px;
+  background: #ffae00;
+  z-index: 5000;
+  color:white;
+  cursor: pointer;
 }
 
-#menuContainer li {
+.indicator-val {
+  position: relative;
+  top: -2px;
+  left: 10px;
+}
+
+.indicator-close {
+  background-color: #f8f9facc !important;
+  position: relative;
+  font-size: xx-small;
+  top: -20px;
+  left: 9px;
+  visibility: hidden;
+}
+
+.indicator-draggable:hover .indicator-close{
+  visibility: visible;
+}
+
+#topSnapable {
+  background: #686868;
+  border-radius: 4px;
+  display: flex;
+}
+
+/* Navigation Menu Bar - Left */
+.menuDropdown {
+  position: relative;
+}
+
+.menuContainer {
+  background: #FFF0;
+  border: unset !important;
+  width: 250px;
+  position: absolute;
+  top: 100%;
+  display: none;
+  z-index: 1000;
+  min-width: 10rem;
+  padding: .5rem 0;
+  margin: .6rem 0 0;
+}
+
+.menuShow {
+  display: block !important;
+  right: 0 !important;
+  left: auto !important;
+}
+
+.menuContainer li {
   cursor: move;
   cursor: pointer;
   padding: 10px 20px;
-  color: #FFF;
+  /* color: #FFF; */
   font: 12px Arial, sans-serif;
 }
 
-#menuContainer li:hover {
+.menuContainer li:hover {
   color: #343a40;
 }
 
@@ -103,7 +153,7 @@ html, body {
 }
 
 .main.container {
-  margin-top: 41px;
+  margin-top: 57px;
   background-color:  #353535;
 }
 
@@ -122,7 +172,7 @@ html, body {
 }
 
 #wrapper {
-  height: 99.6%;
+  height: 97.9%;
   position: relative;
   width: 100%;
   overflow: hidden;
@@ -139,7 +189,25 @@ html, body {
 }
 
 /* Navigation Bar - Bottom */
+.nav-text-adjust {
+  font-size: 10px;
+  margin: 0 10px;
+  font-style: italic;
 
+}
+
+.float-right {
+  float:right;
+}
+.float-left {
+  float:left;
+}
+
+#tooltips {
+  background-color: var(--btn-bg-color);
+  color: var(--btn-font-color-d);
+  padding: 0px 5px;
+}
 
 /* Widget CSS*/
 
@@ -284,3 +352,14 @@ header > button {
 
 
 }
+
+@media only screen and (max-width: 992px) {
+  .nav-text-adjust {
+    margin: -8px 10px;
+  }
+}
+
+@media only screen and (max-width: 1550px) {
+  #topSnapable {
+    display: none;
+  }
