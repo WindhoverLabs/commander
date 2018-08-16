@@ -38,7 +38,7 @@ var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 var socket_io = require( "socket.io" );
 var fs = require('fs');
-var commanderjs = require('commanderjs');
+
 
 var indexRouter = require('./routes/index');
 var test1 = require('./routes/testpage1');
@@ -136,11 +136,11 @@ io.on('connection', function(socket) {
 	    socket.volatile.emit('updateTelem', msg);
 	};
 
-  var cSession = new commanderjs({
-    tlmBypass: tlmBypass,
-    address: 'localhost',
-    port:8090,
-  });
+  // var cSession = new commanderjs({
+  //   tlmBypass: tlmBypass,
+  //   address: 'localhost',
+  //   port:8090,
+  // });
 
   var getDirListing = function(directory, cb) {
     var outFiles = [];
