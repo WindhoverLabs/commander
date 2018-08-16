@@ -38,6 +38,7 @@ var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 var socket_io = require( "socket.io" );
 var fs = require('fs');
+var sage = require('sage');
 
 
 var indexRouter = require('./routes/index');
@@ -77,8 +78,7 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/scripts', express.static(__dirname + '/node_modules/'));
 app.use('/js', express.static(__dirname + '/public/js/'));
-app.use('/commanderjs', express.static(path.join(__dirname, 'commanderjs')));
-app.use('/', indexRouter);
+app.use('/sage', express.static(path.join(__dirname, 'sage')));app.use('/', indexRouter);
 app.use('/*config', test2);
 app.use('/flow*', test1);
 
@@ -129,18 +129,25 @@ io.on('connection', function(socket) {
 
 	socket.on('disconnect', function(socket) {
 		console.log('Client: disconnect');
-		trickComm.disconnect();
+		// trickComm.disconnect();
 	});
+
+  var apiSendToClient = function(bytes) {
+    socket.emit('apiProxy', buffer);
+  };
+
+  var wsSendToClient = function(bytes) {
+    socket.emit('wsProxy', buffer);
+  };
 
 	var tlmBypass = function(msg) {
 	    socket.volatile.emit('updateTelem', msg);
 	};
 
-  // var cSession = new commanderjs({
-  //   tlmBypass: tlmBypass,
-  //   address: 'localhost',
-  //   port:8090,
-  // });
+  var session = new sage({
+    tlmBypass: tlmBypass,
+    address: 'localhost',
+    port: 8090});
 
   var getDirListing = function(directory, cb) {
     var outFiles = [];
@@ -165,12 +172,16 @@ io.on('connection', function(socket) {
       cb({err: err, path: directory, files: outFiles});
     });
   };
-
+  socket.on('wsProxy', function(buffer) {
+    session.wsProxy(buffer);
+  });
   var service = {
-    getDirListing: cSession.getDirListing,
+    getDirListing: session.getDirListing,
+    getDirListing: getDirListing
   }
 
 	var client;
+  var wsConnection;
 	// exposes all methods
 	for (method in service) {
 	   // use a closure to avoid scope erasure
@@ -181,7 +192,7 @@ io.on('connection', function(socket) {
 	           if(typeof service[method] === 'function') {
 	               /* The method defined is actually a javascript function that can
 	                * be called. */
-	               var result = service[method].apply(trickComm, arguments);
+	               var result = service[method].apply(session, arguments);
 	           } else {
 	               console.log('Client attempted to call ndefined method \'' + method + '\'.');
 	           }

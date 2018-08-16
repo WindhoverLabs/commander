@@ -89,4 +89,11 @@ html(lang='en-us')
       ul.navbar-nav
         span#tooltips.nav-text-adjust ToolTips
     script(type="text/javascript" src='/js/appctl.js')  
-    script(type="text/javascript" src='/commanderjs/client.js')  
+    script(type="text/javascript" src='sage/client.js')  
+    script.
+      var session = new Sage();
+      var procDirListing = function (listing){
+        console.log(listing);
+      };
+      console.log("printing session", session);
+      session.getDirectoryListing('',procDirListing);
