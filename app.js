@@ -37,6 +37,9 @@ var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 var socket_io = require( "socket.io" );
+var fs = require('fs');
+var sage = require('./sage');
+
 
 var indexRouter = require('./routes/index');
 var test1 = require('./routes/testpage1');
@@ -58,6 +61,22 @@ const config = require('./config.js');
 var io = socket_io();
 app.io = io;
 
+// Workspace
+var workspace_path = path.join(process.env.YAMCS_WORKSPACE, '/web');
+var fsw_config_file = path.join(process.env.YAMCS_WORKSPACE, '/etc/fsw-config.json');
+var fsw_config = {};
+if(fs.existsSync(fsw_config_file)) {
+    fs.readFile(fsw_config_file, function (err, data) {
+        if(err === null) {
+        	fsw_config = JSON.parse(data);
+        }
+        else
+        {
+     	    console.log(err);
+        }
+    });
+};
+
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'pug');
@@ -69,7 +88,7 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/scripts', express.static(__dirname + '/node_modules/'));
 app.use('/js', express.static(__dirname + '/public/js/'));
-app.use('/', indexRouter);
+app.use('/sage', express.static(path.join(__dirname, 'sage')));app.use('/', indexRouter);
 app.use('/*config', test2);
 app.use('/flow*', test1);
 
@@ -123,36 +142,73 @@ io.on('connection', function(socket) {
 		//trickComm.disconnect();
 	});
 
+  var apiSendToClient = function(bytes) {
+    socket.emit('apiProxy', buffer);
+  };
+
+  var wsSendToClient = function(bytes) {
+    socket.emit('wsProxy', buffer);
+  };
+
 	var tlmBypass = function(msg) {
 	    socket.volatile.emit('updateTelem', msg);
 	};
 
-	// var trickComm = new TrickComm();
-	// trickComm.connect({port: TRICK_SIM_PORT, host: TRICK_SIM_ADDRESS, tlmBypass: tlmBypass});
-  //
-	// var service = {
-	//     subscribe: trickComm.subscribe,
-	//     unsubscribe: trickComm.unsubscribe
-	// };
+  var session = new sage({
+    tlmBypass: tlmBypass,
+    address: 'localhost',
+    port: 8090});
+
+  var getDirListing = function(directory, cb) {
+    var outFiles = [];
+    var fullPath = path.join(workspace_path, directory);
+    fs.readdir(fullPath, (err,files) => {
+      if(err == null){
+        for(var i = 0; i < files.length; i++){
+          var currentFile = fullPath + '/' + files[i];
+          var stats = fs.statSync(currentFile);
+          var transPath  = directory + '/' + files[i];
+          var entry = {path: transPath, name: files[i], size: stats.size, mtime: stats.mtime};
+          if (stats.isFile()) {
+            entry.type = 'file';
+          } else if (stats.isDirectory()) {
+            entry.type = 'dir';
+          } else {
+            entry.type = 'unknown';
+          }
+          outFiles.push(entry);
+        }
+      }
+      cb({err: err, path: directory, files: outFiles});
+    });
+  };
+  socket.on('wsProxy', function(buffer) {
+    session.wsProxy(buffer);
+  });
+  var service = {
+    getDirListing: session.getDirListing,
+    getDirListing: getDirListing
+  }
 
 	var client;
+  var wsConnection;
 	// exposes all methods
-	//for (method in service) {
-	//    // use a closure to avoid scope erasure
-	//    (function (method) {
-	//        // method name will be the name of incoming message
-	//        socket.on(method, function () {
-	//            /* Method is defined in the service list. */
-	//            if(typeof service[method] === 'function') {
-	//                /* The method defined is actually a javascript function that can
-	//                 * be called. */
-	//                var result = service[method].apply(trickComm, arguments);
-	//            } else {
-	//                console.log('Client attempted to call ndefined method \'' + method + '\'.');
-	//            }
-	//        });
-	//    })(method)
-	//};
+	for (method in service) {
+	   // use a closure to avoid scope erasure
+	   (function (method) {
+	       // method name will be the name of incoming message
+	       socket.on(method, function () {
+	           /* Method is defined in the service list. */
+	           if(typeof service[method] === 'function') {
+	               /* The method defined is actually a javascript function that can
+	                * be called. */
+	               var result = service[method].apply(session, arguments);
+	           } else {
+	               console.log('Client attempted to call ndefined method \'' + method + '\'.');
+	           }
+	       });
+	   })(method)
+	};
 });
 
 var tmtc = new TmTcServer(config);

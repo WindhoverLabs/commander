@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "start": "node ./bin/www"
+    "start": "node ./bin/www",
+    "postinstall": "node -e \"var s='../sage',d='node_modules/sage',fs=require('fs');fs.exists(d,function(e){e||fs.symlinkSync(s,d,'dir')});\""
   },
   "dependencies": {
     "binary-parser": "^1.3.2",
@@ -19,16 +20,17 @@
     "google-protobuf": "^3.6.1",
     "http-errors": "^1.7.0",
     "jquery": "^3.3.1",
+    "jquery-ui-dist": "^1.12.1",
     "morgan": "^1.9.0",
+    "overlayscrollbars": "^1.5.1",
     "patternfly-bootstrap-treeview": "^2.1.5",
     "popper.js": "^1.14.4",
-    "promise": "^8.0.1",
     "protobufjs": "^6.8.8",
     "pug": "2.0.0-beta11",
     "socket.io": "^2.1.1",
     "svg.js": "^2.6.5",
     "websocket": "^1.0.26",
     "wolfy87-eventemitter": "^5.2.5",
-    "overlayscrollbars": "^1.5.1"
+    "protobufjs": "^5.0.1"
   }
 }

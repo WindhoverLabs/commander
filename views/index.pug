@@ -7,6 +7,8 @@ html(lang='en-us')
     title Commander
     script(type="text/javascript" src="/scripts/popper.js/dist/umd/popper.min.js")
     script(type="text/javascript" src="/scripts/jquery/dist/jquery.js")
+    script(type="text/javascript" src="/scripts/jquery-ui-dist/jquery-ui.min.js")
+    
     script(type="text/javascript" src="/scripts/bootstrap/dist/js/bootstrap.min.js")
     script(type="text/javascript" src="/scripts/patternfly-bootstrap-treeview/dist/bootstrap-treeview.min.js")
     script(type="text/javascript" src="/scripts/svg.js/dist/svg.js")
@@ -21,6 +23,7 @@ html(lang='en-us')
       session.on('connect', function() {
           console.log('Connected');
       }); */
+    link(rel="stylesheet" type="text/css" href="/scripts/jquery-ui-dist/jquery-ui.min.css")
     link(rel="stylesheet" type="text/css" href="/scripts/overlayscrollbars/css/OverlayScrollbars.min.css")
     link(rel="stylesheet" type="text/css" href="/scripts/patternfly-bootstrap-treeview/dist/bootstrap-treeview.min.css")
     link(rel="stylesheet" type="text/css" href="/scripts/bootstrap/dist/css/bootstrap.min.css")
@@ -41,12 +44,14 @@ html(lang='en-us')
           div.modal-footer
             button#modalSubmit.btn.btn-outline-primary(type="submit" data-dismiss="modal") OK
             button.btn.btn-outline-secondary(type="button" data-dismiss="modal") Close    
-    nav.navbar.fixed-top.navbar-expand-lg.navbar-dark.bg-dark(style="max-height:40px;box-shadow: 0px -23px 80px #fff;")
+    nav.navbar.fixed-top.navbar-expand-lg.navbar-dark.bg-dark(style="box-shadow: 0px -23px 80px #fff;")
       a.navbar-brand(href="#")
         img(src="/img/Windhover-Mark-White.png" width="30" style="margin:8px" class="d-inline-block align-top" alt="")
         | Commander
+      button.navbar-toggler(type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation")
+        span.navbar-toggler-icon
       #navbarSupportedContent.collapse.navbar-collapse
-        ul.navbar-nav.mr-auto
+        ul.navbar-nav
           li.nav-item.dropdown
             a.nav-link.dropdown-toggle(href="#", role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false") Default Instance
             div.dropdown-menu(aria-labelledby="instanceDropdown")
@@ -54,20 +59,41 @@ html(lang='en-us')
               a.dropdown-item(href="#") ocpoc/default
               a.dropdown-item(href="#") bebop2/sitl
               a.dropdown-item(href="#") bebop2/default
-        ul.wh-nav-btn(data-toggle="tooltip" data-placement="bottom" title="Load page layout")
+        ul#topSnapable.navbar-nav
+        ul.navbar-nav.ml-auto(style="margin:5px;")
+        ul.navbar-nav.wh-nav-btn.menuDropdown(data-toggle="tooltip" title="Show/Hide Widget Menu")
+            button#widgetMenuToggle.menuToggle.btn.btn-outline-primary
+              i#widgetMenuIcon.fa.fa-clone 
+            div#widgetMenuContainer.menuContainer(data-open="false")
+        ul.navbar-nav.wh-nav-btn.menuDropdown(data-toggle="tooltip" title="Show/Hide Apps Menu")
+            button#panelMenuToggle.menuToggle.btn.btn-outline-primary
+              i#panelIcon.fa.fa-cube
+            div#panelMenuContainer.menuContainer(data-open="false")
+        ul.navbar-nav.wh-nav-btn.menuDropdown(data-toggle="tooltip" title="Show/Hide Layout Menu")
+            button#layoutMenuToggle.menuToggle.btn.btn-outline-primary
+              i#layoutMenuIcon.fa.fa-cubes
+            div#layoutMenuContainer.menuContainer(data-open="false")
+        ul.navbar-nav.wh-nav-btn(data-toggle="tooltip" title="Load page layout")
             button.btn.btn-outline-primary( data-toggle="modal" data-target="#genericInputModal" data-title="Load Layout" data-submit="LoadLayout" data-custom='[{"label":"Load Layout", "type":"dropdown", "getItem":"GetStoredLayoutList"}]') 
-              i.fa.fa-cubes
-        ul.wh-nav-btn(data-toggle="tooltip" data-placement="bottom" title="Save page layout")
+              i.fa.fa-download
+        ul.navbar-nav.wh-nav-btn(data-toggle="tooltip" title="Save page layout")
             button.btn.btn-outline-primary(data-toggle="modal" data-target="#genericInputModal" data-title="Save Layout" data-submit="SaveLayout" data-custom='[{"label":"Save Layout", "type":"field" }]') 
               i.fa.fa-save 
-        ul.wh-nav-btn(data-toggle="tooltip" data-placement="bottom" title="Show/Hide Side Menu")
-            button#menuToggle.btn.btn-outline-primary
-              i#menuIcon.fa.fa-bars      
     div.ui.main.text.container
       #wrapper
-        div#menuWrapper
-          div#menuContainer
         #layoutContainer
         #main-content
-    nav.navbar.fixed-bottom.navbar-expand-lg.navbar-dark.bg-dark(style="max-height:10px;box-shadow: 0px -1px 2px #fff;")    
+    nav#bottomNav.navbar.fixed-bottom.navbar-expand-lg.navbar-dark.bg-dark(style="max-height:10px;box-shadow: 0px 4px 15px #fff;")
+      ul.navbar-nav.mr-auto
+        span.nav-text-adjust 
+      ul.navbar-nav
+        span#tooltips.nav-text-adjust ToolTips
     script(type="text/javascript" src='/js/appctl.js')  
+    script(type="text/javascript" src='sage/client.js')  
+    script.
+      var session = new Sage();
+      var procDirListing = function (listing){
+        console.log(listing);
+      };
+      console.log("printing session", session);
+      session.getDirectoryListing('',procDirListing);

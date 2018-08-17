@@ -1,0 +1,12 @@
+message IssueCommandRequest {
+  message Assignment {
+    optional string name = 1;
+    optional string value = 2;
+  }
+  repeated Assignment assignment = 1;
+  optional string origin = 2;
+  optional int32 sequenceNumber = 3;
+  optional bool dryRun = 4;
+}
+
+
