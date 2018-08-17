@@ -38,7 +38,7 @@ var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 var socket_io = require( "socket.io" );
 var fs = require('fs');
-var sage = require('sage');
+var sage = require('./sage');
 
 
 var indexRouter = require('./routes/index');
@@ -154,11 +154,11 @@ io.on('connection', function(socket) {
     var fullPath = path.join(workspace_path, directory);
     fs.readdir(fullPath, (err,files) => {
       if(err == null){
-        for(let i = 0; i < files.length; i++){
-          let currentFile = fullPath + '/' + files[i];
-          let stats = fs.statSync(currentFile);
-          let transPath  = directory + '/' + files[i];
-          let entry = {path: transPath, name: files[i], size: stats.size, mtime: stats.mtime};
+        for(var i = 0; i < files.length; i++){
+          var currentFile = fullPath + '/' + files[i];
+          var stats = fs.statSync(currentFile);
+          var transPath  = directory + '/' + files[i];
+          var entry = {path: transPath, name: files[i], size: stats.size, mtime: stats.mtime};
           if (stats.isFile()) {
             entry.type = 'file';
           } else if (stats.isDirectory()) {

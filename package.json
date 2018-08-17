@@ -20,13 +20,15 @@
     "jquery": "^3.3.1",
     "jquery-ui-dist": "^1.12.1",
     "morgan": "^1.9.0",
+    "overlayscrollbars": "^1.5.1",
     "patternfly-bootstrap-treeview": "^2.1.5",
     "popper.js": "^1.14.4",
+    "protobufjs": "^6.8.8",
     "pug": "2.0.0-beta11",
     "socket.io": "^2.1.1",
     "svg.js": "^2.6.5",
     "websocket": "^1.0.26",
     "wolfy87-eventemitter": "^5.2.5",
-    "overlayscrollbars": "^1.5.1"
+    "protobufjs": "^5.0.1"
   }
 }
