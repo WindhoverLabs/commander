@@ -40,6 +40,8 @@ var socket_io = require( "socket.io" );
 var fs = require('fs');
 var sage = require('./sage');
 
+var vm = require('vm');
+
 
 var indexRouter = require('./routes/index');
 var test1 = require('./routes/testpage1');
@@ -48,6 +50,7 @@ var test2 = require('./routes/testpage2');
 var TmTcServer = require('./tmtc-server');
 const dgram = require('dgram');
 const binServer = dgram.createSocket('udp4');
+const binSender = dgram.createSocket('udp4');
 const pbServer = dgram.createSocket('udp4');
 var Parser = require("binary-parser").Parser;
 var fs = require('fs');
@@ -208,10 +211,13 @@ io.on('connection', function(socket) {
 	           }
 	       });
 	   })(method)
-	};
+	}; 
 });
 
-var tmtc = new TmTcServer(config);
+var tmtc = new TmTcServer(config, function (buffer) {
+	console.log(buffer);
+	binSender.send(buffer, 0, buffer.length, config.binCmdPort, '127.0.0.1');
+});
 
 
 binServer.on('error', (err) => {
@@ -234,24 +240,26 @@ binServer.bind(config.binTlmPort);
 
 
 
+//vm.runInThisContext(testString);
 
 
-pbServer.on('error', (err) => {
-  console.log(`pbServer error:\n${err.stack}`);
-  server.close();
-});
 
-pbServer.on('message', (msg, rinfo) => {
-  //console.log(`pbServer got: ${msg} from ${rinfo.address}:${rinfo.port}`);
-  tmtc.processPBMessage(msg);
-});
-
-pbServer.on('listening', () => {
-  const address = pbServer.address();
-  console.log(`pbServer listening ${address.address}:${address.port}`);
-});
-
-console.log('Stating pb UDP listener');
-pbServer.bind(config.pbTlmPort);
+//pbServer.on('error', (err) => {
+//  console.log(`pbServer error:\n${err.stack}`);
+//  server.close();
+//});
+//
+//pbServer.on('message', (msg, rinfo) => {
+//  //console.log(`pbServer got: ${msg} from ${rinfo.address}:${rinfo.port}`);
+//  tmtc.processPBMessage(msg);
+//});
+//
+//pbServer.on('listening', () => {
+//  const address = pbServer.address();
+//  console.log(`pbServer listening ${address.address}:${address.port}`);
+//});
+//
+//console.log('Stating pb UDP listener');
+//pbServer.bind(config.pbTlmPort);
 
 module.exports = app;

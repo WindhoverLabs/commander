@@ -126,6 +126,26 @@
        "msg_id": 6150,
        "code": 24,
        "symbol": "CFE_ES_QueryAllTasksCmd_t"
+    },
+    "EVS_NOOP": {
+       "msg_id": 6145,
+       "code": 0,
+       "symbol": "CFE_ES_NoArgsCmd_t"
+    },
+    "SB_NOOP": {
+       "msg_id": 6147,
+       "code": 0,
+       "symbol": "CFE_ES_NoArgsCmd_t"
+    },
+    "TBL_NOOP": {
+       "msg_id": 6148,
+       "code": 0,
+       "symbol": "CFE_ES_NoArgsCmd_t"
+    },
+    "TIME_NOOP": {
+       "msg_id": 6149,
+       "code": 0,
+       "symbol": "CFE_ES_NoArgsCmd_t"
     }
   },
   "symbols": [
@@ -1856,6 +1876,43 @@
       ]
     },
     {
+      "name": "CFE_ES_AppNameCmd_t",
+      "bit_size": 384,
+      "fields": [
+        {
+          "name": "CmdHeader",
+          "bit_offset": 0,
+          "bit_size": 64,
+          "array": true,
+          "count": 8,
+          "type": {
+            "name": "unsigned char",
+            "bit_size": 8,
+            "base_type": "unsigned char"
+          }
+        },
+        {
+          "name": "Payload",
+          "bit_offset": 64,
+          "bit_size": 320,
+          "fields": [
+            {
+              "name": "Application",
+              "bit_offset": 0,
+              "bit_size": 320,
+              "array": true,
+              "count": 40,
+              "type": {
+                "name": "char",
+                "bit_size": 8,
+                "base_type": "char"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
       "name": "CFE_ES_AppRecord_t",
       "bit_size": 1824,
       "fields": [
@@ -2029,6 +2086,55 @@
             "bit_size": 8,
             "base_type": "char"
           }
+        }
+      ]
+    },
+    {
+      "name": "CFE_ES_AppReloadCmd_t",
+      "bit_size": 896,
+      "fields": [
+        {
+          "name": "CmdHeader",
+          "bit_offset": 0,
+          "bit_size": 64,
+          "array": true,
+          "count": 8,
+          "type": {
+            "name": "unsigned char",
+            "bit_size": 8,
+            "base_type": "unsigned char"
+          }
+        },
+        {
+          "name": "Payload",
+          "bit_offset": 64,
+          "bit_size": 832,
+          "fields": [
+            {
+              "name": "Application",
+              "bit_offset": 0,
+              "bit_size": 320,
+              "array": true,
+              "count": 40,
+              "type": {
+                "name": "char",
+                "bit_size": 8,
+                "base_type": "char"
+              }
+            },
+            {
+              "name": "AppFileName",
+              "bit_offset": 320,
+              "bit_size": 512,
+              "array": true,
+              "count": 64,
+              "type": {
+                "name": "char",
+                "bit_size": 8,
+                "base_type": "char"
+              }
+            }
+          ]
         }
       ]
     },
@@ -2555,6 +2661,43 @@
       ]
     },
     {
+      "name": "CFE_ES_DeleteCDSCmd_t",
+      "bit_size": 528,
+      "fields": [
+        {
+          "name": "CmdHeader",
+          "bit_offset": 0,
+          "bit_size": 64,
+          "array": true,
+          "count": 8,
+          "type": {
+            "name": "unsigned char",
+            "bit_size": 8,
+            "base_type": "unsigned char"
+          }
+        },
+        {
+          "name": "Payload",
+          "bit_offset": 64,
+          "bit_size": 464,
+          "fields": [
+            {
+              "name": "CdsName",
+              "bit_offset": 0,
+              "bit_size": 464,
+              "array": true,
+              "count": 58,
+              "type": {
+                "name": "char",
+                "bit_size": 8,
+                "base_type": "char"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
       "name": "CFE_ES_DumpCDSRegCmd_Payload_t",
       "bit_size": 512,
       "fields": [
@@ -2569,6 +2712,43 @@
             "bit_size": 8,
             "base_type": "char"
           }
+        }
+      ]
+    },
+    {
+      "name": "CFE_ES_DumpCDSRegCmd_t",
+      "bit_size": 576,
+      "fields": [
+        {
+          "name": "CmdHeader",
+          "bit_offset": 0,
+          "bit_size": 64,
+          "array": true,
+          "count": 8,
+          "type": {
+            "name": "unsigned char",
+            "bit_size": 8,
+            "base_type": "unsigned char"
+          }
+        },
+        {
+          "name": "Payload",
+          "bit_offset": 64,
+          "bit_size": 512,
+          "fields": [
+            {
+              "name": "DumpFilename",
+              "bit_offset": 0,
+              "bit_size": 512,
+              "array": true,
+              "count": 64,
+              "type": {
+                "name": "char",
+                "bit_size": 8,
+                "base_type": "char"
+              }
+            }
+          ]
         }
       ]
     },
@@ -3483,7 +3663,6 @@
     },
     {
       "name": "CFE_ES_HkPacket_t",
-      "msgID": 2048,
       "bit_size": 1248,
       "fields": [
         {
@@ -3892,6 +4071,24 @@
       ]
     },
     {
+      "name": "CFE_ES_NoArgsCmd_t",
+      "bit_size": 64,
+      "fields": [
+        {
+          "name": "CmdHeader",
+          "bit_offset": 0,
+          "bit_size": 64,
+          "array": true,
+          "count": 8,
+          "type": {
+            "name": "unsigned char",
+            "bit_size": 8,
+            "base_type": "unsigned char"
+          }
+        }
+      ]
+    },
+    {
       "name": "CFE_ES_ObjectTable_t",
       "bit_size": 480,
       "fields": [
@@ -4144,7 +4341,6 @@
     },
     {
       "name": "CFE_ES_OneAppTlm_t",
-      "msgID": 2059,
       "bit_size": 2080,
       "fields": [
         {
@@ -4334,6 +4530,37 @@
           "bit_offset": 0,
           "bit_size": 32,
           "base_type": "long unsigned int"
+        }
+      ]
+    },
+    {
+      "name": "CFE_ES_OverWriteSysLogCmd_t",
+      "bit_size": 96,
+      "fields": [
+        {
+          "name": "CmdHeader",
+          "bit_offset": 0,
+          "bit_size": 64,
+          "array": true,
+          "count": 8,
+          "type": {
+            "name": "unsigned char",
+            "bit_size": 8,
+            "base_type": "unsigned char"
+          }
+        },
+        {
+          "name": "Payload",
+          "bit_offset": 64,
+          "bit_size": 32,
+          "fields": [
+            {
+              "name": "Mode",
+              "bit_offset": 0,
+              "bit_size": 32,
+              "base_type": "long unsigned int"
+            }
+          ]
         }
       ]
     },
@@ -4682,6 +4909,43 @@
       ]
     },
     {
+      "name": "CFE_ES_PerfSetFilterMaskCmd_t",
+      "bit_size": 128,
+      "fields": [
+        {
+          "name": "CmdHeader",
+          "bit_offset": 0,
+          "bit_size": 64,
+          "array": true,
+          "count": 8,
+          "type": {
+            "name": "unsigned char",
+            "bit_size": 8,
+            "base_type": "unsigned char"
+          }
+        },
+        {
+          "name": "Payload",
+          "bit_offset": 64,
+          "bit_size": 64,
+          "fields": [
+            {
+              "name": "FilterMaskNum",
+              "bit_offset": 0,
+              "bit_size": 32,
+              "base_type": "long unsigned int"
+            },
+            {
+              "name": "FilterMask",
+              "bit_offset": 32,
+              "bit_size": 32,
+              "base_type": "long unsigned int"
+            }
+          ]
+        }
+      ]
+    },
+    {
       "name": "CFE_ES_PerfSetTrigMaskCmd_Payload_t",
       "bit_size": 64,
       "fields": [
@@ -4700,6 +4964,43 @@
       ]
     },
     {
+      "name": "CFE_ES_PerfSetTrigMaskCmd_t",
+      "bit_size": 128,
+      "fields": [
+        {
+          "name": "CmdHeader",
+          "bit_offset": 0,
+          "bit_size": 64,
+          "array": true,
+          "count": 8,
+          "type": {
+            "name": "unsigned char",
+            "bit_size": 8,
+            "base_type": "unsigned char"
+          }
+        },
+        {
+          "name": "Payload",
+          "bit_offset": 64,
+          "bit_size": 64,
+          "fields": [
+            {
+              "name": "TriggerMaskNum",
+              "bit_offset": 0,
+              "bit_size": 32,
+              "base_type": "long unsigned int"
+            },
+            {
+              "name": "TriggerMask",
+              "bit_offset": 32,
+              "bit_size": 32,
+              "base_type": "long unsigned int"
+            }
+          ]
+        }
+      ]
+    },
+    {
       "name": "CFE_ES_PerfStartCmd_Payload_t",
       "bit_size": 32,
       "fields": [
@@ -4708,6 +5009,37 @@
           "bit_offset": 0,
           "bit_size": 32,
           "base_type": "long unsigned int"
+        }
+      ]
+    },
+    {
+      "name": "CFE_ES_PerfStartCmd_t",
+      "bit_size": 96,
+      "fields": [
+        {
+          "name": "CmdHeader",
+          "bit_offset": 0,
+          "bit_size": 64,
+          "array": true,
+          "count": 8,
+          "type": {
+            "name": "unsigned char",
+            "bit_size": 8,
+            "base_type": "unsigned char"
+          }
+        },
+        {
+          "name": "Payload",
+          "bit_offset": 64,
+          "bit_size": 32,
+          "fields": [
+            {
+              "name": "TriggerMode",
+              "bit_offset": 0,
+              "bit_size": 32,
+              "base_type": "long unsigned int"
+            }
+          ]
         }
       ]
     },
@@ -4726,6 +5058,43 @@
             "bit_size": 8,
             "base_type": "char"
           }
+        }
+      ]
+    },
+    {
+      "name": "CFE_ES_PerfStopCmd_t",
+      "bit_size": 576,
+      "fields": [
+        {
+          "name": "CmdHeader",
+          "bit_offset": 0,
+          "bit_size": 64,
+          "array": true,
+          "count": 8,
+          "type": {
+            "name": "unsigned char",
+            "bit_size": 8,
+            "base_type": "unsigned char"
+          }
+        },
+        {
+          "name": "Payload",
+          "bit_offset": 64,
+          "bit_size": 512,
+          "fields": [
+            {
+              "name": "DataFileName",
+              "bit_offset": 0,
+              "bit_size": 512,
+              "array": true,
+              "count": 64,
+              "type": {
+                "name": "char",
+                "bit_size": 8,
+                "base_type": "char"
+              }
+            }
+          ]
         }
       ]
     },
@@ -4805,7 +5174,6 @@
     },
     {
       "name": "CFE_ES_PoolStatsTlm_t",
-      "msgID": 2064,
       "bit_size": 1888,
       "fields": [
         {
@@ -4916,6 +5284,43 @@
       ]
     },
     {
+      "name": "CFE_ES_QueryAllCmd_t",
+      "bit_size": 576,
+      "fields": [
+        {
+          "name": "CmdHeader",
+          "bit_offset": 0,
+          "bit_size": 64,
+          "array": true,
+          "count": 8,
+          "type": {
+            "name": "unsigned char",
+            "bit_size": 8,
+            "base_type": "unsigned char"
+          }
+        },
+        {
+          "name": "Payload",
+          "bit_offset": 64,
+          "bit_size": 512,
+          "fields": [
+            {
+              "name": "QueryAllFileName",
+              "bit_offset": 0,
+              "bit_size": 512,
+              "array": true,
+              "count": 64,
+              "type": {
+                "name": "char",
+                "bit_size": 8,
+                "base_type": "char"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
       "name": "CFE_ES_QueryAllTasksCmd_Payload_t",
       "bit_size": 512,
       "fields": [
@@ -4930,6 +5335,43 @@
             "bit_size": 8,
             "base_type": "char"
           }
+        }
+      ]
+    },
+    {
+      "name": "CFE_ES_QueryAllTasksCmd_t",
+      "bit_size": 576,
+      "fields": [
+        {
+          "name": "CmdHeader",
+          "bit_offset": 0,
+          "bit_size": 64,
+          "array": true,
+          "count": 8,
+          "type": {
+            "name": "unsigned char",
+            "bit_size": 8,
+            "base_type": "unsigned char"
+          }
+        },
+        {
+          "name": "Payload",
+          "bit_offset": 64,
+          "bit_size": 512,
+          "fields": [
+            {
+              "name": "QueryAllFileName",
+              "bit_offset": 0,
+              "bit_size": 512,
+              "array": true,
+              "count": 64,
+              "type": {
+                "name": "char",
+                "bit_size": 8,
+                "base_type": "char"
+              }
+            }
+          ]
         }
       ]
     },
@@ -5591,6 +6033,37 @@
       ]
     },
     {
+      "name": "CFE_ES_RestartCmd_t",
+      "bit_size": 80,
+      "fields": [
+        {
+          "name": "CmdHeader",
+          "bit_offset": 0,
+          "bit_size": 64,
+          "array": true,
+          "count": 8,
+          "type": {
+            "name": "unsigned char",
+            "bit_size": 8,
+            "base_type": "unsigned char"
+          }
+        },
+        {
+          "name": "Payload",
+          "bit_offset": 64,
+          "bit_size": 16,
+          "fields": [
+            {
+              "name": "RestartType",
+              "bit_offset": 0,
+              "bit_size": 16,
+              "base_type": "short unsigned int"
+            }
+          ]
+        }
+      ]
+    },
+    {
       "name": "CFE_ES_SetMaxPRCountCmd_Payload_t",
       "bit_size": 16,
       "fields": [
@@ -5599,6 +6072,37 @@
           "bit_offset": 0,
           "bit_size": 16,
           "base_type": "short unsigned int"
+        }
+      ]
+    },
+    {
+      "name": "CFE_ES_SetMaxPRCountCmd_t",
+      "bit_size": 80,
+      "fields": [
+        {
+          "name": "CmdHeader",
+          "bit_offset": 0,
+          "bit_size": 64,
+          "array": true,
+          "count": 8,
+          "type": {
+            "name": "unsigned char",
+            "bit_size": 8,
+            "base_type": "unsigned char"
+          }
+        },
+        {
+          "name": "Payload",
+          "bit_offset": 64,
+          "bit_size": 16,
+          "fields": [
+            {
+              "name": "MaxPRCount",
+              "bit_offset": 0,
+              "bit_size": 16,
+              "base_type": "short unsigned int"
+            }
+          ]
         }
       ]
     },
@@ -5633,6 +6137,55 @@
       ]
     },
     {
+      "name": "CFE_ES_ShellCmd_t",
+      "bit_size": 1088,
+      "fields": [
+        {
+          "name": "CmdHeader",
+          "bit_offset": 0,
+          "bit_size": 64,
+          "array": true,
+          "count": 8,
+          "type": {
+            "name": "unsigned char",
+            "bit_size": 8,
+            "base_type": "unsigned char"
+          }
+        },
+        {
+          "name": "Payload",
+          "bit_offset": 64,
+          "bit_size": 1024,
+          "fields": [
+            {
+              "name": "CmdString",
+              "bit_offset": 0,
+              "bit_size": 512,
+              "array": true,
+              "count": 64,
+              "type": {
+                "name": "char",
+                "bit_size": 8,
+                "base_type": "char"
+              }
+            },
+            {
+              "name": "OutputFilename",
+              "bit_offset": 512,
+              "bit_size": 512,
+              "array": true,
+              "count": 64,
+              "type": {
+                "name": "char",
+                "bit_size": 8,
+                "base_type": "char"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
       "name": "CFE_ES_ShellPacket_Payload_t",
       "bit_size": 512,
       "fields": [
@@ -5652,7 +6205,6 @@
     },
     {
       "name": "CFE_ES_ShellPacket_t",
-      "msgID": 2063,
       "bit_size": 608,
       "fields": [
         {
@@ -5745,6 +6297,85 @@
           "bit_offset": 1200,
           "bit_size": 16,
           "base_type": "short unsigned int"
+        }
+      ]
+    },
+    {
+      "name": "CFE_ES_StartAppCmd_t",
+      "bit_size": 1280,
+      "fields": [
+        {
+          "name": "CmdHeader",
+          "bit_offset": 0,
+          "bit_size": 64,
+          "array": true,
+          "count": 8,
+          "type": {
+            "name": "unsigned char",
+            "bit_size": 8,
+            "base_type": "unsigned char"
+          }
+        },
+        {
+          "name": "Payload",
+          "bit_offset": 64,
+          "bit_size": 1216,
+          "fields": [
+            {
+              "name": "Application",
+              "bit_offset": 0,
+              "bit_size": 320,
+              "array": true,
+              "count": 40,
+              "type": {
+                "name": "char",
+                "bit_size": 8,
+                "base_type": "char"
+              }
+            },
+            {
+              "name": "AppEntryPoint",
+              "bit_offset": 320,
+              "bit_size": 320,
+              "array": true,
+              "count": 40,
+              "type": {
+                "name": "char",
+                "bit_size": 8,
+                "base_type": "char"
+              }
+            },
+            {
+              "name": "AppFileName",
+              "bit_offset": 640,
+              "bit_size": 512,
+              "array": true,
+              "count": 64,
+              "type": {
+                "name": "char",
+                "bit_size": 8,
+                "base_type": "char"
+              }
+            },
+            {
+              "name": "StackSize",
+              "bit_offset": 1152,
+              "bit_size": 32,
+              "base_type": "long unsigned int"
+            },
+            {
+              "name": "ExceptionAction",
+              "bit_offset": 1184,
+              "bit_size": 16,
+              "base_type": "short unsigned int"
+            },
+            {
+              "name": "Priority",
+              "bit_offset": 1200,
+              "bit_size": 16,
+              "base_type": "short unsigned int"
+            }
+          ]
         }
       ]
     },
@@ -6516,6 +7147,49 @@
       ]
     },
     {
+      "name": "CFE_ES_TlmPoolStatsCmd_t",
+      "bit_size": 416,
+      "fields": [
+        {
+          "name": "CmdHeader",
+          "bit_offset": 0,
+          "bit_size": 64,
+          "array": true,
+          "count": 8,
+          "type": {
+            "name": "unsigned char",
+            "bit_size": 8,
+            "base_type": "unsigned char"
+          }
+        },
+        {
+          "name": "Payload",
+          "bit_offset": 64,
+          "bit_size": 352,
+          "fields": [
+            {
+              "name": "Application",
+              "bit_offset": 0,
+              "bit_size": 320,
+              "array": true,
+              "count": 40,
+              "type": {
+                "name": "char",
+                "bit_size": 8,
+                "base_type": "char"
+              }
+            },
+            {
+              "name": "PoolHandle",
+              "bit_offset": 320,
+              "bit_size": 32,
+              "base_type": "long unsigned int"
+            }
+          ]
+        }
+      ]
+    },
+    {
       "name": "CFE_ES_WriteERlogCmd_Payload_t",
       "bit_size": 512,
       "fields": [
@@ -6534,6 +7208,43 @@
       ]
     },
     {
+      "name": "CFE_ES_WriteERlogCmd_t",
+      "bit_size": 576,
+      "fields": [
+        {
+          "name": "CmdHeader",
+          "bit_offset": 0,
+          "bit_size": 64,
+          "array": true,
+          "count": 8,
+          "type": {
+            "name": "unsigned char",
+            "bit_size": 8,
+            "base_type": "unsigned char"
+          }
+        },
+        {
+          "name": "Payload",
+          "bit_offset": 64,
+          "bit_size": 512,
+          "fields": [
+            {
+              "name": "ERLogFileName",
+              "bit_offset": 0,
+              "bit_size": 512,
+              "array": true,
+              "count": 64,
+              "type": {
+                "name": "char",
+                "bit_size": 8,
+                "base_type": "char"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
       "name": "CFE_ES_WriteSyslogCmd_Payload_t",
       "bit_size": 512,
       "fields": [
@@ -6548,6 +7259,43 @@
             "bit_size": 8,
             "base_type": "char"
           }
+        }
+      ]
+    },
+    {
+      "name": "CFE_ES_WriteSyslogCmd_t",
+      "bit_size": 576,
+      "fields": [
+        {
+          "name": "CmdHeader",
+          "bit_offset": 0,
+          "bit_size": 64,
+          "array": true,
+          "count": 8,
+          "type": {
+            "name": "unsigned char",
+            "bit_size": 8,
+            "base_type": "unsigned char"
+          }
+        },
+        {
+          "name": "Payload",
+          "bit_offset": 64,
+          "bit_size": 512,
+          "fields": [
+            {
+              "name": "SysLogFileName",
+              "bit_offset": 0,
+              "bit_size": 512,
+              "array": true,
+              "count": 64,
+              "type": {
+                "name": "char",
+                "bit_size": 8,
+                "base_type": "char"
+              }
+            }
+          ]
         }
       ]
     },
@@ -7356,7 +8104,6 @@
     },
     {
       "name": "CFE_EVS_Packet_t",
-      "msgID": 2056,
       "bit_size": 1504,
       "fields": [
         {
@@ -7576,7 +8323,6 @@
     },
     {
       "name": "CFE_EVS_TlmPkt_t",
-      "msgID": "2049",
       "bit_size": 4320,
       "fields": [
         {
@@ -8536,7 +9282,6 @@
     },
     {
       "name": "CFE_SB_HKMsg_t",
-      "msgID": 2051,
       "bit_size": 320,
       "fields": [
         {
@@ -9086,7 +9831,6 @@
     },
     {
       "name": "CFE_SB_PrevSubMsg_t",
-      "msgID": 2061,
       "bit_size": 1152,
       "fields": [
         {
@@ -9527,7 +10271,6 @@
     },
     {
       "name": "CFE_SB_StatMsg_t",
-      "msgID": 2058,
       "bit_size": 16896,
       "fields": [
         {
@@ -9823,7 +10566,6 @@
     },
     {
       "name": "CFE_SB_SubRprtMsg_t",
-      "msgID": 2062,
       "bit_size": 160,
       "fields": [
         {
@@ -10686,7 +11428,6 @@
     },
     {
       "name": "CFE_TBL_HkPacket_t",
-      "msgID": 2052,
       "bit_size": 2848,
       "fields": [
         {
@@ -12724,7 +13465,6 @@
     },
     {
       "name": "CFE_TBL_TblRegPacket_t",
-      "msgID": 2060,
       "bit_size": 1760,
       "fields": [
         {
@@ -13458,7 +14198,6 @@
     },
     {
       "name": "CFE_TIME_DiagPacket_t",
-      "msgID": 2054,
       "bit_size": 1696,
       "fields": [
         {
@@ -14008,7 +14747,6 @@
     },
     {
       "name": "CFE_TIME_HkPacket_t",
-      "msgID": 2053,
       "bit_size": 352,
       "fields": [
         {

@@ -55,12 +55,15 @@ exports.events = [
 var listenerCount = Emitter.listenerCount ||
 function (emitter, type) { return emitter.listeners(type).length }
 
-function TmTcServer(options) {
+function TmTcServer(options, sendCallback) {
     this.parsers = {};
     this.options = options;
-    this.cmdDefs = {};
+    this.cmdDefs = [];
     this.tlm = {};
     this.protoDefs = {};
+    this.cmdHeaderLength = 64;
+    this.sequence = 0;
+    this.sendCallback = sendCallback;
     
     this.ccsdsPriHdr = new Parser()
       .endianess('big')
@@ -84,7 +87,7 @@ function TmTcServer(options) {
     	  .endianess('little')
           .uint32('seconds')
           .uint16('subseconds');
-        this.headerLength = 96;
+        this.tlmHeaderLength = 96;
     	break;
     	  
       case 'CFE_SB_TIME_32_32_SUBS':
@@ -92,7 +95,7 @@ function TmTcServer(options) {
     	  .endianess('little')
           .uint32('seconds')
           .uint32('subseconds');
-        this.headerLength = 98;
+        this.tlmHeaderLength = 98;
     	break;
     	  
       case 'CFE_SB_TIME_32_32_M_20':
@@ -100,7 +103,7 @@ function TmTcServer(options) {
     	  .endianess('little')
           .uint32('seconds')
           .uint32('subseconds');
-        this.headerLength = 98;
+        this.tlmHeaderLength = 98;
     	break;
     	  
       default:
@@ -215,9 +218,9 @@ TmTcServer.prototype.parseMsgDefFile = function (filePath) {
     		
 			for(var j=0; j < symbol.fields.length; ++j) {
 				if(msgDef.little_endian == true) {
-  		    	    bitPosition = this.parseFieldDef(parser, symbol.fields[j], bitPosition, 'le');
+  		    	    //bitPosition = this.tlmParseFieldDef(parser, symbol.fields[j], bitPosition, 'le');
 				} else {
-					bitPosition = this.parseFieldDef(parser, symbol.fields[j], bitPosition, 'be');
+					//bitPosition = this.tlmParseFieldDef(parser, symbol.fields[j], bitPosition, 'be');
   		    	}
 			}
 
@@ -229,17 +232,66 @@ TmTcServer.prototype.parseMsgDefFile = function (filePath) {
 	for(var key in msgDef.cmds) {
 		if(msgDef.cmds.hasOwnProperty(key)) {
 			//console.log(key, msgDef.cmds[key]);
+			var symbolName = msgDef.cmds[key].symbol;
+			var msgID = msgDef.cmds[key].msg_id;
+			var code = msgDef.cmds[key].code;
+			var cmdDef = [];
+			var symbol = {};
+			var bitPosition = 0;
+			var encoder = {};
+			var decoder;
+
+			for(var i = 0; i < msgDef.symbols.length; ++i) {
+				if(msgDef.symbols[i].name == symbolName) {
+					symbol = msgDef.symbols[i];
+					break;
+				}
+			};
+    		
+			for(var i=0; i < symbol.fields.length; ++i) {
+				if(msgDef.little_endian == true) {
+  		    	    bitPosition = this.cmdParseFieldDef(cmdDef, encoder, decoder, symbol.fields[i], bitPosition, 'le');
+				} else {
+					bitPosition = this.cmdParseFieldDef(cmdDef, encoder, decoder, symbol.fields[i], bitPosition, 'be');
+  		    	} 
+			}
+			
+			cmdDef.byteLength = bitPosition / 8;
+			cmdDef.msgID = msgID;
+			cmdDef.commandCode = code;
+			console.log(cmdDef);
+			
+			this.cmdDefs[key] = cmdDef;
 		}
 	}
+	
+	var cmd;
+	
+	cmd = this.getCmdDef('ES_NOOP');
+	this.sendCommand(cmd);
+	
+	cmd = this.getCmdDef('EVS_NOOP');
+	this.sendCommand(cmd);
+	
+	cmd = this.getCmdDef('SB_NOOP');
+	this.sendCommand(cmd);
+	
+	cmd = this.getCmdDef('TBL_NOOP');
+	this.sendCommand(cmd);
+	
+	cmd = this.getCmdDef('TIME_NOOP');
+	this.sendCommand(cmd);
+	
+	//cmd['Application'].value = 'Hello world';
+	//cmd['PoolHandle'].value = 1234;
+	
 }
 
 
 
-TmTcServer.prototype.parseFieldDef = function (parser, field, bitPosition, endian) {	
-	var retObj = {};
-	
+TmTcServer.prototype.tlmParseFieldDef = function (parser, field, bitPosition, endian) {		
 	if(typeof field.array !== 'undefined') {
-		if(bitPosition >= this.headerLength) {
+		if(bitPosition >= this.tlmHeaderLength) {
 			if(typeof field.type.base_type !== 'undefined'){
   			    switch(field.type.base_type) {
  		            case 'unsigned char':
@@ -297,9 +349,9 @@ TmTcServer.prototype.parseFieldDef = function (parser, field, bitPosition, endia
 					//} else {
 					//	newParser.endianess('big');
 					//}
-			    	//bitPosition = this.parseFieldDef(newParser, field.type.fields[i], bitPosition, endian);
+			    	//bitPosition = this.tlmParseFieldDef(newParser, field.type.fields[i], bitPosition, endian);
 			    	//parser.nest(field.name, {type: newParser});
-			    	bitPosition = this.parseFieldDef(parser, field.type.fields[i], bitPosition, endian);
+			    //	bitPosition = this.tlmParseFieldDef(parser, field.type.fields[i], bitPosition, endian);
 				}
 			}
 		}
@@ -312,12 +364,12 @@ TmTcServer.prototype.parseFieldDef = function (parser, field, bitPosition, endia
 			//} else {
 			//	newParser.endianess('big');
 			//}
-	    	//bitPosition = this.parseFieldDef(newParser, field.fields[i], bitPosition, endian);
+	    	//bitPosition = this.tlmParseFieldDef(newParser, field.fields[i], bitPosition, endian);
 	    	//parser.nest(field.name, {type: newParser});
-	    	bitPosition = this.parseFieldDef(parser, field.fields[i], bitPosition, endian);
+	    //	bitPosition = this.tlmParseFieldDef(parser, field.fields[i], bitPosition, endian);
 		}
 	} else {
-		if(bitPosition >= this.headerLength) {
+		if(bitPosition >= this.tlmHeaderLength) {
 			switch(field.base_type) {
 		        case 'unsigned char':
 		        	parser.uint8(field.name);
@@ -346,6 +398,175 @@ TmTcServer.prototype.parseFieldDef = function (parser, field, bitPosition, endia
  		        default:
  		        	console.log('Unsupported type ' + field);
  		            exit(-1);
+		    }
+		}
+		bitPosition += field.bit_size;
+	}
+
+	return bitPosition;
+}
+
+
+
+TmTcServer.prototype.getCmdDef = function (opsName) {
+	return this.cmdDefs[opsName];
+}
+
+
+
+TmTcServer.prototype.sendCommand = function (cmd) {
+	var buffer = new Buffer(cmd.byteLength);
+	buffer.fill(0x00);
+	
+	buffer.writeUInt16BE(cmd.msgID, 0);
+	buffer.writeUInt16BE(this.sequence, 2);
+	buffer.writeUInt16BE(cmd.byteLength - 7, 4);
+	buffer.writeUInt8(cmd.commandCode, 7);
+	buffer.writeUInt8(0, 6);
+	
+	this.sequence++;
+	
+	for(var key in cmd) {
+		var field = cmd[key]
+		if(field.hasOwnProperty('value')) {
+			if(field.hasOwnProperty('multiplicity')) {
+				switch(field.type) {
+					case 'uint8':
+						buffer.writeUInt8(field.value, field.offset / 8);
+						break;
+						
+					case 'string':
+						buffer.write(field.value, field.offset / 8);
+						break;
+						
+					case 'uint16':
+						buffer.writeUInt16LE(field.value, field.offset / 8);
+						break;
+						
+					case 'int16':
+						buffer.writeInt16LE(field.value, field.offset / 8);
+						break;
+						
+					case 'uint32':
+						buffer.writeUInt32LE(field.value, field.offset / 8);
+						break;
+						
+					case 'int32':
+						buffer.writeInt32LE(field.value, field.offset / 8);
+						break;
+				}
+			} else {
+
+				switch(field.type) {
+					case 'uint8':
+						buffer.writeInt32LE(field.value, field.offset / 8);
+						break;
+						
+					case 'string':
+						console.log(field.value);
+						buffer.write(field.value, field.offset / 8, field.length);
+						break;
+						
+					case 'uint16':
+						buffer.writeUInt16LE(field.value, field.offset / 8);
+						break;
+						
+					case 'int16':
+						buffer.writeInt16LE(field.value, field.offset / 8);
+						break;
+						
+					case 'uint32':
+						console.log(field.offset / 8);
+						buffer.writeUInt32LE(field.value, field.offset / 8);
+						break;
+						
+					case 'int32':
+						buffer.writeInt32LE(field.value, field.offset / 8);
+						break;
+				}
+			}
+		}
+	}
+	
+	this.sendCallback(buffer);
+}
+
+
+
+TmTcServer.prototype.cmdParseFieldDef = function (msgDef, encoder, decoder, field, bitPosition, endian) {		
+	if(typeof field.array !== 'undefined') {
+		if(bitPosition >= this.cmdHeaderLength) {
+			if(typeof field.type.base_type !== 'undefined'){
+  			    switch(field.type.base_type) {
+ 		            case 'unsigned char':
+ 		            	msgDef[field.name] = {type: 'uint8', multiplicity: field.count, offset: bitPosition};
+ 		        	    break;
+ 		        	
+ 		            case 'char':
+ 		            	msgDef[field.name] = {type: 'string', length: field.count, offset: bitPosition};
+ 		                break;
+ 		        	
+ 		            case 'short unsigned int':
+ 		            	msgDef[field.name] = {type: 'uint16', multiplicity: field.count, offset: bitPosition};
+ 		        	    break;
+ 		        	
+ 		            case 'short int':
+ 		            	msgDef[field.name] = {type: 'int16', multiplicity: field.count, offset: bitPosition};
+ 		        	    break;
+ 		        	
+			        case 'long unsigned int':
+ 		            	msgDef[field.name] = {type: 'uint32', multiplicity: field.count, offset: bitPosition};
+ 		        	    break;
+ 		        	
+			        case 'long int':
+ 		            	msgDef[field.name] = {type: 'int16', multiplicity: field.count, offset: bitPosition};
+ 		        	    break;
+ 		        	
+ 		            default:
+ 		        	    console.log('Unsupported type');
+  			    }
+			} else {
+				for(var i=0; i < field.type.fields.length; ++i) {				    
+			    	bitPosition = this.cmdParseFieldDef(msgDef, encoder, decoder, field.type.fields[i], bitPosition, endian);
+				}
+			}
+		}
+		bitPosition += (field.type.bit_size * field.count);
+	} else if(Array.isArray(field.fields)) {
+		for(var i=0; i < field.fields.length; ++i) {
+		    //msgDef[field.name] = {};	
+		
+	    	bitPosition = this.cmdParseFieldDef(msgDef, encoder, decoder, field.fields[i], bitPosition, endian);
+		}
+	} else {
+		if(bitPosition >= this.cmdHeaderLength) {
+			switch(field.base_type) {
+		        case 'unsigned char':
+		            msgDef[field.name] = {type: 'uint8', offset: bitPosition};
+		        	break;
+		        	
+		        case 'char':
+		            msgDef[field.name] = {type: 'int8', offset: bitPosition};
+		        	break;
+		        	
+		        case 'short unsigned int':
+		            msgDef[field.name] = {type: 'uint16', offset: bitPosition};
+		        	break;
+		        	
+		        case 'short int':
+		            msgDef[field.name] = {type: 'int16', offset: bitPositio};
+		        	break;
+		        	
+		        case 'long unsigned int':
+		            msgDef[field.name] = {type: 'uint32', offset: bitPosition};
+		        	break;
+		        	
+		        case 'long int':
+		            msgDef[field.name] = {type: 'int32', offset: bitPosition};
+		        	break;
+ 		        	
+ 		        default:
+ 		        	console.log('Unsupported type ' + field);
 		    }
 		}
 		bitPosition += field.bit_size;
