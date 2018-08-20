@@ -214,10 +214,14 @@ io.on('connection', function(socket) {
 	}; 
 });
 
+
 var tmtc = new TmTcServer(config, function (buffer) {
 	console.log(buffer);
 	binSender.send(buffer, 0, buffer.length, config.binCmdPort, '127.0.0.1');
 });
+
+
+//tmtc.subscribe()
 
 
 binServer.on('error', (err) => {

@@ -41,6 +41,7 @@ var fs = require('fs');
 const util = require('util');
 var protobuf = require('protobufjs');
 var Promise = require('promise');
+var mergeJSON = require('merge-json');
 
 var emit = Emitter.prototype.emit;
 
@@ -59,11 +60,13 @@ function TmTcServer(options, sendCallback) {
     this.parsers = {};
     this.options = options;
     this.cmdDefs = [];
+    this.tlmDefs = [];
     this.tlm = {};
     this.protoDefs = {};
     this.cmdHeaderLength = 64;
     this.sequence = 0;
     this.sendCallback = sendCallback;
+    this.subscribers = {};
     
     this.ccsdsPriHdr = new Parser()
       .endianess('big')
@@ -122,13 +125,24 @@ function TmTcServer(options, sendCallback) {
     	})
         .buffer('payload', {readUntil: 'eof'});
    
+    var msgDefs = {};
+    
     for(var i = 0; i < options.msgDefs.length; ++i) {
-    	this.parseMsgDefFile(options.msgDefs[i].file);
+    	
+    	var msgDefInput = JSON.parse(fs.readFileSync(options.msgDefs[i].file, 'utf8'));
+    	msgDefs = mergeJSON.merge(msgDefs, msgDefInput);
     }
+    
+    //console.log(msgDefs);
+	this.parseMsgDefFile(msgDefs);
+    
+    //for(var i = 0; i < options.msgDefs.length; ++i) {
+    //	this.parseMsgDefFile(options.msgDefs[i].file);
+    //}
    
-    for(var i = 0; i < options.protoDefs.length; ++i) {
-    	this.parseProtoFile(options.protoDefs[i].msg_id, options.protoDefs[i].file);
-    }
+    //for(var i = 0; i < options.protoDefs.length; ++i) {
+    //	this.parseProtoFile(options.protoDefs[i].msgId, options.protoDefs[i].file);
+    //}
 };
 
 
@@ -141,17 +155,95 @@ TmTcServer.prototype.__proto__ = Emitter.prototype;
 
 
 TmTcServer.prototype.processBinaryMessage = function (buffer) {
+	var parsedTlm = [];
+	
     var msgID = buffer.readUInt16BE(0);
     
-    var parser = this.parsers[msgID];
-    
 	var message = this.ccsds.parse(buffer);
+	
+	var tlmDef = this.getMsgDefByMsgID(msgID);
 
-    if(typeof parser !== 'undefined') {
-    	message.payload = parser.parse(message.payload);
+    if(typeof tlmDef !== 'undefined') {
+    	for(var fieldName in tlmDef.fields) {
+    		var field = tlmDef.fields[fieldName];
+    		var opsName = tlmDef.path + '/'+ fieldName;
+    		var telemItem = {'opsName': opsName};
+    		
+    		if(field.hasOwnProperty('multiplicity')) {
+    		    switch(field.type) {
+    				case 'uint8':
+    					telemItem.value = buffer.readUInt8(field.offset / 8);
+    					break;
+    					
+    				case 'string':
+    					telemItem.value = buffer.read(field.offset / 8);
+    					break;
+    						
+    				case 'uint16':
+    					telemItem.value = buffer.readUInt16LE(field.offset / 8);
+    					break;
+    						
+    				case 'int16':
+    					telemItem.value = buffer.readInt16LE(field.offset / 8);
+    					break;
+    						
+    				case 'uint32':
+    					telemItem.value = buffer.readUInt32LE(field.offset / 8);
+    					break;
+    						
+    				case 'int32':
+    					telemItem.value = buffer.readInt32LE(field.offset / 8);
+    					break;
+   				}
+   			} else {
+   				switch(field.type) {
+   					case 'uint8':
+   						telemItem.value = buffer.readUInt8(field.offset / 8);
+   						break;
+    						
+   					case 'string':
+   						telemItem.value = buffer.toString('ascii', field.offset / 8, (field.offset / 8) + field.length);
+   						break;
+    						
+   					case 'uint16':
+   						telemItem.value = buffer.readUInt16LE(field.offset / 8);
+   						break;
+    						
+   					case 'int16':
+   						telemItem.value = buffer.readInt16LE(field.offset / 8);
+   						break;
+    						
+   					case 'uint32':
+   						telemItem.value = buffer.readUInt32LE(field.offset / 8);
+   						break;
+    						
+   					case 'int32':
+   						telemItem.value = buffer.readInt32LE(field.offset / 8);
+   						break;
+   				}
+   			}
+        	parsedTlm.push(telemItem);
+   		}
+        
+        /* Now Send the values to the subscribers. */
+        
+    	for(var i = 0; i < parsedTlm.length; ++i) {
+        	//console.log('****************  ' + parsedTlm[i].path);
+    		if(this.subscribers.hasOwnProperty(parsedTlm[i].opsName)) {
+    			var subscription = this.subscribers[parsedTlm[i].opsName];
+    			for(var j = 0; j < subscription.length; ++j) {
+    				subscription[j](parsedTlm[i].value);
+    			}
+    		}
+    	}
     }
 };
 
+
+
+TmTcServer.prototype.getMsgDefByMsgID = function (msgID) {
+	return this.tlmDefs[msgID];
+}
 
 
 TmTcServer.prototype.processPBMessage = function (buffer) {
@@ -199,97 +291,217 @@ TmTcServer.prototype.parseProtoFile = function (msgID, filePath) {
 
 
 
-TmTcServer.prototype.parseMsgDefFile = function (filePath) {
-	var msgDef = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+TmTcServer.prototype.isCommandMsg = function (msgID) {
+	if((msgID & 0x1000) == 0x1000) {
+		return true;
+	} else {
+		return false;
+	}
+}
 
+
+
+TmTcServer.prototype.isTelemetryMsg = function (msgID) {
+	if((msgID & 0x1000) == 0x1000) {
+		return false;
+	} else {
+		return true;
+	}
+}
+
+
+
+TmTcServer.prototype.parseMsgDefFile = function (msgDefs) {
 	/* Parse the telemetry. */
-	for(var i = 0; i < msgDef.symbols.length; ++i) {
-		var symbol = msgDef.symbols[i];
-		var bitPosition = 0;
+	//for(var i = 0; i < msgDef.symbols.length; ++i) {
+	//	var symbol = msgDef.symbols[i];
+	//	var bitPosition = 0;
 				
-		if(typeof symbol.msgID !== 'undefined') {
-    		var parser = new Parser();
+	//	if(typeof symbol.msgID !== 'undefined') {
+    //		var parser = new Parser();
     		
-    		if(msgDef.little_endian == true) {
-    			parser.endianess('little');
-    		} else {
-    			parser.endianess('big');
-    		}
+    //		if(msgDef.little_endian == true) {
+    //			parser.endianess('little');
+    //		} else {
+    //			parser.endianess('big');
+    //		}
     		
-			for(var j=0; j < symbol.fields.length; ++j) {
-				if(msgDef.little_endian == true) {
-  		    	    //bitPosition = this.tlmParseFieldDef(parser, symbol.fields[j], bitPosition, 'le');
-				} else {
-					//bitPosition = this.tlmParseFieldDef(parser, symbol.fields[j], bitPosition, 'be');
-  		    	}
-			}
+	//		for(var j=0; j < symbol.fields.length; ++j) {
+	//			if(msgDef.little_endian == true) {
+  	//	    	    bitPosition = this.tlmParseFieldDef(parser, symbol.fields[j], bitPosition, 'le');
+	//			} else {
+	//				bitPosition = this.tlmParseFieldDef(parser, symbol.fields[j], bitPosition, 'be');
+  	//	    	}
+	//		}
 
-	        this.addMessageParser(symbol.msgID, parser);
-		}
-	};
+	//        this.addMessageParser(symbol.msgID, parser);
+	        
+	//        console.log(bitPosition);
+	//	}
+	//};
 
-	/* Parse the command definitions. */
-	for(var key in msgDef.cmds) {
-		if(msgDef.cmds.hasOwnProperty(key)) {
-			//console.log(key, msgDef.cmds[key]);
-			var symbolName = msgDef.cmds[key].symbol;
-			var msgID = msgDef.cmds[key].msg_id;
-			var code = msgDef.cmds[key].code;
+	/* Get the config object. */
+	var messages = msgDefs.Messages;
+	
+	/* Flatten the message definition from a hierarchical to ops names. */
+	var msgDefInput = this.flattenMsgDefs(messages);
+	
+	for(var key in msgDefInput) {
+		var symbolName = msgDefInput[key].symbol;
+		var msgID = msgDefInput[key].msgID;
+		if(this.isCommandMsg(msgID)) {
+			var cmdCode = msgDefInput[key].cmdCode;
 			var cmdDef = [];
 			var symbol = {};
 			var bitPosition = 0;
-			var encoder = {};
-			var decoder;
+			
+			console.log(key);
 
-			for(var i = 0; i < msgDef.symbols.length; ++i) {
-				if(msgDef.symbols[i].name == symbolName) {
-					symbol = msgDef.symbols[i];
+			for(var i = 0; i < msgDefs.symbols.length; ++i) {
+				if(msgDefs.symbols[i].name == symbolName) {
+					symbol = msgDefs.symbols[i];
 					break;
 				}
 			};
     		
 			for(var i=0; i < symbol.fields.length; ++i) {
-				if(msgDef.little_endian == true) {
-  		    	    bitPosition = this.cmdParseFieldDef(cmdDef, encoder, decoder, symbol.fields[i], bitPosition, 'le');
+				if(msgDefs.little_endian == true) {
+  		    	    bitPosition = this.msgParseFieldDef(cmdDef, symbol.fields[i], bitPosition, 'le', this.cmdHeaderLength);
 				} else {
-					bitPosition = this.cmdParseFieldDef(cmdDef, encoder, decoder, symbol.fields[i], bitPosition, 'be');
+					bitPosition = this.msgParseFieldDef(cmdDef, symbol.fields[i], bitPosition, 'be', this.cmdHeaderLength);
   		    	} 
 			}
 			
 			cmdDef.byteLength = bitPosition / 8;
 			cmdDef.msgID = msgID;
-			cmdDef.commandCode = code;
-			console.log(cmdDef);
+			cmdDef.commandCode = cmdCode;
 			
 			this.cmdDefs[key] = cmdDef;
+		} else {
+			var tlmDef = {};
+			var symbol = {};
+			var bitPosition = 0;
+
+			for(var i = 0; i < msgDefs.symbols.length; ++i) {
+				if(msgDefs.symbols[i].name == symbolName) {
+					symbol = msgDefs.symbols[i];
+					break;
+				}
+			};
+			
+			tlmDef.fields = new Array();
+    		
+			for(var i=0; i < symbol.fields.length; ++i) {
+				if(msgDefs.little_endian == true) {
+  		    	    bitPosition = this.msgParseFieldDef(tlmDef.fields, symbol.fields[i], bitPosition, 'le', this.tlmHeaderLength);
+				} else {
+  		    	    bitPosition = this.msgParseFieldDef(tlmDef.fields, symbol.fields[i], bitPosition, 'be', this.tlmHeaderLength);
+  		    	} 
+			}
+			
+			tlmDef.byteLength = bitPosition / 8;
+			
+			tlmDef.path = key;
+			
+			this.tlmDefs[msgID] = tlmDef;
 		}
 	}
 	
 	var cmd;
 	
-	cmd = this.getCmdDef('ES_NOOP');
+	cmd = this.getCmdDef('/CFE_ES/ES_NOOP');
+	console.log('**********************************************');
+	console.log(cmd);
+	console.log('**********************************************');
 	this.sendCommand(cmd);
 	
-	cmd = this.getCmdDef('EVS_NOOP');
-	this.sendCommand(cmd);
+	//cmd = this.getCmdDef('EVS_NOOP');
+	//this.sendCommand(cmd);
 	
-	cmd = this.getCmdDef('SB_NOOP');
-	this.sendCommand(cmd);
+	//cmd = this.getCmdDef('SB_NOOP');
+	//this.sendCommand(cmd);
 	
-	cmd = this.getCmdDef('TBL_NOOP');
-	this.sendCommand(cmd);
+	//cmd = this.getCmdDef('TBL_NOOP');
+	//this.sendCommand(cmd);
 	
-	cmd = this.getCmdDef('TIME_NOOP');
-	this.sendCommand(cmd);
+	//cmd = this.getCmdDef('TIME_NOOP');
+	//this.sendCommand(cmd);
 	
 	//cmd['Application'].value = 'Hello world';
 	//cmd['PoolHandle'].value = 1234;
+	
+	this.subscribe('/CFE_ES/HK/CmdCounter', function(value) {
+		console.log(value);
+	})
 	
 }
 
 
 
-TmTcServer.prototype.tlmParseFieldDef = function (parser, field, bitPosition, endian) {		
+TmTcServer.prototype.subscribe = function (tlmID, callback) {
+	if(!this.subscribers.hasOwnProperty(tlmID)) {
+		this.subscribers[tlmID] = new Array();
+	}
+	
+	this.subscribers[tlmID].push(callback);
+}
+
+
+
+TmTcServer.prototype.flattenMsgDefs = function (obj, msgDefs, path) {	    
+	if(typeof path === 'undefined') {
+        path = '';
+    }
+    
+    if(typeof msgDefs === 'undefined') {
+        msgDefs = {};
+    }
+	
+	for(var prop in obj) {
+		var newPath = path + '/' + prop;
+		if(this.isMsgDef(obj[prop], newPath)) {
+			msgDefs[newPath] = obj[prop];
+		} else {
+			this.flattenMsgDefs(obj[prop], msgDefs, newPath);
+		}
+	}
+	
+	return msgDefs
+}
+
+
+
+TmTcServer.prototype.isMsgDef = function (obj, path) {
+	/* First, check to see if the object has both message ID and symbol
+	 * assigned to it.
+	 */
+	var hasMsgId = obj.hasOwnProperty('msgID');
+	var hasSymbol = obj.hasOwnProperty('symbol');
+	
+	if(hasMsgId && hasSymbol) {
+		/* It does.  This must be a message definition.  Return this object. */
+		return true;
+	}
+	
+	/* Now check to see if this object has one but not the other, so we can 
+	 * let the operator now the definition is malformed.
+	 */
+	if(hasMsgId && !hasSymbol) {
+		/* It has a message ID but not a symbol assigned.  Return nothing.*/
+		console.log('Message definition for ' + path + ' is missing the symbol definition.');
+		return false;
+	}
+
+	if(!hasMsgId && hasSymbol) {
+		/* It has a symbol ID but not a message ID assigned.  Return nothing.*/
+		console.log('Message definition for ' + path + ' is missing the message ID definition.');
+		return false;
+	}
+}
+
+
+
+TmTcServer.prototype.tlmParseFieldDef2 = function (parser, field, bitPosition, endian) {		
 	if(typeof field.array !== 'undefined') {
 		if(bitPosition >= this.tlmHeaderLength) {
 			if(typeof field.type.base_type !== 'undefined'){
@@ -351,7 +563,7 @@ TmTcServer.prototype.tlmParseFieldDef = function (parser, field, bitPosition, en
 					//}
 			    	//bitPosition = this.tlmParseFieldDef(newParser, field.type.fields[i], bitPosition, endian);
 			    	//parser.nest(field.name, {type: newParser});
-			    //	bitPosition = this.tlmParseFieldDef(parser, field.type.fields[i], bitPosition, endian);
+			    	bitPosition = this.tlmParseFieldDef(parser, field.type.fields[i], bitPosition, endian);
 				}
 			}
 		}
@@ -366,7 +578,7 @@ TmTcServer.prototype.tlmParseFieldDef = function (parser, field, bitPosition, en
 			//}
 	    	//bitPosition = this.tlmParseFieldDef(newParser, field.fields[i], bitPosition, endian);
 	    	//parser.nest(field.name, {type: newParser});
-	    //	bitPosition = this.tlmParseFieldDef(parser, field.fields[i], bitPosition, endian);
+	    	bitPosition = this.tlmParseFieldDef(parser, field.fields[i], bitPosition, endian);
 		}
 	} else {
 		if(bitPosition >= this.tlmHeaderLength) {
@@ -459,11 +671,10 @@ TmTcServer.prototype.sendCommand = function (cmd) {
 
 				switch(field.type) {
 					case 'uint8':
-						buffer.writeInt32LE(field.value, field.offset / 8);
+						buffer.writeUInt8(field.value, field.offset / 8);
 						break;
 						
 					case 'string':
-						console.log(field.value);
 						buffer.write(field.value, field.offset / 8, field.length);
 						break;
 						
@@ -476,7 +687,6 @@ TmTcServer.prototype.sendCommand = function (cmd) {
 						break;
 						
 					case 'uint32':
-						console.log(field.offset / 8);
 						buffer.writeUInt32LE(field.value, field.offset / 8);
 						break;
 						
@@ -493,9 +703,9 @@ TmTcServer.prototype.sendCommand = function (cmd) {
 
 
 
-TmTcServer.prototype.cmdParseFieldDef = function (msgDef, encoder, decoder, field, bitPosition, endian) {		
+TmTcServer.prototype.msgParseFieldDef = function (msgDef, field, bitPosition, endian, headerLength) {		
 	if(typeof field.array !== 'undefined') {
-		if(bitPosition >= this.cmdHeaderLength) {
+		if(bitPosition >= headerLength) {
 			if(typeof field.type.base_type !== 'undefined'){
   			    switch(field.type.base_type) {
  		            case 'unsigned char':
@@ -527,7 +737,7 @@ TmTcServer.prototype.cmdParseFieldDef = function (msgDef, encoder, decoder, fiel
   			    }
 			} else {
 				for(var i=0; i < field.type.fields.length; ++i) {				    
-			    	bitPosition = this.cmdParseFieldDef(msgDef, encoder, decoder, field.type.fields[i], bitPosition, endian);
+			    	bitPosition = this.msgParseFieldDef(msgDef, field.type.fields[i], bitPosition, endian, headerLength);
 				}
 			}
 		}
@@ -536,7 +746,7 @@ TmTcServer.prototype.cmdParseFieldDef = function (msgDef, encoder, decoder, fiel
 		for(var i=0; i < field.fields.length; ++i) {
 		    //msgDef[field.name] = {};	
 		
-	    	bitPosition = this.cmdParseFieldDef(msgDef, encoder, decoder, field.fields[i], bitPosition, endian);
+	    	bitPosition = this.msgParseFieldDef(msgDef, field.fields[i], bitPosition, endian, headerLength);
 		}
 	} else {
 		if(bitPosition >= this.cmdHeaderLength) {
@@ -554,7 +764,7 @@ TmTcServer.prototype.cmdParseFieldDef = function (msgDef, encoder, decoder, fiel
 		        	break;
 		        	
 		        case 'short int':
-		            msgDef[field.name] = {type: 'int16', offset: bitPositio};
+		            msgDef[field.name] = {type: 'int16', offset: bitPosition};
 		        	break;
 		        	
 		        case 'long unsigned int':

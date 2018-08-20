@@ -45,7 +45,9 @@ const config = {
     pbTlmPort:                 5012,
     pbCmdPort:                 5013,
     msgDefs: [
-    	{file: './output-cmd.json'}
+    	{file: './output.json'},
+    	{file: './output-cmd.json'},
+    	{file: './input.json'}
     ],
     protoDefs: [
     	{msg_id: 2048, file: './proto_defs/es_hk.proto'},
