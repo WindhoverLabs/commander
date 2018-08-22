@@ -5,8 +5,8 @@ import "nanopb.proto";
 
 message es_perf_set_filter_mask_payload_pb
 {
-	required uint32 FilterMaskNum = 1;
-	required uint32 FilterMask = 2;
+	optional uint32 FilterMaskNum = 1;
+	optional uint32 FilterMask = 2;
 }
 
 message es_perf_set_filter_mask_pb

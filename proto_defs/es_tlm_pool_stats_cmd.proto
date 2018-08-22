@@ -5,8 +5,8 @@ import "nanopb.proto";
 
 message es_tlm_pool_stats_cmd_payload_pb
 {
-	required string Application = 1[(nanopb).max_size = 64];
-	required uint32 PoolHandle = 2;
+	optional string Application = 1[(nanopb).max_size = 64];
+	optional uint32 PoolHandle = 2;
 }
 
 message es_tlm_pool_stats_cmd_pb

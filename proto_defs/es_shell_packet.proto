@@ -5,7 +5,7 @@ import "nanopb.proto";
 
 message es_shell_packet_payload_pb
 {
-	required string ShellOutput = 1[(nanopb).max_size = 64];
+	optional string ShellOutput = 1[(nanopb).max_size = 64];
 }
 
 message es_shell_packet_pb

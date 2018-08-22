@@ -5,7 +5,7 @@ import "nanopb.proto";
 
 message es_write_sys_log_payload_pb
 {
-	required string SysLogFileName = 1[(nanopb).max_size = 64];
+	optional string SysLogFileName = 1[(nanopb).max_size = 64];
 }
 
 message es_write_sys_log_pb

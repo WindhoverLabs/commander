@@ -5,7 +5,7 @@ import "nanopb.proto";
 
 message es_query_all_payload_pb
 {
-	required string QueryAllFileName = 1[(nanopb).max_size = 64];
+	optional string QueryAllFileName = 1[(nanopb).max_size = 64];
 }
 
 message es_query_all_pb

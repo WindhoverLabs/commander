@@ -5,7 +5,7 @@ import "nanopb.proto";
 
 message es_dump_cds_reg_payload_pb
 {
-	required string DumpFilename = 1[(nanopb).max_size = 64];
+	optional string DumpFilename = 1[(nanopb).max_size = 64];
 }
 
 message es_dump_cds_reg_pb

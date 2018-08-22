@@ -5,32 +5,32 @@ import "nanopb.proto";
 
 message es_one_app_payload_pb
 {
-	required es_app_info_pb AppInfo = 1;
+	optional es_app_info_pb AppInfo = 1;
 }
 
 message es_app_info_pb
 {
-	required uint32 ExecutionCounter = 1;
-	required uint32 NumOfChildTasks = 2;
-	required string Name = 3[(nanopb).max_size = 64];
-	required string MainTaskName = 4[(nanopb).max_size = 64];
-	required uint32 CodeAddress = 5;
-	required uint32 MainTaskId = 6;
-	required uint32 CodeSize = 7;
-	required string FileName = 8[(nanopb).max_size = 64];
-	required uint32 Priority = 9;
-	required uint32 StartAddress = 10;
-	required uint32 DataAddress = 11;
-	required string EntryPoint = 12[(nanopb).max_size = 64];
-	required uint32 BSSAddress = 13;
-	required uint32 AppId = 14;
-	required uint32 BSSSize = 15;
-	required uint32 AddressesAreValid = 16;
-	required uint32 StackSize = 17;
-	required uint32 DataSize = 18;
-	required uint32 Type = 19;
-	required uint32 ExceptionAction = 20;
-	required uint32 ModuleId = 21;
+	optional uint32 ExecutionCounter = 1;
+	optional uint32 NumOfChildTasks = 2;
+	optional string Name = 3[(nanopb).max_size = 64];
+	optional string MainTaskName = 4[(nanopb).max_size = 64];
+	optional uint32 CodeAddress = 5;
+	optional uint32 MainTaskId = 6;
+	optional uint32 CodeSize = 7;
+	optional string FileName = 8[(nanopb).max_size = 64];
+	optional uint32 Priority = 9;
+	optional uint32 StartAddress = 10;
+	optional uint32 DataAddress = 11;
+	optional string EntryPoint = 12[(nanopb).max_size = 64];
+	optional uint32 BSSAddress = 13;
+	optional uint32 AppId = 14;
+	optional uint32 BSSSize = 15;
+	optional uint32 AddressesAreValid = 16;
+	optional uint32 StackSize = 17;
+	optional uint32 DataSize = 18;
+	optional uint32 Type = 19;
+	optional uint32 ExceptionAction = 20;
+	optional uint32 ModuleId = 21;
 }
 
 message es_one_app_pb

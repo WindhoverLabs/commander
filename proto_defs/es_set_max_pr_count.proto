@@ -5,7 +5,7 @@ import "nanopb.proto";
 
 message es_set_max_pr_count_payload_pb
 {
-	required uint32 MaxPRCount = 1;
+	optional uint32 MaxPRCount = 1;
 }
 
 message es_set_max_pr_count_pb

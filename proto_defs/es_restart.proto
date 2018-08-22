@@ -5,7 +5,7 @@ import "nanopb.proto";
 
 message es_restart_payload_pb
 {
-	required uint32 RestartType = 1;
+	optional uint32 RestartType = 1;
 }
 
 message es_restart_pb

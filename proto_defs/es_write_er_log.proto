@@ -5,7 +5,7 @@ import "nanopb.proto";
 
 message es_write_er_log_payload_pb
 {
-	required string ERLogFileName = 1[(nanopb).max_size = 64];
+	optional string ERLogFileName = 1[(nanopb).max_size = 64];
 }
 
 message es_write_er_log_pb

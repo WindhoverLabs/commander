@@ -5,8 +5,8 @@ import "nanopb.proto";
 
 message es_perf_set_trig_mask_payload_pb
 {
-	required uint32 TriggerMaskNum = 1;
-	required uint32 TriggerMask = 2;
+	optional uint32 TriggerMaskNum = 1;
+	optional uint32 TriggerMask = 2;
 }
 
 message es_perf_set_trig_mask_pb

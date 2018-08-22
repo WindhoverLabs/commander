@@ -5,7 +5,7 @@ import "nanopb.proto";
 
 message es_perf_stop_payload_pb
 {
-	required string DataFileName = 1[(nanopb).max_size = 64];
+	optional string DataFileName = 1[(nanopb).max_size = 64];
 }
 
 message es_perf_stop_pb

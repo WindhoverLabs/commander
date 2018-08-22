@@ -5,8 +5,8 @@ import "nanopb.proto";
 
 message es_app_reload_payload_pb
 {
-	required string Application = 1[(nanopb).max_size = 64];
-	required string AppFileName = 2[(nanopb).max_size = 64];
+	optional string Application = 1[(nanopb).max_size = 64];
+	optional string AppFileName = 2[(nanopb).max_size = 64];
 }
 
 message es_app_reload_pb
