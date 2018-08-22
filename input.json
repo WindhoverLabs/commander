@@ -1,0 +1,215 @@
+{
+    "Messages": {
+	    "CFE_ES": {
+	        "HK": {
+	            "msgID": 2048,
+	            "symbol": "CFE_ES_HkPacket_t"
+	        },
+	        "ONE_APP": {
+	            "msgID": 2059,
+	            "symbol": "CFE_ES_OneAppTlm_t"
+	        },
+	        "POOL_STATS": {
+	            "msgID": 2064,
+	            "symbol": "CFE_ES_PoolStatsTlm_t"
+	        },
+	        "SHELL_PACKET": {
+	            "msgID": 2063,
+	            "symbol": "CFE_ES_ShellPacket_t"
+	        },
+	        "ES_NOOP": {
+	            "msgID": 6150,
+	            "cmdCode": 0,
+	            "symbol": "CFE_ES_NoArgsCmd_t"
+	        },
+		    "ES_RESETCTRS": {
+		        "msgID": 6150,
+		        "cmdCode": 1,
+		        "symbol": "CFE_ES_NoArgsCmd_t"
+		    },
+		    "ES_RESET": {
+		        "msgID": 6150,
+		        "cmdCode": 2,
+		        "symbol": "CFE_ES_RestartCmd_t"
+		    },
+		    "ES_SHELL": {
+		        "msgID": 6150,
+		        "cmdCode": 3,
+		        "symbol": "CFE_ES_ShellCmd_t"
+		    },
+		    "ES_STARTAPP": {
+		        "msgID": 6150,
+		        "cmdCode": 4,
+		        "symbol": "CFE_ES_StartAppCmd_t"
+		    },
+		    "ES_STOPAPP": {
+		        "msgID": 6150,
+		        "cmdCode": 5,
+		        "symbol": "CFE_ES_AppNameCmd_t"
+		    },
+		    "ES_RESTARTAPP": {
+		        "msgID": 6150,
+		        "cmdCode": 6,
+		        "symbol": "CFE_ES_AppNameCmd_t"
+		    },
+		    "ES_RELOADAPP": {
+		        "msgID": 6150,
+		        "cmdCode": 7,
+		        "symbol": "CFE_ES_AppReloadCmd_t"
+		    },
+		    "ES_QUERYAPP": {
+		        "msgID": 6150,
+		        "cmdCode": 8,
+		        "symbol": "CFE_ES_AppNameCmd_t"
+		    },
+		    "ES_WRITEAPPINFO2FILE": {
+		        "msgID": 6150,
+		        "cmdCode": 9,
+		        "symbol": "CFE_ES_QueryAllCmd_t"
+		    },
+		    "ES_CLEARSYSLOG": {
+		        "msgID": 6150,
+		        "cmdCode": 10,
+		        "symbol": "CFE_ES_NoArgsCmd_t"
+		    },
+		    "ES_WRITESYSLOG2FILE": {
+		        "msgID": 6150,
+		        "cmdCode": 11,
+		        "symbol": "CFE_ES_WriteSyslogCmd_t"
+		    },
+		    "ES_CLEARERLOG": {
+		        "msgID": 6150,
+		        "cmdCode": 12,
+		        "symbol": "CFE_ES_NoArgsCmd_t"
+		    },
+		    "ES_WRITEERLOG2FILE": {
+		        "msgID": 6150,
+		        "cmdCode": 13,
+		        "symbol": "CFE_ES_WriteERlogCmd_t"
+		    },
+		    "ES_STARTLADATA": {
+		        "msgID": 6150,
+		        "cmdCode": 14,
+		        "symbol": "CFE_ES_PerfStartCmd_t"
+		    },
+		    "ES_STOPLADATA": {
+		        "msgID": 6150,
+		        "cmdCode": 15,
+		        "symbol": "CFE_ES_PerfStopCmd_t"
+		    },
+		    "ES_LAFILTERMASK": {
+		        "msgID": 6150,
+		        "cmdCode": 16,
+		        "symbol": "CFE_ES_PerfSetFilterMaskCmd_t"
+		    },
+		    "ES_LATRIGGERMASK": {
+		        "msgID": 6150,
+		        "cmdCode": 17,
+		        "symbol": "CFE_ES_PerfSetTrigMaskCmd_t"
+		    },
+		    "ES_OVERWRITESYSLOGMODE": {
+		        "msgID": 6150,
+		        "cmdCode": 18,
+		        "symbol": "CFE_ES_OverWriteSysLogCmd_t"
+		    },
+		    "ES_RESETPRCNT": {
+		        "msgID": 6150,
+		        "cmdCode": 19,
+		        "symbol": "CFE_ES_NoArgsCmd_t"
+		    },
+		    "ES_SETMAXPRCNT": {
+		        "msgID": 6150,
+		        "cmdCode": 20,
+		        "symbol": "CFE_ES_SetMaxPRCountCmd_t"
+		    },
+		    "ES_DELETECDS": {
+		        "msgID": 6150,
+		        "cmdCode": 21,
+		        "symbol": "CFE_ES_DeleteCDSCmd_t"
+		    },
+		    "ES_TLMPOOLSTATS": {
+		        "msgID": 6150,
+		        "cmdCode": 22,
+		        "symbol": "CFE_ES_TlmPoolStatsCmd_t"
+		    },
+		    "ES_DUMPCDSREG": {
+		        "msgID": 6150,
+		        "cmdCode": 23,
+		        "symbol": "CFE_ES_DumpCDSRegCmd_t"
+		    },
+		    "ES_WRITETASKINFO2FILE": {
+		        "msgID": 6150,
+		        "cmdCode": 24,
+		        "symbol": "CFE_ES_QueryAllTasksCmd_t"
+		    }
+	    },
+	    "CFE_EVS": {
+	        "EVENT": {
+	            "msgID": 2056,
+	            "symbol": "CFE_EVS_Packet_t"
+	        },
+	        "HK": {
+	            "msgID": "2049",
+	            "symbol": "CFE_EVS_TlmPkt_t"
+	        },
+		    "EVS_NOOP": {
+		        "msgID": 6145,
+		        "cmdCode": 0,
+		        "symbol": "CFE_ES_NoArgsCmd_t"
+		    }
+	    },
+	    "CFE_SB": {
+	        "HK": {
+	            "msgID": 2051,
+	            "symbol": "CFE_SB_HKMsg_t"
+	        },
+	        "PREV_SUB": {
+	            "msgID": 2061,
+	            "symbol": "CFE_SB_PrevSubMsg_t"
+	        },
+	        "STAT": {
+	            "msgID": 2058,
+	            "symbol": "CFE_SB_StatMsg_t"
+	        },
+	        "SUB_RPRT": {
+	            "msgID": 2062,
+	            "symbol": "CFE_SB_SubRprtMsg_t"
+	        },
+		    "SB_NOOP": {
+		        "msgID": 6147,
+		        "cmdCode": 0,
+		        "symbol": "CFE_ES_NoArgsCmd_t"
+		    }
+		},
+	    "CFE_TBL": {
+	        "HK": {
+	            "msgID": 2052,
+	            "symbol": "CFE_TBL_HkPacket_t"
+	        },
+	        "REG": {
+	            "msgID": 2060,
+	            "symbol": "CFE_TBL_TblRegPacket_t"
+	        },
+		    "TBL_NOOP": {
+		        "msgID": 6148,
+		        "cmdCode": 0,
+		        "symbol": "CFE_ES_NoArgsCmd_t"
+		    }
+	    },
+	    "CFE_TIME": {
+	        "DIAG": {
+	            "msgID": 2054,
+	            "symbol": "CFE_TIME_DiagPacket_t"
+	        },
+	        "HK": {
+	            "msgID": 2053,
+	            "symbol": "CFE_TIME_HkPacket_t"
+	        },
+		    "TIME_NOOP": {
+		        "msgID": 6149,
+		        "cmdCode": 0,
+		        "symbol": "CFE_ES_NoArgsCmd_t"
+		    }
+	    }
+	}
+}

@@ -267,3 +267,77 @@ binServer.bind(config.binTlmPort);
 //pbServer.bind(config.pbTlmPort);
 
 module.exports = app;
+
+
+
+
+
+
+
+
+
+
+var protobuf = require('protobufjs');
+
+var Root  = protobuf.Root,
+    Type  = protobuf.Type,
+    Field = protobuf.Field;
+
+var es_hk_pb = new Type("es_hk_pb");
+var es_hk_payload_pb = new Type("es_hk_payload_pb");
+es_hk_payload_pb.add(new Field("PerfTriggerMask",     1, "uint32"));
+es_hk_payload_pb.add(new Field("ResetSubtype",        2, "uint32"));
+es_hk_payload_pb.add(new Field("ProcessorResets",     3, "uint32"));
+es_hk_payload_pb.add(new Field("PerfMode",            4, "uint32"));
+es_hk_payload_pb.add(new Field("CFEMinorVersion",     5, "uint32"));
+es_hk_payload_pb.add(new Field("ErrCounter",          6, "uint32"));
+es_hk_payload_pb.add(new Field("RegisteredLibs",      7, "uint32"));
+es_hk_payload_pb.add(new Field("CFERevision",         8, "uint32"));
+es_hk_payload_pb.add(new Field("RegisteredExternalApps", 9, "uint32"));
+es_hk_payload_pb.add(new Field("RegisteredCoreApps", 10, "uint32"));
+es_hk_payload_pb.add(new Field("HeapBytesFree",      11, "uint32"));
+es_hk_payload_pb.add(new Field("SysLogSize",         12, "uint32"));
+es_hk_payload_pb.add(new Field("PerfFilterMask",     13, "uint32"));
+es_hk_payload_pb.add(new Field("OSALMissionRevision", 14, "uint32"));
+es_hk_payload_pb.add(new Field("CFECoreChecksum",    15, "uint32"));
+es_hk_payload_pb.add(new Field("PerfDataStart",      16, "uint32"));
+es_hk_payload_pb.add(new Field("BootSource",         17, "uint32"));
+es_hk_payload_pb.add(new Field("PerfTriggerCount",   18, "uint32"));
+es_hk_payload_pb.add(new Field("PerfState",          19, "uint32"));
+es_hk_payload_pb.add(new Field("OSALMajorVersion",   20, "uint32"));
+es_hk_payload_pb.add(new Field("ERLogEntries",       21, "uint32"));
+es_hk_payload_pb.add(new Field("SysLogBytesUsed",    22, "uint32"));
+es_hk_payload_pb.add(new Field("CFEMissionRevision", 23, "uint32"));
+es_hk_payload_pb.add(new Field("RegisteredTasks",    24, "uint32"));
+es_hk_payload_pb.add(new Field("OSALMinorVersion",   25, "uint32"));
+es_hk_payload_pb.add(new Field("CmdCounter",         26, "uint32"));
+es_hk_payload_pb.add(new Field("HeapMaxBlockSize",   27, "uint32"));
+es_hk_payload_pb.add(new Field("PerfDataEnd",        28, "uint32"));
+es_hk_payload_pb.add(new Field("ERLogIndex",         29, "uint32"));
+es_hk_payload_pb.add(new Field("PerfDataToWrite",    30, "uint32"));
+es_hk_payload_pb.add(new Field("CFEMajorVersion",    31, "uint32"));
+es_hk_payload_pb.add(new Field("SysLogEntries",      32, "uint32"));
+es_hk_payload_pb.add(new Field("OSALRevision",       33, "uint32"));
+es_hk_payload_pb.add(new Field("MaxProcessorResets", 34, "uint32"));
+es_hk_payload_pb.add(new Field("HeapBlocksFree",     35, "uint32"));
+es_hk_payload_pb.add(new Field("SysLogMode",         36, "uint32"));
+es_hk_payload_pb.add(new Field("ResetType",          37, "uint32"));
+es_hk_payload_pb.add(new Field("PerfDataCount",      38, "uint32"));
+
+var root = new Root().define("es_hk_pb").add(es_hk_pb).define("es_hk_payload_pb").add(es_hk_payload_pb);
+
+//pbServer.bind(config.pbTlmOutPort);
+
+var message = es_hk_payload_pb.create({CmdCounter: 4});
+//message.es_hk_payload_pb = {};
+//message.CmdCounter = 3;
+var buffer  = es_hk_pb.encode(message).finish();
+var decoded = es_hk_pb.decode(buffer);
+console.log(decoded);
+
+pbServer.send(buffer, 0, buffer.length, config.pbTlmOutPort, '127.0.0.1');
+
+
+
+
+

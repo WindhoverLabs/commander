@@ -44,6 +44,8 @@ const config = {
     binCmdPort:                5010,
     pbTlmPort:                 5012,
     pbCmdPort:                 5013,
+    pbTlmOutPort:              5112,
+    pbCmdInPort:               5109,
     msgDefs: [
     	{file: './output.json'},
     	{file: './output-cmd.json'},
