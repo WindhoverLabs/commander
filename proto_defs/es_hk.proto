@@ -3,7 +3,7 @@
 syntax = "proto2";
 import "nanopb.proto";
 
-message es_hk_payload_pb
+message Payload
 {
 	repeated uint32 PerfTriggerMask = 1[(nanopb).max_count = 4];
 	optional uint32 ResetSubtype = 2;
@@ -45,7 +45,7 @@ message es_hk_payload_pb
 	optional uint32 PerfDataCount = 38;
 }
 
-message es_hk_pb
+message CFE_ES_HkPacket_t
 { 
-	required es_hk_payload_pb Payload = 1;
+	required Payload Payload = 1;
 }
