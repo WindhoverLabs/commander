@@ -129,7 +129,6 @@ function TmTcServer(options, sendCallback, pbSendCallback) {
     var msgDefs = {};
     
     for(var i = 0; i < options.msgDefs.length; ++i) {
-    	
     	var msgDefInput = JSON.parse(fs.readFileSync(options.msgDefs[i].file, 'utf8'));
     	msgDefs = mergeJSON.merge(msgDefs, msgDefInput);
     }
@@ -273,22 +272,26 @@ TmTcServer.prototype.processBinaryMessage = function (buffer) {
     if(typeof tlmDef !== 'undefined') {
     	var tlmJson = {};
     	
+    	console.log(tlmDef.opsName);
+    	
     	this.processBinaryFields(tlmDef, buffer, tlmJson, parsedTlm);
     	
     	/* Now send the the message to all PB listeners. */
-    	var pbMsgDef = tlmDef.proto.lookupType(tlmDef.symbol);
-    	var pbMsg = pbMsgDef.create(tlmJson);
-    	var pbBuffer = pbMsgDef.encode(pbMsg).finish();
-    	var hdrBuffer = new Buffer(12)
-  	    hdrBuffer.writeUInt16BE(tlmDef.msgID, 0);
-        hdrBuffer.writeUInt16BE(1, 2);
-  	    hdrBuffer.writeUInt16BE(pbBuffer.length - 1, 4);
-  	    hdrBuffer.writeUInt16BE(0, 6);
-  	    hdrBuffer.writeUInt16BE(0, 8);
-  	    hdrBuffer.writeUInt16BE(0, 10);
-        
-        var msgBuffer = Buffer.concat([hdrBuffer, pbBuffer]);
-        this.pbSendCallback(msgBuffer);
+    	if(tlmDef.hasOwnProperty('proto')) {
+	    	var pbMsgDef = tlmDef.proto.lookupType(tlmDef.symbol);
+	    	var pbMsg = pbMsgDef.create(tlmJson);
+	    	var pbBuffer = pbMsgDef.encode(pbMsg).finish();
+	    	var hdrBuffer = new Buffer(12)
+	  	    hdrBuffer.writeUInt16BE(tlmDef.msgID, 0);
+	        hdrBuffer.writeUInt16BE(1, 2);
+	  	    hdrBuffer.writeUInt16BE(pbBuffer.length - 1, 4);
+	  	    hdrBuffer.writeUInt16BE(0, 6);
+	  	    hdrBuffer.writeUInt16BE(0, 8);
+	  	    hdrBuffer.writeUInt16BE(0, 10);
+	        
+	        var msgBuffer = Buffer.concat([hdrBuffer, pbBuffer]);
+	        this.pbSendCallback(msgBuffer);
+    	}
     	
         /* Finally, send the values to the subscribers. */
     	for(var i = 0; i < parsedTlm.length; ++i) {
@@ -315,8 +318,6 @@ TmTcServer.prototype.processPBMessage = function (buffer) {
     var cmdCode = message.SecHdr.code;
 	
     var cmd = this.getCmdDefByMsgIDandCC(msgID, cmdCode);
-	console.log('***************');
-	console.log(this.cmdDefs);
     
     if(typeof cmd !== 'undefined') {
     	var msgLength = message.PriHdr.length;
@@ -324,7 +325,6 @@ TmTcServer.prototype.processPBMessage = function (buffer) {
     	if(msgLength > 1) {
     		
     	}
-    	
     		
     	this.sendCommand(cmd);
     }

@@ -244,7 +244,6 @@ pbCmdInServer.on('error', (err) => {
 });
 
 pbCmdInServer.on('message', (msg, rinfo) => {
-    console.log(`pbCmdInServer got: ${msg} from ${rinfo.address}:${rinfo.port}`);
     tmtc.processPBMessage(msg);
 });
 
