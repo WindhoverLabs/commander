@@ -48,28 +48,6 @@ const config = {
     	{file: './output.json'},
     	{file: './output-cmd.json'},
     	{file: './input.json'}
-    ],
-    protoDefs: [
-//    	{msg_id: , file: './proto_defs/es_app_name.proto'},
-//    	{msg_id: , file: './proto_defs/es_app_reload.proto'},
-//    	{msg_id: , file: './proto_defs/es_delete_cds.proto'},
-//    	{msg_id: , file: './proto_defs/es_dump_cds_reg.proto'},
-//    	{msg_id: , file: './proto_defs/es_hk.proto'},
-//    	{msg_id: , file: './proto_defs/es_one_app.proto'},
-//    	{msg_id: , file: './proto_defs/es_overwrite_sys_log.proto'},
-//    	{msg_id: , file: './proto_defs/es_perf_set_filter_mask.proto'},
-//    	{msg_id: , file: './proto_defs/es_perf_set_trig_mask.proto'},
-//    	{msg_id: , file: './proto_defs/es_perf_start.proto'},
-//    	{msg_id: , file: './proto_defs/es_perf_stop.proto'},
-//    	{msg_id: , file: './proto_defs/es_query_all.proto'},
-//    	{msg_id: , file: './proto_defs/es_query_all_tasks.proto'},
-//    	{msg_id: , file: './proto_defs/es_restart.proto'},
-//    	{msg_id: , file: './proto_defs/es_set_max_pr_count.prot'},
-//    	{msg_id: , file: './proto_defs/es_shell_packet.proto'},
-//    	{msg_id: , file: './proto_defs/es_shell.proto'},
-//    	{msg_id: , file: './proto_defs/es_start_app.proto'},
-//    	{msg_id: , file: './proto_defs/es_tlm_pool_stats_cmd.proto'},
-//    	{msg_id: , file: './proto_defs/es_write_er_log.proto'}
     ]
 }
 

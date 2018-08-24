@@ -134,16 +134,7 @@ function TmTcServer(options, sendCallback, pbSendCallback) {
     	msgDefs = mergeJSON.merge(msgDefs, msgDefInput);
     }
     
-    //console.log(msgDefs);
 	this.parseMsgDefFile(msgDefs);
-    
-    //for(var i = 0; i < options.msgDefs.length; ++i) {
-    //	this.parseMsgDefFile(options.msgDefs[i].file);
-    //}
-   
-    //for(var i = 0; i < options.protoDefs.length; ++i) {
-    //	this.parseProtoFile(options.protoDefs[i].msgId, options.protoDefs[i].file);
-    //}
 };
 
 
@@ -176,12 +167,6 @@ TmTcServer.prototype.sendPBMessage = function (message) {
 	
 	pbSender.send(msgBuffer, 0, msgBuffer.length, config.pbTlmOutPort, '127.0.0.1');
 	
-	//console.log(msgBuffer);
-	
-	
-	
-	
-	//console.log(message);
 	var buffer = new Buffer(cmd.byteLength);
 	buffer.fill(0x00);
 	
@@ -287,9 +272,6 @@ TmTcServer.prototype.processBinaryMessage = function (buffer) {
 
     if(typeof tlmDef !== 'undefined') {
     	var tlmJson = {};
-    	//if(tlmDef.hasOwnProperty('proto')) {
-    	//	this.sendPBMessage(tlmDef, message);
-    	//}
     	
     	this.processBinaryFields(tlmDef, buffer, tlmJson, parsedTlm);
     	
@@ -297,7 +279,7 @@ TmTcServer.prototype.processBinaryMessage = function (buffer) {
     	var pbMsgDef = tlmDef.proto.lookupType(tlmDef.symbol);
     	var pbMsg = pbMsgDef.create(tlmJson);
     	var pbBuffer = pbMsgDef.encode(pbMsg).finish();
-    	var hdrBuffer = Buffer.alloc(12)
+    	var hdrBuffer = new Buffer(12)
   	    hdrBuffer.writeUInt16BE(tlmDef.msgID, 0);
         hdrBuffer.writeUInt16BE(1, 2);
   	    hdrBuffer.writeUInt16BE(pbBuffer.length - 1, 4);
@@ -331,9 +313,10 @@ TmTcServer.prototype.processPBMessage = function (buffer) {
     var message = this.ccsds.parse(buffer);
     var msgID = buffer.readUInt16BE(0);
     var cmdCode = message.SecHdr.code;
-	//console.log(msgID);
 	
     var cmd = this.getCmdDefByMsgIDandCC(msgID, cmdCode);
+	console.log('***************');
+	console.log(this.cmdDefs);
     
     if(typeof cmd !== 'undefined') {
     	var msgLength = message.PriHdr.length;
@@ -341,19 +324,10 @@ TmTcServer.prototype.processPBMessage = function (buffer) {
     	if(msgLength > 1) {
     		
     	}
+    	
     		
     	this.sendCommand(cmd);
-        //var pbRoot = cmd.proto;
-        //console.log(pbRoot);
     }
-    
-    //if(typeof pbRoot !== 'undefined') {
-    //	var msgName = Object.keys(pbRoot.nested)[0];
-    //	var pbMessage = pbRoot.lookupType(msgName);
-    	
-    //	message.payload = pbMessage.decode(message.payload);
-    //	console.log(message);
-    //}
 };
 
 
@@ -406,34 +380,6 @@ TmTcServer.prototype.isTelemetryMsg = function (msgID) {
 
 
 TmTcServer.prototype.parseMsgDefFile = function (msgDefs) {
-	/* Parse the telemetry. */
-	//for(var i = 0; i < msgDef.symbols.length; ++i) {
-	//	var symbol = msgDef.symbols[i];
-	//	var bitPosition = 0;
-				
-	//	if(typeof symbol.msgID !== 'undefined') {
-    //		var parser = new Parser();
-    		
-    //		if(msgDef.little_endian == true) {
-    //			parser.endianess('little');
-    //		} else {
-    //			parser.endianess('big');
-    //		}
-    		
-	//		for(var j=0; j < symbol.fields.length; ++j) {
-	//			if(msgDef.little_endian == true) {
-  	//	    	    bitPosition = this.tlmParseFieldDef(parser, symbol.fields[j], bitPosition, 'le');
-	//			} else {
-	//				bitPosition = this.tlmParseFieldDef(parser, symbol.fields[j], bitPosition, 'be');
-  	//	    	}
-	//		}
-
-	//        this.addMessageParser(symbol.msgID, parser);
-	        
-	//        console.log(bitPosition);
-	//	}
-	//};
-
 	/* Get the config object. */
 	var messages = msgDefs.Messages;
 	
@@ -526,35 +472,7 @@ TmTcServer.prototype.parseMsgDefFile = function (msgDefs) {
 				this.tlmDefs[msgID] = tlmDef;
 			}
 		}
-	}
-	
-	var cmd;
-	
-	//cmd = this.getCmdDef('/CFE_ES/ES_NOOP');
-	//console.log('**********************************************');
-	//console.log(cmd);
-	//console.log('**********************************************');
-	//this.sendCommand(cmd);
-	
-	//cmd = this.getCmdDef('EVS_NOOP');
-	//this.sendCommand(cmd);
-	
-	//cmd = this.getCmdDef('SB_NOOP');
-	//this.sendCommand(cmd);
-	
-	//cmd = this.getCmdDef('TBL_NOOP');
-	//this.sendCommand(cmd);
-	
-	//cmd = this.getCmdDef('TIME_NOOP');
-	//this.sendCommand(cmd);
-	
-	//cmd['Application'].value = 'Hello world';
-	//cmd['PoolHandle'].value = 1234;
-	
-	this.subscribe('/CFE_ES/HK/CmdCounter', function(value) {
-		//console.log(value);
-	})
-	
+	}	
 }
 
 
@@ -577,14 +495,10 @@ TmTcServer.prototype.flattenMsgDefs = function (obj, msgDefs, path) {
     if(typeof msgDefs === 'undefined') {
         msgDefs = {};
     }
-    
-    //console.log('path = ' + path)
-    //console.log(obj);
-    //console.log(msgDefs);
 	
 	for(var prop in obj) {
 		var newPath = path + '/' + prop;
-		//console.log(prop)
+
 		if(this.isMsgDef(obj[prop], newPath)) {
 			msgDefs[newPath] = obj[prop];
 		} else {
@@ -681,14 +595,6 @@ TmTcServer.prototype.tlmParseFieldDef2 = function (parser, field, bitPosition, e
   			    }
 			} else {
 				for(var i=0; i < field.type.fields.length; ++i) {
-					//var newParser = new Parser();
-					//if(endian == 'le') {
-					//	newParser.endianess('little');
-					//} else {
-					//	newParser.endianess('big');
-					//}
-			    	//bitPosition = this.tlmParseFieldDef(newParser, field.type.fields[i], bitPosition, endian);
-			    	//parser.nest(field.name, {type: newParser});
 			    	bitPosition = this.tlmParseFieldDef(parser, field.type.fields[i], bitPosition, endian);
 				}
 			}
@@ -696,14 +602,6 @@ TmTcServer.prototype.tlmParseFieldDef2 = function (parser, field, bitPosition, e
 		bitPosition += (field.type.bit_size * field.count);
 	} else if(Array.isArray(field.fields)) {
 		for(var i=0; i < field.fields.length; ++i) {
-			//var newParser = new Parser();
-			//if(endian == 'le') {
-			//	newParser.endianess('little');
-			//} else {
-			//	newParser.endianess('big');
-			//}
-	    	//bitPosition = this.tlmParseFieldDef(newParser, field.fields[i], bitPosition, endian);
-	    	//parser.nest(field.name, {type: newParser});
 	    	bitPosition = this.tlmParseFieldDef(parser, field.fields[i], bitPosition, endian);
 		}
 	} else {

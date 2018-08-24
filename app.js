@@ -40,9 +40,6 @@ var socket_io = require( "socket.io" );
 var fs = require('fs');
 var sage = require('./sage');
 
-var vm = require('vm');
-
-
 var indexRouter = require('./routes/index');
 var test1 = require('./routes/testpage1');
 var test2 = require('./routes/testpage2');
@@ -53,8 +50,6 @@ const binTlmInServer = dgram.createSocket('udp4');
 const binCmdOutSender = dgram.createSocket('udp4');
 const pbTlmOutSender = dgram.createSocket('udp4');
 const pbCmdInServer = dgram.createSocket('udp4');
-var Parser = require("binary-parser").Parser;
-var fs = require('fs');
 const util = require('util');
 
 var app = express();
@@ -218,30 +213,25 @@ io.on('connection', function(socket) {
 
 var tmtc = new TmTcServer(config, 
    function (buffer) {
-	console.log('BIN: ' + buffer);
-	binCmdOutSender.send(buffer, 0, buffer.length, config.binCmdOutPort, '127.0.0.1');
+	   binCmdOutSender.send(buffer, 0, buffer.length, config.binCmdOutPort, '127.0.0.1');
 }, function (buffer) {
-	console.log('PB: ' + buffer);
-	pbTlmOutSender.send(buffer, 0, buffer.length, config.pbTlmOutPort, '127.0.0.1');
+	   pbTlmOutSender.send(buffer, 0, buffer.length, config.pbTlmOutPort, '127.0.0.1');
 });
-
-
-//tmtc.subscribe()
 
 
 binTlmInServer.on('error', (err) => {
-  console.log(`binTlmInServer error:\n${err.stack}`);
-  server.close();
+    console.log(`binTlmInServer error:\n${err.stack}`);
+    server.close();
 });
 
 binTlmInServer.on('message', (msg, rinfo) => {
-  //console.log(`binTlmInServer got: ${msg} from ${rinfo.address}:${rinfo.port}`);
-  tmtc.processBinaryMessage(msg);
+    //console.log(`binTlmInServer got: ${msg} from ${rinfo.address}:${rinfo.port}`);
+    tmtc.processBinaryMessage(msg);
 });
 
 binTlmInServer.on('listening', () => {
-  const address = binTlmInServer.address();
-  console.log(`binTlmInServer listening ${address.address}:${address.port}`);
+    const address = binTlmInServer.address();
+    console.log(`binTlmInServer listening ${address.address}:${address.port}`);
 });
 
 console.log('Starting binary UDP listener');
@@ -249,79 +239,22 @@ binTlmInServer.bind(config.binTlmInPort);
 
 
 pbCmdInServer.on('error', (err) => {
-  console.log(`pbCmdInServer error:\n${err.stack}`);
-  server.close();
+    console.log(`pbCmdInServer error:\n${err.stack}`);
+    server.close();
 });
 
 pbCmdInServer.on('message', (msg, rinfo) => {
-  console.log(`pbCmdInServer got: ${msg} from ${rinfo.address}:${rinfo.port}`);
-  tmtc.processPBMessage(msg);
+    console.log(`pbCmdInServer got: ${msg} from ${rinfo.address}:${rinfo.port}`);
+    tmtc.processPBMessage(msg);
 });
 
 pbCmdInServer.on('listening', () => {
-  const address = pbCmdInServer.address();
-  console.log(`pbCmdInServer listening ${address.address}:${address.port}`);
+    const address = pbCmdInServer.address();
+    console.log(`pbCmdInServer listening ${address.address}:${address.port}`);
 });
 
 console.log('Starting Protobuf UDP listener');
 pbCmdInServer.bind(config.pbCmdInPort);
 
 
-
-//vm.runInThisContext(testString);
-
-
-
-//pbServer.on('error', (err) => {
-//  console.log(`pbServer error:\n${err.stack}`);
-//  server.close();
-//});
-//
-//pbServer.on('message', (msg, rinfo) => {
-//  //console.log(`pbServer got: ${msg} from ${rinfo.address}:${rinfo.port}`);
-//  tmtc.processPBMessage(msg);
-//});
-//
-//pbServer.on('listening', () => {
-//  const address = pbServer.address();
-//  console.log(`pbServer listening ${address.address}:${address.port}`);
-//});
-//
-//console.log('Stating pb UDP listener');
-//pbServer.bind(config.pbTlmPort);
-
 module.exports = app;
-
-
-
-//setInterval(function() { 
-//	tlmDef = tmtc.getTlmDef('/CFE_ES/HK/CFE_ES_HkPacket_t');
-//    console.log(tlmDef);	
-//	var esHkMsg = tlmDef.proto.lookupType('CFE_ES_HkPacket_t');
-//	
-//	var msg = esHkMsg.create({'Payload': {'CmdCounter': 7}});
-//	
-//	var pbBuffer = esHkMsg.encode(msg).finish();
-//
-//	var hdrBuffer = Buffer.alloc(12)
-//	hdrBuffer.writeUInt16BE(tlmDef.msgID, 0);
-//	hdrBuffer.writeUInt16BE(1, 2);
-//	hdrBuffer.writeUInt16BE(pbBuffer.length - 1, 4);
-//	hdrBuffer.writeUInt16BE(0, 6);
-//	hdrBuffer.writeUInt16BE(0, 8);
-//	hdrBuffer.writeUInt16BE(0, 10);
-//	
-//	var msgBuffer = Buffer.concat([hdrBuffer, pbBuffer]);
-//	
-//	pbSender.send(msgBuffer, 0, msgBuffer.length, config.pbTlmOutPort, '127.0.0.1');
-//	
-//	console.log(msgBuffer);
-//}, 1000);
-
-
-//pbServer.send(buffer, 0, buffer.length, config.pbTlmOutPort, '127.0.0.1');
-
-
-
-
-
