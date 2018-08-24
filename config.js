@@ -40,10 +40,8 @@ const config = {
     CFE_TIME_EPOCH_HOUR:       0,
     CFE_TIME_EPOCH_MINUTE:     0,
     CFE_TIME_EPOCH_SECOND:     0,
-    binTlmPort:                5011,
-    binCmdPort:                5010,
-    pbTlmPort:                 5012,
-    pbCmdPort:                 5013,
+    binTlmInPort:              5011,
+    binCmdOutPort:             5010,
     pbTlmOutPort:              5112,
     pbCmdInPort:               5109,
     msgDefs: [

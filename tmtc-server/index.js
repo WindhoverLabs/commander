@@ -56,7 +56,7 @@ exports.events = [
 var listenerCount = Emitter.listenerCount ||
 function (emitter, type) { return emitter.listeners(type).length }
 
-function TmTcServer(options, sendCallback) {
+function TmTcServer(options, sendCallback, pbSendCallback) {
     this.parsers = {};
     this.options = options;
     this.cmdDefs = [];
@@ -67,6 +67,7 @@ function TmTcServer(options, sendCallback) {
     this.sequence = 0;
     this.sendCallback = sendCallback;
     this.subscribers = {};
+    this.pbSendCallback = pbSendCallback;
     
     this.ccsdsPriHdr = new Parser()
       .endianess('big')
@@ -154,6 +155,127 @@ TmTcServer.prototype.__proto__ = Emitter.prototype;
 
 
 
+TmTcServer.prototype.sendPBMessage = function (message) {
+	tlmDef = tmtc.getTlmDef('/CFE_ES/HK/CFE_ES_HkPacket_t');
+	
+	var esHkMsg = tlmDef.proto.lookupType('CFE_ES_HkPacket_t');
+	
+	var msg = esHkMsg.create({'Payload': {'CmdCounter': 7}});
+	
+	var pbBuffer = esHkMsg.encode(msg).finish();
+
+	var hdrBuffer = Buffer.alloc(12)
+	hdrBuffer.writeUInt16BE(tlmDef.msgID, 0);
+	hdrBuffer.writeUInt16BE(1, 2);
+	hdrBuffer.writeUInt16BE(pbBuffer.length - 1, 4);
+	hdrBuffer.writeUInt16BE(0, 6);
+	hdrBuffer.writeUInt16BE(0, 8);
+	hdrBuffer.writeUInt16BE(0, 10);
+	
+	var msgBuffer = Buffer.concat([hdrBuffer, pbBuffer]);
+	
+	pbSender.send(msgBuffer, 0, msgBuffer.length, config.pbTlmOutPort, '127.0.0.1');
+	
+	//console.log(msgBuffer);
+	
+	
+	
+	
+	//console.log(message);
+	var buffer = new Buffer(cmd.byteLength);
+	buffer.fill(0x00);
+	
+	buffer.writeUInt16BE(cmd.msgID, 0);
+	buffer.writeUInt16BE(this.sequence, 2);
+	buffer.writeUInt16BE(cmd.byteLength - 7, 4);
+	buffer.writeUInt8(cmd.commandCode, 7);
+	buffer.writeUInt8(0, 6);
+	
+	this.sequence++;
+}
+
+
+TmTcServer.prototype.processBinaryFields = function (tlmDef, buffer, tlmJson, parsedTlm) {	
+	for(var fieldName in tlmDef.fields) {
+		var field = tlmDef.fields[fieldName];
+		var symbolName = field.symbolName;
+		var opsName = tlmDef.path + '/'+ fieldName;
+		var telemItem = {'opsName': opsName};
+				
+		if(field.hasOwnProperty('multiplicity')) {
+		    switch(field.type) {
+				case 'uint8':
+					telemItem.value = buffer.readUInt8(field.offset / 8);
+					tlmJson[fieldName] = buffer.readUInt8(field.offset / 8);
+					break;
+					
+				case 'string':
+					telemItem.value = buffer.read(field.offset / 8);
+					tlmJson[fieldName] = buffer.read(field.offset / 8);
+					break;
+						
+				case 'uint16':
+					telemItem.value = buffer.readUInt16LE(field.offset / 8);
+					tlmJson[fieldName] = buffer.readUInt16LE(field.offset / 8);
+					break;
+						
+				case 'int16':
+					telemItem.value = buffer.readInt16LE(field.offset / 8);
+					tlmJson[fieldName] = buffer.readInt16LE(field.offset / 8);
+					break;
+						
+				case 'uint32':
+					telemItem.value = buffer.readUInt32LE(field.offset / 8);
+					tlmJson[fieldName] = buffer.readUInt32LE(field.offset / 8);
+					break;
+						
+				case 'int32':
+					telemItem.value = buffer.readInt32LE(field.offset / 8);
+					tlmJson[fieldName] = buffer.readInt32LE(field.offset / 8);
+					break;
+				}
+		} else if(field.hasOwnProperty('type')) {
+			switch(field.type) {
+				case 'uint8':
+					telemItem.value = buffer.readUInt8(field.offset / 8);
+					tlmJson[fieldName] = buffer.readUInt8(field.offset / 8);
+					break;
+					
+				case 'string':
+					telemItem.value = buffer.toString('ascii', field.offset / 8, (field.offset / 8) + field.length);
+					tlmJson[fieldName] = buffer.toString('ascii', field.offset / 8, (field.offset / 8) + field.length);
+					break;
+					
+				case 'uint16':
+					telemItem.value = buffer.readUInt16LE(field.offset / 8);
+					tlmJson[fieldName] = buffer.readUInt16LE(field.offset / 8);
+					break;
+					
+				case 'int16':
+					telemItem.value = buffer.readInt16LE(field.offset / 8);
+					tlmJson[fieldName] = buffer.readInt16LE(field.offset / 8);
+					break;
+					
+				case 'uint32':
+					telemItem.value = buffer.readUInt32LE(field.offset / 8);
+					tlmJson[fieldName] = buffer.readUInt32LE(field.offset / 8);
+					break;
+					
+				case 'int32':
+					telemItem.value = buffer.readInt32LE(field.offset / 8);
+					tlmJson[fieldName] = buffer.readInt32LE(field.offset / 8);
+					break;
+			}
+		} else if(typeof field === 'object'){
+			tlmJson[fieldName] = {};
+			this.processBinaryFields(field, buffer, tlmJson[fieldName], parsedTlm);
+		}
+	    parsedTlm.push(telemItem);
+	}
+}
+
+
+
 TmTcServer.prototype.processBinaryMessage = function (buffer) {
 	var parsedTlm = [];
 	
@@ -164,71 +286,30 @@ TmTcServer.prototype.processBinaryMessage = function (buffer) {
 	var tlmDef = this.getMsgDefByMsgID(msgID);
 
     if(typeof tlmDef !== 'undefined') {
-    	for(var fieldName in tlmDef.fields) {
-    		var field = tlmDef.fields[fieldName];
-    		var opsName = tlmDef.path + '/'+ fieldName;
-    		var telemItem = {'opsName': opsName};
-    		
-    		if(field.hasOwnProperty('multiplicity')) {
-    		    switch(field.type) {
-    				case 'uint8':
-    					telemItem.value = buffer.readUInt8(field.offset / 8);
-    					break;
-    					
-    				case 'string':
-    					telemItem.value = buffer.read(field.offset / 8);
-    					break;
-    						
-    				case 'uint16':
-    					telemItem.value = buffer.readUInt16LE(field.offset / 8);
-    					break;
-    						
-    				case 'int16':
-    					telemItem.value = buffer.readInt16LE(field.offset / 8);
-    					break;
-    						
-    				case 'uint32':
-    					telemItem.value = buffer.readUInt32LE(field.offset / 8);
-    					break;
-    						
-    				case 'int32':
-    					telemItem.value = buffer.readInt32LE(field.offset / 8);
-    					break;
-   				}
-   			} else {
-   				switch(field.type) {
-   					case 'uint8':
-   						telemItem.value = buffer.readUInt8(field.offset / 8);
-   						break;
-    						
-   					case 'string':
-   						telemItem.value = buffer.toString('ascii', field.offset / 8, (field.offset / 8) + field.length);
-   						break;
-    						
-   					case 'uint16':
-   						telemItem.value = buffer.readUInt16LE(field.offset / 8);
-   						break;
-    						
-   					case 'int16':
-   						telemItem.value = buffer.readInt16LE(field.offset / 8);
-   						break;
-    						
-   					case 'uint32':
-   						telemItem.value = buffer.readUInt32LE(field.offset / 8);
-   						break;
-    						
-   					case 'int32':
-   						telemItem.value = buffer.readInt32LE(field.offset / 8);
-   						break;
-   				}
-   			}
-        	parsedTlm.push(telemItem);
-   		}
+    	var tlmJson = {};
+    	//if(tlmDef.hasOwnProperty('proto')) {
+    	//	this.sendPBMessage(tlmDef, message);
+    	//}
+    	
+    	this.processBinaryFields(tlmDef, buffer, tlmJson, parsedTlm);
+    	
+    	/* Now send the the message to all PB listeners. */
+    	var pbMsgDef = tlmDef.proto.lookupType(tlmDef.symbol);
+    	var pbMsg = pbMsgDef.create(tlmJson);
+    	var pbBuffer = pbMsgDef.encode(pbMsg).finish();
+    	var hdrBuffer = Buffer.alloc(12)
+  	    hdrBuffer.writeUInt16BE(tlmDef.msgID, 0);
+        hdrBuffer.writeUInt16BE(1, 2);
+  	    hdrBuffer.writeUInt16BE(pbBuffer.length - 1, 4);
+  	    hdrBuffer.writeUInt16BE(0, 6);
+  	    hdrBuffer.writeUInt16BE(0, 8);
+  	    hdrBuffer.writeUInt16BE(0, 10);
         
-        /* Now Send the values to the subscribers. */
-        
+        var msgBuffer = Buffer.concat([hdrBuffer, pbBuffer]);
+        this.pbSendCallback(msgBuffer);
+    	
+        /* Finally, send the values to the subscribers. */
     	for(var i = 0; i < parsedTlm.length; ++i) {
-        	//console.log('****************  ' + parsedTlm[i].path);
     		if(this.subscribers.hasOwnProperty(parsedTlm[i].opsName)) {
     			var subscription = this.subscribers[parsedTlm[i].opsName];
     			for(var j = 0; j < subscription.length; ++j) {
@@ -247,19 +328,32 @@ TmTcServer.prototype.getMsgDefByMsgID = function (msgID) {
 
 
 TmTcServer.prototype.processPBMessage = function (buffer) {
+    var message = this.ccsds.parse(buffer);
     var msgID = buffer.readUInt16BE(0);
+    var cmdCode = message.SecHdr.code;
+	//console.log(msgID);
+	
+    var cmd = this.getCmdDefByMsgIDandCC(msgID, cmdCode);
     
-    var pbRoot = this.protoDefs[msgID];
-    
-	var message = this.ccsds.parse(buffer);
-
-    if(typeof pbRoot !== 'undefined') {
-    	var msgName = Object.keys(pbRoot.nested)[0];
-    	var pbMessage = pbRoot.lookupType(msgName);
+    if(typeof cmd !== 'undefined') {
+    	var msgLength = message.PriHdr.length;
     	
-    	message.payload = pbMessage.decode(message.payload);
-    	console.log(message);
+    	if(msgLength > 1) {
+    		
+    	}
+    		
+    	this.sendCommand(cmd);
+        //var pbRoot = cmd.proto;
+        //console.log(pbRoot);
     }
+    
+    //if(typeof pbRoot !== 'undefined') {
+    //	var msgName = Object.keys(pbRoot.nested)[0];
+    //	var pbMessage = pbRoot.lookupType(msgName);
+    	
+    //	message.payload = pbMessage.decode(message.payload);
+    //	console.log(message);
+    //}
 };
 
 
@@ -349,13 +443,28 @@ TmTcServer.prototype.parseMsgDefFile = function (msgDefs) {
 	for(var key in msgDefInput) {
 		var symbolName = msgDefInput[key].symbol;
 		var msgID = msgDefInput[key].msgID;
+		
 		if(this.isCommandMsg(msgID)) {
 			var cmdCode = msgDefInput[key].cmdCode;
 			var cmdDef = [];
 			var symbol = {};
 			var bitPosition = 0;
-			
-			console.log(key);
+
+			if('proto' in msgDefInput[key]) {
+				var filePath = msgDefInput[key].proto;
+				console.log('Loading ' + filePath);
+				
+				if('proto' in msgDefInput[key]) {
+					var self = this;
+					var filePath = msgDefInput[key].proto;
+					console.log('Loading ' + filePath);
+					this.cmdDefs[key] = cmdDef;
+					this.cmdDefs[key].proto = new protobuf.Root();
+					protobuf.loadSync(filePath, this.cmdDefs[key].proto);
+				} else {
+					this.cmdDefs[msgID] = cmdDef;
+				}
+			};
 
 			for(var i = 0; i < msgDefs.symbols.length; ++i) {
 				if(msgDefs.symbols[i].name == symbolName) {
@@ -402,18 +511,30 @@ TmTcServer.prototype.parseMsgDefFile = function (msgDefs) {
 			tlmDef.byteLength = bitPosition / 8;
 			
 			tlmDef.path = key;
-			
-			this.tlmDefs[msgID] = tlmDef;
+			tlmDef.opsName = tlmDef.path + '/' + symbolName;
+			tlmDef.msgID = msgID;
+            tlmDef.symbol = symbolName;
+
+			if('proto' in msgDefInput[key]) {
+				var self = this;
+				var filePath = msgDefInput[key].proto;
+				console.log('Loading ' + filePath);
+				this.tlmDefs[msgID] = tlmDef;
+				this.tlmDefs[msgID].proto = new protobuf.Root();
+				protobuf.loadSync(filePath, this.tlmDefs[msgID].proto);
+			} else {
+				this.tlmDefs[msgID] = tlmDef;
+			}
 		}
 	}
 	
 	var cmd;
 	
-	cmd = this.getCmdDef('/CFE_ES/ES_NOOP');
-	console.log('**********************************************');
-	console.log(cmd);
-	console.log('**********************************************');
-	this.sendCommand(cmd);
+	//cmd = this.getCmdDef('/CFE_ES/ES_NOOP');
+	//console.log('**********************************************');
+	//console.log(cmd);
+	//console.log('**********************************************');
+	//this.sendCommand(cmd);
 	
 	//cmd = this.getCmdDef('EVS_NOOP');
 	//this.sendCommand(cmd);
@@ -431,7 +552,7 @@ TmTcServer.prototype.parseMsgDefFile = function (msgDefs) {
 	//cmd['PoolHandle'].value = 1234;
 	
 	this.subscribe('/CFE_ES/HK/CmdCounter', function(value) {
-		console.log(value);
+		//console.log(value);
 	})
 	
 }
@@ -448,7 +569,7 @@ TmTcServer.prototype.subscribe = function (tlmID, callback) {
 
 
 
-TmTcServer.prototype.flattenMsgDefs = function (obj, msgDefs, path) {	    
+TmTcServer.prototype.flattenMsgDefs = function (obj, msgDefs, path) {
 	if(typeof path === 'undefined') {
         path = '';
     }
@@ -456,9 +577,14 @@ TmTcServer.prototype.flattenMsgDefs = function (obj, msgDefs, path) {
     if(typeof msgDefs === 'undefined') {
         msgDefs = {};
     }
+    
+    //console.log('path = ' + path)
+    //console.log(obj);
+    //console.log(msgDefs);
 	
 	for(var prop in obj) {
 		var newPath = path + '/' + prop;
+		//console.log(prop)
 		if(this.isMsgDef(obj[prop], newPath)) {
 			msgDefs[newPath] = obj[prop];
 		} else {
@@ -620,8 +746,29 @@ TmTcServer.prototype.tlmParseFieldDef2 = function (parser, field, bitPosition, e
 
 
 
-TmTcServer.prototype.getCmdDef = function (opsName) {
+TmTcServer.prototype.getCmdDefByOpsName = function (opsName) {
 	return this.cmdDefs[opsName];
+}
+
+
+
+TmTcServer.prototype.getCmdDefByMsgIDandCC = function (msgID, cmdCode) {
+	for(var opsName in this.cmdDefs) {
+		var cmd = this.cmdDefs[opsName];
+		if((cmd.msgID == msgID) && (cmd.commandCode == cmdCode)){
+			return cmd;
+		}
+	}
+}
+
+
+
+TmTcServer.prototype.getTlmDef = function (opsName) {
+	for(var msgID in this.tlmDefs) {
+		var tlm = this.tlmDefs[msgID];
+		if(tlm.opsName == opsName)
+			return tlm;
+	}
 }
 
 
@@ -703,7 +850,7 @@ TmTcServer.prototype.sendCommand = function (cmd) {
 
 
 
-TmTcServer.prototype.msgParseFieldDef = function (msgDef, field, bitPosition, endian, headerLength) {		
+TmTcServer.prototype.msgParseFieldDef = function (msgDef, field, bitPosition, endian, headerLength) {
 	if(typeof field.array !== 'undefined') {
 		if(bitPosition >= headerLength) {
 			if(typeof field.type.base_type !== 'undefined'){
@@ -735,18 +882,20 @@ TmTcServer.prototype.msgParseFieldDef = function (msgDef, field, bitPosition, en
  		            default:
  		        	    console.log('Unsupported type');
   			    }
-			} else {
-				for(var i=0; i < field.type.fields.length; ++i) {				    
-			    	bitPosition = this.msgParseFieldDef(msgDef, field.type.fields[i], bitPosition, endian, headerLength);
+			} else {	
+			    msgDef[field.name] = { fields: {}};	
+				for(var i=0; i < field.type.fields.length; ++i) {
+					var nextMsgDef = msgDef[field.name].fields;
+			    	bitPosition = this.msgParseFieldDef(nextMsgDef, field.type.fields[i], bitPosition, endian, headerLength);
 				}
 			}
 		}
 		bitPosition += (field.type.bit_size * field.count);
 	} else if(Array.isArray(field.fields)) {
-		for(var i=0; i < field.fields.length; ++i) {
-		    //msgDef[field.name] = {};	
-		
-	    	bitPosition = this.msgParseFieldDef(msgDef, field.fields[i], bitPosition, endian, headerLength);
+	    msgDef[field.name] = { fields: {}};	
+		for(var i=0; i < field.fields.length; ++i) {		
+			var nextMsgDef = msgDef[field.name].fields;	    
+	    	bitPosition = this.msgParseFieldDef(nextMsgDef, field.fields[i], bitPosition, endian, headerLength);
 		}
 	} else {
 		if(bitPosition >= this.cmdHeaderLength) {

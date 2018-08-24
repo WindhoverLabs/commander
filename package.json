@@ -27,6 +27,7 @@
     "overlayscrollbars": "^1.5.1",
     "patternfly-bootstrap-treeview": "^2.1.5",
     "popper.js": "^1.14.4",
+    "promise": "^8.0.1",
     "protobufjs": "^6.8.8",
     "pug": "2.0.0-beta11",
     "socket.io": "^2.1.1",
