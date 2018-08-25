@@ -68,6 +68,7 @@ function TmTcServer(options, sendCallback, pbSendCallback) {
     this.sendCallback = sendCallback;
     this.subscribers = {};
     this.pbSendCallback = pbSendCallback;
+    this.cdd = {};
     
     this.ccsdsPriHdr = new Parser()
       .endianess('big')
@@ -183,8 +184,9 @@ TmTcServer.prototype.processBinaryFields = function (tlmDef, buffer, tlmJson, pa
 	for(var fieldName in tlmDef.fields) {
 		var field = tlmDef.fields[fieldName];
 		var symbolName = field.symbolName;
-		var opsName = tlmDef.path + '/'+ fieldName;
-		var telemItem = {'opsName': opsName};
+		var opsName = field.opsName;
+		var engName = field.engName;
+		var telemItem = {'engName': engName};
 				
 		if(field.hasOwnProperty('multiplicity')) {
 		    switch(field.type) {
@@ -194,8 +196,8 @@ TmTcServer.prototype.processBinaryFields = function (tlmDef, buffer, tlmJson, pa
 					break;
 					
 				case 'string':
-					telemItem.value = buffer.read(field.offset / 8);
-					tlmJson[fieldName] = buffer.read(field.offset / 8);
+					telemItem.value = buffer.toString("utf-8", field.offset / 8, field.multiplicity).replace(/\0/g, '');
+					tlmJson[fieldName] = buffer.toString("utf-8", field.offset / 8, field.multiplicity).replace(/\0/g, '');
 					break;
 						
 				case 'uint16':
@@ -272,9 +274,8 @@ TmTcServer.prototype.processBinaryMessage = function (buffer) {
     if(typeof tlmDef !== 'undefined') {
     	var tlmJson = {};
     	
-    	console.log(tlmDef.opsName);
-    	
     	this.processBinaryFields(tlmDef, buffer, tlmJson, parsedTlm);
+    	console.log(parsedTlm);
     	
     	/* Now send the the message to all PB listeners. */
     	if(tlmDef.hasOwnProperty('proto')) {
@@ -295,8 +296,8 @@ TmTcServer.prototype.processBinaryMessage = function (buffer) {
     	
         /* Finally, send the values to the subscribers. */
     	for(var i = 0; i < parsedTlm.length; ++i) {
-    		if(this.subscribers.hasOwnProperty(parsedTlm[i].opsName)) {
-    			var subscription = this.subscribers[parsedTlm[i].opsName];
+    		if(this.subscribers.hasOwnProperty(parsedTlm[i].engName)) {
+    			var subscription = this.subscribers[parsedTlm[i].engName];
     			for(var j = 0; j < subscription.length; ++j) {
     				subscription[j](parsedTlm[i].value);
     			}
@@ -387,92 +388,73 @@ TmTcServer.prototype.parseMsgDefFile = function (msgDefs) {
 	var msgDefInput = this.flattenMsgDefs(messages);
 	
 	for(var key in msgDefInput) {
-		var symbolName = msgDefInput[key].symbol;
-		var msgID = msgDefInput[key].msgID;
+		var msgDef = {};
+		var symbol = {};
+
+		msgDef.symbol = msgDefInput[key].symbol;
+		msgDef.msgID = msgDefInput[key].msgID;
+		msgDef.path = key;
+		msgDef.opsName = msgDef.path + '/' + msgDef.symbol;
 		
-		if(this.isCommandMsg(msgID)) {
-			var cmdCode = msgDefInput[key].cmdCode;
-			var cmdDef = [];
-			var symbol = {};
-			var bitPosition = 0;
-
-			if('proto' in msgDefInput[key]) {
-				var filePath = msgDefInput[key].proto;
-				console.log('Loading ' + filePath);
-				
-				if('proto' in msgDefInput[key]) {
-					var self = this;
-					var filePath = msgDefInput[key].proto;
-					console.log('Loading ' + filePath);
-					this.cmdDefs[key] = cmdDef;
-					this.cmdDefs[key].proto = new protobuf.Root();
-					protobuf.loadSync(filePath, this.cmdDefs[key].proto);
-				} else {
-					this.cmdDefs[msgID] = cmdDef;
-				}
-			};
-
-			for(var i = 0; i < msgDefs.symbols.length; ++i) {
-				if(msgDefs.symbols[i].name == symbolName) {
-					symbol = msgDefs.symbols[i];
-					break;
-				}
-			};
-    		
-			for(var i=0; i < symbol.fields.length; ++i) {
-				if(msgDefs.little_endian == true) {
-  		    	    bitPosition = this.msgParseFieldDef(cmdDef, symbol.fields[i], bitPosition, 'le', this.cmdHeaderLength);
-				} else {
-					bitPosition = this.msgParseFieldDef(cmdDef, symbol.fields[i], bitPosition, 'be', this.cmdHeaderLength);
-  		    	} 
+		for(var i = 0; i < msgDefs.symbols.length; ++i) {
+			if(msgDefs.symbols[i].name == msgDef.symbol) {
+				symbol = msgDefs.symbols[i];
+				break;
 			}
-			
-			cmdDef.byteLength = bitPosition / 8;
-			cmdDef.msgID = msgID;
-			cmdDef.commandCode = cmdCode;
-			
-			this.cmdDefs[key] = cmdDef;
+		};
+
+		if(this.isCommandMsg(msgDef.msgID)) {
+			var headerLength = this.cmdHeaderLength;
 		} else {
-			var tlmDef = {};
-			var symbol = {};
-			var bitPosition = 0;
-
-			for(var i = 0; i < msgDefs.symbols.length; ++i) {
-				if(msgDefs.symbols[i].name == symbolName) {
-					symbol = msgDefs.symbols[i];
-					break;
-				}
-			};
-			
-			tlmDef.fields = new Array();
-    		
-			for(var i=0; i < symbol.fields.length; ++i) {
-				if(msgDefs.little_endian == true) {
-  		    	    bitPosition = this.msgParseFieldDef(tlmDef.fields, symbol.fields[i], bitPosition, 'le', this.tlmHeaderLength);
-				} else {
-  		    	    bitPosition = this.msgParseFieldDef(tlmDef.fields, symbol.fields[i], bitPosition, 'be', this.tlmHeaderLength);
-  		    	} 
-			}
-			
-			tlmDef.byteLength = bitPosition / 8;
-			
-			tlmDef.path = key;
-			tlmDef.opsName = tlmDef.path + '/' + symbolName;
-			tlmDef.msgID = msgID;
-            tlmDef.symbol = symbolName;
-
-			if('proto' in msgDefInput[key]) {
-				var self = this;
-				var filePath = msgDefInput[key].proto;
-				console.log('Loading ' + filePath);
-				this.tlmDefs[msgID] = tlmDef;
-				this.tlmDefs[msgID].proto = new protobuf.Root();
-				protobuf.loadSync(filePath, this.tlmDefs[msgID].proto);
-			} else {
-				this.tlmDefs[msgID] = tlmDef;
-			}
+			var headerLength = this.tlmHeaderLength;
 		}
+
+		for(var i=0; i < symbol.fields.length; ++i) {
+			var bitPosition = 0;
+			var fieldName = symbol.fields[i].name;
+			var engName = '/' + symbol.name;
+			
+			if(msgDefs.little_endian == true) {
+				var endianTag = 'le';
+			} else {
+				var endianTag = 'be';
+		    }
+			
+			msgDef.fields = {};
+			
+			bitPosition = this.msgParseFieldDef(msgDef.fields, symbol.fields[i], bitPosition, endianTag, headerLength, engName);
+		}
+
+		msgDef.byteLength = bitPosition / 8;
+		
+		if(this.isCommandMsg(msgDef.msgID)) {
+			msgDef.commandCode = msgDefInput[key].cmdCode;
+			
+			if('proto' in msgDefInput[key]) {
+				var filePath = msgDefInput[key].proto;
+				msgDef.proto = new protobuf.Root();
+				this.cmdDefs[key] = msgDef;
+				protobuf.loadSync(filePath, this.cmdDefs[key].proto);
+			} else {
+				this.cmdDefs[key] = msgDef;
+			}
+		} else {
+			
+			if('proto' in msgDefInput[key]) {
+				var filePath = msgDefInput[key].proto;
+				msgDef.proto = new protobuf.Root();
+				this.tlmDefs[msgDef.msgID] = msgDef;
+				protobuf.loadSync(filePath, this.tlmDefs[msgDef.msgID].proto);
+			} else {
+				this.tlmDefs[msgDef.msgID] = msgDef;
+			}
+			//console.log(msgDef);
+		}
+		
+		//console.log(util.inspect(msgDef, false, null));
 	}	
+
+	//console.log(this.cmdDefs);
 }
 
 
@@ -537,109 +519,6 @@ TmTcServer.prototype.isMsgDef = function (obj, path) {
 		console.log('Message definition for ' + path + ' is missing the message ID definition.');
 		return false;
 	}
-}
-
-
-
-TmTcServer.prototype.tlmParseFieldDef2 = function (parser, field, bitPosition, endian) {		
-	if(typeof field.array !== 'undefined') {
-		if(bitPosition >= this.tlmHeaderLength) {
-			if(typeof field.type.base_type !== 'undefined'){
-  			    switch(field.type.base_type) {
- 		            case 'unsigned char':
- 		        	    parser.array(field.name, {
- 		                    type: 'uint8',
- 		                    length: field.count
- 		                });
- 		        	    break;
- 		        	
- 		            case 'char':
- 		               	parser.string(field.name, {
- 		               	    encoding: 'ascii',
- 		                    length: field.count
- 		                });
- 		                break;
- 		        	
- 		            case 'short unsigned int':
- 		        	    parser.array(field.name, {
-  		                    type: 'uint16' + endian,
-  		                    length: field.count
-  		                });
- 		        	    break;
- 		        	
- 		            case 'short int':
- 		        	    parser.array(field.name, {
-  		                    type: 'int16' + endian,
-  		                    length: field.count
-  		                });
- 		        	    break;
- 		        	
-			        case 'long unsigned int':
-			    	    parser.array(field.name, {
-  		                    type: 'uint32' + endian,
-  		                    length: field.count
-  		                });
- 		        	    break;
- 		        	
-			        case 'long int':
-			    	    parser.array(field.name, {
-  		                    type: 'uint32' + endian,
-  		                    length: field.count
-  		                });
- 		        	    break;
- 		        	
- 		            default:
- 		        	    console.log('Unsupported type');
-		        	    console.log(field);
- 		                exit(-1);
-  			    }
-			} else {
-				for(var i=0; i < field.type.fields.length; ++i) {
-			    	bitPosition = this.tlmParseFieldDef(parser, field.type.fields[i], bitPosition, endian);
-				}
-			}
-		}
-		bitPosition += (field.type.bit_size * field.count);
-	} else if(Array.isArray(field.fields)) {
-		for(var i=0; i < field.fields.length; ++i) {
-	    	bitPosition = this.tlmParseFieldDef(parser, field.fields[i], bitPosition, endian);
-		}
-	} else {
-		if(bitPosition >= this.tlmHeaderLength) {
-			switch(field.base_type) {
-		        case 'unsigned char':
-		        	parser.uint8(field.name);
-		        	break;
-		        	
-		        case 'char':
-		        	parser.int8(field.name);
-		        	break;
-		        	
-		        case 'short unsigned int':
-		        	parser.uint16(field.name);
-		        	break;
-		        	
-		        case 'short int':
-		        	parser.int16(field.name);
-		        	break;
-		        	
-		        case 'long unsigned int':
-		        	parser.uint32(field.name);
-		        	break;
-		        	
-		        case 'long int':
-		        	parser.int32(field.name);
-		        	break;
- 		        	
- 		        default:
- 		        	console.log('Unsupported type ' + field);
- 		            exit(-1);
-		    }
-		}
-		bitPosition += field.bit_size;
-	}
-
-	return bitPosition;
 }
 
 
@@ -748,44 +627,48 @@ TmTcServer.prototype.sendCommand = function (cmd) {
 
 
 
-TmTcServer.prototype.msgParseFieldDef = function (msgDef, field, bitPosition, endian, headerLength) {
+TmTcServer.prototype.msgParseFieldDef = function (msgDef, field, bitPosition, endian, headerLength, parentEngName) {
+	var engName = parentEngName + '/' + field.name;
+	
 	if(typeof field.array !== 'undefined') {
 		if(bitPosition >= headerLength) {
 			if(typeof field.type.base_type !== 'undefined'){
+				var newField =  {multiplicity: field.count, offset: bitPosition, engName: engName};
   			    switch(field.type.base_type) {
  		            case 'unsigned char':
- 		            	msgDef[field.name] = {type: 'uint8', multiplicity: field.count, offset: bitPosition};
+ 		            	newField.type = 'uint8';
  		        	    break;
  		        	
  		            case 'char':
- 		            	msgDef[field.name] = {type: 'string', length: field.count, offset: bitPosition};
+ 		            	newField.type = 'string';
  		                break;
  		        	
  		            case 'short unsigned int':
- 		            	msgDef[field.name] = {type: 'uint16', multiplicity: field.count, offset: bitPosition};
+ 		            	newField.type = 'uint16';
  		        	    break;
  		        	
  		            case 'short int':
- 		            	msgDef[field.name] = {type: 'int16', multiplicity: field.count, offset: bitPosition};
+ 		            	newField.type = 'int16';
  		        	    break;
  		        	
 			        case 'long unsigned int':
- 		            	msgDef[field.name] = {type: 'uint32', multiplicity: field.count, offset: bitPosition};
+ 		            	newField.type = 'uint32';
  		        	    break;
  		        	
 			        case 'long int':
- 		            	msgDef[field.name] = {type: 'int16', multiplicity: field.count, offset: bitPosition};
+ 		            	newField.type = 'int16';
  		        	    break;
  		        	
  		            default:
  		        	    console.log('Unsupported type');
   			    }
+                msgDef[field.name] = newField;				
 			} else {	
-			    msgDef[field.name] = { fields: {}};	
-				for(var i=0; i < field.type.fields.length; ++i) {
-					var nextMsgDef = msgDef[field.name].fields;
-			    	bitPosition = this.msgParseFieldDef(nextMsgDef, field.type.fields[i], bitPosition, endian, headerLength);
-				}
+			    //msgDef[field.name] = { fields: {}};	
+				//for(var i=0; i < field.type.fields.length; ++i) {
+				//	var nextMsgDef = msgDef[field.name].fields;
+			    //	bitPosition = this.msgParseFieldDef(nextMsgDef, field.type.fields[i], bitPosition, endian, headerLength, engName);
+				//}
 			}
 		}
 		bitPosition += (field.type.bit_size * field.count);
@@ -793,42 +676,47 @@ TmTcServer.prototype.msgParseFieldDef = function (msgDef, field, bitPosition, en
 	    msgDef[field.name] = { fields: {}};	
 		for(var i=0; i < field.fields.length; ++i) {		
 			var nextMsgDef = msgDef[field.name].fields;	    
-	    	bitPosition = this.msgParseFieldDef(nextMsgDef, field.fields[i], bitPosition, endian, headerLength);
+	    	bitPosition = this.msgParseFieldDef(nextMsgDef, field.fields[i], bitPosition, endian, headerLength, engName);
 		}
 	} else {
 		if(bitPosition >= this.cmdHeaderLength) {
+			var newField =  {offset: bitPosition, engName: engName};
 			switch(field.base_type) {
 		        case 'unsigned char':
-		            msgDef[field.name] = {type: 'uint8', offset: bitPosition};
+		        	newField.type = 'uint8';
 		        	break;
 		        	
 		        case 'char':
-		            msgDef[field.name] = {type: 'int8', offset: bitPosition};
+		        	newField.type = 'int8';
 		        	break;
 		        	
 		        case 'short unsigned int':
-		            msgDef[field.name] = {type: 'uint16', offset: bitPosition};
+		        	newField.type = 'uint16';
 		        	break;
 		        	
 		        case 'short int':
-		            msgDef[field.name] = {type: 'int16', offset: bitPosition};
+		        	newField.type = 'int16';
 		        	break;
 		        	
 		        case 'long unsigned int':
-		            msgDef[field.name] = {type: 'uint32', offset: bitPosition};
+		        	newField.type = 'uint32';
 		        	break;
 		        	
 		        case 'long int':
-		            msgDef[field.name] = {type: 'int32', offset: bitPosition};
+		        	newField.type = 'int32';
 		        	break;
  		        	
  		        default:
  		        	console.log('Unsupported type ' + field);
 		    }
+			
+			msgDef[field.name] = newField;
 		}
 		bitPosition += field.bit_size;
 	}
-
+	
+	this.cdd[engName] = msgDef[field.name];
+	
 	return bitPosition;
 }
 
