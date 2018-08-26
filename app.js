@@ -257,3 +257,28 @@ pbCmdInServer.bind(config.pbCmdInPort);
 
 
 module.exports = app;
+
+
+
+
+
+
+
+
+
+
+
+
+tmtc.register(function (connection) {
+	connection.subscribe('/CFE_ES_HkPacket_t/Payload/CmdCounter');
+	connection.subscribe('/CFE_ES_HkPacket_t/Payload/ErrCounter');
+	connection.subscribe('/CFE_ES_HkPacket_t/Payload');
+	
+	var cmdDef = tmtc.getCmdDefByOpsName('/CFE_ES/ES_NOOP');
+	console.log(cmdDef);
+	tmtc.sendCommand(cmdDef);
+	
+	connection.on('update', (parameters) => {
+		console.log(parameters);
+	});
+})

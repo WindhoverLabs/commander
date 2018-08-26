@@ -69,6 +69,7 @@ function TmTcServer(options, sendCallback, pbSendCallback) {
     this.subscribers = {};
     this.pbSendCallback = pbSendCallback;
     this.cdd = {};
+    this.registrations = [];
     
     this.ccsdsPriHdr = new Parser()
       .endianess('big')
@@ -186,6 +187,7 @@ TmTcServer.prototype.processBinaryFields = function (tlmDef, buffer, tlmJson, pa
 		var symbolName = field.symbolName;
 		var opsName = field.opsName;
 		var engName = field.engName;
+
 		var telemItem = {'engName': engName};
 				
 		if(field.hasOwnProperty('multiplicity')) {
@@ -254,6 +256,10 @@ TmTcServer.prototype.processBinaryFields = function (tlmDef, buffer, tlmJson, pa
 			}
 		} else if(typeof field === 'object'){
 			tlmJson[fieldName] = {};
+			telemItem.value = new Buffer(field.bitLength / 8);
+			var startOffset = field.offset / 8;
+			var stopOffset = startOffset + field.bitLength / 8;
+			buffer.copy(telemItem.value, 0, startOffset, stopOffset);
 			this.processBinaryFields(field, buffer, tlmJson[fieldName], parsedTlm);
 		}
 	    parsedTlm.push(telemItem);
@@ -273,9 +279,8 @@ TmTcServer.prototype.processBinaryMessage = function (buffer) {
 
     if(typeof tlmDef !== 'undefined') {
     	var tlmJson = {};
-    	
+
     	this.processBinaryFields(tlmDef, buffer, tlmJson, parsedTlm);
-    	console.log(parsedTlm);
     	
     	/* Now send the the message to all PB listeners. */
     	if(tlmDef.hasOwnProperty('proto')) {
@@ -299,10 +304,12 @@ TmTcServer.prototype.processBinaryMessage = function (buffer) {
     		if(this.subscribers.hasOwnProperty(parsedTlm[i].engName)) {
     			var subscription = this.subscribers[parsedTlm[i].engName];
     			for(var j = 0; j < subscription.length; ++j) {
-    				subscription[j](parsedTlm[i].value);
+    				subscription[j](parsedTlm[i]);
     			}
     		}
     	}
+    	
+    	this.emit('processed-binary', parsedTlm);
     }
 };
 
@@ -403,16 +410,18 @@ TmTcServer.prototype.parseMsgDefFile = function (msgDefs) {
 			}
 		};
 
+		var engName = '/' + symbol.name;
+		msgDef.engName = engName;
+
 		if(this.isCommandMsg(msgDef.msgID)) {
 			var headerLength = this.cmdHeaderLength;
 		} else {
 			var headerLength = this.tlmHeaderLength;
 		}
 
+		var bitPosition = 0;
 		for(var i=0; i < symbol.fields.length; ++i) {
-			var bitPosition = 0;
 			var fieldName = symbol.fields[i].name;
-			var engName = '/' + symbol.name;
 			
 			if(msgDefs.little_endian == true) {
 				var endianTag = 'le';
@@ -427,34 +436,29 @@ TmTcServer.prototype.parseMsgDefFile = function (msgDefs) {
 
 		msgDef.byteLength = bitPosition / 8;
 		
+		var filePath = msgDefInput[key].proto;
+		
 		if(this.isCommandMsg(msgDef.msgID)) {
 			msgDef.commandCode = msgDefInput[key].cmdCode;
 			
 			if('proto' in msgDefInput[key]) {
-				var filePath = msgDefInput[key].proto;
 				msgDef.proto = new protobuf.Root();
 				this.cmdDefs[key] = msgDef;
-				protobuf.loadSync(filePath, this.cmdDefs[key].proto);
+				protobuf.loadSync(filePath, msgDef.proto);
 			} else {
 				this.cmdDefs[key] = msgDef;
 			}
 		} else {
 			
 			if('proto' in msgDefInput[key]) {
-				var filePath = msgDefInput[key].proto;
 				msgDef.proto = new protobuf.Root();
 				this.tlmDefs[msgDef.msgID] = msgDef;
-				protobuf.loadSync(filePath, this.tlmDefs[msgDef.msgID].proto);
+				protobuf.loadSync(filePath, msgDef.proto);
 			} else {
 				this.tlmDefs[msgDef.msgID] = msgDef;
 			}
-			//console.log(msgDef);
 		}
-		
-		//console.log(util.inspect(msgDef, false, null));
 	}	
-
-	//console.log(this.cmdDefs);
 }
 
 
@@ -674,8 +678,11 @@ TmTcServer.prototype.msgParseFieldDef = function (msgDef, field, bitPosition, en
 		bitPosition += (field.type.bit_size * field.count);
 	} else if(Array.isArray(field.fields)) {
 	    msgDef[field.name] = { fields: {}};	
+		msgDef[field.name].engName = engName;
+		msgDef[field.name].offset = bitPosition;
+		msgDef[field.name].bitLength = field.bit_size;
 		for(var i=0; i < field.fields.length; ++i) {		
-			var nextMsgDef = msgDef[field.name].fields;	    
+			var nextMsgDef = msgDef[field.name].fields;
 	    	bitPosition = this.msgParseFieldDef(nextMsgDef, field.fields[i], bitPosition, endian, headerLength, engName);
 		}
 	} else {
@@ -795,3 +802,60 @@ TmTcServer.prototype.cfeTimeToJsTime = function(seconds, subseconds) {
 TmTcServer.prototype.getCommandDef = function (ops_name) {	
 	var retObj = {};
 }
+
+
+
+TmTcServer.prototype.register = function (callback) {	
+	var registration = new TmTcRegistration(this);
+	
+	this.registrations.push(registration);
+	
+	if(typeof callback === 'function') {
+		callback(registration);
+	}
+	
+	return registration;
+}
+
+
+
+
+
+
+
+
+
+
+TmTcRegistration.prototype.__proto__ = events.EventEmitter.prototype;
+
+function TmTcRegistration(server) {
+	this.queuedParams = [];
+	
+	this.server = server;
+	
+	var self = this;
+	
+    //TmTcSubscriber.prototype.register = fun
+	
+	this.server.on('processed-binary', () => {
+		if(self.queuedParams.length > 0) {
+			self.emit('update', self.queuedParams);
+			self.queuedParams = [];
+		}
+	});
+};
+
+
+
+TmTcRegistration.prototype.subscribe = function (tlmID, callback) {
+	var self = this;
+	
+	this.server.subscribe(tlmID, function(param) {
+		if(typeof callback === 'function') {
+			callback(param);
+		}
+		
+		self.queuedParams.push(param);
+	})
+}
+
