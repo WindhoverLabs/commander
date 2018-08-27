@@ -1,0 +1,36 @@
+// an example configuration file
+{
+    instances: [
+        {
+            name: 'airliner',
+            CFE_SB_PACKET_TIME_FORMAT: 'CFE_SB_TIME_32_16_SUBS',
+            CFE_TIME_EPOCH_YEAR: 1980,
+            CFE_TIME_EPOCH_DAY: 1,
+            CFE_TIME_EPOCH_HOUR: 0,
+            CFE_TIME_EPOCH_MINUTE: 0,
+            CFE_TIME_EPOCH_SECOND: 0,
+            plugins: [
+                {
+                    name: 'udp-adapter',
+                    require: 'udp-adapter',
+                    config: {
+                        input: {
+                            port: 5010
+                        },
+                        output: {
+                            port: 5011
+                        }
+                    }
+                }
+            ],
+            msgDefs: [
+                {file: './output.json'},
+                {file: './output-cmd.json'},
+                {file: './input.json'}
+            ]
+        }
+    ],
+    plugins: [
+    ]
+}
+        

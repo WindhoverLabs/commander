@@ -44,13 +44,9 @@ var indexRouter = require('./routes/index');
 var test1 = require('./routes/testpage1');
 var test2 = require('./routes/testpage2');
 
-var TmTcServer = require('./tmtc-server');
-const dgram = require('dgram');
-const binTlmInServer = dgram.createSocket('udp4');
-const binCmdOutSender = dgram.createSocket('udp4');
-const pbTlmOutSender = dgram.createSocket('udp4');
-const pbCmdInServer = dgram.createSocket('udp4');
+
 const util = require('util');
+var Commander = require('./commander');
 
 var app = express();
 
@@ -107,153 +103,9 @@ app.use(function(err, req, res, next) {
     res.render('error');
 });
 
-io.on('connection', function(socket) {
-	socket.on('connect_error', function(socket) {
-		console.log('Client: connect_error');
-	});
 
-	socket.on('connect_timeout', function(socket) {
-		console.log('Client: connect_timeout');
-	});
+var commander = new Commander('./config/development.json');
 
-	socket.on('reconnect', function(socket) {
-		console.log('Client: reconnect');
-	});
-
-	socket.on('reconnect_attempt', function(socket) {
-		console.log('Client: reconnect_attempt');
-	});
-
-	socket.on('reconnecting', function(socket) {
-		console.log('Client: reconnecting');
-	});
-
-	socket.on('reconnect_error', function(socket) {
-		console.log('Client: reconnect_error');
-	});
-
-	socket.on('reconnect_failed', function(socket) {
-		console.log('Client: reconnect_failed');
-	});
-
-	socket.on('disconnect', function(socket) {
-		console.log('Client: disconnect');
-		//trickComm.disconnect();
-	});
-
-  var apiSendToClient = function(bytes) {
-    socket.emit('apiProxy', buffer);
-  };
-
-  var wsSendToClient = function(bytes) {
-    socket.emit('wsProxy', buffer);
-  };
-
-	var tlmBypass = function(msg) {
-	    socket.volatile.emit('updateTelem', msg);
-	};
-
-  var session = new sage({
-    tlmBypass: tlmBypass,
-    address: 'localhost',
-    port: 8090});
-
-  var getDirListing = function(directory, cb) {
-    var outFiles = [];
-    var fullPath = path.join(workspace_path, directory);
-    fs.readdir(fullPath, (err,files) => {
-      if(err == null){
-        for(var i = 0; i < files.length; i++){
-          var currentFile = fullPath + '/' + files[i];
-          var stats = fs.statSync(currentFile);
-          var transPath  = directory + '/' + files[i];
-          var entry = {path: transPath, name: files[i], size: stats.size, mtime: stats.mtime};
-          if (stats.isFile()) {
-            entry.type = 'file';
-          } else if (stats.isDirectory()) {
-            entry.type = 'dir';
-          } else {
-            entry.type = 'unknown';
-          }
-          outFiles.push(entry);
-        }
-      }
-      cb({err: err, path: directory, files: outFiles});
-    });
-  };
-  socket.on('wsProxy', function(buffer) {
-    session.wsProxy(buffer);
-  });
-  var service = {
-    getDirListing: session.getDirListing,
-    getDirListing: getDirListing
-  }
-
-	var client;
-  var wsConnection;
-	// exposes all methods
-	for (method in service) {
-	   // use a closure to avoid scope erasure
-	   (function (method) {
-	       // method name will be the name of incoming message
-	       socket.on(method, function () {
-	           /* Method is defined in the service list. */
-	           if(typeof service[method] === 'function') {
-	               /* The method defined is actually a javascript function that can
-	                * be called. */
-	               var result = service[method].apply(session, arguments);
-	           } else {
-	               console.log('Client attempted to call ndefined method \'' + method + '\'.');
-	           }
-	       });
-	   })(method)
-	}; 
-});
-
-
-var tmtc = new TmTcServer(config, 
-   function (buffer) {
-	   binCmdOutSender.send(buffer, 0, buffer.length, config.binCmdOutPort, '127.0.0.1');
-}, function (buffer) {
-	   pbTlmOutSender.send(buffer, 0, buffer.length, config.pbTlmOutPort, '127.0.0.1');
-});
-
-
-binTlmInServer.on('error', (err) => {
-    console.log(`binTlmInServer error:\n${err.stack}`);
-    server.close();
-});
-
-binTlmInServer.on('message', (msg, rinfo) => {
-    //console.log(`binTlmInServer got: ${msg} from ${rinfo.address}:${rinfo.port}`);
-    tmtc.processBinaryMessage(msg);
-});
-
-binTlmInServer.on('listening', () => {
-    const address = binTlmInServer.address();
-    console.log(`binTlmInServer listening ${address.address}:${address.port}`);
-});
-
-console.log('Starting binary UDP listener');
-binTlmInServer.bind(config.binTlmInPort);
-
-
-pbCmdInServer.on('error', (err) => {
-    console.log(`pbCmdInServer error:\n${err.stack}`);
-    server.close();
-});
-
-pbCmdInServer.on('message', (msg, rinfo) => {
-    tmtc.processPBMessage(msg);
-});
-
-pbCmdInServer.on('listening', () => {
-    const address = pbCmdInServer.address();
-    console.log(`pbCmdInServer listening ${address.address}:${address.port}`);
-});
-
-console.log('Starting Protobuf UDP listener');
-pbCmdInServer.bind(config.pbCmdInPort);
 
 
 module.exports = app;
@@ -261,24 +113,3 @@ module.exports = app;
 
 
 
-
-
-
-
-
-
-
-
-tmtc.register(function (connection) {
-	connection.subscribe('/CFE_ES_HkPacket_t/Payload/CmdCounter');
-	connection.subscribe('/CFE_ES_HkPacket_t/Payload/ErrCounter');
-	connection.subscribe('/CFE_ES_HkPacket_t/Payload');
-	
-	var cmdDef = tmtc.getCmdDefByOpsName('/CFE_ES/ES_NOOP');
-	console.log(cmdDef);
-	tmtc.sendCommand(cmdDef);
-	
-	connection.on('update', (parameters) => {
-		console.log(parameters);
-	});
-})
