@@ -47,10 +47,14 @@ var test2 = require('./routes/testpage2');
 
 const util = require('util');
 var Commander = require('./commander');
+var BinaryEncoder = require('./binary-encoder');
+var BinaryDecoder = require('./binary-decoder');
+var UdpStdProvider = require('./udp-std-provider');
+var VariableServer = require('./variable-server');
+var ClientConnector = require('./client-connector');
+var ProtobufEncoder = require('./protobuf-encoder');
 
 var app = express();
-
-const config = require('./config.js');
 
 //Socket.io
 var io = socket_io();
@@ -105,6 +109,24 @@ app.use(function(err, req, res, next) {
 
 
 var commander = new Commander('./config/development.json');
+var binaryEncoder = new BinaryEncoder('./binary-encoder-config.json');
+var binaryDecoder = new BinaryDecoder('./binary-decoder-config.json');
+var variableServer = new VariableServer('./variable-server-config.json');
+var fswConnector = new UdpStdProvider('./udpstdprovider-config.json');
+var pylinerConnector = new UdpStdProvider('./pyliner-connector-config.json');
+var clientConnector = new ClientConnector('./client-connector-config.json');
+var protobufEncoder = new ProtobufEncoder('./protobuf-encoder-config.json');
+
+var airliner = commander.addInstance('airliner', function(instance) {
+	instance.addApp('binary-encoder',    binaryEncoder);
+	instance.addApp('binary-decoder',    binaryDecoder);
+	instance.addApp('fsw-connector',     fswConnector);
+	instance.addApp('pyliner-connector', pylinerConnector);
+	instance.addApp('variable-server',   variableServer);
+	instance.addApp('client-connector',  clientConnector);
+	instance.addApp('protobuf-encoder',  protobufEncoder);
+});
+
 
 
 

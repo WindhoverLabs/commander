@@ -35,41 +35,34 @@
 
 var Parser = require("binary-parser").Parser;
 const net = require('net');
-var events = require('events');
-var Emitter = require('events').EventEmitter;
+const Emitter = require('events');
 var fs = require('fs');
 const util = require('util');
-var protobuf = require('protobufjs');
-var Promise = require('promise');
 var mergeJSON = require('merge-json');
+var convict = require('convict');
+var config = require('./config.js');
 
 var emit = Emitter.prototype.emit;
 
-exports = module.exports = TmTcServer;
-
-exports.events = [
-  'connect',
-  'close',
-  'error'
-];
+exports = module.exports = BinaryEncoder;
 
 var listenerCount = Emitter.listenerCount ||
 function (emitter, type) { return emitter.listeners(type).length }
 
-function TmTcServer(options, sendCallback, pbSendCallback) {
-    this.parsers = {};
-    this.options = options;
+function BinaryEncoder(configFile) {
     this.cmdDefs = [];
     this.tlmDefs = [];
-    this.tlm = {};
-    this.protoDefs = {};
     this.cmdHeaderLength = 64;
     this.sequence = 0;
-    this.sendCallback = sendCallback;
-    this.subscribers = {};
-    this.pbSendCallback = pbSendCallback;
     this.cdd = {};
-    this.registrations = [];
+    var self = this;
+    this.instanceEmitter;
+    
+    /* Load environment dependent configuration */
+    config.loadFile(configFile);
+
+    /* Perform validation */
+    config.validate({allowed: 'strict'});
     
     this.ccsdsPriHdr = new Parser()
       .endianess('big')
@@ -86,8 +79,8 @@ function TmTcServer(options, sendCallback, pbSendCallback) {
 	  .bit1('reserved')
 	  .bit7('code')
 	  .uint8('checksum');
-    
-    switch(options.CFE_SB_PACKET_TIME_FORMAT) {
+	
+    switch(config.get('CFE_SB_PACKET_TIME_FORMAT')) {
       case 'CFE_SB_TIME_32_16_SUBS':
         this.ccsdsTlmSecHdr = new Parser()
     	  .endianess('little')
@@ -130,8 +123,10 @@ function TmTcServer(options, sendCallback, pbSendCallback) {
    
     var msgDefs = {};
     
-    for(var i = 0; i < options.msgDefs.length; ++i) {
-    	var msgDefInput = JSON.parse(fs.readFileSync(options.msgDefs[i].file, 'utf8'));
+    var inMsgDefs = config.get('msgDefs')
+    
+    for(var i = 0; i < inMsgDefs.length; ++i) {
+    	var msgDefInput = JSON.parse(fs.readFileSync(inMsgDefs[i].file, 'utf8'));
     	msgDefs = mergeJSON.merge(msgDefs, msgDefInput);
     }
     
@@ -140,234 +135,50 @@ function TmTcServer(options, sendCallback, pbSendCallback) {
 
 
 
-/**
- * Inherits from `EventEmitter`.
- */
-TmTcServer.prototype.__proto__ = Emitter.prototype;
-
-
-
-TmTcServer.prototype.sendPBMessage = function (message) {
-	tlmDef = tmtc.getTlmDef('/CFE_ES/HK/CFE_ES_HkPacket_t');
-	
-	var esHkMsg = tlmDef.proto.lookupType('CFE_ES_HkPacket_t');
-	
-	var msg = esHkMsg.create({'Payload': {'CmdCounter': 7}});
-	
-	var pbBuffer = esHkMsg.encode(msg).finish();
-
-	var hdrBuffer = Buffer.alloc(12)
-	hdrBuffer.writeUInt16BE(tlmDef.msgID, 0);
-	hdrBuffer.writeUInt16BE(1, 2);
-	hdrBuffer.writeUInt16BE(pbBuffer.length - 1, 4);
-	hdrBuffer.writeUInt16BE(0, 6);
-	hdrBuffer.writeUInt16BE(0, 8);
-	hdrBuffer.writeUInt16BE(0, 10);
-	
-	var msgBuffer = Buffer.concat([hdrBuffer, pbBuffer]);
-	
-	pbSender.send(msgBuffer, 0, msgBuffer.length, config.pbTlmOutPort, '127.0.0.1');
-	
-	var buffer = new Buffer(cmd.byteLength);
-	buffer.fill(0x00);
-	
-	buffer.writeUInt16BE(cmd.msgID, 0);
-	buffer.writeUInt16BE(this.sequence, 2);
-	buffer.writeUInt16BE(cmd.byteLength - 7, 4);
-	buffer.writeUInt8(cmd.commandCode, 7);
-	buffer.writeUInt8(0, 6);
-	
-	this.sequence++;
-}
-
-
-TmTcServer.prototype.processBinaryFields = function (tlmDef, buffer, tlmJson, parsedTlm) {	
-	for(var fieldName in tlmDef.fields) {
-		var field = tlmDef.fields[fieldName];
-		var symbolName = field.symbolName;
-		var opsName = field.opsName;
-		var engName = field.engName;
-
-		var telemItem = {'engName': engName};
-				
-		if(field.hasOwnProperty('multiplicity')) {
-		    switch(field.type) {
-				case 'uint8':
-					telemItem.value = buffer.readUInt8(field.offset / 8);
-					tlmJson[fieldName] = buffer.readUInt8(field.offset / 8);
-					break;
-					
-				case 'string':
-					telemItem.value = buffer.toString("utf-8", field.offset / 8, field.multiplicity).replace(/\0/g, '');
-					tlmJson[fieldName] = buffer.toString("utf-8", field.offset / 8, field.multiplicity).replace(/\0/g, '');
-					break;
-						
-				case 'uint16':
-					telemItem.value = buffer.readUInt16LE(field.offset / 8);
-					tlmJson[fieldName] = buffer.readUInt16LE(field.offset / 8);
-					break;
-						
-				case 'int16':
-					telemItem.value = buffer.readInt16LE(field.offset / 8);
-					tlmJson[fieldName] = buffer.readInt16LE(field.offset / 8);
-					break;
-						
-				case 'uint32':
-					telemItem.value = buffer.readUInt32LE(field.offset / 8);
-					tlmJson[fieldName] = buffer.readUInt32LE(field.offset / 8);
-					break;
-						
-				case 'int32':
-					telemItem.value = buffer.readInt32LE(field.offset / 8);
-					tlmJson[fieldName] = buffer.readInt32LE(field.offset / 8);
-					break;
-				}
-		} else if(field.hasOwnProperty('type')) {
-			switch(field.type) {
-				case 'uint8':
-					telemItem.value = buffer.readUInt8(field.offset / 8);
-					tlmJson[fieldName] = buffer.readUInt8(field.offset / 8);
-					break;
-					
-				case 'string':
-					telemItem.value = buffer.toString('ascii', field.offset / 8, (field.offset / 8) + field.length);
-					tlmJson[fieldName] = buffer.toString('ascii', field.offset / 8, (field.offset / 8) + field.length);
-					break;
-					
-				case 'uint16':
-					telemItem.value = buffer.readUInt16LE(field.offset / 8);
-					tlmJson[fieldName] = buffer.readUInt16LE(field.offset / 8);
-					break;
-					
-				case 'int16':
-					telemItem.value = buffer.readInt16LE(field.offset / 8);
-					tlmJson[fieldName] = buffer.readInt16LE(field.offset / 8);
-					break;
-					
-				case 'uint32':
-					telemItem.value = buffer.readUInt32LE(field.offset / 8);
-					tlmJson[fieldName] = buffer.readUInt32LE(field.offset / 8);
-					break;
-					
-				case 'int32':
-					telemItem.value = buffer.readInt32LE(field.offset / 8);
-					tlmJson[fieldName] = buffer.readInt32LE(field.offset / 8);
-					break;
-			}
-		} else if(typeof field === 'object'){
-			tlmJson[fieldName] = {};
-			telemItem.value = new Buffer(field.bitLength / 8);
-			var startOffset = field.offset / 8;
-			var stopOffset = startOffset + field.bitLength / 8;
-			buffer.copy(telemItem.value, 0, startOffset, stopOffset);
-			this.processBinaryFields(field, buffer, tlmJson[fieldName], parsedTlm);
-		}
-	    parsedTlm.push(telemItem);
-	}
-}
-
-
-
-TmTcServer.prototype.processBinaryMessage = function (buffer) {
-	var parsedTlm = [];
-	
-    var msgID = buffer.readUInt16BE(0);
-    
-	var message = this.ccsds.parse(buffer);
-	
-	var tlmDef = this.getMsgDefByMsgID(msgID);
-
-    if(typeof tlmDef !== 'undefined') {
-    	var tlmJson = {};
-
-    	this.processBinaryFields(tlmDef, buffer, tlmJson, parsedTlm);
-    	
-    	/* Now send the the message to all PB listeners. */
-    	if(tlmDef.hasOwnProperty('proto')) {
-	    	var pbMsgDef = tlmDef.proto.lookupType(tlmDef.symbol);
-	    	var pbMsg = pbMsgDef.create(tlmJson);
-	    	var pbBuffer = pbMsgDef.encode(pbMsg).finish();
-	    	var hdrBuffer = new Buffer(12)
-	  	    hdrBuffer.writeUInt16BE(tlmDef.msgID, 0);
-	        hdrBuffer.writeUInt16BE(1, 2);
-	  	    hdrBuffer.writeUInt16BE(pbBuffer.length - 1, 4);
-	  	    hdrBuffer.writeUInt16BE(0, 6);
-	  	    hdrBuffer.writeUInt16BE(0, 8);
-	  	    hdrBuffer.writeUInt16BE(0, 10);
-	        
-	        var msgBuffer = Buffer.concat([hdrBuffer, pbBuffer]);
-	        this.pbSendCallback(msgBuffer);
-    	}
-    	
-        /* Finally, send the values to the subscribers. */
-    	for(var i = 0; i < parsedTlm.length; ++i) {
-    		if(this.subscribers.hasOwnProperty(parsedTlm[i].engName)) {
-    			var subscription = this.subscribers[parsedTlm[i].engName];
-    			for(var j = 0; j < subscription.length; ++j) {
-    				subscription[j](parsedTlm[i]);
-    			}
-    		}
-    	}
-    	
-    	this.emit('processed-binary', parsedTlm);
-    }
-};
-
-
-
-TmTcServer.prototype.getMsgDefByMsgID = function (msgID) {
-	return this.tlmDefs[msgID];
-}
-
-
-TmTcServer.prototype.processPBMessage = function (buffer) {
-    var message = this.ccsds.parse(buffer);
-    var msgID = buffer.readUInt16BE(0);
-    var cmdCode = message.SecHdr.code;
-	
-    var cmd = this.getCmdDefByMsgIDandCC(msgID, cmdCode);
-    
-    if(typeof cmd !== 'undefined') {
-    	var msgLength = message.PriHdr.length;
-    	
-    	if(msgLength > 1) {
-    		
-    	}
-    		
-    	this.sendCommand(cmd);
-    }
-};
-
-
-
-TmTcServer.prototype.addMessageParser = function (msgID, parser) {
-	this.parsers[msgID] = parser;
-}
-
-
-
-TmTcServer.prototype.addCommandDefinition = function (ops_name) {
-	this.parsers[msgID] = parser;
-}
-
-
-
-TmTcServer.prototype.parseProtoFile = function (msgID, filePath) {
+BinaryEncoder.prototype.setInstanceEmitter = function (newInstanceEmitter)
+{
 	var self = this;
+	this.instanceEmitter = newInstanceEmitter;
+
+	this.instanceEmitter.on(config.get('cmdDefReqStreamID'), function(cmdName) {
+		var cmdDef = self.getCmdDefByOpsName(cmdName).fields;
 	
-	console.log('Loading ' + filePath);
-	protobuf.load(filePath, function(err, root) {
-		if (err)
-			throw err;
+	    self.instanceEmit(config.get('cmdDefRspStreamIDPrefix') + cmdName, cmdDef);
+	});
+
+	this.instanceEmitter.on(config.get('cmdSendStreamID'), function(cmdName, args) {
+		var cmdDef = self.getCmdDefByOpsName(cmdName);
 		
-    	console.log('Loaded ' + filePath);
-		self.protoDefs[msgID] = root;
+		//cmdDef.fields = args;
+	    
+		self.sendCommand(cmdDef);
 	});
 }
 
 
 
-TmTcServer.prototype.isCommandMsg = function (msgID) {
+BinaryEncoder.prototype.instanceEmit = function (streamID, msg)
+{
+	this.instanceEmitter.emit(streamID, msg);
+}
+
+
+
+
+/**
+ * Inherits from `EventEmitter`.
+ */
+BinaryEncoder.prototype.__proto__ = Emitter.prototype;
+
+
+
+BinaryEncoder.prototype.addCommandDefinition = function (ops_name) {
+	this.parsers[msgID] = parser;
+}
+
+
+
+BinaryEncoder.prototype.isCommandMsg = function (msgID) {
 	if((msgID & 0x1000) == 0x1000) {
 		return true;
 	} else {
@@ -377,7 +188,7 @@ TmTcServer.prototype.isCommandMsg = function (msgID) {
 
 
 
-TmTcServer.prototype.isTelemetryMsg = function (msgID) {
+BinaryEncoder.prototype.isTelemetryMsg = function (msgID) {
 	if((msgID & 0x1000) == 0x1000) {
 		return false;
 	} else {
@@ -387,7 +198,7 @@ TmTcServer.prototype.isTelemetryMsg = function (msgID) {
 
 
 
-TmTcServer.prototype.parseMsgDefFile = function (msgDefs) {
+BinaryEncoder.prototype.parseMsgDefFile = function (msgDefs) {
 	/* Get the config object. */
 	var messages = msgDefs.Messages;
 	
@@ -440,40 +251,17 @@ TmTcServer.prototype.parseMsgDefFile = function (msgDefs) {
 		
 		if(this.isCommandMsg(msgDef.msgID)) {
 			msgDef.commandCode = msgDefInput[key].cmdCode;
-			
-			if('proto' in msgDefInput[key]) {
-				msgDef.proto = new protobuf.Root();
-				this.cmdDefs[key] = msgDef;
-				protobuf.loadSync(filePath, msgDef.proto);
-			} else {
-				this.cmdDefs[key] = msgDef;
-			}
+
+			this.cmdDefs[key] = msgDef;
 		} else {
-			
-			if('proto' in msgDefInput[key]) {
-				msgDef.proto = new protobuf.Root();
-				this.tlmDefs[msgDef.msgID] = msgDef;
-				protobuf.loadSync(filePath, msgDef.proto);
-			} else {
-				this.tlmDefs[msgDef.msgID] = msgDef;
-			}
+			this.tlmDefs[msgDef.msgID] = msgDef;
 		}
 	}	
 }
 
 
 
-TmTcServer.prototype.subscribe = function (tlmID, callback) {
-	if(!this.subscribers.hasOwnProperty(tlmID)) {
-		this.subscribers[tlmID] = new Array();
-	}
-	
-	this.subscribers[tlmID].push(callback);
-}
-
-
-
-TmTcServer.prototype.flattenMsgDefs = function (obj, msgDefs, path) {
+BinaryEncoder.prototype.flattenMsgDefs = function (obj, msgDefs, path) {
 	if(typeof path === 'undefined') {
         path = '';
     }
@@ -497,7 +285,7 @@ TmTcServer.prototype.flattenMsgDefs = function (obj, msgDefs, path) {
 
 
 
-TmTcServer.prototype.isMsgDef = function (obj, path) {
+BinaryEncoder.prototype.isMsgDef = function (obj, path) {
 	/* First, check to see if the object has both message ID and symbol
 	 * assigned to it.
 	 */
@@ -527,13 +315,13 @@ TmTcServer.prototype.isMsgDef = function (obj, path) {
 
 
 
-TmTcServer.prototype.getCmdDefByOpsName = function (opsName) {
+BinaryEncoder.prototype.getCmdDefByOpsName = function (opsName) {
 	return this.cmdDefs[opsName];
 }
 
 
 
-TmTcServer.prototype.getCmdDefByMsgIDandCC = function (msgID, cmdCode) {
+BinaryEncoder.prototype.getCmdDefByMsgIDandCC = function (msgID, cmdCode) {
 	for(var opsName in this.cmdDefs) {
 		var cmd = this.cmdDefs[opsName];
 		if((cmd.msgID == msgID) && (cmd.commandCode == cmdCode)){
@@ -544,17 +332,7 @@ TmTcServer.prototype.getCmdDefByMsgIDandCC = function (msgID, cmdCode) {
 
 
 
-TmTcServer.prototype.getTlmDef = function (opsName) {
-	for(var msgID in this.tlmDefs) {
-		var tlm = this.tlmDefs[msgID];
-		if(tlm.opsName == opsName)
-			return tlm;
-	}
-}
-
-
-
-TmTcServer.prototype.sendCommand = function (cmd) {
+BinaryEncoder.prototype.sendCommand = function (cmd) {
 	var buffer = new Buffer(cmd.byteLength);
 	buffer.fill(0x00);
 	
@@ -626,12 +404,12 @@ TmTcServer.prototype.sendCommand = function (cmd) {
 		}
 	}
 	
-	this.sendCallback(buffer);
+	this.instanceEmit(config.get('binaryOutputStreamID'), buffer);
 }
 
 
 
-TmTcServer.prototype.msgParseFieldDef = function (msgDef, field, bitPosition, endian, headerLength, parentEngName) {
+BinaryEncoder.prototype.msgParseFieldDef = function (msgDef, field, bitPosition, endian, headerLength, parentEngName) {
 	var engName = parentEngName + '/' + field.name;
 	
 	if(typeof field.array !== 'undefined') {
@@ -729,7 +507,7 @@ TmTcServer.prototype.msgParseFieldDef = function (msgDef, field, bitPosition, en
 
 
 
-TmTcServer.prototype.cfeTimeToJsTime = function(seconds, subseconds) {
+BinaryEncoder.prototype.cfeTimeToJsTime = function(seconds, subseconds) {
     var microseconds;
 
     /* 0xffffdf00 subseconds = 999999 microseconds, so anything greater 
@@ -799,63 +577,6 @@ TmTcServer.prototype.cfeTimeToJsTime = function(seconds, subseconds) {
 
 
 
-TmTcServer.prototype.getCommandDef = function (ops_name) {	
+BinaryEncoder.prototype.getCommandDef = function (ops_name) {	
 	var retObj = {};
 }
-
-
-
-TmTcServer.prototype.register = function (callback) {	
-	var registration = new TmTcRegistration(this);
-	
-	this.registrations.push(registration);
-	
-	if(typeof callback === 'function') {
-		callback(registration);
-	}
-	
-	return registration;
-}
-
-
-
-
-
-
-
-
-
-
-TmTcRegistration.prototype.__proto__ = events.EventEmitter.prototype;
-
-function TmTcRegistration(server) {
-	this.queuedParams = [];
-	
-	this.server = server;
-	
-	var self = this;
-	
-    //TmTcSubscriber.prototype.register = fun
-	
-	this.server.on('processed-binary', () => {
-		if(self.queuedParams.length > 0) {
-			self.emit('update', self.queuedParams);
-			self.queuedParams = [];
-		}
-	});
-};
-
-
-
-TmTcRegistration.prototype.subscribe = function (tlmID, callback) {
-	var self = this;
-	
-	this.server.subscribe(tlmID, function(param) {
-		if(typeof callback === 'function') {
-			callback(param);
-		}
-		
-		self.queuedParams.push(param);
-	})
-}
-

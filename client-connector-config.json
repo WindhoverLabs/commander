@@ -31,25 +31,13 @@
 *
 *****************************************************************************/
 
-'use strict';
-
-const config = {
-    CFE_SB_PACKET_TIME_FORMAT: 'CFE_SB_TIME_32_16_SUBS',
-    CFE_TIME_EPOCH_YEAR:       1980,
-    CFE_TIME_EPOCH_DAY:        1,
-    CFE_TIME_EPOCH_HOUR:       0,
-    CFE_TIME_EPOCH_MINUTE:     0,
-    CFE_TIME_EPOCH_SECOND:     0,
-    binTlmInPort:              5011,
-    binCmdOutPort:             5010,
-    pbTlmOutPort:              5112,
-    pbCmdInPort:               5109,
-    msgDefs: [
-    	{file: './output.json'},
-    	{file: './output-cmd.json'},
-    	{file: './input.json'}
-    ]
+// an example configuration file
+{
+    varServerEventsStreamID: 'var-server-events',
+    varUpdateStreamIDPrefix: 'var-update:',
+    varDefReqStreamID:       'var-def-request',
+    varDefRspStreamIDPrefix: 'var-def:',
+    cmdDefReqStreamID:       'cmd-def-request',
+    cmdDefRspStreamIDPrefix: 'cmd-def:',
+    cmdSendStreamID:         'cmd-send'
 }
-
-exports = module.exports = config;
-

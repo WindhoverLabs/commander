@@ -31,36 +31,11 @@
 *
 *****************************************************************************/
 
-'use strict';
-
-const net = require('net');
-var events = require('events');
-var Emitter = require('events').EventEmitter;
-
-var emit = Emitter.prototype.emit;
-
-exports = module.exports = UdpStdListener;
-
-exports.events = [
-  'connect',
-  'close',
-  'error'
-];
-
-var listenerCount = Emitter.listenerCount ||
-function (emitter, type) { return emitter.listeners(type).length }
-
-function UdpStdListener() {
-    this.params = [];
-};
-
-/**
- * Inherits from `EventEmitter`.
- */
-UdpStdListener.prototype.__proto__ = Emitter.prototype;
-
-
-UdpStdListener.prototype.connect = function (options){
-    var self = this;
-    
-};
+// an example configuration file
+{
+    inPort:  5011,
+    outPort: 5010,
+    outAddress: '127.0.0.1',
+    inputStreamID: 'bin-cmd-stream',
+    outputStreamID: 'bin-tlm-stream'
+}
