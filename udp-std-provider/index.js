@@ -132,10 +132,6 @@ UdpStdProvider.prototype.setInstanceEmitter = function (newInstanceEmitter)
     console.log(self.config.get('inputStreamID'));
     
 	this.instanceEmitter.on(this.config.get('inputStreamID'), function(buffer) {
-		console.log('1**********************');
-		console.log(buffer);
-		console.log(self.config.get('outPort'));
-		console.log(self.config.get('outAddress'));
 		self.sender.send(buffer, 0, buffer.length, self.config.get('outPort'), self.config.get('outAddress'));
 	});
 }

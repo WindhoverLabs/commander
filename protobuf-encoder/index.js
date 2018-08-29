@@ -44,6 +44,7 @@ var mergeJSON = require('merge-json');
 var convict = require('convict');
 var config = require('./config.js');
 const Sparkles = require('sparkles');
+var path = require('path');
 
 var emit = Emitter.prototype.emit;
 
@@ -54,6 +55,33 @@ exports.events = [
   'close',
   'error'
 ];
+
+
+
+function recFindByExt(base, ext, files, result) 
+{
+    files = files || fs.readdirSync(base) 
+    result = result || [] 
+
+    files.forEach( 
+        function (file) {
+            var newbase = path.join(base,file)
+            if ( fs.statSync(newbase).isDirectory() )
+            {
+                result = recFindByExt(newbase,ext,fs.readdirSync(newbase),result)
+            }
+            else
+            {
+                if ( file.substr(-1*(ext.length+1)) == '.' + ext )
+                {
+                    result.push(newbase)
+                } 
+            }
+        }
+    )
+    return result
+}
+
 
 var listenerCount = Emitter.listenerCount ||
 function (emitter, type) { return emitter.listeners(type).length }
@@ -71,7 +99,7 @@ function ProtobufEncoder(configFile) {
     this.registrations = [];
     var self = this;
     this.instanceEmitter;
-    this.defs;
+    this.defs = {};
     
     /* Load environment dependent configuration */
     config.loadFile(configFile);
@@ -136,22 +164,11 @@ function ProtobufEncoder(configFile) {
     	})
         .buffer('payload', {readUntil: 'eof'});
     
-    fs.readdir('./proto_defs', function(err, apps) {     
-        for(var i=0; i<apps.length; i++) {
-//            console.log(apps[i]);
-        	var appDir = './proto_defs/' + apps[i];
-        	
-        	if(fs.lstatSync(appDir).isDirectory()) {
-                fs.readdir(appDir, function(err, items) {                 
-                    for(var j=0; j<items.length; j++) {
-                        console.log(appDir + '/' + items[j]);
-                    }
-                });
-        	}
-            
-        }
-    });
-
+    var protoFiles = recFindByExt('./proto_defs', 'proto');
+    
+    for(var i = 0; i < protoFiles.length; i++) {
+    	this.parseProtoFile('./' + protoFiles[i]);
+    }
 };
 
 
@@ -162,29 +179,30 @@ ProtobufEncoder.prototype.setInstanceEmitter = function (newInstanceEmitter)
 	this.instanceEmitter = newInstanceEmitter;
 
 	this.instanceEmitter.on(config.get('jsonInputStreamID'), function(message) {
-		var tlmDef = self.getMsgDefByMsgID(message.msgID);
-
+		var tlmDef = self.getMsgDefBySymbolName(message.symbol);
+        console.log(tlmDef);
+        
 	    if(typeof tlmDef !== 'undefined') {
 	    	var tlmJson = {};
 
 	    	self.processFields(message.fields, tlmJson);
 	    	
 	    	/* Now send the the message to all PB listeners. */
-	    	if(tlmDef.hasOwnProperty('proto')) {
-		    	var pbMsgDef = tlmDef.proto.lookupType(tlmDef.symbol);
-		    	var pbMsg = pbMsgDef.create(tlmJson);
-		    	var pbBuffer = pbMsgDef.encode(pbMsg).finish();
-		    	var hdrBuffer = new Buffer(12)
-		  	    hdrBuffer.writeUInt16BE(tlmDef.msgID, 0);
-		        hdrBuffer.writeUInt16BE(1, 2);
-		  	    hdrBuffer.writeUInt16BE(pbBuffer.length - 1, 4);
-		  	    hdrBuffer.writeUInt16BE(0, 6);
-		  	    hdrBuffer.writeUInt16BE(0, 8);
-		  	    hdrBuffer.writeUInt16BE(0, 10);
+	    	var pbMsgDef = tlmDef.proto.lookupType(tlmDef.name + '_pb');
+	    	var pbMsg = pbMsgDef.create(tlmJson);
+	    	var pbBuffer = pbMsgDef.encode(pbMsg).finish();
+	    	var hdrBuffer = new Buffer(12)
+	  	    hdrBuffer.writeUInt16BE(tlmDef.msgID, 0);
+	        hdrBuffer.writeUInt16BE(1, 2);
+	  	    hdrBuffer.writeUInt16BE(pbBuffer.length - 1, 4);
+	  	    hdrBuffer.writeUInt16BE(0, 6);
+	  	    hdrBuffer.writeUInt16BE(0, 8);
+	  	    hdrBuffer.writeUInt16BE(0, 10);
+	        
+	        var msgBuffer = Buffer.concat([hdrBuffer, pbBuffer]);
+	        self.instanceEmit(config.get('binaryOutputStreamID'), msgBuffer);
 		        
-		        var msgBuffer = Buffer.concat([hdrBuffer, pbBuffer]);
-		        self.instanceEmit(config.get('binaryOutputStreamID'), msgBuffer);
-	    	}
+	    	console.log(tlmJson);
 	    }
 	});
 }
@@ -240,7 +258,7 @@ ProtobufEncoder.prototype.sendPBMessage = function (message) {
 }
 
 
-ProtobufEncoder.prototype.processFields = function (inJSON, outJSON) {	
+ProtobufEncoder.prototype.processFields = function (inJSON, outJSON) {		
 	for(var i = 0; i < inJSON.length; ++i) {
 	    var engName = inJSON[i].engName;
 
@@ -306,6 +324,12 @@ ProtobufEncoder.prototype.getMsgDefByMsgID = function (msgID) {
 }
 
 
+
+ProtobufEncoder.prototype.getMsgDefBySymbolName = function (name) {
+	return this.defs[name];
+}
+
+
 ProtobufEncoder.prototype.processPBMessage = function (buffer) {
     var message = this.ccsds.parse(buffer);
     var msgID = buffer.readUInt16BE(0);
@@ -338,16 +362,22 @@ ProtobufEncoder.prototype.addCommandDefinition = function (ops_name) {
 
 
 
-ProtobufEncoder.prototype.parseProtoFile = function (msgID, filePath) {
+ProtobufEncoder.prototype.parseProtoFile = function (filePath) {
 	var self = this;
 	
-	console.log('Loading ' + filePath);
-	protobuf.load(filePath, function(err, root) {
+    var fileName = filePath.replace(/^.*[\\\/]/, '');
+    var structureName = fileName.replace(/\.[^/.]+$/, '');
+    
+    var root = new protobuf.Root();
+	
+    //root.resolvePath = function(origin, target) {
+    //	return origin;
+    //}
+    protobuf.load(root, function(err, root) {
 		if (err)
 			throw err;
-		
-    	console.log('Loaded ' + filePath);
-		self.protoDefs[msgID] = root;
+
+	    self.defs[structureName] = {name: structureName, proto: root};
 	});
 }
 

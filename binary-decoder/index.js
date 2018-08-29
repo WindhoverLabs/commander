@@ -191,7 +191,7 @@ BinaryDecoder.prototype.processBinaryFields = function (tlmDef, buffer, parsedTl
 		var engName = field.engName;
 
 		var telemItem = {'engName': engName};
-				
+
 		if(field.hasOwnProperty('multiplicity')) {
 		    switch(field.type) {
 				case 'uint8':
@@ -285,7 +285,9 @@ BinaryDecoder.prototype.processBinaryMessage = function (buffer) {
     if(typeof tlmDef !== 'undefined') {
     	this.processBinaryFields(tlmDef, buffer,  parsedTlm);
     	
-    	this.instanceEmit(config.get('jsonOutputStreamID'), {msgID: msgID, fields: parsedTlm});
+    	var msgOut = {msgID: msgID, symbol: tlmDef.symbol, fields: parsedTlm};
+    	
+    	this.instanceEmit(config.get('jsonOutputStreamID'), msgOut);
     }
 };
 
@@ -482,6 +484,7 @@ BinaryDecoder.prototype.getTlmItemDef = function (engName) {
 BinaryDecoder.prototype.msgParseFieldDef = function (msgDef, field, bitPosition, endian, headerLength, parentEngName) {
 	var engName = parentEngName + '/' + field.name;
 	
+	
 	if(typeof field.array !== 'undefined') {
 		if(bitPosition >= headerLength) {
 			if(typeof field.type.base_type !== 'undefined'){
@@ -534,7 +537,7 @@ BinaryDecoder.prototype.msgParseFieldDef = function (msgDef, field, bitPosition,
 	    	bitPosition = this.msgParseFieldDef(nextMsgDef, field.fields[i], bitPosition, endian, headerLength, engName);
 		}
 	} else {
-		if(bitPosition >= this.cmdHeaderLength) {
+		if(bitPosition >= headerLength) {
 			var newField =  {offset: bitPosition, engName: engName};
 			switch(field.base_type) {
 		        case 'unsigned char':
@@ -564,6 +567,7 @@ BinaryDecoder.prototype.msgParseFieldDef = function (msgDef, field, bitPosition,
  		        default:
  		        	console.log('Unsupported type ' + field);
 		    }
+            msgDef[field.name] = newField;
 		}
 		bitPosition += field.bit_size;
 	}
