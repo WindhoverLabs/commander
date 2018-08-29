@@ -71,6 +71,7 @@ function ProtobufEncoder(configFile) {
     this.registrations = [];
     var self = this;
     this.instanceEmitter;
+    this.defs;
     
     /* Load environment dependent configuration */
     config.loadFile(configFile);
@@ -134,6 +135,23 @@ function ProtobufEncoder(configFile) {
     	    }
     	})
         .buffer('payload', {readUntil: 'eof'});
+    
+    fs.readdir('./proto_defs', function(err, apps) {     
+        for(var i=0; i<apps.length; i++) {
+//            console.log(apps[i]);
+        	var appDir = './proto_defs/' + apps[i];
+        	
+        	if(fs.lstatSync(appDir).isDirectory()) {
+                fs.readdir(appDir, function(err, items) {                 
+                    for(var j=0; j<items.length; j++) {
+                        console.log(appDir + '/' + items[j]);
+                    }
+                });
+        	}
+            
+        }
+    });
+
 };
 
 
