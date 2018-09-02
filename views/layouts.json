@@ -1,0 +1,46 @@
+ {
+     apps: {
+         text:  'Apps'
+         nodes: {
+             'flow_appctl.pug': {
+                  text: 'FLOW',
+                  type:  'panel'     
+             },
+             'flow_config.pug': {
+                  text: 'FLOW',
+                  type:  'panel'     
+             }
+             'flow_diag.pug': {
+                  text: 'FLOW',
+                  type:  'panel'     
+             }
+             'flow_general.pug': {
+                  text: 'FLOW',
+                  type:  'layout'     
+             }
+             'flow_graph.pug': {
+                  text: 'FLOW',
+                  type:  'panel'     
+             }
+             'flow_hk.pug': {
+                  text: 'FLOW',
+                  type:  'panel'     
+             }
+         },
+     cfe: {
+         text:  'CFE',
+         type: 'group'
+         },
+     flight: {
+         text:  'Flight',
+         type: 'group'
+         },
+     px4: {
+         text:  'PX4',
+         type: 'group'
+         },
+     scripts: {
+         text:  'Scripts',
+         type: 'group'
+         }
+}

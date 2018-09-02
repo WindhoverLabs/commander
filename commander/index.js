@@ -56,7 +56,8 @@ var config = require('./config.js');
 
 const ROOT_INSTANCE_NAME = 'ROOT';
 
-function Commander(configFile) {
+function Commander(workspace, configFile) {
+    this.workspace = workspace;
     this.instances = {};
     
     /* Load environment dependent configuration */

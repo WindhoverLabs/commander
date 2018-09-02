@@ -37,6 +37,9 @@ const util = require('util');
 var convict = require('convict');
 var config = require('./config.js');
 const Sparkles = require('sparkles');
+var socket_io = require('socket.io');
+var path = require('path');
+var fs = require('fs');
 
 var emit = Emitter.prototype.emit;
 
@@ -46,19 +49,118 @@ exports.events = [
 var listenerCount = Emitter.listenerCount ||
 function (emitter, type) { return emitter.listeners(type).length }
 
-function ClientConnector(configFile) {
+var publicFunctions = [
+	'getDirectoryListing',
+	'getCmdDefs',
+	'getTlmDefs',
+	'subscribe',
+	'sendCommand'
+];
+
+function ClientConnector(workspace, configFile, app) {
     this.vars = {};
     var self = this;
+    this.workspace = workspace;
     this.instanceEmitter = new Emitter();;
-    
+
     /* Load environment dependent configuration */
     config.loadFile(configFile);
 
     /* Perform validation */
     config.validate({allowed: 'strict'});
     
-    return this;
+  //Socket.io
+    var io = socket_io();
+    app.io = io;
+
+    io.on('connection', function(socket) {
+    	socket.on('connect_error', function(socket) {
+    		console.log('Client: connect_error');
+    	});
+
+    	socket.on('connect_timeout', function(socket) {
+    		console.log('Client: connect_timeout');
+    	});
+
+    	socket.on('reconnect', function(socket) {
+    		console.log('Client: reconnect');
+    	});
+
+    	socket.on('reconnect_attempt', function(socket) {
+    		console.log('Client: reconnect_attempt');
+    	});
+
+    	socket.on('reconnecting', function(socket) {
+    		console.log('Client: reconnecting');
+    	});
+
+    	socket.on('reconnect_error', function(socket) {
+    		console.log('Client: reconnect_error');
+    	});
+
+    	socket.on('reconnect_failed', function(socket) {
+    		console.log('Client: reconnect_failed');
+    	});
+
+    	socket.on('disconnect', function(socket) {
+    		console.log('Client: disconnect');
+    	});
+
+    	for(var i in publicFunctions) {
+    		(function(funcName) {
+    	        socket.on(funcName, function() {
+    	        	var cb = arguments[arguments.length-1];
+	    	        self[funcName].apply(self, arguments);
+    		    });
+    	    })(publicFunctions[i]);
+    	}
+    });    
 };
+
+
+
+ClientConnector.prototype.getDirectoryListing = function(inPath, cb) {
+    var outFiles = [];
+    var fullPath = path.join(this.workspace + '/web', inPath);
+
+    fs.readdir(fullPath, function (err, files) {
+        if (err == null) {
+            for (var i = 0; i < files.length; ++i) {
+                var currentFile = fullPath + '/' + files[i];
+                var stats = fs.statSync(currentFile);
+                var transPath = inPath + '/' + files[i];
+                var entry = {path: transPath, name: files[i], size: stats.size, mtime: stats.mtime};
+                if (stats.isFile()) {
+                    entry.type = 'file';
+                } else if (stats.isDirectory()) {
+                    entry.type = 'dir';
+                } else {
+                    entry.type = 'unknown';
+                }
+                outFiles.push(entry);
+            };
+        };
+        cb({err: err, path: inPath, files: outFiles});
+    });
+}
+
+
+
+ClientConnector.prototype.getCmdDefs = function(cb) {
+	cb('getCmdDefs');
+}
+
+
+
+ClientConnector.prototype.getTlmDefs = function(cb) {
+	cb('getTlmDefs');
+}
+
+
+
+ClientConnector.prototype.sendCommand = function(cb) {
+	cb('sendCommand');
+}
 
 
 
@@ -86,8 +188,6 @@ function isEmpty(obj) {
     for (var key in obj) {
         if (hasOwnProperty.call(obj, key)) return false;
     }
-
-    return true;
 }
 
 

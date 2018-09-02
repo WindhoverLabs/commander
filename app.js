@@ -41,6 +41,7 @@ var fs = require('fs');
 var sage = require('./sage');
 
 var indexRouter = require('./routes/index');
+var workspaceRouter = require('./routes/workspace');
 var test1 = require('./routes/testpage1');
 var test2 = require('./routes/testpage2');
 
@@ -54,11 +55,13 @@ var VariableServer = require('./variable-server');
 var ClientConnector = require('./client-connector');
 var ProtobufEncoder = require('./protobuf-encoder');
 
+var workspace = path.join(__dirname, '/workspace');
+
 var app = express();
 
-//Socket.io
-var io = socket_io();
-app.io = io;
+////Socket.io
+//var io = socket_io();
+//app.io = io;
 
 // Workspace
 var workspace_path = path.join(process.env.YAMCS_WORKSPACE, '/web');
@@ -77,7 +80,8 @@ if(fs.existsSync(fsw_config_file)) {
 };
 
 // view engine setup
-app.set('views', path.join(__dirname, 'views'));
+console.log(workspace);
+app.set('views', [path.join(__dirname, 'workspace'),path.join(__dirname, 'views')]);
 app.set('view engine', 'pug');
 
 app.use(logger('dev'));
@@ -87,7 +91,10 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/scripts', express.static(__dirname + '/node_modules/'));
 app.use('/js', express.static(__dirname + '/public/js/'));
-app.use('/sage', express.static(path.join(__dirname, 'sage')));app.use('/', indexRouter);
+app.use('/sage', express.static(path.join(__dirname, 'sage')));
+app.use('/commander', express.static(path.join(__dirname, 'commander')));
+app.use('/', indexRouter);
+app.use('/ws', workspaceRouter);
 app.use('/*config', test2);
 app.use('/flow*', test1);
 
@@ -108,13 +115,13 @@ app.use(function(err, req, res, next) {
 });
 
 
-var commander = new Commander('./config/development.json');
+var commander = new Commander(workspace, './config/development.json');
 var binaryEncoder = new BinaryEncoder('./binary-encoder-config.json');
 var binaryDecoder = new BinaryDecoder('./binary-decoder-config.json');
 var variableServer = new VariableServer('./variable-server-config.json');
 var fswConnector = new UdpStdProvider('./udpstdprovider-config.json');
 var pylinerConnector = new UdpStdProvider('./pyliner-connector-config.json');
-var clientConnector = new ClientConnector('./client-connector-config.json');
+var clientConnector = new ClientConnector(workspace, './client-connector-config.json', app);
 var protobufEncoder = new ProtobufEncoder('./protobuf-encoder-config.json');
 
 var airliner = commander.addInstance('airliner', function(instance) {
