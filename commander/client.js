@@ -1,40 +1,40 @@
 'use strict';
 
-var Commander = Commander || {};
+var CommanderClient = CommanderClient || {};
 
-Commander.prototype.__proto__ = EventEmitter.prototype;
+CommanderClient.prototype.__proto__ = EventEmitter.prototype;
 
-function Commander() {
+function CommanderClient() {
     this.isSocketConnected = false;
 	this.socket;
 	
-	console.log('Commander');
+	console.log('CommanderClient');
 	
 	this.connect();
 }
 
 
 
-Commander.prototype.isSocketConnected = function() {
+CommanderClient.prototype.isSocketConnected = function() {
   /* TODO */
   return isSocketConnected;
 };
 
 
 
-Commander.prototype.getLayouts = function (path, cb){
+CommanderClient.prototype.getLayouts = function (path, cb){
 	this.getDirectoryListing(path, 'layout', cb);
 };
 
 
 
-Commander.prototype.getPanels = function (path, cb){
+CommanderClient.prototype.getPanels = function (path, cb){
 	this.getDirectoryListing(path, 'pug', cb);
 };
 
 
 
-Commander.prototype.getDirectoryListing = function (path, extension, cb){
+CommanderClient.prototype.getDirectoryListing = function (path, extension, cb){
 	var re = /(?:\.([^.]+))?$/;
 	
     if(this.isSocketConnected){
@@ -72,7 +72,7 @@ Commander.prototype.getDirectoryListing = function (path, extension, cb){
 
 
 
-Commander.prototype.getViews = function (cb){
+CommanderClient.prototype.getViews = function (cb){
     if(this.isSocketConnected){
     	this.socket.emit('getViews', function(views){
             cb(views);
@@ -82,7 +82,7 @@ Commander.prototype.getViews = function (cb){
 
 
 
-Commander.prototype.getCmdDefs = function (cb){
+CommanderClient.prototype.getCmdDefs = function (cb){
     if(this.isSocketConnected){
     	this.socket.emit('getCmdDefs', function(cmdDefs){
             cb(cmdDefs);
@@ -92,7 +92,7 @@ Commander.prototype.getCmdDefs = function (cb){
 
 
 
-Commander.prototype.getTlmDefs = function (cb){
+CommanderClient.prototype.getTlmDefs = function (cb){
     if(!this.isSocketConnected){
     	this.socket.emit('getTlmDefs', function(tlmDefs){
             cb(tlmDefs);
@@ -102,7 +102,7 @@ Commander.prototype.getTlmDefs = function (cb){
 
 
 
-Commander.prototype.subscribe = function (cb){
+CommanderClient.prototype.subscribe = function (cb){
     if(!this.isSocketConnected){
     	this.socket.emit('subscribe', function(params){
             cb(params);
@@ -112,7 +112,7 @@ Commander.prototype.subscribe = function (cb){
 
 
 
-Commander.prototype.sendCommand = function (cb){
+CommanderClient.prototype.sendCommand = function (cb){
     if(!this.isSocketConnected){
     	this.socket.emit('sendCommand', function(cmd){
             cb(cmd);
@@ -122,7 +122,7 @@ Commander.prototype.sendCommand = function (cb){
 
 
 
-Commander.prototype.connect = function (){
+CommanderClient.prototype.connect = function (){
     var self = this;
 
     this.socket = io({

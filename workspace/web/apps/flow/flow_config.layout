@@ -57,7 +57,7 @@
                   "componentName": "Blank",
                   "componentState": {
                     "text": "text",
-                    "link": "/ws/apps/flow/flow_general.pug"
+                    "link": "ws/apps/flow/flow_general.pug"
                   },
                   "isClosable": true,
                   "reorderEnabled": true
@@ -80,7 +80,7 @@
                   "componentName": "Blank",
                   "componentState": {
                     "text": "text",
-                    "link": "/ws/apps/flow/flow_hk.pug"
+                    "link": "ws/apps/flow/flow_hk.pug"
                   },
                   "isClosable": true,
                   "reorderEnabled": true
@@ -105,7 +105,7 @@
               "componentName": "Blank",
               "componentState": {
                 "text": "text",
-                "link": "/ws/apps/flow/flow_appctl.pug"
+                "link": "ws/apps/flow/flow_appctl.pug"
               },
               "isClosable": true,
               "reorderEnabled": true
@@ -128,7 +128,7 @@
               "componentName": "Blank",
               "componentState": {
                 "text": "text",
-                "link": "/ws/apps/flow/flow_graph.pug"
+                "link": "ws/apps/flow/flow_graph.pug"
               },
               "isClosable": true,
               "reorderEnabled": true
@@ -150,7 +150,7 @@
               "componentName": "Blank",
               "componentState": {
                 "text": "text",
-                "link": "/ws/apps/flow/flow_diag.pug"
+                "link": "ws/apps/flow/flow_diag.pug"
               },
               "isClosable": true,
               "reorderEnabled": true

@@ -620,8 +620,215 @@ function IndicatorCloseClick() {
     IndicatorCount -= 1;
 }
 
+
+
+function UpdateLayoutNode(node, display) {
+    session.getLayouts(node.path, function (dirEntries) {
+        var entries = [];
+    
+        for(var i=0; i < dirEntries.length; ++i) {
+            var dirEntry = dirEntries[i];
+            
+            var layoutEntry = {
+                name: dirEntry.name,
+                text: dirEntry.name,
+                path: dirEntry.path,
+                type: dirEntry.type,
+                ext: dirEntry.path,
+                selectable: false,
+                checkable: false
+            };
+            
+            if(dirEntry.type == 'dir') {
+                layoutEntry.lazyLoad = true;
+                layoutEntry.selectable = false;
+            } else {
+                layoutEntry.lazyLoad = false;
+                layoutEntry.selectable = true;
+                layoutEntry.type = 'config';
+            }
+            
+            entries.push(layoutEntry);
+        }
+        
+        var tree = $('#layoutMenuContainer').treeview(true)
+        tree.addNode(entries, node, node.index, { silent: true} );
+        tree.expandNode(node, { silent: true, ignoreChildren: true } );
+    });
+}
+
+function UpdatePanelNode(node, display) {
+    console.log('onLazyLoad');
+    console.log(node);
+    session.getPanels(node.path, function (dirEntries) {
+        var panelEntries = [];
+        
+        console.log('session.getPanels = ' + dirEntries);
+    
+        for(var i=0; i < dirEntries.length; ++i) {
+            var dirEntry = dirEntries[i];
+            
+            var panelEntry = {
+                name: dirEntry.name,
+                text: dirEntry.name,
+                path: dirEntry.path,
+                type: dirEntry.type,
+                ext: dirEntry.path,
+                selectable: true,
+                checkable: false
+            };
+            
+            if(dirEntry.type == 'dir') {
+                panelEntry.lazyLoad = true;
+                panelEntry.selectable = false;
+                console.log('dir');
+            } else {
+                panelEntry.icon = 'fa fa-file';
+                panelEntry.lazyLoad = false;
+                panelEntry.selectable = true;
+                panelEntry.type = 'file';
+                panelEntry.url = 'ws/' + dirEntry.path;
+                console.log('file');
+            }
+            
+            panelEntries.push(panelEntry);
+        }
+        
+        var tree = $('#panelMenuContainer').treeview(true)
+        tree.addNode(panelEntries, node, node.index, { silent: true} );
+        tree.expandNode(node, { silent: true, ignoreChildren: true } );    
+    });
+}
+
+
+var session;
+
 /* appctl main - this script execution starts from here */
-$(()=>{
+$(()=>{     
+	session = new CommanderClient(); 
+    
+    var config = {
+        settings: {
+            selectionEnabled: true
+        },
+        content: [{
+            type: 'row',
+            content: [{
+                type:'component',
+                componentName: 'Blank',
+                componentState: { text: 'Component 1'}
+            },
+            {
+                type:'component',
+                componentName: 'Blank',
+                componentState: { text: 'Component 2'}
+            }]
+        }]
+    };
+    
+    session.on('connect', function() {
+        console.log('connected');
+        
+        session.getPanels('', function (dirEntries) {              
+            var panelEntries = [];
+            
+            for(var i=0; i < dirEntries.length; ++i) {
+                var entry = {
+                    name: dirEntries[i].name,
+                    text: dirEntries[i].name,
+                    path: dirEntries[i].path,
+                    type: dirEntries[i].type,
+                    lazyLoad: true,
+                    ext: dirEntries[i].path,
+                    selectable: false,
+                    checkable: false
+                };
+                
+                panelEntries.push(entry);
+            }
+
+            $('#panelMenuContainer').treeview({
+                data: panelEntries,
+                levels:1,
+                backColor: '#343a40',//grey
+                selectedBackColor: "#fff",
+                selectedColor:"#343a40",
+                onhoverColor:"#fff",
+                wrapNodeText:true,
+                collapseIcon: 'fa fa-minus',
+                expandIcon: 'fa fa-plus',
+                lazyLoad: UpdatePanelNode,
+                onNodeRendered : NodeRendered,
+                onNodeSelected: NodeSelected,
+            });
+    
+            session.getLayouts('', function (dirEntries) {                
+                var entries = [];
+                
+                for(var i=0; i < dirEntries.length; ++i) {
+                    console.log(dirEntries);
+                    var entry = {
+                        name: dirEntries[i].name,
+                        text: dirEntries[i].name,
+                        path: dirEntries[i].path,
+                        type: dirEntries[i].type,
+                        lazyLoad: true,
+                        ext: dirEntries[i].path,
+                        selectable: false,
+                        checkable: false
+                    };
+                    
+                    entries.push(entry);
+                }
+                myLayout = new window.GoldenLayout( config, $('#layoutContainer'));
+                
+                $('#layoutMenuContainer').treeview({
+                    data: entries,
+                    levels:1,
+                    backColor: '#343a40',//grey
+                    selectedBackColor: "#fff",
+                    selectedColor:"#343a40",
+                    onhoverColor:"#fff",
+                    wrapNodeText:true,
+                    collapseIcon: 'fa fa-minus',
+                    expandIcon: 'fa fa-plus',
+                    lazyLoad: UpdateLayoutNode,
+                    onNodeRendered : NodeRendered,
+                    onNodeSelected: NodeSelected,
+                });
+                
+                InitTreeView();
+                InitLayout(myLayout);
+                InitModal();
+                InitMenuState();
+                InitToolTips();
+                InitPopover();
+                InitScrollBar();
+                InitResizeCtl();
+            });
+        });
+        
+        //session.getViews(function (views) {
+        //    console.log(views);
+        //});
+        //
+        //session.getCmdDefs(function (cmdDefs) {
+        //    console.log(cmdDefs);
+        //});
+        //
+        //session.getTlmDefs(function (tlmDefs) {
+        //    console.log(tlmDefs);
+        //});
+        //
+        //session.subscribe(function (params) {
+        //    console.log(params);
+        //});
+        //
+        //session.sendCommand(function (result) {
+        //    console.log(result);
+        //});
+    });
+    
     //  myLayout = new window.GoldenLayout( config, $('#layoutContainer'));
     //  InitTreeView();
     //  InitLayout(myLayout);
