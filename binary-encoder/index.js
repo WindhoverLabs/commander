@@ -140,10 +140,16 @@ BinaryEncoder.prototype.setInstanceEmitter = function (newInstanceEmitter)
 	var self = this;
 	this.instanceEmitter = newInstanceEmitter;
 
-	this.instanceEmitter.on(config.get('cmdDefReqStreamID'), function(cmdName) {
-		var cmdDef = self.getCmdDefByOpsName(cmdName).fields;
-	
-	    self.instanceEmit(config.get('cmdDefRspStreamIDPrefix') + cmdName, cmdDef);
+	this.instanceEmitter.on(config.get('cmdDefReqStreamID'), function(cmdReq) {
+		if(cmdReq.hasOwnProperty('opsName')) {
+			var cmdDef = self.getCmdDefByOpsName(cmdReq.opsName).fields;
+			
+		    self.instanceEmit(config.get('cmdDefRspStreamIDPrefix') + cmdReq.opsName, cmdDef);
+		} else if (cmdReq.hasOwnProperty('msgID') && cmdReq.hasOwnProperty('cmdCode')) {
+			var cmdDef = self.getCmdDefByMsgIDandCC(cmdReq.msgID, cmdReq.cmdCode);
+			
+		    self.instanceEmit(config.get('cmdDefRspStreamIDPrefix') + ':' + cmdReq.msgID + ':' + cmdReq.cmdCode, cmdDef);
+		}
 	});
 
 	this.instanceEmitter.on(config.get('cmdSendStreamID'), function(cmdName, args) {

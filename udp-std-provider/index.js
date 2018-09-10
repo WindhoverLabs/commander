@@ -124,12 +124,15 @@ UdpStdProvider.prototype.setInstanceEmitter = function (newInstanceEmitter)
 	this.instanceEmitter = newInstanceEmitter;
     var self = this;
     
+	console.log(self.config.get('inPort'));
+    
     this.listener.on('message', (msg, rinfo) => {
-        //console.log(`binTlmInServer got: ${msg} from ${rinfo.address}:${rinfo.port}`);
+//        if(self.config.get('inPort') == 5109) {
+//        	console.log(msg);
+//        }
+
         self.instanceEmitter.emit(self.config.get('outputStreamID'), msg);
     });
-    
-    console.log(self.config.get('inputStreamID'));
     
 	this.instanceEmitter.on(this.config.get('inputStreamID'), function(buffer) {
 		self.sender.send(buffer, 0, buffer.length, self.config.get('outPort'), self.config.get('outAddress'));

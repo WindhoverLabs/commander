@@ -333,8 +333,9 @@ BinaryEncoderDecoder.prototype.processPBMessage = function (buffer) {
     	if(msgLength > 1) {
     		
     	}
-    		
-    	this.sendCommand(cmd);
+
+    	//this.sendCmd('/CFE_ES/ES_NOOP');
+    	//this.sendCommand(cmd);
     }
 };
 

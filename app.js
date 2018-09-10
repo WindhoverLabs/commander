@@ -54,6 +54,7 @@ var UdpStdProvider = require('./udp-std-provider');
 var VariableServer = require('./variable-server');
 var ClientConnector = require('./client-connector');
 var ProtobufEncoder = require('./protobuf-encoder');
+var ProtobufDecoder = require('./protobuf-decoder');
 
 var workspace = path.join(__dirname, '/workspace');
 
@@ -123,6 +124,7 @@ var fswConnector = new UdpStdProvider('./udpstdprovider-config.json');
 var pylinerConnector = new UdpStdProvider('./pyliner-connector-config.json');
 var clientConnector = new ClientConnector(workspace, './client-connector-config.json', app);
 var protobufEncoder = new ProtobufEncoder('./protobuf-encoder-config.json');
+var protobufDecoder = new ProtobufDecoder('./protobuf-decoder-config.json');
 
 var airliner = commander.addInstance('airliner', function(instance) {
 	instance.addApp('binary-encoder',    binaryEncoder);
@@ -132,9 +134,17 @@ var airliner = commander.addInstance('airliner', function(instance) {
 	instance.addApp('variable-server',   variableServer);
 	instance.addApp('client-connector',  clientConnector);
 	instance.addApp('protobuf-encoder',  protobufEncoder);
+	instance.addApp('protobuf-decoder',  protobufDecoder);
 });
 
 
+//instance.addApp('binary-encoder',    binaryEncoder);
+//instance.addApp('binary-decoder',    binaryDecoder);
+//instance.addApp('fsw-connector',     fswConnector);
+//instance.addApp('pyliner-connector', pylinerConnector);
+//instance.addApp('variable-server',   variableServer);
+//instance.addApp('client-connector',  clientConnector);
+//instance.addApp('protobuf-encoder',  protobufEncoder);
 
 
 module.exports = app;

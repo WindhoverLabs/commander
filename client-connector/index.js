@@ -209,7 +209,7 @@ ClientConnector.prototype.setInstanceEmitter = function (newInstanceEmitter)
     	}
 	});
 	
-	this.sendCmd('/CFE_ES/ES_NOOP', '');
+	this.sendCmd('/CFE_ES/ES_NOOP');
 	
 //	this.requestCmdDefinition('/CFE_ES/ES_NOOP', function(definition) {
 //		console.log(definition);

@@ -33,7 +33,7 @@
 
 'use strict';
 
-var Parser = require("binary-parser").Parser;
+var Parser = require('binary-parser').Parser;
 const net = require('net');
 const Emitter = require('events');
 var fs = require('fs');

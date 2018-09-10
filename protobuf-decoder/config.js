@@ -38,23 +38,34 @@ var config = convict({
         format: 'int',
         default: 0
     },
-    msgDefs: [{
+    definitions: [{
         file: {
             doc: 'Input file.',
             format: String,
             default: ''
         }
     }],
-    jsonInputStreamID: {
-        doc: 'Input JSON stream from a command source to the encoder.',
+    binaryInputStreamID: {
+        doc: 'Input binary stream from binary data provider.',
         format: String,
         default: ''
     },
-    binaryOutputStreamID: {
-        doc: 'Output binary stream from encoder to binary data provider.',
+    jsonOutputStreamID: {
+        doc: 'Output json stream to the binary encoder.',
         format: String,
         default: ''
-    }
+    },
+    cmdDefReqStreamID: {
+        doc: 'Command definition request',
+        format: String,
+        default: ''
+    },
+    cmdDefRspStreamIDPrefix: {
+        doc: 'Prefix of the stream ID that command definitions will be sent out.  The full stream name is prefix + \':\' + message ID + \':\' + command code',
+        format: String,
+        default: ''
+    },
+    
 });
 
 module.exports = config;
