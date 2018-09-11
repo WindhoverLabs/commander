@@ -208,7 +208,7 @@ ClientConnector.prototype.setInstanceEmitter = function (newInstanceEmitter)
     	}
 	});
 	
-	this.sendCmd('/CFE_ES/ES_NOOP');
+	//this.sendCmd('/CFE/ES_Noop');
 	
 //	this.requestCmdDefinition('/CFE_ES/ES_NOOP', function(definition) {
 //		console.log(definition);
@@ -226,7 +226,7 @@ ClientConnector.prototype.setInstanceEmitter = function (newInstanceEmitter)
 
 
 ClientConnector.prototype.sendCmd = function (cmdName, args) {
-	this.instanceEmit(config.get('cmdSendStreamID'), cmdName);
+	this.instanceEmit(config.get('cmdSendStreamID'), cmdName, args);
 }
 
 

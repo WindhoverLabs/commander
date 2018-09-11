@@ -108,10 +108,10 @@ function ProtobufDecoder(configFile) {
       .uint16('length');
     
 	this.ccsdsCmdSecHdr = new Parser()
-	  .endianess('little')
+	  .endianess('big')
+	  .uint8('checksum')
 	  .bit1('reserved')
-	  .bit7('code')
-	  .uint8('checksum');
+	  .bit7('code');
 	
     switch(config.get('CFE_SB_PACKET_TIME_FORMAT')) {
       case 'CFE_SB_TIME_32_16_SUBS':
@@ -177,34 +177,43 @@ ProtobufDecoder.prototype.setInstanceEmitter = function (newInstanceEmitter)
 	    	
 	    	self.requestCmdDefinition(msgID, cmdCode, function (cmdDef) {
 		    	var msgLength = message.PriHdr.length;
+		    	//console.log(cmdDef);
 		    	
 		    	if(msgLength > 1) {
-				    
-					var msgDef = self.getCmdDefByMsgIDandCC(msgID, cmdCode);
-			        
+					var msgDef = self.getCmdByName(cmdDef.symbol);
+			    	
 				    if(typeof msgDef !== 'undefined') {
 				    	var tlmJson = {};
-
-				    	self.processFields(message.fields, tlmJson);
 				    	
-				    	/* Now send the the message to all PB listeners. */
-				    	var pbMsgDef = tlmDef.proto.lookupType(msgDef.name + '_pb');
+				    	var pbMsgDef = msgDef.proto.lookupType(msgDef.name + '_pb');
+				    	
 				    	var pbMsg = pbMsgDef.create(tlmJson);
-				    	var pbBuffer = pbMsgDef.encode(pbMsg).finish();
-				    	var hdrBuffer = new Buffer(12)
-				  	    hdrBuffer.writeUInt16BE(msgID, 0);
-				        hdrBuffer.writeUInt16BE(1, 2);
-				  	    hdrBuffer.writeUInt16BE(pbBuffer.length - 1, 4);
-				  	    hdrBuffer.writeUInt16BE(0, 6);
-				  	    hdrBuffer.writeUInt16BE(0, 8);
-				  	    hdrBuffer.writeUInt16BE(0, 10);
-				        
-				        var msgBuffer = Buffer.concat([hdrBuffer, pbBuffer]);
-				        self.instanceEmit(config.get('jsonOutputStreamID'), msgBuffer);
+				    	var obj = pbMsgDef.decode(message.payload);
+				    	cmdDef.fields.Payload.fields.MaxPRCount.value = 1;
+				    	//self.sendCmd('/CFE/ES_SETMAXPRCNT');
+				    	
+					    //self.instanceEmit(config.get('jsonCmdOutputStreamID'), obj);
+
+//				    	self.processFields(message.fields, tlmJson);
+//				    	
+//				    	/* Now send the the message to all PB listeners. */
+//				    	var pbMsgDef = tlmDef.proto.lookupType(msgDef.name + '_pb');
+//				    	var pbMsg = pbMsgDef.create(tlmJson);
+//				    	var pbBuffer = pbMsgDef.encode(pbMsg).finish();
+//				    	var hdrBuffer = new Buffer(12)
+//				  	    hdrBuffer.writeUInt16BE(msgID, 0);
+//				        hdrBuffer.writeUInt16BE(1, 2);
+//				  	    hdrBuffer.writeUInt16BE(pbBuffer.length - 1, 4);
+//				  	    hdrBuffer.writeUInt16BE(0, 6);
+//				  	    hdrBuffer.writeUInt16BE(0, 8);
+//				  	    hdrBuffer.writeUInt16BE(0, 10);
+//				        
+//				        var msgBuffer = Buffer.concat([hdrBuffer, pbBuffer]);
+//				        self.instanceEmit(config.get('jsonCmdOutputStreamID'), msgBuffer);
 				    }
 		    	}
-		    		
-		        self.sendCmd(cmdDef.path);
+				
+		        self.sendCmd(cmdDef.ops_path);
 	    	})
 	    } else {	         
             var msgLength = message.PriHdr.length;
@@ -219,7 +228,7 @@ ProtobufDecoder.prototype.setInstanceEmitter = function (newInstanceEmitter)
 				    	var pbMsg = pbMsgDef.create(tlmJson);
 				    	var obj = pbMsgDef.decode(message.payload);
                         //console.log(obj);
-					    self.instanceEmit(config.get('jsonOutputStreamID'), obj);
+					    self.instanceEmit(config.get('jsonTlmOutputStreamID'), obj);
 
 //				 	   	self.processFields(message.fields, tlmJson);
 //			        	//console.log(tlmJson); 
@@ -249,7 +258,7 @@ ProtobufDecoder.prototype.setInstanceEmitter = function (newInstanceEmitter)
 
 
 ProtobufDecoder.prototype.sendCmd = function (cmdName, args) {
-	this.instanceEmit(config.get('jsonOutputStreamID'), cmdName);
+	this.instanceEmit(config.get('jsonCmdOutputStreamID'), cmdName);
 }
 
 
@@ -324,6 +333,18 @@ ProtobufDecoder.prototype.processFields = function (inJSON, outJSON) {
 
 
 
+ProtobufDecoder.prototype.getCmdDefByPath = function (path) {
+	for(var name in this.defs) {
+		var cmd = this.defs[name];
+		//console.log(cmd);
+		if(cmd.path == path){
+			return cmd;
+		}
+	}
+}
+
+
+
 ProtobufDecoder.prototype.getMsgDefBySymbolName = function (name) {
 	return this.defs[name];
 };
@@ -334,6 +355,17 @@ ProtobufDecoder.prototype.getCmdDefByMsgIDandCC = function (msgID, cmdCode) {
 	for(var name in this.defs) {
 		var cmd = this.defs[name];
 		if((cmd.msgID == msgID) && (cmd.commandCode == cmdCode)){
+			return cmd;
+		}
+	}
+}
+
+
+
+ProtobufDecoder.prototype.getCmdByName = function (name) {
+	for(var item in this.defs) {
+		var cmd = this.defs[item];
+		if(cmd.name == name){
 			return cmd;
 		}
 	}

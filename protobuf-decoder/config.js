@@ -50,8 +50,13 @@ var config = convict({
         format: String,
         default: ''
     },
-    jsonOutputStreamID: {
-        doc: 'Output json stream to the binary encoder.',
+    jsonCmdOutputStreamID: {
+        doc: 'Command output json stream to the binary encoder.',
+        format: String,
+        default: ''
+    },
+    jsonTlmOutputStreamID: {
+        doc: 'Telemetry output json stream to the binary encoder.',
         format: String,
         default: ''
     },
