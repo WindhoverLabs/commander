@@ -294,7 +294,6 @@ BinaryDecoder.prototype.processBinaryMessage = function (buffer) {
     	var msgOut = {msgID: msgID, symbol: tlmDef.symbol, fields: parsedTlm};
     	
     	this.instanceEmit(config.get('jsonOutputStreamID'), msgOut);
-    	console.log(msgOut);
     }
 };
 
@@ -522,7 +521,7 @@ BinaryDecoder.prototype.msgParseFieldDef = function (msgDef, field, bitPosition,
  		        	    break;
  		        	
  		            default:
- 		        	    console.log('Unsupported type');
+ 		        	    console.log('Unsupported field.type.base_type \'' + field.type.base_type + '\'');
   			    }
                 msgDef[field.name] = newField;	
 			} else {	
@@ -572,7 +571,7 @@ BinaryDecoder.prototype.msgParseFieldDef = function (msgDef, field, bitPosition,
 		        	break;
  		        	
  		        default:
- 		        	console.log('Unsupported type ' + field);
+ 		        	console.log('Unsupported field.base_type \'' + field.base_type + '\'');
 		    }
             msgDef[field.name] = newField;
 		}

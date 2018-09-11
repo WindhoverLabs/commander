@@ -203,7 +203,6 @@ ClientConnector.prototype.setInstanceEmitter = function (newInstanceEmitter)
     		 * have updates in the queue, flush the queue out to the client.
     		 */
     		if(isEmpty(self.vars) == false) {
-    			console.log(self.vars);
         		self.vars = {};
     		};
     	}

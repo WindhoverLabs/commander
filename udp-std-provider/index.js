@@ -95,8 +95,6 @@ function UdpStdProvider(configFile) {
 
     /* Perform validation */
     this.config.validate({allowed: 'strict'});
-	
-	console.log(configFile);
 
 	this.inputStreamID = this.config.get('inputStreamID');
 	this.outputStreamID = this.config.get('outputStreamID');
@@ -123,8 +121,6 @@ UdpStdProvider.prototype.setInstanceEmitter = function (newInstanceEmitter)
 {
 	this.instanceEmitter = newInstanceEmitter;
     var self = this;
-    
-	console.log(self.config.get('inPort'));
     
     this.listener.on('message', (msg, rinfo) => {
 //        if(self.config.get('inPort') == 5109) {
