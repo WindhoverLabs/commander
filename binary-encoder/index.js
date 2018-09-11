@@ -159,6 +159,17 @@ BinaryEncoder.prototype.setInstanceEmitter = function (newInstanceEmitter)
 	    
 		self.sendCommand(cmdDef);
 	});
+
+	this.instanceEmitter.on(config.get('tlmSendStreamID'), function(tlmObj) {
+		//console.log(tlmObj);
+		//var tlmDef = self.getTlmDefByOpsName(tlmName);
+		
+		//cmdDef.fields = args;
+	    
+		//self.sendTelemetry(tlmDef);
+	});
+	
+	
 }
 
 
@@ -237,18 +248,20 @@ BinaryEncoder.prototype.parseMsgDefFile = function (msgDefs) {
 		}
 
 		var bitPosition = 0;
-		for(var i=0; i < symbol.fields.length; ++i) {
-			var fieldName = symbol.fields[i].name;
-			
-			if(msgDefs.little_endian == true) {
-				var endianTag = 'le';
-			} else {
-				var endianTag = 'be';
-		    }
-			
-			msgDef.fields = {};
-			
-			bitPosition = this.msgParseFieldDef(msgDef.fields, symbol.fields[i], bitPosition, endianTag, headerLength, engName);
+		if(symbol.hasOwnProperty('fields')) {
+			for(var i=0; i < symbol.fields.length; ++i) {
+				var fieldName = symbol.fields[i].name;
+				
+				if(msgDefs.little_endian == true) {
+					var endianTag = 'le';
+				} else {
+					var endianTag = 'be';
+			    }
+				
+				msgDef.fields = {};
+				
+				bitPosition = this.msgParseFieldDef(msgDef.fields, symbol.fields[i], bitPosition, endianTag, headerLength, engName);
+			}
 		}
 
 		msgDef.byteLength = bitPosition / 8;
@@ -352,6 +365,81 @@ BinaryEncoder.prototype.sendCommand = function (cmd) {
 	
 	for(var key in cmd) {
 		var field = cmd[key]
+		if(field.hasOwnProperty('value')) {
+			if(field.hasOwnProperty('multiplicity')) {
+				switch(field.type) {
+					case 'uint8':
+						buffer.writeUInt8(field.value, field.offset / 8);
+						break;
+						
+					case 'string':
+						buffer.write(field.value, field.offset / 8);
+						break;
+						
+					case 'uint16':
+						buffer.writeUInt16LE(field.value, field.offset / 8);
+						break;
+						
+					case 'int16':
+						buffer.writeInt16LE(field.value, field.offset / 8);
+						break;
+						
+					case 'uint32':
+						buffer.writeUInt32LE(field.value, field.offset / 8);
+						break;
+						
+					case 'int32':
+						buffer.writeInt32LE(field.value, field.offset / 8);
+						break;
+				}
+			} else {
+
+				switch(field.type) {
+					case 'uint8':
+						buffer.writeUInt8(field.value, field.offset / 8);
+						break;
+						
+					case 'string':
+						buffer.write(field.value, field.offset / 8, field.length);
+						break;
+						
+					case 'uint16':
+						buffer.writeUInt16LE(field.value, field.offset / 8);
+						break;
+						
+					case 'int16':
+						buffer.writeInt16LE(field.value, field.offset / 8);
+						break;
+						
+					case 'uint32':
+						buffer.writeUInt32LE(field.value, field.offset / 8);
+						break;
+						
+					case 'int32':
+						buffer.writeInt32LE(field.value, field.offset / 8);
+						break;
+				}
+			}
+		}
+	}
+	
+	this.instanceEmit(config.get('binaryOutputStreamID'), buffer);
+}
+
+
+
+BinaryEncoder.prototype.sendTelemetry = function (tlm) {
+	var buffer = new Buffer(tlm.byteLength);
+	buffer.fill(0x00);
+	
+	buffer.writeUInt16BE(tlm.msgID, 0);
+	buffer.writeUInt16BE(this.sequence, 2);
+	buffer.writeUInt16BE(tlm.byteLength - 7, 4);
+	buffer.writeUInt16BE(0, 6);
+	buffer.writeUInt16BE(0, 8);
+	
+	for(var key in tlm) {
+		var field = tlm[key]
 		if(field.hasOwnProperty('value')) {
 			if(field.hasOwnProperty('multiplicity')) {
 				switch(field.type) {

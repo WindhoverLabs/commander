@@ -65,6 +65,16 @@ var config = convict({
         format: String,
         default: ''
     },
+    tlmDefReqStreamID: {
+        doc: 'Telemetry definition request',
+        format: String,
+        default: ''
+    },
+    tlmDefRspStreamIDPrefix: {
+        doc: 'Prefix of the stream ID that telemetry definitions will be sent out.  The full stream name is prefix + \':\' + message ID',
+        format: String,
+        default: ''
+    },
     
 });
 

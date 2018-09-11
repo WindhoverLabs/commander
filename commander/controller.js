@@ -10,199 +10,12 @@
    Resize
    Widget Generation */
 
-/* Directory Listing */
-/* Workspace folders and files should be stored like the following structure */
-function fakeDirData(id) {
-    let testData = [{
-        "path": "/apps",
-        "text": "apps",
-        "size": 4096,
-        "mtime": "2018-08-09T15:30:50.247Z",
-        "type": "dir",
-        "url": "view/apps",
-        "lazyLoad": true,
-        "ext": "/apps",
-        "selectable":false,
-        "checkable":false,
-    },{
-        "path": "/cfe",
-        "text": "cfe",
-        "size": 4096,
-        "mtime": "2018-08-09T15:30:08.431Z",
-        "type": "dir",
-        "url": "view/cfe",
-        "lazyLoad": true,
-        "selectable":false,
-        "checkable":false,
-        "ext": "/cfe"
-    },{
-        "path": "/flight",
-        "text": "flight",
-        "size": 4096,
-        "mtime": "2018-08-09T15:30:50.251Z",
-        "type": "dir",
-        "url": "view/flight",
-        "lazyLoad": true,
-        "selectable":false,
-        "checkable":false,
-        "ext": "/flight"
-    },{
-        "path": "/probe",
-        "text": "probe",
-        "size": 4096,
-        "mtime": "2018-08-09T15:30:08.499Z",
-        "type": "dir",
-        "url": "view/probe",
-        "lazyLoad": true,
-        "selectable":false,
-        "checkable":false,
-        "ext": "/probe"
-    },{
-        "path": "/px4",
-        "text": "px4",
-        "size": 4096,
-        "mtime": "2018-08-09T15:30:50.251Z",
-        "type": "dir",
-        "url": "view/px4",
-        "lazyLoad": true,
-        "selectable":false,
-        "checkable":false,
-        "ext": "/px4"
-    },{
-        "path": "/scripts",
-        "text": "scripts",
-        "size": 4096,
-        "mtime": "2018-08-09T15:30:08.559Z",
-        "type": "dir",
-        "url": "view/scripts",
-        "selectable":false,
-        "checkable":false,
-        "ext": "/scripts",
-        "lazyLoad": true,
-    }];
-    
-    let testNode =   {
-        "icon": "fa fa-file",
-        "path": "/flow_general",
-        "text": "FLOW General",
-        "size": 4096,
-        "mtime": "2018-08-09T15:30:50.247Z",
-        "type": "file",
-        "url": "view/apps/flow",
-        "selectable":true,
-        "checkable":false,
-        "ext": "/apps/flow",
-        "path": "flow_general"
-    }
-    
-    let testNode1 =   {
-        "icon": "fa fa-file",
-        "path": "/flow_hk",
-        "text": "FLOW HK",
-        "size": 4096,
-        "mtime": "2018-08-09T15:30:50.247Z",
-        "type": "file",
-        "url": "view/apps/flow",
-        "selectable":true,
-        "checkable":false,
-        "ext": "/apps/flow",
-        "path": "flow_hk"
-    }
-  
-    let testNode2 =   {
-        "icon": "fa fa-file",
-        "path": "/flow_general",
-        "text": "FLOW Application Control",
-        "size": 4096,
-        "mtime": "2018-08-09T15:30:50.247Z",
-        "type": "file",
-        "url": "view/apps/flow",
-        "selectable":true,
-        "checkable":false,
-        "ext": "/apps/flow",
-        "path": "flow_appctl"
-    }
-  
-    let testNode3 =   {
-        "icon": "fa fa-file",
-        "path": "/flow_general",
-        "text": "FLOW Diag",
-        "size": 4096,
-        "mtime": "2018-08-09T15:30:50.247Z",
-        "type": "file",
-        "url": "view/apps/flow",
-        "selectable":true,
-        "checkable":false,
-        "ext": "/apps/flow",
-        "path": "flow_diag"
-    }
-  
-    let testNode4 =   {
-        "icon": "fa fa-file",
-        "path": "/flow_general",
-        "text": "FLOW Graph",
-        "size": 4096,
-        "mtime": "2018-08-09T15:30:50.247Z",
-        "type": "file",
-        "url": "view/apps/flow",
-        "selectable":true,
-        "checkable":false,
-        "ext": "/apps/flow",
-        "path": "flow_graph"
-    }
-  
-    let testNode5 =   {
-        "icon": "fa fa-file",
-        "path": "/flow_general",
-        "text": "FLOW",
-        "size": 4096,
-        "mtime": "2018-08-09T15:30:50.247Z",
-        "type": "config",
-        "url": "view/apps/flow",
-        "selectable":true,
-        "checkable":false,
-        "ext": "/apps/flow",
-        "path": "flow_config"
-    }
-  
-    let testNode6 = {
-        "icon": "fa fa-gear",
-        "text": "Indicator",
-        "type": "widget",
-        "selectable":true,
-        "checkable":false,
-    }
-  
-    let result = undefined;
-    switch(id) {
-        case 1:
-            result = testData;
-            break;
-    
-        case 2:
-            result = [testNode1,testNode2,testNode3,testNode4,testNode];
-            break;
-    
-        case 3:
-            result = [testNode5];
-            break;
-    
-        case 4:
-            result = [testNode6];
-            break;
-    
-        default:
-            result = [testNode5];
-    }
-    return result;
-}
+
 
 
 /* This function is triggered when a new node is rendered */
 function NodeRendered(e, node) {
-	console.log(node);
     if(node.type === "file") {
-    	console.log('ws/' + node.path);
         let newItemConfig = {
             id: node.id,
             title: node.text,
@@ -210,14 +23,13 @@ function NodeRendered(e, node) {
             componentName: 'Blank',
             componentState: { text: "text", link: 'ws/' + node.path}
         };
-        console.log(newItemConfig);
+
         myLayout.createDragSource( node.$el, newItemConfig );
     }
 }
 
 /* This function is triggered when a selectable node is selected */
 function NodeSelected(e, node) {
-	console.log('NodeSelected');
     if(node.type === 'file') {
         let newItemConfig = {
             id: node.id,
@@ -230,7 +42,6 @@ function NodeSelected(e, node) {
         if( myLayout.selectedItem === null ) {
             alert( 'Container not selected. Choose any container to load component.' );
         } else {
-        	console.log(newItemConfig);
             myLayout.selectedItem.addChild( newItemConfig );
         }
     } else if(node.type === 'config') {
@@ -240,7 +51,16 @@ function NodeSelected(e, node) {
             if( response !== null ) {
                 myLayout.destroy()
                 myLayout = new window.GoldenLayout( jsonObj, $('#layoutContainer') );
+                
+                myLayout.on('stackCreated', (item) => {
+                	/* TODO:  This is where we need to add code to bind the telemetry
+                	 *   and commands to the server.
+                	 */
+                	console.log('stackCreated:' + item.type);
+                });                
+                
                 InitLayout(myLayout);
+                
             } else {
                 console.log("Layout cannot be loaded.")
             }
@@ -267,24 +87,11 @@ function WidgetNodeRendered(e, node) {
     console.log(element)
 }
 
-/* This function initializes directory tree */
-function InitTreeView() {
-    $('#widgetMenuContainer').treeview({
-        data: fakeDirData(4),
-        levels:1,
-        backColor: '#343a40',//grey
-        selectedBackColor: "#fff",
-        selectedColor:"#343a40",
-        onhoverColor:"#fff",
-        wrapNodeText:true,
-        onNodeRendered: WidgetNodeRendered,
-    });
-}
 
 /* Golden Layout */
 /* A layout is defined by its configuration as shown below */
 /* Initial configuration */
-var config = {
+var _config = {
     settings: {
         selectionEnabled: true
     },
@@ -348,7 +155,14 @@ function InitLayout(mlyt){
                     item.container._contentElement.css("overflow","auto");
                 }
             }
-        }
+        } 
+    });
+    
+    mlyt.on('stackCreated', (item) => {
+    	/* TODO:  This is where we need to add code to bind the telemetry
+    	 *   and commands to the server.
+    	 */
+    	console.log('stackCreated:' + item.type);
     });
     
     mlyt.on("stateChanged",function(){
@@ -595,7 +409,7 @@ function InitDraggable(){
 }
 
 /* Widget Generation */
-var IndicatorCount = 0;
+var _IndicatorCount = 0;
 function CreateIndicator() {
     if(IndicatorCount < 8) {
         IndicatorCount += 1;
@@ -658,12 +472,8 @@ function UpdateLayoutNode(node, display) {
 }
 
 function UpdatePanelNode(node, display) {
-    console.log('onLazyLoad');
-    console.log(node);
     session.getPanels(node.path, function (dirEntries) {
         var panelEntries = [];
-        
-        console.log('session.getPanels = ' + dirEntries);
     
         for(var i=0; i < dirEntries.length; ++i) {
             var dirEntry = dirEntries[i];
@@ -701,7 +511,7 @@ function UpdatePanelNode(node, display) {
 }
 
 
-var session;
+var _session;
 
 /* appctl main - this script execution starts from here */
 $(()=>{     
@@ -796,15 +606,14 @@ $(()=>{
                     onNodeRendered : NodeRendered,
                     onNodeSelected: NodeSelected,
                 });
-                
-                InitTreeView();
+
                 InitLayout(myLayout);
                 InitModal();
                 InitMenuState();
-                InitToolTips();
-                InitPopover();
-                InitScrollBar();
-                InitResizeCtl();
+                //InitToolTips();
+                //InitPopover();
+                //InitScrollBar();
+                //InitResizeCtl();
             });
         });
         

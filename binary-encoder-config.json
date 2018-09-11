@@ -49,4 +49,5 @@
     cmdDefReqStreamID:       'cmd-def-request',
     cmdDefRspStreamIDPrefix: 'cmd-def:',
     cmdSendStreamID:         'cmd-send',
+    tlmSendStreamID:         'tlm-send',
 }

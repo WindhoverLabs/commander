@@ -154,16 +154,22 @@ BinaryDecoder.prototype.setInstanceEmitter = function (newInstanceEmitter)
     	self.processBinaryMessage(buffer);
 	});
 
-	this.instanceEmitter.on(config.get('varDefReqStreamID'), function(name) {
-		var tlmItemDef = self.getTlmItemDef(name);
-		var varDef = {};
-		
-		varDef.type = tlmItemDef.type;
-		if(tlmItemDef.hasOwnProperty('multiplicity')) {
-			varDef.multiplicity = tlmItemDef.multiplicity;
+	this.instanceEmitter.on(config.get('varDefReqStreamID'), function(req) {
+		if(req.hasOwnProperty('name')) {
+			var tlmItemDef = self.getTlmItemDef(name);
+			var varDef = {};
+			
+			varDef.type = tlmItemDef.type;
+			if(tlmItemDef.hasOwnProperty('multiplicity')) {
+				varDef.multiplicity = tlmItemDef.multiplicity;
+			}
+	    	
+			self.instanceEmit(config.get('varDefRspStreamIDPrefix') + name, varDef);
+		} else if(req.hasOwnProperty('msgID')) {
+			var tlmDef = self.getMsgDefByMsgID(req.msgID);
+			
+			self.instanceEmit(config.get('varDefRspStreamIDPrefix') + req.msgID, tlmDef);
 		}
-    	
-		self.instanceEmit(config.get('varDefRspStreamIDPrefix') + name, varDef);
 	});
 }
 
@@ -288,6 +294,7 @@ BinaryDecoder.prototype.processBinaryMessage = function (buffer) {
     	var msgOut = {msgID: msgID, symbol: tlmDef.symbol, fields: parsedTlm};
     	
     	this.instanceEmit(config.get('jsonOutputStreamID'), msgOut);
+    	console.log(msgOut);
     }
 };
 

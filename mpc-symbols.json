@@ -1,0 +1,3276 @@
+{
+  "file": "MPC.so",
+  "little_endian": true,
+  "symbols": [
+    {
+      "name": "*CFE_SB_Msg_t",
+      "bit_size": 32,
+      "fields": [
+        {
+          "name": "*CFE_SB_Msg_t",
+          "bit_offset": 0,
+          "bit_size": 32,
+          "base_type": "*"
+        }
+      ],
+      "real_type": "*CFE_SB_Msg_t"
+    },
+    {
+      "name": "*MPC_ConfigTbl_t",
+      "bit_size": 32,
+      "fields": [
+        {
+          "name": "*MPC_ConfigTbl_t",
+          "bit_offset": 0,
+          "bit_size": 32,
+          "base_type": "*"
+        }
+      ],
+      "real_type": "*MPC_ConfigTbl_t"
+    },
+    {
+      "name": "CCSDS_PriHdr_t",
+      "bit_size": 48,
+      "fields": [
+        {
+          "name": "StreamId",
+          "bit_offset": 0,
+          "bit_size": 16,
+          "array": true,
+          "count": 2,
+          "type": {
+            "name": "unsigned char",
+            "bit_size": 8,
+            "base_type": "unsigned char"
+          },
+          "real_type": "uint8"
+        },
+        {
+          "name": "Sequence",
+          "bit_offset": 16,
+          "bit_size": 16,
+          "array": true,
+          "count": 2,
+          "type": {
+            "name": "unsigned char",
+            "bit_size": 8,
+            "base_type": "unsigned char"
+          },
+          "real_type": "uint8"
+        },
+        {
+          "name": "Length",
+          "bit_offset": 32,
+          "bit_size": 16,
+          "array": true,
+          "count": 2,
+          "type": {
+            "name": "unsigned char",
+            "bit_size": 8,
+            "base_type": "unsigned char"
+          },
+          "real_type": "uint8"
+        }
+      ],
+      "real_type": "CCSDS_PriHdr_t"
+    },
+    {
+      "name": "CFE_SB_MsgId_t",
+      "bit_size": 16,
+      "base_type": "CFE_SB_MsgId_t"
+    },
+    {
+      "name": "CFE_SB_Msg_t",
+      "bit_size": 64,
+      "fields": [
+        {
+          "name": "Hdr",
+          "bit_offset": 0,
+          "bit_size": 48,
+          "fields": [
+            {
+              "name": "StreamId",
+              "bit_offset": 0,
+              "bit_size": 16,
+              "array": true,
+              "count": 2,
+              "type": {
+                "name": "unsigned char",
+                "bit_size": 8,
+                "base_type": "unsigned char"
+              },
+              "real_type": "uint8"
+            },
+            {
+              "name": "Sequence",
+              "bit_offset": 16,
+              "bit_size": 16,
+              "array": true,
+              "count": 2,
+              "type": {
+                "name": "unsigned char",
+                "bit_size": 8,
+                "base_type": "unsigned char"
+              },
+              "real_type": "uint8"
+            },
+            {
+              "name": "Length",
+              "bit_offset": 32,
+              "bit_size": 16,
+              "array": true,
+              "count": 2,
+              "type": {
+                "name": "unsigned char",
+                "bit_size": 8,
+                "base_type": "unsigned char"
+              },
+              "real_type": "uint8"
+            }
+          ],
+          "real_type": "CCSDS_PriHdr_t"
+        },
+        {
+          "name": "Dword",
+          "bit_offset": 0,
+          "bit_size": 32,
+          "base_type": "long unsigned int",
+          "real_type": "uint32"
+        },
+        {
+          "name": "Byte",
+          "bit_offset": 0,
+          "bit_size": 48,
+          "array": true,
+          "count": 6,
+          "type": {
+            "name": "unsigned char",
+            "bit_size": 8,
+            "base_type": "unsigned char"
+          },
+          "real_type": "uint8"
+        }
+      ],
+      "real_type": "CFE_SB_Msg_t"
+    },
+    {
+      "name": "CFE_SB_PipeId_t",
+      "bit_size": 8,
+      "base_type": "CFE_SB_PipeId_t"
+    },
+    {
+      "name": "CFE_SB_Qos_t",
+      "bit_size": 16,
+      "fields": [
+        {
+          "name": "Priority",
+          "bit_offset": 0,
+          "bit_size": 8,
+          "base_type": "unsigned char",
+          "real_type": "uint8"
+        },
+        {
+          "name": "Reliability",
+          "bit_offset": 8,
+          "bit_size": 8,
+          "base_type": "unsigned char",
+          "real_type": "uint8"
+        }
+      ],
+      "real_type": "CFE_SB_Qos_t"
+    },
+    {
+      "name": "CFE_TBL_Handle_t",
+      "bit_size": 16,
+      "base_type": "CFE_TBL_Handle_t"
+    },
+    {
+      "name": "CFE_TBL_SrcEnum_t",
+      "bit_size": 32,
+      "base_type": "CFE_TBL_SrcEnum_t"
+    },
+    {
+      "name": "MPC_ConfigTbl_t",
+      "bit_size": 1440,
+      "fields": [
+        {
+          "name": "THR_MIN",
+          "bit_offset": 0,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "THR_HOVER",
+          "bit_offset": 32,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "THR_MAX",
+          "bit_offset": 64,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "MANTHR_MIN",
+          "bit_offset": 96,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "MANTHR_MAX",
+          "bit_offset": 128,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "Z_P",
+          "bit_offset": 160,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "Z_VEL_P",
+          "bit_offset": 192,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "Z_VEL_I",
+          "bit_offset": 224,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "Z_VEL_D",
+          "bit_offset": 256,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "Z_VEL_MAX_UP",
+          "bit_offset": 288,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "Z_VEL_MAX_DN",
+          "bit_offset": 320,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "Z_FF",
+          "bit_offset": 352,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "XY_P",
+          "bit_offset": 384,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "XY_VEL_P",
+          "bit_offset": 416,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "XY_VEL_I",
+          "bit_offset": 448,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "XY_VEL_D",
+          "bit_offset": 480,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "XY_CRUISE",
+          "bit_offset": 512,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "VEL_MAN_MAX",
+          "bit_offset": 544,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "TARGET_THRE",
+          "bit_offset": 576,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "XY_VEL_MAX",
+          "bit_offset": 608,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "XY_FF",
+          "bit_offset": 640,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "TILTMAX_AIR",
+          "bit_offset": 672,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "TILTMAX_LND",
+          "bit_offset": 704,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "LAND_SPEED",
+          "bit_offset": 736,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "TKO_SPEED",
+          "bit_offset": 768,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "MAN_TILT_MAX",
+          "bit_offset": 800,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "MAN_Y_MAX",
+          "bit_offset": 832,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "HOLD_DZ",
+          "bit_offset": 864,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "HOLD_MAX_XY",
+          "bit_offset": 896,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "HOLD_MAX_Z",
+          "bit_offset": 928,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "VELD_LP",
+          "bit_offset": 960,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "ACC_HOR_MAX",
+          "bit_offset": 992,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "DEC_HOR_MAX",
+          "bit_offset": 1024,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "ACC_UP_MAX",
+          "bit_offset": 1056,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "ACC_DOWN_MAX",
+          "bit_offset": 1088,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "ALT_MODE",
+          "bit_offset": 1120,
+          "bit_size": 32,
+          "base_type": "long unsigned int",
+          "real_type": "uint32"
+        },
+        {
+          "name": "XY_MAN_EXPO",
+          "bit_offset": 1152,
+          "bit_size": 32,
+          "base_type": "long unsigned int",
+          "real_type": "uint32"
+        },
+        {
+          "name": "Z_MAN_EXPO",
+          "bit_offset": 1184,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "LAND_ALT1",
+          "bit_offset": 1216,
+          "bit_size": 32,
+          "base_type": "long unsigned int",
+          "real_type": "uint32"
+        },
+        {
+          "name": "LAND_ALT2",
+          "bit_offset": 1248,
+          "bit_size": 32,
+          "base_type": "long unsigned int",
+          "real_type": "uint32"
+        },
+        {
+          "name": "TKO_RAMP_T",
+          "bit_offset": 1280,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "MC_YAWRATE_MAX",
+          "bit_offset": 1312,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "MC_YAW_P",
+          "bit_offset": 1344,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "VT_OPT_RECOV_EN",
+          "bit_offset": 1376,
+          "bit_size": 32,
+          "base_type": "long int",
+          "real_type": "int32"
+        },
+        {
+          "name": "MIS_LTRMIN_ALT",
+          "bit_offset": 1408,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        }
+      ],
+      "real_type": "MPC_ConfigTbl_t"
+    },
+    {
+      "name": "MPC_EventIds_t",
+      "bit_size": 32,
+      "base_type": "MPC_EventIds_t"
+    },
+    {
+      "name": "MPC_HkTlm_t",
+      "bit_size": 112,
+      "fields": [
+        {
+          "name": "TlmHeader",
+          "bit_offset": 0,
+          "bit_size": 96,
+          "array": true,
+          "count": 12,
+          "type": {
+            "name": "unsigned char",
+            "bit_size": 8,
+            "base_type": "unsigned char"
+          },
+          "real_type": "uint8"
+        },
+        {
+          "name": "usCmdCnt",
+          "bit_offset": 96,
+          "bit_size": 8,
+          "base_type": "unsigned char",
+          "real_type": "uint8"
+        },
+        {
+          "name": "usCmdErrCnt",
+          "bit_offset": 104,
+          "bit_size": 8,
+          "base_type": "unsigned char",
+          "real_type": "uint8"
+        }
+      ],
+      "real_type": "MPC_HkTlm_t"
+    },
+    {
+      "name": "PX4_ArmingState_t",
+      "bit_size": 32,
+      "base_type": "PX4_ArmingState_t"
+    },
+    {
+      "name": "PX4_ControlStateMsg_t",
+      "bit_size": 1184,
+      "fields": [
+        {
+          "name": "TlmHeader",
+          "bit_offset": 0,
+          "bit_size": 96,
+          "array": true,
+          "count": 12,
+          "type": {
+            "name": "unsigned char",
+            "bit_size": 8,
+            "base_type": "unsigned char"
+          },
+          "real_type": "uint8"
+        },
+        {
+          "name": "Timestamp",
+          "bit_offset": 96,
+          "bit_size": 64,
+          "base_type": "long long unsigned int",
+          "real_type": "uint64"
+        },
+        {
+          "name": "AccX",
+          "bit_offset": 160,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "AccY",
+          "bit_offset": 192,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "AccZ",
+          "bit_offset": 224,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "VelX",
+          "bit_offset": 256,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "VelY",
+          "bit_offset": 288,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "VelZ",
+          "bit_offset": 320,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "PosX",
+          "bit_offset": 352,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "PosY",
+          "bit_offset": 384,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "PosZ",
+          "bit_offset": 416,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "Airspeed",
+          "bit_offset": 448,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "VelVariance",
+          "bit_offset": 480,
+          "bit_size": 96,
+          "array": true,
+          "count": 3,
+          "type": {
+            "name": "float",
+            "bit_size": 32,
+            "base_type": "float"
+          },
+          "real_type": "float"
+        },
+        {
+          "name": "PosVariance",
+          "bit_offset": 576,
+          "bit_size": 96,
+          "array": true,
+          "count": 3,
+          "type": {
+            "name": "float",
+            "bit_size": 32,
+            "base_type": "float"
+          },
+          "real_type": "float"
+        },
+        {
+          "name": "Q",
+          "bit_offset": 672,
+          "bit_size": 128,
+          "array": true,
+          "count": 4,
+          "type": {
+            "name": "float",
+            "bit_size": 32,
+            "base_type": "float"
+          },
+          "real_type": "float"
+        },
+        {
+          "name": "DeltaQReset",
+          "bit_offset": 800,
+          "bit_size": 128,
+          "array": true,
+          "count": 4,
+          "type": {
+            "name": "float",
+            "bit_size": 32,
+            "base_type": "float"
+          },
+          "real_type": "float"
+        },
+        {
+          "name": "RollRate",
+          "bit_offset": 928,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "PitchRate",
+          "bit_offset": 960,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "YawRate",
+          "bit_offset": 992,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "HorzAccMag",
+          "bit_offset": 1024,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "RollRateBias",
+          "bit_offset": 1056,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "PitchRateBias",
+          "bit_offset": 1088,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "YawRateBias",
+          "bit_offset": 1120,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "AirspeedValid",
+          "bit_offset": 1152,
+          "bit_size": 8,
+          "base_type": "unsigned char",
+          "real_type": "boolean"
+        },
+        {
+          "name": "QuatResetCounter",
+          "bit_offset": 1160,
+          "bit_size": 8,
+          "base_type": "unsigned char",
+          "real_type": "uint8"
+        }
+      ],
+      "real_type": "PX4_ControlStateMsg_t"
+    },
+    {
+      "name": "PX4_HilState_t",
+      "bit_size": 32,
+      "base_type": "PX4_HilState_t"
+    },
+    {
+      "name": "PX4_HomePositionMsg_t",
+      "bit_size": 544,
+      "fields": [
+        {
+          "name": "TlmHeader",
+          "bit_offset": 0,
+          "bit_size": 96,
+          "array": true,
+          "count": 12,
+          "type": {
+            "name": "unsigned char",
+            "bit_size": 8,
+            "base_type": "unsigned char"
+          },
+          "real_type": "uint8"
+        },
+        {
+          "name": "Timestamp",
+          "bit_offset": 96,
+          "bit_size": 64,
+          "base_type": "long long unsigned int",
+          "real_type": "uint64"
+        },
+        {
+          "name": "Lat",
+          "bit_offset": 160,
+          "bit_size": 64,
+          "base_type": "double",
+          "real_type": "double"
+        },
+        {
+          "name": "Lon",
+          "bit_offset": 224,
+          "bit_size": 64,
+          "base_type": "double",
+          "real_type": "double"
+        },
+        {
+          "name": "Alt",
+          "bit_offset": 288,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "X",
+          "bit_offset": 320,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "Y",
+          "bit_offset": 352,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "Z",
+          "bit_offset": 384,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "Yaw",
+          "bit_offset": 416,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "DirectionX",
+          "bit_offset": 448,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "DirectionY",
+          "bit_offset": 480,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "DirectionZ",
+          "bit_offset": 512,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        }
+      ],
+      "real_type": "PX4_HomePositionMsg_t"
+    },
+    {
+      "name": "PX4_ManualControlDataSource_t",
+      "bit_size": 32,
+      "base_type": "PX4_ManualControlDataSource_t"
+    },
+    {
+      "name": "PX4_ManualControlSetpointMsg_t",
+      "bit_size": 960,
+      "fields": [
+        {
+          "name": "TlmHeader",
+          "bit_offset": 0,
+          "bit_size": 96,
+          "array": true,
+          "count": 12,
+          "type": {
+            "name": "unsigned char",
+            "bit_size": 8,
+            "base_type": "unsigned char"
+          },
+          "real_type": "uint8"
+        },
+        {
+          "name": "Timestamp",
+          "bit_offset": 96,
+          "bit_size": 64,
+          "base_type": "long long unsigned int",
+          "real_type": "uint64"
+        },
+        {
+          "name": "X",
+          "bit_offset": 160,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "Y",
+          "bit_offset": 192,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "Z",
+          "bit_offset": 224,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "R",
+          "bit_offset": 256,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "Flaps",
+          "bit_offset": 288,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "Aux1",
+          "bit_offset": 320,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "Aux2",
+          "bit_offset": 352,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "Aux3",
+          "bit_offset": 384,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "Aux4",
+          "bit_offset": 416,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "Aux5",
+          "bit_offset": 448,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "ModeSwitch",
+          "bit_offset": 480,
+          "bit_size": 32,
+          "base_type": "PX4_SwitchPos_t",
+          "real_type": "PX4_SwitchPos_t"
+        },
+        {
+          "name": "ReturnSwitch",
+          "bit_offset": 512,
+          "bit_size": 32,
+          "base_type": "PX4_SwitchPos_t",
+          "real_type": "PX4_SwitchPos_t"
+        },
+        {
+          "name": "RattitudeSwitch",
+          "bit_offset": 544,
+          "bit_size": 32,
+          "base_type": "PX4_SwitchPos_t",
+          "real_type": "PX4_SwitchPos_t"
+        },
+        {
+          "name": "PosctlSwitch",
+          "bit_offset": 576,
+          "bit_size": 32,
+          "base_type": "PX4_SwitchPos_t",
+          "real_type": "PX4_SwitchPos_t"
+        },
+        {
+          "name": "LoiterSwitch",
+          "bit_offset": 608,
+          "bit_size": 32,
+          "base_type": "PX4_SwitchPos_t",
+          "real_type": "PX4_SwitchPos_t"
+        },
+        {
+          "name": "AcroSwitch",
+          "bit_offset": 640,
+          "bit_size": 32,
+          "base_type": "PX4_SwitchPos_t",
+          "real_type": "PX4_SwitchPos_t"
+        },
+        {
+          "name": "OffboardSwitch",
+          "bit_offset": 672,
+          "bit_size": 32,
+          "base_type": "PX4_SwitchPos_t",
+          "real_type": "PX4_SwitchPos_t"
+        },
+        {
+          "name": "KillSwitch",
+          "bit_offset": 704,
+          "bit_size": 32,
+          "base_type": "PX4_SwitchPos_t",
+          "real_type": "PX4_SwitchPos_t"
+        },
+        {
+          "name": "TransitionSwitch",
+          "bit_offset": 736,
+          "bit_size": 32,
+          "base_type": "PX4_SwitchPos_t",
+          "real_type": "PX4_SwitchPos_t"
+        },
+        {
+          "name": "GearSwitch",
+          "bit_offset": 768,
+          "bit_size": 32,
+          "base_type": "PX4_SwitchPos_t",
+          "real_type": "PX4_SwitchPos_t"
+        },
+        {
+          "name": "ArmSwitch",
+          "bit_offset": 800,
+          "bit_size": 32,
+          "base_type": "PX4_SwitchPos_t",
+          "real_type": "PX4_SwitchPos_t"
+        },
+        {
+          "name": "StabSwitch",
+          "bit_offset": 832,
+          "bit_size": 32,
+          "base_type": "PX4_SwitchPos_t",
+          "real_type": "PX4_SwitchPos_t"
+        },
+        {
+          "name": "ManSwitch",
+          "bit_offset": 864,
+          "bit_size": 32,
+          "base_type": "PX4_SwitchPos_t",
+          "real_type": "PX4_SwitchPos_t"
+        },
+        {
+          "name": "ModeSlot",
+          "bit_offset": 896,
+          "bit_size": 32,
+          "base_type": "PX4_ModeSlot_t",
+          "real_type": "PX4_ModeSlot_t"
+        },
+        {
+          "name": "DataSource",
+          "bit_offset": 928,
+          "bit_size": 32,
+          "base_type": "PX4_ManualControlDataSource_t",
+          "real_type": "PX4_ManualControlDataSource_t"
+        }
+      ],
+      "real_type": "PX4_ManualControlSetpointMsg_t"
+    },
+    {
+      "name": "PX4_ModeSlot_t",
+      "bit_size": 32,
+      "base_type": "PX4_ModeSlot_t"
+    },
+    {
+      "name": "PX4_NavigationState_t",
+      "bit_size": 32,
+      "base_type": "PX4_NavigationState_t"
+    },
+    {
+      "name": "PX4_PositionSetpointTripletMsg_t",
+      "bit_size": 2848,
+      "fields": [
+        {
+          "name": "TlmHeader",
+          "bit_offset": 0,
+          "bit_size": 96,
+          "array": true,
+          "count": 12,
+          "type": {
+            "name": "unsigned char",
+            "bit_size": 8,
+            "base_type": "unsigned char"
+          },
+          "real_type": "uint8"
+        },
+        {
+          "name": "Timestamp",
+          "bit_offset": 96,
+          "bit_size": 64,
+          "base_type": "long long unsigned int",
+          "real_type": "uint64"
+        },
+        {
+          "name": "Previous",
+          "bit_offset": 160,
+          "bit_size": 896,
+          "fields": [
+            {
+              "name": "Timestamp",
+              "bit_offset": 0,
+              "bit_size": 64,
+              "base_type": "long long unsigned int",
+              "real_type": "uint64"
+            },
+            {
+              "name": "Lat",
+              "bit_offset": 64,
+              "bit_size": 64,
+              "base_type": "double",
+              "real_type": "double"
+            },
+            {
+              "name": "Lon",
+              "bit_offset": 128,
+              "bit_size": 64,
+              "base_type": "double",
+              "real_type": "double"
+            },
+            {
+              "name": "X",
+              "bit_offset": 192,
+              "bit_size": 32,
+              "base_type": "float",
+              "real_type": "float"
+            },
+            {
+              "name": "Y",
+              "bit_offset": 224,
+              "bit_size": 32,
+              "base_type": "float",
+              "real_type": "float"
+            },
+            {
+              "name": "Z",
+              "bit_offset": 256,
+              "bit_size": 32,
+              "base_type": "float",
+              "real_type": "float"
+            },
+            {
+              "name": "VX",
+              "bit_offset": 288,
+              "bit_size": 32,
+              "base_type": "float",
+              "real_type": "float"
+            },
+            {
+              "name": "VY",
+              "bit_offset": 320,
+              "bit_size": 32,
+              "base_type": "float",
+              "real_type": "float"
+            },
+            {
+              "name": "VZ",
+              "bit_offset": 352,
+              "bit_size": 32,
+              "base_type": "float",
+              "real_type": "float"
+            },
+            {
+              "name": "Alt",
+              "bit_offset": 384,
+              "bit_size": 32,
+              "base_type": "float",
+              "real_type": "float"
+            },
+            {
+              "name": "Yaw",
+              "bit_offset": 416,
+              "bit_size": 32,
+              "base_type": "float",
+              "real_type": "float"
+            },
+            {
+              "name": "Yawspeed",
+              "bit_offset": 448,
+              "bit_size": 32,
+              "base_type": "float",
+              "real_type": "float"
+            },
+            {
+              "name": "LoiterRadius",
+              "bit_offset": 480,
+              "bit_size": 32,
+              "base_type": "float",
+              "real_type": "float"
+            },
+            {
+              "name": "PitchMin",
+              "bit_offset": 512,
+              "bit_size": 32,
+              "base_type": "float",
+              "real_type": "float"
+            },
+            {
+              "name": "AX",
+              "bit_offset": 544,
+              "bit_size": 32,
+              "base_type": "float",
+              "real_type": "float"
+            },
+            {
+              "name": "AY",
+              "bit_offset": 576,
+              "bit_size": 32,
+              "base_type": "float",
+              "real_type": "float"
+            },
+            {
+              "name": "AZ",
+              "bit_offset": 608,
+              "bit_size": 32,
+              "base_type": "float",
+              "real_type": "float"
+            },
+            {
+              "name": "AcceptanceRadius",
+              "bit_offset": 640,
+              "bit_size": 32,
+              "base_type": "float",
+              "real_type": "float"
+            },
+            {
+              "name": "CruisingSpeed",
+              "bit_offset": 672,
+              "bit_size": 32,
+              "base_type": "float",
+              "real_type": "float"
+            },
+            {
+              "name": "CruisingThrottle",
+              "bit_offset": 704,
+              "bit_size": 32,
+              "base_type": "float",
+              "real_type": "float"
+            },
+            {
+              "name": "Valid",
+              "bit_offset": 736,
+              "bit_size": 8,
+              "base_type": "unsigned char",
+              "real_type": "boolean"
+            },
+            {
+              "name": "Type",
+              "bit_offset": 768,
+              "bit_size": 32,
+              "base_type": "PX4_SetpointType_t",
+              "real_type": "PX4_SetpointType_t"
+            },
+            {
+              "name": "PositionValid",
+              "bit_offset": 800,
+              "bit_size": 8,
+              "base_type": "unsigned char",
+              "real_type": "boolean"
+            },
+            {
+              "name": "VelocityValid",
+              "bit_offset": 808,
+              "bit_size": 8,
+              "base_type": "unsigned char",
+              "real_type": "boolean"
+            },
+            {
+              "name": "VelocityFrame",
+              "bit_offset": 816,
+              "bit_size": 8,
+              "base_type": "unsigned char",
+              "real_type": "uint8"
+            },
+            {
+              "name": "AltValid",
+              "bit_offset": 824,
+              "bit_size": 8,
+              "base_type": "unsigned char",
+              "real_type": "boolean"
+            },
+            {
+              "name": "YawValid",
+              "bit_offset": 832,
+              "bit_size": 8,
+              "base_type": "unsigned char",
+              "real_type": "boolean"
+            },
+            {
+              "name": "DisableMcYawControl",
+              "bit_offset": 840,
+              "bit_size": 8,
+              "base_type": "unsigned char",
+              "real_type": "boolean"
+            },
+            {
+              "name": "YawspeedValid",
+              "bit_offset": 848,
+              "bit_size": 8,
+              "base_type": "unsigned char",
+              "real_type": "boolean"
+            },
+            {
+              "name": "LoiterDirection",
+              "bit_offset": 856,
+              "bit_size": 8,
+              "base_type": "signed char",
+              "real_type": "int8"
+            },
+            {
+              "name": "AccelerationValid",
+              "bit_offset": 864,
+              "bit_size": 8,
+              "base_type": "unsigned char",
+              "real_type": "boolean"
+            },
+            {
+              "name": "AccelerationIsForce",
+              "bit_offset": 872,
+              "bit_size": 8,
+              "base_type": "unsigned char",
+              "real_type": "boolean"
+            }
+          ],
+          "real_type": "PX4_PositionSetpoint_t"
+        },
+        {
+          "name": "Current",
+          "bit_offset": 1056,
+          "bit_size": 896,
+          "fields": [
+            {
+              "name": "Timestamp",
+              "bit_offset": 0,
+              "bit_size": 64,
+              "base_type": "long long unsigned int",
+              "real_type": "uint64"
+            },
+            {
+              "name": "Lat",
+              "bit_offset": 64,
+              "bit_size": 64,
+              "base_type": "double",
+              "real_type": "double"
+            },
+            {
+              "name": "Lon",
+              "bit_offset": 128,
+              "bit_size": 64,
+              "base_type": "double",
+              "real_type": "double"
+            },
+            {
+              "name": "X",
+              "bit_offset": 192,
+              "bit_size": 32,
+              "base_type": "float",
+              "real_type": "float"
+            },
+            {
+              "name": "Y",
+              "bit_offset": 224,
+              "bit_size": 32,
+              "base_type": "float",
+              "real_type": "float"
+            },
+            {
+              "name": "Z",
+              "bit_offset": 256,
+              "bit_size": 32,
+              "base_type": "float",
+              "real_type": "float"
+            },
+            {
+              "name": "VX",
+              "bit_offset": 288,
+              "bit_size": 32,
+              "base_type": "float",
+              "real_type": "float"
+            },
+            {
+              "name": "VY",
+              "bit_offset": 320,
+              "bit_size": 32,
+              "base_type": "float",
+              "real_type": "float"
+            },
+            {
+              "name": "VZ",
+              "bit_offset": 352,
+              "bit_size": 32,
+              "base_type": "float",
+              "real_type": "float"
+            },
+            {
+              "name": "Alt",
+              "bit_offset": 384,
+              "bit_size": 32,
+              "base_type": "float",
+              "real_type": "float"
+            },
+            {
+              "name": "Yaw",
+              "bit_offset": 416,
+              "bit_size": 32,
+              "base_type": "float",
+              "real_type": "float"
+            },
+            {
+              "name": "Yawspeed",
+              "bit_offset": 448,
+              "bit_size": 32,
+              "base_type": "float",
+              "real_type": "float"
+            },
+            {
+              "name": "LoiterRadius",
+              "bit_offset": 480,
+              "bit_size": 32,
+              "base_type": "float",
+              "real_type": "float"
+            },
+            {
+              "name": "PitchMin",
+              "bit_offset": 512,
+              "bit_size": 32,
+              "base_type": "float",
+              "real_type": "float"
+            },
+            {
+              "name": "AX",
+              "bit_offset": 544,
+              "bit_size": 32,
+              "base_type": "float",
+              "real_type": "float"
+            },
+            {
+              "name": "AY",
+              "bit_offset": 576,
+              "bit_size": 32,
+              "base_type": "float",
+              "real_type": "float"
+            },
+            {
+              "name": "AZ",
+              "bit_offset": 608,
+              "bit_size": 32,
+              "base_type": "float",
+              "real_type": "float"
+            },
+            {
+              "name": "AcceptanceRadius",
+              "bit_offset": 640,
+              "bit_size": 32,
+              "base_type": "float",
+              "real_type": "float"
+            },
+            {
+              "name": "CruisingSpeed",
+              "bit_offset": 672,
+              "bit_size": 32,
+              "base_type": "float",
+              "real_type": "float"
+            },
+            {
+              "name": "CruisingThrottle",
+              "bit_offset": 704,
+              "bit_size": 32,
+              "base_type": "float",
+              "real_type": "float"
+            },
+            {
+              "name": "Valid",
+              "bit_offset": 736,
+              "bit_size": 8,
+              "base_type": "unsigned char",
+              "real_type": "boolean"
+            },
+            {
+              "name": "Type",
+              "bit_offset": 768,
+              "bit_size": 32,
+              "base_type": "PX4_SetpointType_t",
+              "real_type": "PX4_SetpointType_t"
+            },
+            {
+              "name": "PositionValid",
+              "bit_offset": 800,
+              "bit_size": 8,
+              "base_type": "unsigned char",
+              "real_type": "boolean"
+            },
+            {
+              "name": "VelocityValid",
+              "bit_offset": 808,
+              "bit_size": 8,
+              "base_type": "unsigned char",
+              "real_type": "boolean"
+            },
+            {
+              "name": "VelocityFrame",
+              "bit_offset": 816,
+              "bit_size": 8,
+              "base_type": "unsigned char",
+              "real_type": "uint8"
+            },
+            {
+              "name": "AltValid",
+              "bit_offset": 824,
+              "bit_size": 8,
+              "base_type": "unsigned char",
+              "real_type": "boolean"
+            },
+            {
+              "name": "YawValid",
+              "bit_offset": 832,
+              "bit_size": 8,
+              "base_type": "unsigned char",
+              "real_type": "boolean"
+            },
+            {
+              "name": "DisableMcYawControl",
+              "bit_offset": 840,
+              "bit_size": 8,
+              "base_type": "unsigned char",
+              "real_type": "boolean"
+            },
+            {
+              "name": "YawspeedValid",
+              "bit_offset": 848,
+              "bit_size": 8,
+              "base_type": "unsigned char",
+              "real_type": "boolean"
+            },
+            {
+              "name": "LoiterDirection",
+              "bit_offset": 856,
+              "bit_size": 8,
+              "base_type": "signed char",
+              "real_type": "int8"
+            },
+            {
+              "name": "AccelerationValid",
+              "bit_offset": 864,
+              "bit_size": 8,
+              "base_type": "unsigned char",
+              "real_type": "boolean"
+            },
+            {
+              "name": "AccelerationIsForce",
+              "bit_offset": 872,
+              "bit_size": 8,
+              "base_type": "unsigned char",
+              "real_type": "boolean"
+            }
+          ],
+          "real_type": "PX4_PositionSetpoint_t"
+        },
+        {
+          "name": "Next",
+          "bit_offset": 1952,
+          "bit_size": 896,
+          "fields": [
+            {
+              "name": "Timestamp",
+              "bit_offset": 0,
+              "bit_size": 64,
+              "base_type": "long long unsigned int",
+              "real_type": "uint64"
+            },
+            {
+              "name": "Lat",
+              "bit_offset": 64,
+              "bit_size": 64,
+              "base_type": "double",
+              "real_type": "double"
+            },
+            {
+              "name": "Lon",
+              "bit_offset": 128,
+              "bit_size": 64,
+              "base_type": "double",
+              "real_type": "double"
+            },
+            {
+              "name": "X",
+              "bit_offset": 192,
+              "bit_size": 32,
+              "base_type": "float",
+              "real_type": "float"
+            },
+            {
+              "name": "Y",
+              "bit_offset": 224,
+              "bit_size": 32,
+              "base_type": "float",
+              "real_type": "float"
+            },
+            {
+              "name": "Z",
+              "bit_offset": 256,
+              "bit_size": 32,
+              "base_type": "float",
+              "real_type": "float"
+            },
+            {
+              "name": "VX",
+              "bit_offset": 288,
+              "bit_size": 32,
+              "base_type": "float",
+              "real_type": "float"
+            },
+            {
+              "name": "VY",
+              "bit_offset": 320,
+              "bit_size": 32,
+              "base_type": "float",
+              "real_type": "float"
+            },
+            {
+              "name": "VZ",
+              "bit_offset": 352,
+              "bit_size": 32,
+              "base_type": "float",
+              "real_type": "float"
+            },
+            {
+              "name": "Alt",
+              "bit_offset": 384,
+              "bit_size": 32,
+              "base_type": "float",
+              "real_type": "float"
+            },
+            {
+              "name": "Yaw",
+              "bit_offset": 416,
+              "bit_size": 32,
+              "base_type": "float",
+              "real_type": "float"
+            },
+            {
+              "name": "Yawspeed",
+              "bit_offset": 448,
+              "bit_size": 32,
+              "base_type": "float",
+              "real_type": "float"
+            },
+            {
+              "name": "LoiterRadius",
+              "bit_offset": 480,
+              "bit_size": 32,
+              "base_type": "float",
+              "real_type": "float"
+            },
+            {
+              "name": "PitchMin",
+              "bit_offset": 512,
+              "bit_size": 32,
+              "base_type": "float",
+              "real_type": "float"
+            },
+            {
+              "name": "AX",
+              "bit_offset": 544,
+              "bit_size": 32,
+              "base_type": "float",
+              "real_type": "float"
+            },
+            {
+              "name": "AY",
+              "bit_offset": 576,
+              "bit_size": 32,
+              "base_type": "float",
+              "real_type": "float"
+            },
+            {
+              "name": "AZ",
+              "bit_offset": 608,
+              "bit_size": 32,
+              "base_type": "float",
+              "real_type": "float"
+            },
+            {
+              "name": "AcceptanceRadius",
+              "bit_offset": 640,
+              "bit_size": 32,
+              "base_type": "float",
+              "real_type": "float"
+            },
+            {
+              "name": "CruisingSpeed",
+              "bit_offset": 672,
+              "bit_size": 32,
+              "base_type": "float",
+              "real_type": "float"
+            },
+            {
+              "name": "CruisingThrottle",
+              "bit_offset": 704,
+              "bit_size": 32,
+              "base_type": "float",
+              "real_type": "float"
+            },
+            {
+              "name": "Valid",
+              "bit_offset": 736,
+              "bit_size": 8,
+              "base_type": "unsigned char",
+              "real_type": "boolean"
+            },
+            {
+              "name": "Type",
+              "bit_offset": 768,
+              "bit_size": 32,
+              "base_type": "PX4_SetpointType_t",
+              "real_type": "PX4_SetpointType_t"
+            },
+            {
+              "name": "PositionValid",
+              "bit_offset": 800,
+              "bit_size": 8,
+              "base_type": "unsigned char",
+              "real_type": "boolean"
+            },
+            {
+              "name": "VelocityValid",
+              "bit_offset": 808,
+              "bit_size": 8,
+              "base_type": "unsigned char",
+              "real_type": "boolean"
+            },
+            {
+              "name": "VelocityFrame",
+              "bit_offset": 816,
+              "bit_size": 8,
+              "base_type": "unsigned char",
+              "real_type": "uint8"
+            },
+            {
+              "name": "AltValid",
+              "bit_offset": 824,
+              "bit_size": 8,
+              "base_type": "unsigned char",
+              "real_type": "boolean"
+            },
+            {
+              "name": "YawValid",
+              "bit_offset": 832,
+              "bit_size": 8,
+              "base_type": "unsigned char",
+              "real_type": "boolean"
+            },
+            {
+              "name": "DisableMcYawControl",
+              "bit_offset": 840,
+              "bit_size": 8,
+              "base_type": "unsigned char",
+              "real_type": "boolean"
+            },
+            {
+              "name": "YawspeedValid",
+              "bit_offset": 848,
+              "bit_size": 8,
+              "base_type": "unsigned char",
+              "real_type": "boolean"
+            },
+            {
+              "name": "LoiterDirection",
+              "bit_offset": 856,
+              "bit_size": 8,
+              "base_type": "signed char",
+              "real_type": "int8"
+            },
+            {
+              "name": "AccelerationValid",
+              "bit_offset": 864,
+              "bit_size": 8,
+              "base_type": "unsigned char",
+              "real_type": "boolean"
+            },
+            {
+              "name": "AccelerationIsForce",
+              "bit_offset": 872,
+              "bit_size": 8,
+              "base_type": "unsigned char",
+              "real_type": "boolean"
+            }
+          ],
+          "real_type": "PX4_PositionSetpoint_t"
+        }
+      ],
+      "real_type": "PX4_PositionSetpointTripletMsg_t"
+    },
+    {
+      "name": "PX4_PositionSetpoint_t",
+      "bit_size": 896,
+      "fields": [
+        {
+          "name": "Timestamp",
+          "bit_offset": 0,
+          "bit_size": 64,
+          "base_type": "long long unsigned int",
+          "real_type": "uint64"
+        },
+        {
+          "name": "Lat",
+          "bit_offset": 64,
+          "bit_size": 64,
+          "base_type": "double",
+          "real_type": "double"
+        },
+        {
+          "name": "Lon",
+          "bit_offset": 128,
+          "bit_size": 64,
+          "base_type": "double",
+          "real_type": "double"
+        },
+        {
+          "name": "X",
+          "bit_offset": 192,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "Y",
+          "bit_offset": 224,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "Z",
+          "bit_offset": 256,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "VX",
+          "bit_offset": 288,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "VY",
+          "bit_offset": 320,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "VZ",
+          "bit_offset": 352,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "Alt",
+          "bit_offset": 384,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "Yaw",
+          "bit_offset": 416,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "Yawspeed",
+          "bit_offset": 448,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "LoiterRadius",
+          "bit_offset": 480,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "PitchMin",
+          "bit_offset": 512,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "AX",
+          "bit_offset": 544,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "AY",
+          "bit_offset": 576,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "AZ",
+          "bit_offset": 608,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "AcceptanceRadius",
+          "bit_offset": 640,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "CruisingSpeed",
+          "bit_offset": 672,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "CruisingThrottle",
+          "bit_offset": 704,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "Valid",
+          "bit_offset": 736,
+          "bit_size": 8,
+          "base_type": "unsigned char",
+          "real_type": "boolean"
+        },
+        {
+          "name": "Type",
+          "bit_offset": 768,
+          "bit_size": 32,
+          "base_type": "PX4_SetpointType_t",
+          "real_type": "PX4_SetpointType_t"
+        },
+        {
+          "name": "PositionValid",
+          "bit_offset": 800,
+          "bit_size": 8,
+          "base_type": "unsigned char",
+          "real_type": "boolean"
+        },
+        {
+          "name": "VelocityValid",
+          "bit_offset": 808,
+          "bit_size": 8,
+          "base_type": "unsigned char",
+          "real_type": "boolean"
+        },
+        {
+          "name": "VelocityFrame",
+          "bit_offset": 816,
+          "bit_size": 8,
+          "base_type": "unsigned char",
+          "real_type": "uint8"
+        },
+        {
+          "name": "AltValid",
+          "bit_offset": 824,
+          "bit_size": 8,
+          "base_type": "unsigned char",
+          "real_type": "boolean"
+        },
+        {
+          "name": "YawValid",
+          "bit_offset": 832,
+          "bit_size": 8,
+          "base_type": "unsigned char",
+          "real_type": "boolean"
+        },
+        {
+          "name": "DisableMcYawControl",
+          "bit_offset": 840,
+          "bit_size": 8,
+          "base_type": "unsigned char",
+          "real_type": "boolean"
+        },
+        {
+          "name": "YawspeedValid",
+          "bit_offset": 848,
+          "bit_size": 8,
+          "base_type": "unsigned char",
+          "real_type": "boolean"
+        },
+        {
+          "name": "LoiterDirection",
+          "bit_offset": 856,
+          "bit_size": 8,
+          "base_type": "signed char",
+          "real_type": "int8"
+        },
+        {
+          "name": "AccelerationValid",
+          "bit_offset": 864,
+          "bit_size": 8,
+          "base_type": "unsigned char",
+          "real_type": "boolean"
+        },
+        {
+          "name": "AccelerationIsForce",
+          "bit_offset": 872,
+          "bit_size": 8,
+          "base_type": "unsigned char",
+          "real_type": "boolean"
+        }
+      ],
+      "real_type": "PX4_PositionSetpoint_t"
+    },
+    {
+      "name": "PX4_RcInMode_t",
+      "bit_size": 32,
+      "base_type": "PX4_RcInMode_t"
+    },
+    {
+      "name": "PX4_SetpointType_t",
+      "bit_size": 32,
+      "base_type": "PX4_SetpointType_t"
+    },
+    {
+      "name": "PX4_SwitchPos_t",
+      "bit_size": 32,
+      "base_type": "PX4_SwitchPos_t"
+    },
+    {
+      "name": "PX4_SystemType_t",
+      "bit_size": 32,
+      "base_type": "PX4_SystemType_t"
+    },
+    {
+      "name": "PX4_VehicleAttitudeSetpointMsg_t",
+      "bit_size": 576,
+      "fields": [
+        {
+          "name": "TlmHeader",
+          "bit_offset": 0,
+          "bit_size": 96,
+          "array": true,
+          "count": 12,
+          "type": {
+            "name": "unsigned char",
+            "bit_size": 8,
+            "base_type": "unsigned char"
+          },
+          "real_type": "uint8"
+        },
+        {
+          "name": "Timestamp",
+          "bit_offset": 96,
+          "bit_size": 64,
+          "base_type": "long long unsigned int",
+          "real_type": "uint64"
+        },
+        {
+          "name": "RollBody",
+          "bit_offset": 160,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "PitchBody",
+          "bit_offset": 192,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "YawBody",
+          "bit_offset": 224,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "YawSpMoveRate",
+          "bit_offset": 256,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "Q_D",
+          "bit_offset": 288,
+          "bit_size": 128,
+          "array": true,
+          "count": 4,
+          "type": {
+            "name": "float",
+            "bit_size": 32,
+            "base_type": "float"
+          },
+          "real_type": "float"
+        },
+        {
+          "name": "Q_D_Valid",
+          "bit_offset": 416,
+          "bit_size": 8,
+          "base_type": "unsigned char",
+          "real_type": "boolean"
+        },
+        {
+          "name": "Thrust",
+          "bit_offset": 448,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "RollResetIntegral",
+          "bit_offset": 480,
+          "bit_size": 8,
+          "base_type": "unsigned char",
+          "real_type": "boolean"
+        },
+        {
+          "name": "PitchResetIntegral",
+          "bit_offset": 488,
+          "bit_size": 8,
+          "base_type": "unsigned char",
+          "real_type": "boolean"
+        },
+        {
+          "name": "YawResetIntegral",
+          "bit_offset": 496,
+          "bit_size": 8,
+          "base_type": "unsigned char",
+          "real_type": "boolean"
+        },
+        {
+          "name": "FwControlYaw",
+          "bit_offset": 504,
+          "bit_size": 8,
+          "base_type": "unsigned char",
+          "real_type": "boolean"
+        },
+        {
+          "name": "DisableMcYawControl",
+          "bit_offset": 512,
+          "bit_size": 8,
+          "base_type": "unsigned char",
+          "real_type": "boolean"
+        },
+        {
+          "name": "ApplyFlaps",
+          "bit_offset": 520,
+          "bit_size": 8,
+          "base_type": "unsigned char",
+          "real_type": "boolean"
+        },
+        {
+          "name": "LandingGear",
+          "bit_offset": 544,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        }
+      ],
+      "real_type": "PX4_VehicleAttitudeSetpointMsg_t"
+    },
+    {
+      "name": "PX4_VehicleControlModeMsg_t",
+      "bit_size": 320,
+      "fields": [
+        {
+          "name": "TlmHeader",
+          "bit_offset": 0,
+          "bit_size": 96,
+          "array": true,
+          "count": 12,
+          "type": {
+            "name": "unsigned char",
+            "bit_size": 8,
+            "base_type": "unsigned char"
+          },
+          "real_type": "uint8"
+        },
+        {
+          "name": "Timestamp",
+          "bit_offset": 96,
+          "bit_size": 64,
+          "base_type": "long long unsigned int",
+          "real_type": "uint64"
+        },
+        {
+          "name": "Armed",
+          "bit_offset": 160,
+          "bit_size": 8,
+          "base_type": "unsigned char",
+          "real_type": "boolean"
+        },
+        {
+          "name": "ExternalManualOverrideOk",
+          "bit_offset": 168,
+          "bit_size": 8,
+          "base_type": "unsigned char",
+          "real_type": "boolean"
+        },
+        {
+          "name": "SystemHilEnabled",
+          "bit_offset": 176,
+          "bit_size": 8,
+          "base_type": "unsigned char",
+          "real_type": "boolean"
+        },
+        {
+          "name": "ControlManualEnabled",
+          "bit_offset": 184,
+          "bit_size": 8,
+          "base_type": "unsigned char",
+          "real_type": "boolean"
+        },
+        {
+          "name": "ControlAutoEnabled",
+          "bit_offset": 192,
+          "bit_size": 8,
+          "base_type": "unsigned char",
+          "real_type": "boolean"
+        },
+        {
+          "name": "ControlOffboardEnabled",
+          "bit_offset": 200,
+          "bit_size": 8,
+          "base_type": "unsigned char",
+          "real_type": "boolean"
+        },
+        {
+          "name": "ControlRatesEnabled",
+          "bit_offset": 208,
+          "bit_size": 8,
+          "base_type": "unsigned char",
+          "real_type": "boolean"
+        },
+        {
+          "name": "ControlAttitudeEnabled",
+          "bit_offset": 216,
+          "bit_size": 8,
+          "base_type": "unsigned char",
+          "real_type": "boolean"
+        },
+        {
+          "name": "ControlRattitudeEnabled",
+          "bit_offset": 224,
+          "bit_size": 8,
+          "base_type": "unsigned char",
+          "real_type": "boolean"
+        },
+        {
+          "name": "ControlForceEnabled",
+          "bit_offset": 232,
+          "bit_size": 8,
+          "base_type": "unsigned char",
+          "real_type": "boolean"
+        },
+        {
+          "name": "ControlAccelerationEnabled",
+          "bit_offset": 240,
+          "bit_size": 8,
+          "base_type": "unsigned char",
+          "real_type": "boolean"
+        },
+        {
+          "name": "ControlVelocityEnabled",
+          "bit_offset": 248,
+          "bit_size": 8,
+          "base_type": "unsigned char",
+          "real_type": "boolean"
+        },
+        {
+          "name": "ControlPositionEnabled",
+          "bit_offset": 256,
+          "bit_size": 8,
+          "base_type": "unsigned char",
+          "real_type": "boolean"
+        },
+        {
+          "name": "ControlAltitudeEnabled",
+          "bit_offset": 264,
+          "bit_size": 8,
+          "base_type": "unsigned char",
+          "real_type": "boolean"
+        },
+        {
+          "name": "ControlClimbRateEnabled",
+          "bit_offset": 272,
+          "bit_size": 8,
+          "base_type": "unsigned char",
+          "real_type": "boolean"
+        },
+        {
+          "name": "ControlTerminationEnabled",
+          "bit_offset": 280,
+          "bit_size": 8,
+          "base_type": "unsigned char",
+          "real_type": "boolean"
+        },
+        {
+          "name": "ControlFixedHdgEnabled",
+          "bit_offset": 288,
+          "bit_size": 8,
+          "base_type": "unsigned char",
+          "real_type": "boolean"
+        }
+      ],
+      "real_type": "PX4_VehicleControlModeMsg_t"
+    },
+    {
+      "name": "PX4_VehicleGlobalVelocitySetpointMsg_t",
+      "bit_size": 256,
+      "fields": [
+        {
+          "name": "TlmHeader",
+          "bit_offset": 0,
+          "bit_size": 96,
+          "array": true,
+          "count": 12,
+          "type": {
+            "name": "unsigned char",
+            "bit_size": 8,
+            "base_type": "unsigned char"
+          },
+          "real_type": "uint8"
+        },
+        {
+          "name": "Timestamp",
+          "bit_offset": 96,
+          "bit_size": 64,
+          "base_type": "long long unsigned int",
+          "real_type": "uint64"
+        },
+        {
+          "name": "VX",
+          "bit_offset": 160,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "VY",
+          "bit_offset": 192,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "VZ",
+          "bit_offset": 224,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        }
+      ],
+      "real_type": "PX4_VehicleGlobalVelocitySetpointMsg_t"
+    },
+    {
+      "name": "PX4_VehicleLandDetectedMsg_t",
+      "bit_size": 224,
+      "fields": [
+        {
+          "name": "TlmHeader",
+          "bit_offset": 0,
+          "bit_size": 96,
+          "array": true,
+          "count": 12,
+          "type": {
+            "name": "unsigned char",
+            "bit_size": 8,
+            "base_type": "unsigned char"
+          },
+          "real_type": "uint8"
+        },
+        {
+          "name": "Timestamp",
+          "bit_offset": 96,
+          "bit_size": 64,
+          "base_type": "long long unsigned int",
+          "real_type": "uint64"
+        },
+        {
+          "name": "AltMax",
+          "bit_offset": 160,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "Landed",
+          "bit_offset": 192,
+          "bit_size": 8,
+          "base_type": "unsigned char",
+          "real_type": "boolean"
+        },
+        {
+          "name": "Freefall",
+          "bit_offset": 200,
+          "bit_size": 8,
+          "base_type": "unsigned char",
+          "real_type": "boolean"
+        },
+        {
+          "name": "GroundContact",
+          "bit_offset": 208,
+          "bit_size": 8,
+          "base_type": "unsigned char",
+          "real_type": "boolean"
+        }
+      ],
+      "real_type": "PX4_VehicleLandDetectedMsg_t"
+    },
+    {
+      "name": "PX4_VehicleLocalPositionMsg_t",
+      "bit_size": 1248,
+      "fields": [
+        {
+          "name": "TlmHeader",
+          "bit_offset": 0,
+          "bit_size": 96,
+          "array": true,
+          "count": 12,
+          "type": {
+            "name": "unsigned char",
+            "bit_size": 8,
+            "base_type": "unsigned char"
+          },
+          "real_type": "uint8"
+        },
+        {
+          "name": "Timestamp",
+          "bit_offset": 96,
+          "bit_size": 64,
+          "base_type": "long long unsigned int",
+          "real_type": "uint64"
+        },
+        {
+          "name": "RefTimestamp",
+          "bit_offset": 160,
+          "bit_size": 64,
+          "base_type": "long long unsigned int",
+          "real_type": "uint64"
+        },
+        {
+          "name": "RefLat",
+          "bit_offset": 224,
+          "bit_size": 64,
+          "base_type": "double",
+          "real_type": "double"
+        },
+        {
+          "name": "RefLon",
+          "bit_offset": 288,
+          "bit_size": 64,
+          "base_type": "double",
+          "real_type": "double"
+        },
+        {
+          "name": "SurfaceBottomTimestamp",
+          "bit_offset": 352,
+          "bit_size": 64,
+          "base_type": "long long unsigned int",
+          "real_type": "uint64"
+        },
+        {
+          "name": "X",
+          "bit_offset": 416,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "Y",
+          "bit_offset": 448,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "Z",
+          "bit_offset": 480,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "Delta_XY",
+          "bit_offset": 512,
+          "bit_size": 64,
+          "array": true,
+          "count": 2,
+          "type": {
+            "name": "float",
+            "bit_size": 32,
+            "base_type": "float"
+          },
+          "real_type": "float"
+        },
+        {
+          "name": "Delta_Z",
+          "bit_offset": 576,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "VX",
+          "bit_offset": 608,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "VY",
+          "bit_offset": 640,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "VZ",
+          "bit_offset": 672,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "Delta_VXY",
+          "bit_offset": 704,
+          "bit_size": 64,
+          "array": true,
+          "count": 2,
+          "type": {
+            "name": "float",
+            "bit_size": 32,
+            "base_type": "float"
+          },
+          "real_type": "float"
+        },
+        {
+          "name": "Delta_VZ",
+          "bit_offset": 768,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "AX",
+          "bit_offset": 800,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "AY",
+          "bit_offset": 832,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "AZ",
+          "bit_offset": 864,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "Yaw",
+          "bit_offset": 896,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "RefAlt",
+          "bit_offset": 928,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "DistBottom",
+          "bit_offset": 960,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "DistBottomRate",
+          "bit_offset": 992,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "EpH",
+          "bit_offset": 1024,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "EpV",
+          "bit_offset": 1056,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "EvH",
+          "bit_offset": 1088,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "EvV",
+          "bit_offset": 1120,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "EstimatorType",
+          "bit_offset": 1152,
+          "bit_size": 8,
+          "base_type": "unsigned char",
+          "real_type": "uint8"
+        },
+        {
+          "name": "XY_Valid",
+          "bit_offset": 1160,
+          "bit_size": 8,
+          "base_type": "unsigned char",
+          "real_type": "boolean"
+        },
+        {
+          "name": "Z_Valid",
+          "bit_offset": 1168,
+          "bit_size": 8,
+          "base_type": "unsigned char",
+          "real_type": "boolean"
+        },
+        {
+          "name": "V_XY_Valid",
+          "bit_offset": 1176,
+          "bit_size": 8,
+          "base_type": "unsigned char",
+          "real_type": "boolean"
+        },
+        {
+          "name": "V_Z_Valid",
+          "bit_offset": 1184,
+          "bit_size": 8,
+          "base_type": "unsigned char",
+          "real_type": "boolean"
+        },
+        {
+          "name": "XY_ResetCounter",
+          "bit_offset": 1192,
+          "bit_size": 8,
+          "base_type": "unsigned char",
+          "real_type": "uint8"
+        },
+        {
+          "name": "Z_ResetCounter",
+          "bit_offset": 1200,
+          "bit_size": 8,
+          "base_type": "unsigned char",
+          "real_type": "uint8"
+        },
+        {
+          "name": "VXY_ResetCounter",
+          "bit_offset": 1208,
+          "bit_size": 8,
+          "base_type": "unsigned char",
+          "real_type": "uint8"
+        },
+        {
+          "name": "VZ_ResetCounter",
+          "bit_offset": 1216,
+          "bit_size": 8,
+          "base_type": "unsigned char",
+          "real_type": "uint8"
+        },
+        {
+          "name": "XY_Global",
+          "bit_offset": 1224,
+          "bit_size": 8,
+          "base_type": "unsigned char",
+          "real_type": "boolean"
+        },
+        {
+          "name": "Z_Global",
+          "bit_offset": 1232,
+          "bit_size": 8,
+          "base_type": "unsigned char",
+          "real_type": "boolean"
+        },
+        {
+          "name": "DistBottomValid",
+          "bit_offset": 1240,
+          "bit_size": 8,
+          "base_type": "unsigned char",
+          "real_type": "boolean"
+        }
+      ],
+      "real_type": "PX4_VehicleLocalPositionMsg_t"
+    },
+    {
+      "name": "PX4_VehicleLocalPositionSetpointMsg_t",
+      "bit_size": 480,
+      "fields": [
+        {
+          "name": "TlmHeader",
+          "bit_offset": 0,
+          "bit_size": 96,
+          "array": true,
+          "count": 12,
+          "type": {
+            "name": "unsigned char",
+            "bit_size": 8,
+            "base_type": "unsigned char"
+          },
+          "real_type": "uint8"
+        },
+        {
+          "name": "Timestamp",
+          "bit_offset": 96,
+          "bit_size": 64,
+          "base_type": "long long unsigned int",
+          "real_type": "uint64"
+        },
+        {
+          "name": "X",
+          "bit_offset": 160,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "Y",
+          "bit_offset": 192,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "Z",
+          "bit_offset": 224,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "Yaw",
+          "bit_offset": 256,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "VX",
+          "bit_offset": 288,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "VY",
+          "bit_offset": 320,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "VZ",
+          "bit_offset": 352,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "AccX",
+          "bit_offset": 384,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "AccY",
+          "bit_offset": 416,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        },
+        {
+          "name": "AccZ",
+          "bit_offset": 448,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        }
+      ],
+      "real_type": "PX4_VehicleLocalPositionSetpointMsg_t"
+    },
+    {
+      "name": "PX4_VehicleStatusMsg_t",
+      "bit_size": 640,
+      "fields": [
+        {
+          "name": "TlmHeader",
+          "bit_offset": 0,
+          "bit_size": 96,
+          "array": true,
+          "count": 12,
+          "type": {
+            "name": "unsigned char",
+            "bit_size": 8,
+            "base_type": "unsigned char"
+          },
+          "real_type": "uint8"
+        },
+        {
+          "name": "Timestamp",
+          "bit_offset": 96,
+          "bit_size": 64,
+          "base_type": "long long unsigned int",
+          "real_type": "uint64"
+        },
+        {
+          "name": "SystemID",
+          "bit_offset": 160,
+          "bit_size": 32,
+          "base_type": "long unsigned int",
+          "real_type": "uint32"
+        },
+        {
+          "name": "ComponentID",
+          "bit_offset": 192,
+          "bit_size": 32,
+          "base_type": "long unsigned int",
+          "real_type": "uint32"
+        },
+        {
+          "name": "OnboardControlSensorsPresent",
+          "bit_offset": 224,
+          "bit_size": 32,
+          "base_type": "long unsigned int",
+          "real_type": "uint32"
+        },
+        {
+          "name": "OnboardControlSensorsEnabled",
+          "bit_offset": 256,
+          "bit_size": 32,
+          "base_type": "long unsigned int",
+          "real_type": "uint32"
+        },
+        {
+          "name": "OnboardControlSensorsHealth",
+          "bit_offset": 288,
+          "bit_size": 32,
+          "base_type": "long unsigned int",
+          "real_type": "uint32"
+        },
+        {
+          "name": "NavState",
+          "bit_offset": 320,
+          "bit_size": 32,
+          "base_type": "PX4_NavigationState_t",
+          "real_type": "PX4_NavigationState_t"
+        },
+        {
+          "name": "ArmingState",
+          "bit_offset": 352,
+          "bit_size": 32,
+          "base_type": "PX4_ArmingState_t",
+          "real_type": "PX4_ArmingState_t"
+        },
+        {
+          "name": "HilState",
+          "bit_offset": 384,
+          "bit_size": 32,
+          "base_type": "PX4_HilState_t",
+          "real_type": "PX4_HilState_t"
+        },
+        {
+          "name": "Failsafe",
+          "bit_offset": 416,
+          "bit_size": 8,
+          "base_type": "unsigned char",
+          "real_type": "boolean"
+        },
+        {
+          "name": "SystemType",
+          "bit_offset": 448,
+          "bit_size": 32,
+          "base_type": "PX4_SystemType_t",
+          "real_type": "PX4_SystemType_t"
+        },
+        {
+          "name": "IsRotaryWing",
+          "bit_offset": 480,
+          "bit_size": 8,
+          "base_type": "unsigned char",
+          "real_type": "boolean"
+        },
+        {
+          "name": "IsVtol",
+          "bit_offset": 488,
+          "bit_size": 8,
+          "base_type": "unsigned char",
+          "real_type": "boolean"
+        },
+        {
+          "name": "VtolFwPermanentStab",
+          "bit_offset": 496,
+          "bit_size": 8,
+          "base_type": "unsigned char",
+          "real_type": "boolean"
+        },
+        {
+          "name": "InTransitionMode",
+          "bit_offset": 504,
+          "bit_size": 8,
+          "base_type": "unsigned char",
+          "real_type": "boolean"
+        },
+        {
+          "name": "RcSignalLost",
+          "bit_offset": 512,
+          "bit_size": 8,
+          "base_type": "unsigned char",
+          "real_type": "boolean"
+        },
+        {
+          "name": "RcInputMode",
+          "bit_offset": 544,
+          "bit_size": 32,
+          "base_type": "PX4_RcInMode_t",
+          "real_type": "PX4_RcInMode_t"
+        },
+        {
+          "name": "DataLinkLost",
+          "bit_offset": 576,
+          "bit_size": 8,
+          "base_type": "unsigned char",
+          "real_type": "boolean"
+        },
+        {
+          "name": "DataLinkLostCounter",
+          "bit_offset": 584,
+          "bit_size": 8,
+          "base_type": "unsigned char",
+          "real_type": "uint8"
+        },
+        {
+          "name": "EngineFailure",
+          "bit_offset": 592,
+          "bit_size": 8,
+          "base_type": "unsigned char",
+          "real_type": "boolean"
+        },
+        {
+          "name": "EngineFailureCmd",
+          "bit_offset": 600,
+          "bit_size": 8,
+          "base_type": "unsigned char",
+          "real_type": "boolean"
+        },
+        {
+          "name": "MissionFailure",
+          "bit_offset": 608,
+          "bit_size": 8,
+          "base_type": "unsigned char",
+          "real_type": "boolean"
+        }
+      ],
+      "real_type": "PX4_VehicleStatusMsg_t"
+    },
+    {
+      "name": "PX4_VelocityFrameType_t",
+      "bit_size": 32,
+      "base_type": "PX4_VelocityFrameType_t"
+    },
+    {
+      "name": "array_float_2",
+      "bit_size": 64,
+      "fields": [
+        {
+          "name": "[array]",
+          "bit_offset": 0,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        }
+      ],
+      "real_type": "array_float_2"
+    },
+    {
+      "name": "array_float_3",
+      "bit_size": 96,
+      "fields": [
+        {
+          "name": "[array]",
+          "bit_offset": 0,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        }
+      ],
+      "real_type": "array_float_3"
+    },
+    {
+      "name": "array_float_4",
+      "bit_size": 128,
+      "fields": [
+        {
+          "name": "[array]",
+          "bit_offset": 0,
+          "bit_size": 32,
+          "base_type": "float",
+          "real_type": "float"
+        }
+      ],
+      "real_type": "array_float_4"
+    },
+    {
+      "name": "array_uint8_12",
+      "bit_size": 96,
+      "fields": [
+        {
+          "name": "[array]",
+          "bit_offset": 0,
+          "bit_size": 8,
+          "base_type": "unsigned char",
+          "real_type": "uint8"
+        }
+      ],
+      "real_type": "array_uint8_12"
+    },
+    {
+      "name": "array_uint8_2",
+      "bit_size": 16,
+      "fields": [
+        {
+          "name": "[array]",
+          "bit_offset": 0,
+          "bit_size": 8,
+          "base_type": "unsigned char",
+          "real_type": "uint8"
+        }
+      ],
+      "real_type": "array_uint8_2"
+    },
+    {
+      "name": "array_uint8_6",
+      "bit_size": 48,
+      "fields": [
+        {
+          "name": "[array]",
+          "bit_offset": 0,
+          "bit_size": 8,
+          "base_type": "unsigned char",
+          "real_type": "uint8"
+        }
+      ],
+      "real_type": "array_uint8_6"
+    },
+    {
+      "name": "bool",
+      "bit_size": 8,
+      "base_type": "bool"
+    },
+    {
+      "name": "boolean",
+      "bit_size": 8,
+      "base_type": "boolean"
+    },
+    {
+      "name": "char",
+      "bit_size": 8,
+      "base_type": "char"
+    },
+    {
+      "name": "double",
+      "bit_size": 64,
+      "base_type": "double"
+    },
+    {
+      "name": "float",
+      "bit_size": 32,
+      "base_type": "float"
+    },
+    {
+      "name": "int",
+      "bit_size": 32,
+      "base_type": "int"
+    },
+    {
+      "name": "int16",
+      "bit_size": 16,
+      "base_type": "int16"
+    },
+    {
+      "name": "int32",
+      "bit_size": 32,
+      "base_type": "int32"
+    },
+    {
+      "name": "int8",
+      "bit_size": 8,
+      "base_type": "int8"
+    },
+    {
+      "name": "long double",
+      "bit_size": 96,
+      "base_type": "long double"
+    },
+    {
+      "name": "long int",
+      "bit_size": 32,
+      "base_type": "long int"
+    },
+    {
+      "name": "long long int",
+      "bit_size": 64,
+      "base_type": "long long int"
+    },
+    {
+      "name": "long long unsigned int",
+      "bit_size": 64,
+      "base_type": "long long unsigned int"
+    },
+    {
+      "name": "long unsigned int",
+      "bit_size": 32,
+      "base_type": "long unsigned int"
+    },
+    {
+      "name": "map_projection_reference_s",
+      "bit_size": 352,
+      "fields": [
+        {
+          "name": "lat_rad",
+          "bit_offset": 0,
+          "bit_size": 64,
+          "base_type": "double",
+          "real_type": "double"
+        },
+        {
+          "name": "lon_rad",
+          "bit_offset": 64,
+          "bit_size": 64,
+          "base_type": "double",
+          "real_type": "double"
+        },
+        {
+          "name": "sin_lat",
+          "bit_offset": 128,
+          "bit_size": 64,
+          "base_type": "double",
+          "real_type": "double"
+        },
+        {
+          "name": "cos_lat",
+          "bit_offset": 192,
+          "bit_size": 64,
+          "base_type": "double",
+          "real_type": "double"
+        },
+        {
+          "name": "init_done",
+          "bit_offset": 256,
+          "bit_size": 8,
+          "base_type": "bool",
+          "real_type": "bool"
+        },
+        {
+          "name": "timestamp",
+          "bit_offset": 288,
+          "bit_size": 64,
+          "base_type": "long long unsigned int",
+          "real_type": "uint64"
+        }
+      ],
+      "real_type": "map_projection_reference_s"
+    },
+    {
+      "name": "osalbool",
+      "bit_size": 8,
+      "base_type": "osalbool"
+    },
+    {
+      "name": "short int",
+      "bit_size": 16,
+      "base_type": "short int"
+    },
+    {
+      "name": "short unsigned int",
+      "bit_size": 16,
+      "base_type": "short unsigned int"
+    },
+    {
+      "name": "signed char",
+      "bit_size": 8,
+      "base_type": "signed char"
+    },
+    {
+      "name": "sizetype",
+      "bit_size": 32,
+      "base_type": "sizetype"
+    },
+    {
+      "name": "uint16",
+      "bit_size": 16,
+      "base_type": "uint16"
+    },
+    {
+      "name": "uint32",
+      "bit_size": 32,
+      "base_type": "uint32"
+    },
+    {
+      "name": "uint64",
+      "bit_size": 64,
+      "base_type": "uint64"
+    },
+    {
+      "name": "uint8",
+      "bit_size": 8,
+      "base_type": "uint8"
+    },
+    {
+      "name": "unsigned char",
+      "bit_size": 8,
+      "base_type": "unsigned char"
+    },
+    {
+      "name": "unsigned int",
+      "bit_size": 32,
+      "base_type": "unsigned int"
+    }
+  ]
+}

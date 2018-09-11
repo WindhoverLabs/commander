@@ -233,6 +233,12 @@
 		        "cmdCode": 0,
 		        "symbol": "CFE_ES_NoArgsCmd_t"
 		    }
-	    }
+	    },
+        "PX4": {
+            "ManualSetpoint": {
+                "msgID": 2599,
+                "symbol": "PX4_ManualControlSetpointMsg_t"
+            }
+        }
 	}
 }

@@ -42,6 +42,7 @@
     msgDefs: [
     	{file: './output.json'},
     	{file: './output-cmd.json'},
+        {file: './mpc-symbols.json'},
     	{file: './input.json'}
     ],
     binaryInputStreamID:     'bin-tlm-stream',

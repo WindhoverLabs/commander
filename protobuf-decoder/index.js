@@ -206,8 +206,44 @@ ProtobufDecoder.prototype.setInstanceEmitter = function (newInstanceEmitter)
 		    		
 		        self.sendCmd(cmdDef.path);
 	    	})
+	    } else {	         
+            var msgLength = message.PriHdr.length;
+		    	
+		    if(msgLength > 1) {
+	            self.requestTlmDefinition(msgID, function (tlmDef) {
+
+		            if(typeof tlmDef !== 'undefined') {
+		            	var msgDef = self.getMsgDefBySymbolName(tlmDef.symbol);
+				        var tlmJson = {};
+				    	var pbMsgDef = msgDef.proto.lookupType(tlmDef.symbol + '_pb');
+				    	var pbMsg = pbMsgDef.create(tlmJson);
+				    	var obj = pbMsgDef.decode(message.payload);
+                        //console.log(obj);
+					    self.instanceEmit(config.get('jsonOutputStreamID'), obj);
+
+//				 	   	self.processFields(message.fields, tlmJson);
+//			        	//console.log(tlmJson); 
+//					    	
+//					   	/* Now send the the message to all PB listeners. */
+//					   	var pbMsgDef = tlmDef.proto.lookupType(tlmDef.symbol + '_pb');
+//					   	var pbMsg = pbMsgDef.create(tlmJson);
+//					   	var pbBuffer = pbMsgDef.encode(pbMsg).finish();
+//					   	var hdrBuffer = new Buffer(12)
+//					    hdrBuffer.writeUInt16BE(msgID, 0);
+//					    hdrBuffer.writeUInt16BE(1, 2);
+//					    hdrBuffer.writeUInt16BE(pbBuffer.length - 1, 4);
+//					    hdrBuffer.writeUInt16BE(0, 6);
+//					    hdrBuffer.writeUInt16BE(0, 8);
+//					    hdrBuffer.writeUInt16BE(0, 10);
+//					        
+//					    var msgBuffer = Buffer.concat([hdrBuffer, pbBuffer]);
+//					    self.instanceEmit(config.get('binaryOutputStreamID'), msgBuffer);
+					}
+		        });
+		        //console.log(msgDef);
+		    }
 	    }
-	});
+    });
 }
 
 
@@ -242,9 +278,21 @@ ProtobufDecoder.prototype.requestCmdDefinition = function (msgID, cmdCode, cb) {
 
 
 
-ProtobufDecoder.prototype.cmdDefRspListener = function (definition) {
+ProtobufDecoder.prototype.requestTlmDefinition = function (msgID, cb) {
+	var self = this;
 	
+	var listenerChannel = config.get('tlmDefRspStreamIDPrefix') + ':' + msgID;
+	
+	function tlmDefRspListener(definition) {
+		self.instanceEmitter.removeListener(listenerChannel, tlmDefRspListener);
+    	cb(definition);
+	}
+	
+	this.instanceEmitter.on(listenerChannel, tlmDefRspListener);
+	
+	this.instanceEmit(config.get('tlmDefReqStreamID'), {msgID: msgID});
 }
+
 
 
 /**
@@ -285,9 +333,19 @@ ProtobufDecoder.prototype.getMsgDefBySymbolName = function (name) {
 ProtobufDecoder.prototype.getCmdDefByMsgIDandCC = function (msgID, cmdCode) {
 	for(var name in this.defs) {
 		var cmd = this.defs[name];
-		console.log(cmd);
 		if((cmd.msgID == msgID) && (cmd.commandCode == cmdCode)){
 			return cmd;
+		}
+	}
+}
+
+
+
+ProtobufDecoder.prototype.getTlmDefByMsgID = function (msgID) {
+	for(var name in this.defs) {
+		var tlm = this.defs[name];
+		if(tlm.msgID == msgID){
+			return tlm;
 		}
 	}
 }
