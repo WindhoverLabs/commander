@@ -45,6 +45,7 @@ var convict = require('convict');
 var config = require('./config.js');
 const Sparkles = require('sparkles');
 var path = require('path');
+var JsonFlattener = require('flat');
 
 var emit = Emitter.prototype.emit;
 
@@ -177,10 +178,9 @@ ProtobufDecoder.prototype.setInstanceEmitter = function (newInstanceEmitter)
 	    	
 	    	self.requestCmdDefinition(msgID, cmdCode, function (cmdDef) {
 		    	var msgLength = message.PriHdr.length;
-		    	//console.log(cmdDef);
 		    	
 		    	if(msgLength > 1) {
-					var msgDef = self.getCmdByName(cmdDef.symbol);
+					var msgDef = self.getCmdByName(cmdDef.operation.airliner_msg);
 			    	
 				    if(typeof msgDef !== 'undefined') {
 				    	var tlmJson = {};
@@ -188,9 +188,22 @@ ProtobufDecoder.prototype.setInstanceEmitter = function (newInstanceEmitter)
 				    	var pbMsgDef = msgDef.proto.lookupType(msgDef.name + '_pb');
 				    	
 				    	var pbMsg = pbMsgDef.create(tlmJson);
-				    	var obj = pbMsgDef.decode(message.payload);
-				    	cmdDef.fields.Payload.fields.MaxPRCount.value = 1;
+				    	
+				    	var msg = pbMsgDef.decode(message.payload);
+				    	
+				    	var obj = pbMsgDef.toObject(msg, {
+				    		long: String,
+				    		enums: String,
+				    		bytes: String
+				    	});
+				    	
+				    	var args = JsonFlattener(obj);
+				    	
+						self.sendCmd(cmdDef.ops_path, args);
+				    	
+				    	//cmdDef.fields.Payload.fields.MaxPRCount.value = 1;
 				    	//self.sendCmd('/CFE/ES_SETMAXPRCNT');
+						//self.sendCmd('/CFE/ES_S')
 				    	
 					    //self.instanceEmit(config.get('jsonCmdOutputStreamID'), obj);
 
@@ -210,10 +223,11 @@ ProtobufDecoder.prototype.setInstanceEmitter = function (newInstanceEmitter)
 //				        
 //				        var msgBuffer = Buffer.concat([hdrBuffer, pbBuffer]);
 //				        self.instanceEmit(config.get('jsonCmdOutputStreamID'), msgBuffer);
+				    	//asdfasdf
 				    }
 		    	}
 				
-		        self.sendCmd(cmdDef.ops_path);
+		        //self.sendCmd(cmdDef.ops_path);
 	    	})
 	    } else {	         
             var msgLength = message.PriHdr.length;
@@ -258,7 +272,7 @@ ProtobufDecoder.prototype.setInstanceEmitter = function (newInstanceEmitter)
 
 
 ProtobufDecoder.prototype.sendCmd = function (cmdName, args) {
-	this.instanceEmit(config.get('jsonCmdOutputStreamID'), cmdName);
+	this.instanceEmit(config.get('jsonCmdOutputStreamID'), {ops_path: cmdName, args: args});
 }
 
 

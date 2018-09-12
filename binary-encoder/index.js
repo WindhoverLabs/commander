@@ -139,7 +139,6 @@ BinaryEncoder.prototype.setInstanceEmitter = function (newInstanceEmitter)
 
 	this.instanceEmitter.on(config.get('cmdDefReqStreamID'), function(cmdReq) {
 		if(cmdReq.hasOwnProperty('opsPath')) {
-			console.log('1');
 			var cmdDef = self.getCmdDefByPath(cmdReq.opsName).fields;
 			
 		    self.instanceEmit(config.get('cmdDefRspStreamIDPrefix') + cmdReq.opsName, cmdDef);
@@ -152,10 +151,10 @@ BinaryEncoder.prototype.setInstanceEmitter = function (newInstanceEmitter)
 		}
 	});
 
-	this.instanceEmitter.on(config.get('cmdSendStreamID'), function(cmdName, args) {
-		var cmdDef = self.getCmdDefByPath(cmdName);
-	    
-		self.sendCommand(cmdDef, args);
+	this.instanceEmitter.on(config.get('cmdSendStreamID'), function(obj) {
+		var cmdDef = self.getCmdDefByPath(obj.ops_path);
+		
+		self.sendCommand(cmdDef, obj.args);
 	});
 
 	this.instanceEmitter.on(config.get('tlmSendStreamID'), function(tlmObj) {
@@ -400,7 +399,7 @@ BinaryEncoder.prototype.getOperationByMsgIDandCC = function (msgID, cmdCode) {
 BinaryEncoder.prototype.getCmdDefByMsgIDandCC = function (msgID, cmdCode) {
 	var cmdDef = this.getOperationByMsgIDandCC(msgID, cmdCode);
 	
-	if(cmdDef.operation.hasOwnProperty('airliner_msg')) {
+	if(cmdDef.operation.airliner_msg !== '') {
 		cmdDef.operational_names = this.getCmdOpNamesStripHeader(cmdDef.operation.airliner_msg)
 	}
 	
@@ -434,9 +433,93 @@ BinaryEncoder.prototype.getCmdByteLength = function (cmd) {
 
 
 
+BinaryEncoder.prototype.setField = function (buffer, fieldName, field, value, bit_offset) {
+	try{
+		if(field.hasOwnProperty('pb_field_rule')) {
+			switch(field.pb_field_rule) {
+				case 'repeated': {
+					switch(field.airliner_type) {
+						case 'uint8':
+							buffer.writeUInt8(value, (bit_offset + field.bit_offset) / 8);
+							break;
+							
+						case 'string':
+							buffer.write(value, (bit_offset + field.bit_offset) / 8);
+							break;
+							
+						case 'uint16':
+							buffer.writeUInt16LE(value, (bit_offset + field.bit_offset) / 8);
+							break;
+							
+						case 'int16':
+							buffer.writeInt16LE(value, (bit_offset + field.bit_offset) / 8);
+							break;
+							
+						case 'uint32':
+							buffer.writeUInt32LE(value, (bit_offset + field.bit_offset) / 8);
+							break;
+							
+						case 'int32':
+							buffer.writeInt32LE(value, (bit_offset + field.bit_offset) / 8);
+							break;
+							
+						default:
+							//console.log(field.airliner_type);
+					}
+					break;
+				}
+			
+			    case 'required': {
+					switch(field.airliner_type) {
+						case 'uint8':
+							buffer.writeUInt8(value, (bit_offset + field.bit_offset) / 8);
+							break;
+							
+						case 'string':
+							buffer.write(value, (bit_offset + field.bit_offset) / 8);
+							break;
+							
+						case 'uint16':
+							buffer.writeUInt16LE(value, (bit_offset + field.bit_offset) / 8);
+							break;
+							
+						case 'int16':
+							buffer.writeInt16LE(value, (bit_offset + field.bit_offset) / 8);
+							break;
+							
+						case 'uint32':
+							buffer.writeUInt32LE(value, (bit_offset + field.bit_offset) / 8);
+							break;
+							
+						case 'int32':
+							buffer.writeInt32LE(value, (bit_offset + field.bit_offset) / 8);
+							break;
+							
+						default:
+							var msgDef = this.getMsgDefByName(field.airliner_type);
+							for(var opNameID in msgDef.operational_names) {	
+								var fieldNames = msgDef.operational_names[opNameID].field_path.split('.');
+								var fieldName = fieldNames[0];
+								var field = msgDef.fields[fieldName];
+							
+								this.setField(buffer, fieldName, field, value, bit_offset + field.bit_offset);
+							}
+					}
+				    break;
+			    }
+		    }
+		}
+	} catch(err) {
+		
+	}
+}
+
+
+
 BinaryEncoder.prototype.sendCommand = function (cmd, args) {
 	//console.log('sendCommand');
 	//console.log(cmd);
+	var msgDef = this.getMsgDefByName(cmd.airliner_msg);
 	var byteLength = this.getCmdByteLength(cmd);
 	var buffer = new Buffer(byteLength);
 	buffer.fill(0x00);
@@ -448,70 +531,18 @@ BinaryEncoder.prototype.sendCommand = function (cmd, args) {
 	buffer.writeUInt8(0, 6);
 	
 	this.sequence++;
-
-	//console.log(cmd);
 	
-//	if(typeof args !== 'undefined') {
-//		for(var key in cmd) {
-//			var field = cmd[key]
-//			if(field.hasOwnProperty('value')) {
-//				if(field.hasOwnProperty('multiplicity')) {
-//					switch(field.type) {
-//						case 'uint8':
-//							buffer.writeUInt8(field.value, field.offset / 8);
-//							break;
-//							
-//						case 'string':
-//							buffer.write(field.value, field.offset / 8);
-//							break;
-//							
-//						case 'uint16':
-//							buffer.writeUInt16LE(field.value, field.offset / 8);
-//							break;
-//							
-//						case 'int16':
-//							buffer.writeInt16LE(field.value, field.offset / 8);
-//							break;
-//							
-//						case 'uint32':
-//							buffer.writeUInt32LE(field.value, field.offset / 8);
-//							break;
-//							
-//						case 'int32':
-//							buffer.writeInt32LE(field.value, field.offset / 8);
-//							break;
-//					}
-//				} else {
-//	
-//					switch(field.type) {
-//						case 'uint8':
-//							buffer.writeUInt8(field.value, field.offset / 8);
-//							break;
-//							
-//						case 'string':
-//							buffer.write(field.value, field.offset / 8, field.length);
-//							break;
-//							
-//						case 'uint16':
-//							buffer.writeUInt16LE(field.value, field.offset / 8);
-//							break;
-//							
-//						case 'int16':
-//							buffer.writeInt16LE(field.value, field.offset / 8);
-//							break;
-//							
-//						case 'uint32':
-//							buffer.writeUInt32LE(field.value, field.offset / 8);
-//							break;
-//							
-//						case 'int32':
-//							buffer.writeInt32LE(field.value, field.offset / 8);
-//							break;
-//					}
-//				}
-//			}
-//		}
-//	}
+	for(var opNameID in msgDef.operational_names) {
+		var fieldNames = msgDef.operational_names[opNameID].field_path.split('.');
+		var fieldName = fieldNames[0];
+		var field = msgDef.fields[fieldName];
+
+		var arg_path = msgDef.operational_names[opNameID].field_path;
+		
+		if(args.hasOwnProperty(arg_path)) {
+		    this.setField(buffer, fieldName, field, args[arg_path], field.bit_offset);
+		}
+	}
 	
 	this.instanceEmit(config.get('binaryOutputStreamID'), buffer);
 }

@@ -16,6 +16,7 @@
     "debug": "^3.1.0",
     "eventemitter": "^0.3.3",
     "express": "^4.16.3",
+    "flat": "^4.1.0",
     "font-awesome": "^4.7.0",
     "font-mfizz": "^2.4.1",
     "google-protobuf": "^3.6.1",
