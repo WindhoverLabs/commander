@@ -45,7 +45,19 @@ var convict = require('convict');
 var config = require('./config.js');
 const Sparkles = require('sparkles');
 var path = require('path');
+var dot = require('dot-object');
 var JsonFlattener = require('flat');
+
+JsonFlattener({
+    this: [
+        { contains: 'arrays' },
+        { preserving: {
+              them: 'for you'
+        }}
+    ]
+}, {
+    safe: true
+})
 
 var emit = Emitter.prototype.emit;
 
@@ -197,7 +209,10 @@ ProtobufDecoder.prototype.setInstanceEmitter = function (newInstanceEmitter)
 				    		bytes: String
 				    	});
 				    	
-				    	var args = JsonFlattener(obj);
+				    	var args = dot.dot(obj);
+
+				    	console.log('****************');
+				    	console.log(args);
 				    	
 						self.sendCmd(cmdDef.ops_path, args);
 				    	

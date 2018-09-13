@@ -163,6 +163,9 @@ BinaryEncoder.prototype.setInstanceEmitter = function (newInstanceEmitter)
 	this.instanceEmitter.on(config.get('cmdSendStreamID'), function(obj) {
 		var cmdDef = self.getCmdDefByPath(obj.ops_path);
 		
+		//console.log('*********************');
+		//console.log(obj);
+		
 		if(typeof cmdDef === 'undefined') {
 			/* TODO: Command definition not found.  ops_path is probably wrong. */
 		} else {
@@ -476,33 +479,37 @@ BinaryEncoder.prototype.setField = function (buffer, fieldDef, bitOffset, value)
 					/* TODO:  'repeated' is not yet fully implemented. */
 					switch(fieldDef.airliner_type) {
 						case 'uint8':
-							console.log('TODO:  \'repeated\' not yet supported.');
-							buffer.writeUInt8(value, bitOffset / 8);
+							for(var i = 0; i < fieldDef.array_length; ++i) {
+							    buffer.writeUInt8(value, bitOffset / 8);
+							}
 							break;
 							
 						case 'string':
-							console.log('TODO:  \'repeated\' not yet supported.');
-							buffer.write(value, bitOffset / 8);
+							buffer.write(value, bitOffset / 8, fieldDef.array_length);
 							break;
 							
 						case 'uint16':
-							console.log('TODO:  \'repeated\' not yet supported.');
-							buffer.writeUInt16LE(value, bitOffset / 8);
+							for(var i = 0; i < fieldDef.array_length; ++i) {
+								buffer.writeUInt16LE(value, (bitOffset / 8) + i);
+							}
 							break;
 							
 						case 'int16':
-							console.log('TODO:  \'repeated\' not yet supported.');
-							buffer.writeInt16LE(value, bitOffset / 8);
+							for(var i = 0; i < fieldDef.array_length; ++i) {
+								buffer.writeInt16LE(value, (bitOffset / 8) + i);
+							}
 							break;
 							
 						case 'uint32':
-							console.log('TODO:  \'repeated\' not yet supported.');
-							buffer.writeUInt32LE(value, bitOffset / 8);
+							for(var i = 0; i < fieldDef.array_length; ++i) {
+								buffer.writeUInt32LE(value, (bitOffset / 8) + i);
+							}
 							break;
 							
 						case 'int32':
-							console.log('TODO:  \'repeated\' not yet supported.');
-							buffer.writeInt32LE(value, bitOffset / 8);
+							for(var i = 0; i < fieldDef.array_length; ++i) {
+								buffer.writeInt32LE(value, (bitOffset / 8) + i);
+							}
 							break;
 							
 						case 'char':
@@ -556,7 +563,7 @@ BinaryEncoder.prototype.setField = function (buffer, fieldDef, bitOffset, value)
 
 
 
-BinaryEncoder.prototype.sendCommand = function (cmd, args) {
+BinaryEncoder.prototype.sendCommand = function (cmd, args) {	
 	var msgDef = this.getMsgDefByName(cmd.airliner_msg);
 	var byteLength = this.getCmdByteLength(cmd);
 	var buffer = new Buffer(byteLength);
@@ -593,8 +600,8 @@ BinaryEncoder.prototype.sendCommand = function (cmd, args) {
 
 
 BinaryEncoder.prototype.getFieldFromOperationalName = function (msgDef, opName, bitOffset) {
-	var op = msgDef.operational_names[opName];
-	var fieldPathArray = opName.split('.');
+	var op = msgDef.operational_names[opName].field_path;
+	var fieldPathArray = op.split('.');
 	var fieldName = fieldPathArray[0];
 	var fieldDef = msgDef.fields[fieldName];
 	

@@ -540,6 +540,17 @@ BinaryDecoder.prototype.getField = function (buffer, fieldDef, bitOffset) {
 
 
 
+BinaryDecoder.prototype.getTlmDefByMsgID = function (msgID) {
+	for(var name in this.defs) {
+		var tlm = this.defs[name];
+		if(tlm.msgID == msgID){
+			return tlm;
+		}
+	}
+}
+
+
+
 //BinaryDecoder.prototype.getMsgDefByMsgID = function (msgID) {
 //	return this.tlmDefs[msgID];
 //}

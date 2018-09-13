@@ -167,8 +167,6 @@ function ProtobufEncoder(configFile) {
     for(var i = 0; i < protoFiles.length; i++) {
     	this.parseProtoFile('./' + protoFiles[i]);
     }
-    
-    //console.log(this.defs);
 };
 
 
@@ -195,8 +193,6 @@ ProtobufEncoder.prototype.setInstanceEmitter = function (newInstanceEmitter)
             		
             	    if(typeof symbolName !== 'undefined') {
             	    	var tlmJson = self.convertJsonToProtoJson(message.fields);    	    	
-
-                		console.log(tlmJson);
                 		
             	    	var pbMsgDef = msgDef.proto_root.lookupType(symbolName + '_pb');
             	    	var pbMsg = pbMsgDef.create(tlmJson);
@@ -265,11 +261,9 @@ ProtobufEncoder.prototype.convertJsonToProtoJson = function (inJSON) {
 	var outJSON = {};
 	
 	for(var itemID in inJSON) {
-		console.log(itemID);
         var msgOpsPath = this.getMsgOpsPathFromFullOpsPath(itemID);
-        var symbolName = this.getSymbolNameFromOpsPath(itemID);
         
-        var updatedItemID = itemID.replace(msgOpsPath, symbolName);
+        var updatedItemID = itemID.replace(msgOpsPath + '/', '');
         updatedItemID = updatedItemID.replace('/', '.');
                 
         outJSON[updatedItemID] = inJSON[itemID].value;

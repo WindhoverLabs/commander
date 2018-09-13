@@ -212,17 +212,17 @@ ClientConnector.prototype.setInstanceEmitter = function (newInstanceEmitter)
 	
 	this.sendCmd({ops_path: '/CFE/ES_Noop'});
 	
-	this.sendCmd({ops_path: '/CFE/StartApp', args: {
-        'Payload.AppEntryPoint':'CF_AppMain',
-        'Payload.Priority':100,
-        'Payload.Application':'CF',
-        'Payload.AppFileName':'/cf/apps/CF.so',
-        'Payload.StackSize':32769,
-        'Payload.ExceptionAction':1}});
-	
-//	this.sendCmd({ops_path: '/CFE/StopApp', args: {
+//	this.sendCmd({ops_path: '/CFE/StartApp', args: {
+//        'Payload.AppEntryPoint':'CF_AppMain',
+//        'Payload.Priority':100,
 //        'Payload.Application':'CF',
-//        'Payload.AppFileName':'/cf/apps/cf.so'}});
+//        'Payload.AppFileName':'/cf/apps/CF.so',
+//        'Payload.StackSize':32769,
+//        'Payload.ExceptionAction':1}});
+	
+	this.sendCmd({ops_path: '/CFE/StopApp', args: {
+        'Payload.Application':'CF',
+        'Payload.AppFileName':'/cf/apps/cf.so'}});
 	
 //	this.requestCmdDefinition('/CFE_ES/ES_NOOP', function(definition) {
 //		console.log(definition);
