@@ -139,14 +139,23 @@ BinaryEncoder.prototype.setInstanceEmitter = function (newInstanceEmitter)
 
 	this.instanceEmitter.on(config.get('cmdDefReqStreamID'), function(cmdReq) {
 		if(cmdReq.hasOwnProperty('opsPath')) {
-			var cmdDef = self.getCmdDefByPath(cmdReq.opsName).fields;
+			var cmdDef = self.getCmdDefByPath(cmdReq.ops_path);
 			
-		    self.instanceEmit(config.get('cmdDefRspStreamIDPrefix') + cmdReq.opsName, cmdDef);
+			if(typeof cmdDef === 'undefined') {
+				/* TODO: Command definition not found.  ops_path is probably wrong. */
+			} else {
+		        self.instanceEmit(config.get('cmdDefRspStreamIDPrefix') + cmdReq.opsName, cmdDef);
+			}
 		} else if (cmdReq.hasOwnProperty('msgID') && cmdReq.hasOwnProperty('cmdCode')) {
 			var cmdDef = self.getCmdDefByMsgIDandCC(cmdReq.msgID, cmdReq.cmdCode);
-			
-		    self.instanceEmit(config.get('cmdDefRspStreamIDPrefix') + ':' + cmdReq.msgID + ':' + cmdReq.cmdCode, cmdDef);
+
+			if(typeof cmdDef === 'undefined') {
+				/* TODO: Command definition not found.  ops_path is probably wrong. */
+			} else {
+		        self.instanceEmit(config.get('cmdDefRspStreamIDPrefix') + ':' + cmdReq.msgID + ':' + cmdReq.cmdCode, cmdDef);
+			}
 		} else {
+			/* TODO:  Request is incorrect. */
 		    self.instanceEmit(config.get('cmdDefRspStreamIDPrefix') + ':' + cmdReq.msgID + ':' + cmdReq.cmdCode, undefined);
 		}
 	});
@@ -154,7 +163,11 @@ BinaryEncoder.prototype.setInstanceEmitter = function (newInstanceEmitter)
 	this.instanceEmitter.on(config.get('cmdSendStreamID'), function(obj) {
 		var cmdDef = self.getCmdDefByPath(obj.ops_path);
 		
-		self.sendCommand(cmdDef, obj.args);
+		if(typeof cmdDef === 'undefined') {
+			/* TODO: Command definition not found.  ops_path is probably wrong. */
+		} else {
+			self.sendCommand(cmdDef, obj.args);
+		}
 	});
 
 	this.instanceEmitter.on(config.get('tlmSendStreamID'), function(tlmObj) {
@@ -174,7 +187,23 @@ BinaryEncoder.prototype.setInstanceEmitter = function (newInstanceEmitter)
 
 
 BinaryEncoder.prototype.getCmdOpNamesStripHeader = function (cmdDef) {
-	return this.getMsgDefByName(cmdDef).operational_names;
+	var opsPaths = {};
+	
+	if(cmdDef.hasOwnProperty('operational_names')) {
+		for(var opNameID in cmdDef.operational_names) {
+			var fieldNames = cmdDef.operational_names[opNameID].field_path.split('.');
+			var fieldName = fieldNames[0];
+			var field = cmdDef.fields[fieldName];
+	
+			var fieldDef = this.getFieldFromOperationalName(cmdDef, opNameID);
+			
+			if(fieldDef.bitOffset > this.cmdHeaderLength) {
+				opsPaths[opNameID] = {dataType: fieldDef.fieldDef.airliner_type};
+			}
+		}
+	}
+	
+	return opsPaths;
 }
 
 
@@ -183,7 +212,6 @@ BinaryEncoder.prototype.instanceEmit = function (streamID, msg)
 {
 	this.instanceEmitter.emit(streamID, msg);
 }
-
 
 
 
@@ -360,13 +388,19 @@ BinaryEncoder.prototype.getOperationFromPath = function (path) {
 BinaryEncoder.prototype.getCmdDefByPath = function (path) {
     var appName = this.getAppNameFromPath(path);
     var operationName = this.getOperationFromPath(path);
-    var appDefinition = this.getAppDefinition(appName);
-    //var msgName = appDefinition.operations[operationName].airliner_msg;
-    //var msgDef = this.getMsgDefByName(msgName);
-    
-    return appDefinition.operations[operationName];
-	//return appDefinition.operations[operationName];
-	//return this.cmdDefs[opsName];
+    if(typeof operationName === 'undefined') {
+    	/* TODO:  Command ops path is incorrect. */
+    	return undefined;
+    } else {
+	    var appDefinition = this.getAppDefinition(appName);
+	    
+	    if(typeof appDefinition === 'undefined') {
+	    	/* TODO:  Command ops path is incorrect. */
+	    	return undefined;
+	    } else {
+		    return appDefinition.operations[operationName];
+	    }
+    }
 }
 
 
@@ -433,92 +467,95 @@ BinaryEncoder.prototype.getCmdByteLength = function (cmd) {
 
 
 
-BinaryEncoder.prototype.setField = function (buffer, fieldName, field, value, bit_offset) {
-	try{
-		if(field.hasOwnProperty('pb_field_rule')) {
-			switch(field.pb_field_rule) {
+BinaryEncoder.prototype.setField = function (buffer, fieldDef, bitOffset, value) {	
+	try{			
+		if(fieldDef.hasOwnProperty('pb_field_rule')) {
+			switch(fieldDef.pb_field_rule) {
 				case 'repeated': {
-					switch(field.airliner_type) {
+					/* TODO:  'repeated' is not yet fully implemented. */
+					switch(fieldDef.airliner_type) {
 						case 'uint8':
-							buffer.writeUInt8(value, (bit_offset + field.bit_offset) / 8);
+							console.log('TODO:  \'repeated\' not yet supported.');
+							buffer.writeUInt8(value, bitOffset / 8);
 							break;
 							
 						case 'string':
-							buffer.write(value, (bit_offset + field.bit_offset) / 8);
+							console.log('TODO:  \'repeated\' not yet supported.');
+							buffer.write(value, bitOffset / 8);
 							break;
 							
 						case 'uint16':
-							buffer.writeUInt16LE(value, (bit_offset + field.bit_offset) / 8);
+							console.log('TODO:  \'repeated\' not yet supported.');
+							buffer.writeUInt16LE(value, bitOffset / 8);
 							break;
 							
 						case 'int16':
-							buffer.writeInt16LE(value, (bit_offset + field.bit_offset) / 8);
+							console.log('TODO:  \'repeated\' not yet supported.');
+							buffer.writeInt16LE(value, bitOffset / 8);
 							break;
 							
 						case 'uint32':
-							buffer.writeUInt32LE(value, (bit_offset + field.bit_offset) / 8);
+							console.log('TODO:  \'repeated\' not yet supported.');
+							buffer.writeUInt32LE(value, bitOffset / 8);
 							break;
 							
 						case 'int32':
-							buffer.writeInt32LE(value, (bit_offset + field.bit_offset) / 8);
+							console.log('TODO:  \'repeated\' not yet supported.');
+							buffer.writeInt32LE(value, bitOffset / 8);
+							break;
+							
+						case 'char':
+							buffer.write(value, bitOffset / 8, fieldDef.array_length);
 							break;
 							
 						default:
-							//console.log(field.airliner_type);
+							console.log('TODO: Unknown data type \'' + fieldDef.airliner_type + '\'')
 					}
 					break;
 				}
 			
 			    case 'required': {
-					switch(field.airliner_type) {
+					switch(fieldDef.airliner_type) {
 						case 'uint8':
-							buffer.writeUInt8(value, (bit_offset + field.bit_offset) / 8);
+							buffer.writeUInt8(value, bitOffset / 8);
 							break;
 							
 						case 'string':
-							buffer.write(value, (bit_offset + field.bit_offset) / 8);
+							buffer.write(value, bitOffset / 8);
 							break;
 							
 						case 'uint16':
-							buffer.writeUInt16LE(value, (bit_offset + field.bit_offset) / 8);
+							buffer.writeUInt16LE(value, bitOffset / 8);
 							break;
 							
 						case 'int16':
-							buffer.writeInt16LE(value, (bit_offset + field.bit_offset) / 8);
+							buffer.writeInt16LE(value, bitOffset / 8);
 							break;
 							
 						case 'uint32':
-							buffer.writeUInt32LE(value, (bit_offset + field.bit_offset) / 8);
+							buffer.writeUInt32LE(value, bitOffset / 8);
 							break;
 							
 						case 'int32':
-							buffer.writeInt32LE(value, (bit_offset + field.bit_offset) / 8);
+							buffer.writeInt32LE(value, bitOffset / 8);
 							break;
 							
 						default:
-							var msgDef = this.getMsgDefByName(field.airliner_type);
-							for(var opNameID in msgDef.operational_names) {	
-								var fieldNames = msgDef.operational_names[opNameID].field_path.split('.');
-								var fieldName = fieldNames[0];
-								var field = msgDef.fields[fieldName];
-							
-								this.setField(buffer, fieldName, field, value, bit_offset + field.bit_offset);
-							}
+							console.log('TODO: Unknown data type \'' + fieldDef.airliner_type + '\'')
 					}
 				    break;
 			    }
 		    }
 		}
 	} catch(err) {
-		
+		console.log('TODO:  An exception occured in setField');
+		console.log(err);
 	}
 }
 
 
 
 BinaryEncoder.prototype.sendCommand = function (cmd, args) {
-	//console.log('sendCommand');
-	//console.log(cmd);
 	var msgDef = this.getMsgDefByName(cmd.airliner_msg);
 	var byteLength = this.getCmdByteLength(cmd);
 	var buffer = new Buffer(byteLength);
@@ -532,19 +569,55 @@ BinaryEncoder.prototype.sendCommand = function (cmd, args) {
 	
 	this.sequence++;
 	
-	for(var opNameID in msgDef.operational_names) {
-		var fieldNames = msgDef.operational_names[opNameID].field_path.split('.');
-		var fieldName = fieldNames[0];
-		var field = msgDef.fields[fieldName];
-
-		var arg_path = msgDef.operational_names[opNameID].field_path;
+	if(typeof msgDef === 'object') {
+		if(msgDef.hasOwnProperty('operational_names')) {
+			for(var opNameID in msgDef.operational_names) {
+				var fieldNames = msgDef.operational_names[opNameID].field_path.split('.');
+				var fieldName = fieldNames[0];
+				var field = msgDef.fields[fieldName];
 		
-		if(args.hasOwnProperty(arg_path)) {
-		    this.setField(buffer, fieldName, field, args[arg_path], field.bit_offset);
+				var arg_path = msgDef.operational_names[opNameID].field_path;
+				
+				if(args.hasOwnProperty(arg_path)) {
+					var fieldDef = this.getFieldFromOperationalName(msgDef, opNameID);
+					this.setField(buffer, fieldDef.fieldDef, fieldDef.bitOffset, args[arg_path]);
+				}
+			}
 		}
 	}
 	
 	this.instanceEmit(config.get('binaryOutputStreamID'), buffer);
+}
+
+
+
+BinaryEncoder.prototype.getFieldFromOperationalName = function (msgDef, opName, bitOffset) {
+	var op = msgDef.operational_names[opName];
+	var fieldPathArray = opName.split('.');
+	var fieldName = fieldPathArray[0];
+	var fieldDef = msgDef.fields[fieldName];
+	
+	if(typeof bitOffset === 'undefined') {
+		bitOffset = fieldDef.bit_offset;
+	}
+	
+	var fieldType = fieldDef.airliner_type;
+	
+	var fieldMsgDef = this.getMsgDefByName(fieldType);
+	
+	if(typeof fieldMsgDef === 'object') {
+		if(fieldPathArray.length == 1) {
+			return fieldMsgDef;
+		} else {
+			if(fieldMsgDef.hasOwnProperty('operational_names')) {
+				fieldPathArray.shift();
+				var nextFieldName = fieldPathArray[0];
+				return this.getFieldFromOperationalName(fieldMsgDef, nextFieldName, bitOffset);
+			}
+		}
+	} else {
+		return {fieldDef: fieldDef, bitOffset: bitOffset + fieldDef.bit_offset};
+	}
 }
 
 

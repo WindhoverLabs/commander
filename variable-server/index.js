@@ -67,28 +67,26 @@ VariableServer.prototype.setInstanceEmitter = function (newInstanceEmitter)
 	var self = this;
 	this.instanceEmitter = newInstanceEmitter;
 
-	this.instanceEmitter.on(config.get('jsonInputStreamID'), function(message) {
-		var variables = message.fields;
-		
-    	for(var i = 0; i < variables.length; ++i) {
-    		var newVariable = variables[i];
+	this.instanceEmitter.on(config.get('jsonInputStreamID'), function(message) {		
+    	for(var itemID in message.fields) {
+    		var item = message.fields[itemID];
     		
-    		if(self.vars.hasOwnProperty(newVariable.engName) == false) {
+    		if(self.vars.hasOwnProperty(itemID) == false) {
     			/* This is the first time we've seen this variable and it does 
     			 * not already have a definition.  Create a new record. */
-        		var variable = {};
-    			self.vars[newVariable.engName] = variable;
+        		var variable = {opsPath: itemID};
+    			self.vars[itemID] = variable;
         		
     		} else {
     			/* We've already received this or have a predefinition. */
-    			var variable = self.vars[newVariable.engName];
+    			var variable = self.vars[itemID];
     		}
     	    
     		/* Update the current value. */
-    		variable.value = newVariable.value;
+    		variable.value = item.value;
     		
     		/* Publish the new value. */
-    		self.instanceEmit(config.get('varUpdateStreamIDPrefix') + newVariable.engName, variable);
+    		self.instanceEmit(config.get('varUpdateStreamIDPrefix') + itemID, variable);
     	}
     	self.instanceEmit(config.get('outputEventsStreamID'), 'message-received')
 	});

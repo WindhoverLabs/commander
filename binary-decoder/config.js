@@ -55,13 +55,13 @@ var config = convict({
         format: String,
         default: ''
     },
-    varDefReqStreamID: {
-        doc: 'Variable definition request',
+    tlmDefReqStreamID: {
+        doc: 'Telemetry definition request',
         format: String,
         default: ''
     },
-    varDefRspStreamIDPrefix: {
-        doc: 'Prefix of the stream ID that variable definitions will be sent out.  The full stream name is prefix + variable name',
+    tlmDefRspStreamIDPrefix: {
+        doc: 'Prefix of the stream ID that telemetry definitions will be sent out.  The full stream name is prefix + telemetry name',
         format: String,
         default: ''
     }
