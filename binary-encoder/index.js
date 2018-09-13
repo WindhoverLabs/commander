@@ -404,6 +404,18 @@ BinaryEncoder.prototype.getCmdDefByPath = function (path) {
 }
 
 
+
+BinaryEncoder.prototype.getAppDefinition = function (appName) {
+	for(var appID in this.defs.Airliner.apps) {
+		var app = this.defs.Airliner.apps[appID];
+		if(app.app_name == appName) {
+			return app;
+		}
+	}
+}
+
+
+
 BinaryEncoder.prototype.getAppDefinition = function (appName) {
 	for(var appID in this.defs.Airliner.apps) {
 		var app = this.defs.Airliner.apps[appID];

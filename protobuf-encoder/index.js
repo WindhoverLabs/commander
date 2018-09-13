@@ -175,6 +175,8 @@ ProtobufEncoder.prototype.setInstanceEmitter = function (newInstanceEmitter)
 	    if(typeof tlmDef !== 'undefined') {
 	    	var tlmJson = {};
 
+	    	console.log(message.fields);
+	    	console.log(tlmJson);
 	    	self.processFields(message.fields, tlmJson);
 	    	
 	    	/* Now send the the message to all PB listeners. */
@@ -211,18 +213,18 @@ ProtobufEncoder.prototype.instanceEmit = function (streamID, msg)
 ProtobufEncoder.prototype.__proto__ = Emitter.prototype;
 
 
-ProtobufEncoder.prototype.processFields = function (inJSON, outJSON) {		
-	for(var i = 0; i < inJSON.length; ++i) {
-	    var engName = inJSON[i].engName;
+ProtobufEncoder.prototype.processFields = function (inJSON, outJSON) {	
+	for(var itemID in inJSON) {
 
-		var path = engName.split('/');
+		var path = itemID.split('/');
+		var item = inJSON[itemID];
 		
 		var tmpObj = outJSON;
 		for(var j = 2; j < path.length; ++j) {
 			if(outJSON.hasOwnProperty(path[j]) == false) {
 				/* Property doesn't exist.  Add it. */
 				if(j == path.length - 1) {
-					tmpObj[path[j]] = inJSON[i].value;
+					tmpObj[path[j]] = item.value;
 				} else {
 					tmpObj[path[j]] = {};
 				}
@@ -230,6 +232,8 @@ ProtobufEncoder.prototype.processFields = function (inJSON, outJSON) {
 			tmpObj = tmpObj[path[j]]
 		}
 	}
+	
+	console.log(outJSON);
 }
 
 

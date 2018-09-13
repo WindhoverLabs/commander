@@ -151,14 +151,14 @@ BinaryDecoder.prototype.setInstanceEmitter = function (newInstanceEmitter)
 
 	this.instanceEmitter.on(config.get('tlmDefReqStreamID'), function(req) {
 		if(req.hasOwnProperty('opsPath')) {
-			var tlmDef = self.getCmdDefByPath(req.ops_path);
+			var tlmDef = self.getTlmDefByPath(req.ops_path);
 			
 			if(typeof tlmDef === 'undefined') {
 				/* TODO: Command definition not found.  ops_path is probably wrong. */
 			} else {
 		        self.instanceEmit(config.get('tlmDefRspStreamIDPrefix') + req.opsName, tlmDef);
 			}
-		} else if (tlmReq.hasOwnProperty('msgID')) {
+		} else if (req.hasOwnProperty('msgID')) {
 			var tlmDef = self.getTlmDefByMsgID(req.msgID);
 
 			if(typeof tlmDef === 'undefined') {
@@ -171,6 +171,40 @@ BinaryDecoder.prototype.setInstanceEmitter = function (newInstanceEmitter)
 		    self.instanceEmit(config.get('tlmDefRspStreamIDPrefix') + ':' + req.msgID, undefined);
 		}
 	});
+}
+
+
+
+BinaryDecoder.prototype.getAppNameFromPath = function (path) {
+	var splitName = path.split('/');
+	return splitName[1];
+}
+
+
+
+BinaryDecoder.prototype.getOperationFromPath = function (path) {
+	var splitName = path.split('/');
+	return splitName[2];
+}
+
+
+
+BinaryDecoder.prototype.getTlmDefByPath = function (path) {
+    var appName = this.getAppNameFromPath(path);
+    var operationName = this.getOperationFromPath(path);
+    if(typeof operationName === 'undefined') {
+    	/* TODO:  Command ops path is incorrect. */
+    	return undefined;
+    } else {
+	    var appDefinition = this.getAppDefinition(appName);
+	    
+	    if(typeof appDefinition === 'undefined') {
+	    	/* TODO:  Command ops path is incorrect. */
+	    	return undefined;
+	    } else {
+		    return appDefinition.operations[operationName];
+	    }
+    }
 }
 
 
@@ -388,8 +422,11 @@ BinaryDecoder.prototype.processBinaryMessage = function (buffer) {
 				parsedTlm[opsPath].value = this.getField(buffer, fieldDef.fieldDef, fieldDef.bitOffset);
 			}
 		}
-    	
-    	this.instanceEmit(config.get('jsonOutputStreamID'), {fields:parsedTlm});
+		
+		var pbMsg = def.msgDef.proto_msg;
+		var symbolName = pbMsg.substring(0, pbMsg.length - 3);
+		
+    	this.instanceEmit(config.get('jsonOutputStreamID'), {fields:parsedTlm, opsPath: def.opsPath, symbol:symbolName, msgID:msgID});
     }
 };
 
