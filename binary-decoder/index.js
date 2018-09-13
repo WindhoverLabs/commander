@@ -189,6 +189,17 @@ BinaryDecoder.prototype.getOperationFromPath = function (path) {
 
 
 
+BinaryDecoder.prototype.getAppDefinition = function (appName) {
+	for(var appID in this.defs.Airliner.apps) {
+		var app = this.defs.Airliner.apps[appID];
+		if(app.app_name == appName) {
+			return app;
+		}
+	}
+}
+
+
+
 BinaryDecoder.prototype.getTlmDefByPath = function (path) {
     var appName = this.getAppNameFromPath(path);
     var operationName = this.getOperationFromPath(path);

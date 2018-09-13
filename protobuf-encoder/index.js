@@ -45,6 +45,7 @@ var convict = require('convict');
 var config = require('./config.js');
 const Sparkles = require('sparkles');
 var path = require('path');
+var dot = require('dot-object');
 
 var emit = Emitter.prototype.emit;
 
@@ -154,11 +155,20 @@ function ProtobufEncoder(configFile) {
     	})
         .buffer('payload', {readUntil: 'eof'});
     
+    var inMsgDefs = config.get('msgDefs')
+    
+    for(var i = 0; i < inMsgDefs.length; ++i) {
+    	var msgDefInput = JSON.parse(fs.readFileSync(inMsgDefs[i].file, 'utf8'));
+    	this.defs = mergeJSON.merge(this.defs, msgDefInput);
+    }
+    
     var protoFiles = recFindByExt('./proto_defs', 'proto');
     
     for(var i = 0; i < protoFiles.length; i++) {
     	this.parseProtoFile('./' + protoFiles[i]);
     }
+    
+    //console.log(this.defs);
 };
 
 
@@ -169,31 +179,42 @@ ProtobufEncoder.prototype.setInstanceEmitter = function (newInstanceEmitter)
 	this.instanceEmitter = newInstanceEmitter;
 
 	this.instanceEmitter.on(config.get('jsonInputStreamID'), function(message) {
-		var tlmDef = self.getMsgDefBySymbolName(message.symbol);
-		var msgID = message.msgID;
-        
-	    if(typeof tlmDef !== 'undefined') {
-	    	var tlmJson = {};
+		var tlmDef = self.getTlmDefByPath(message.opsPath);
+		
+    	if(typeof tlmDef === 'undefined') {
+    		/* TODO */
+    	} else {
+    		var msgDef = self.getMsgDefByName(tlmDef.airliner_msg);
+    		
+        	if(typeof msgDef === 'undefined') {
+        		/* TODO */
+        	} else {
+            	if(msgDef.hasOwnProperty('proto_root')) {
+                	var symbolName = self.getSymbolNameFromOpsPath(message.opsPath);
+            		var msgID = tlmDef.airliner_mid;
+            		
+            	    if(typeof symbolName !== 'undefined') {
+            	    	var tlmJson = self.convertJsonToProtoJson(message.fields);    	    	
 
-	    	console.log(message.fields);
-	    	console.log(tlmJson);
-	    	self.processFields(message.fields, tlmJson);
-	    	
-	    	/* Now send the the message to all PB listeners. */
-	    	var pbMsgDef = tlmDef.proto.lookupType(tlmDef.name + '_pb');
-	    	var pbMsg = pbMsgDef.create(tlmJson);
-	    	var pbBuffer = pbMsgDef.encode(pbMsg).finish();
-	    	var hdrBuffer = new Buffer(12)
-	  	    hdrBuffer.writeUInt16BE(msgID, 0);
-	        hdrBuffer.writeUInt16BE(1, 2);
-	  	    hdrBuffer.writeUInt16BE(pbBuffer.length - 1, 4);
-	  	    hdrBuffer.writeUInt16BE(0, 6);
-	  	    hdrBuffer.writeUInt16BE(0, 8);
-	  	    hdrBuffer.writeUInt16BE(0, 10);
-	        
-	        var msgBuffer = Buffer.concat([hdrBuffer, pbBuffer]);
-	        self.instanceEmit(config.get('binaryOutputStreamID'), msgBuffer);
-	    }
+                		console.log(tlmJson);
+                		
+            	    	var pbMsgDef = msgDef.proto_root.lookupType(symbolName + '_pb');
+            	    	var pbMsg = pbMsgDef.create(tlmJson);
+            	    	var pbBuffer = pbMsgDef.encode(pbMsg).finish();
+            	    	var hdrBuffer = new Buffer(12)
+            	  	    hdrBuffer.writeUInt16BE(msgID, 0);
+            	        hdrBuffer.writeUInt16BE(1, 2);
+            	  	    hdrBuffer.writeUInt16BE(pbBuffer.length - 1, 4);
+            	  	    hdrBuffer.writeUInt16BE(0, 6);
+            	  	    hdrBuffer.writeUInt16BE(0, 8);
+            	  	    hdrBuffer.writeUInt16BE(0, 10);
+            	        
+            	        var msgBuffer = Buffer.concat([hdrBuffer, pbBuffer]);
+            	        self.instanceEmit(config.get('binaryOutputStreamID'), msgBuffer);
+            	    }
+            	}
+        	}
+    	}
 	});
 }
 
@@ -213,34 +234,65 @@ ProtobufEncoder.prototype.instanceEmit = function (streamID, msg)
 ProtobufEncoder.prototype.__proto__ = Emitter.prototype;
 
 
-ProtobufEncoder.prototype.processFields = function (inJSON, outJSON) {	
-	for(var itemID in inJSON) {
 
-		var path = itemID.split('/');
-		var item = inJSON[itemID];
-		
-		var tmpObj = outJSON;
-		for(var j = 2; j < path.length; ++j) {
-			if(outJSON.hasOwnProperty(path[j]) == false) {
-				/* Property doesn't exist.  Add it. */
-				if(j == path.length - 1) {
-					tmpObj[path[j]] = item.value;
-				} else {
-					tmpObj[path[j]] = {};
-				}
-			}
-			tmpObj = tmpObj[path[j]]
-		}
-	}
+ProtobufEncoder.prototype.getMsgOpsPathFromFullOpsPath = function (opsPath) {	
+	var appName = this.getAppNameFromPath(opsPath);
+	var opName = this.getOperationFromPath(opsPath);
 	
-	console.log(outJSON);
+	var msgOpsPath = '/' + appName + '/' + opName;
+	
+	return msgOpsPath;
 }
 
 
 
-ProtobufEncoder.prototype.getMsgDefBySymbolName = function (name) {
-	return this.defs[name];
-};
+ProtobufEncoder.prototype.getSymbolNameFromOpsPath = function (opsPath) {	
+	var msgOpsPath = this.getMsgOpsPathFromFullOpsPath(opsPath);
+	
+	var msgDef = this.getTlmDefByPath(msgOpsPath);
+	
+	if(typeof msgDef === 'undefined') {
+		console.log('TODO:  getSymbolNameFromOpsPath could not find message ops path for \'' + msgOpsPath + '\'');
+		return undefined;
+	} else {
+		return msgDef.airliner_msg;
+	}
+}
+
+
+
+ProtobufEncoder.prototype.convertJsonToProtoJson = function (inJSON) {	
+	var outJSON = {};
+	
+	for(var itemID in inJSON) {
+		console.log(itemID);
+        var msgOpsPath = this.getMsgOpsPathFromFullOpsPath(itemID);
+        var symbolName = this.getSymbolNameFromOpsPath(itemID);
+        
+        var updatedItemID = itemID.replace(msgOpsPath, symbolName);
+        updatedItemID = updatedItemID.replace('/', '.');
+                
+        outJSON[updatedItemID] = inJSON[itemID].value;
+	}
+	
+	dot.object(outJSON);
+	
+	return outJSON;
+}
+
+
+
+ProtobufEncoder.prototype.getMsgDefByName = function (msgName) {
+	for(var appID in this.defs.Airliner.apps) {
+		var app = this.defs.Airliner.apps[appID];
+		for(var protoID in app.proto_msgs) {
+			var protomsg = app.proto_msgs[protoID];
+			if(protoID == msgName) {
+				return protomsg;
+			}
+		}
+	}
+}
 
 
 
@@ -250,9 +302,72 @@ ProtobufEncoder.prototype.parseProtoFile = function (filePath) {
     var fileName = filePath.replace(/^.*[\\\/]/, '');
     var structureName = fileName.replace(/\.[^/.]+$/, '');
     
-    self.defs[structureName] = {name: structureName, proto: new protobuf.Root()};
+    var msgDef = this.getMsgDefByName(structureName);
     
-	protobuf.loadSync(filePath, self.defs[structureName].proto);
+    if(typeof msgDef === 'undefined') {
+    	console.log('TODO:  Protobuf structure not found in definition file.')
+    } else {
+    	msgDef.proto_root = new protobuf.Root();
+
+    	protobuf.loadSync(filePath, msgDef.proto_root);
+    }
 }
 
+
+
+ProtobufEncoder.prototype.getAppNameFromPath = function (path) {
+	var splitName = path.split('/');
+	return splitName[1];
+}
+
+
+
+ProtobufEncoder.prototype.getOperationFromPath = function (path) {
+	var splitName = path.split('/');
+	return splitName[2];
+}
+
+
+
+ProtobufEncoder.prototype.getAppDefinition = function (appName) {
+	for(var appID in this.defs.Airliner.apps) {
+		var app = this.defs.Airliner.apps[appID];
+		if(app.app_name == appName) {
+			return app;
+		}
+	}
+}
+
+
+
+ProtobufEncoder.prototype.getMsgDefByPath = function (path) {
+    var tlmDef = this.getTlmDefByPath(path);
+    
+    if(typeof tlmDef === 'undefined') {
+    	console.log('TODO: getMsgDefByPath failed to find path');
+    	return undefined;
+    } else {
+    	return tlmDef.airliner_msg;
+    }
+}
+
+
+
+ProtobufEncoder.prototype.getTlmDefByPath = function (path) {
+    var appName = this.getAppNameFromPath(path);
+    var operationName = this.getOperationFromPath(path);
+    if(typeof operationName === 'undefined') {
+    	/* TODO:  Command ops path is incorrect. */
+    	return undefined;
+    } else {
+	    var appDefinition = this.getAppDefinition(appName);
+	    
+	    if(typeof appDefinition === 'undefined') {
+	    	/* TODO:  Command ops path is incorrect. */
+	    	return undefined;
+	    } else {
+		    return appDefinition.operations[operationName];
+	    }
+    }
+}
 
