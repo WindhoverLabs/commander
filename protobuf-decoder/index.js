@@ -210,9 +210,6 @@ ProtobufDecoder.prototype.setInstanceEmitter = function (newInstanceEmitter)
 				    	});
 				    	
 				    	var args = dot.dot(obj);
-
-				    	console.log('****************');
-				    	console.log(args);
 				    	
 						self.sendCmd(cmdDef.ops_path, args);
 				    	
