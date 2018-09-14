@@ -6,37 +6,33 @@ function assert(condition, message) {
     }
 }
 
+function isDescendant(parent, child) {
+     var node = child.parentNode;
+     while (node != null) {
+         if (node == parent) {
+             return true;
+         }
+         node = node.parentNode;
+     }
+     return false;
+}
+
 /* Custom Element Classes*/
 class Text extends HTMLElement{
   constructor(){
     super();
-    this.constructIt = function(e){
-      console.log("happened",e)
+    var self = this;
+    this.textContent = "---";
+
+    if(self.hasAttribute("data-tlm")){
+      /* TODO:subscribe */
+      session.getRandomNumber(function (val) {
+        self.textContent = val.toFixed(4)
+      })
     }
-    // this.addEventListener('stack-created-event',(e)=>{
-    //   console.log("happened",e)
-    // },{bubling : true})
-    // var self = this;
-    // this.textContent = "---"
-    //
-    // if(this.hasAttribute("data-tlm")){
-    //   /* TODO:subscribe */
-    //   session.getRandomNumber(function (val) {
-    //     self.textContent = val.toFixed(4)
-    //   })
-    // }
-    // else{
-    //   console.error("attribute, data-tlm is undefined")
-    // }
-  }
-  connectedCallback(){
-    console.log("connectedCallback")
-  }
-  disconnectedCallback() {
-    console.log("disconnectedCallback")
-  }
-  attributeChangedCallback(name, oldValue, newValue) {
-    console.log("attributeChangedCallback")
+    else{
+      console.error("attribute, data-tlm is undefined")
+    }
   }
 }
 
@@ -104,7 +100,7 @@ class DataPlot extends HTMLElement{
 
 
     self.addEventListener('component-resize-event',(e)=>{
-      console.log("ack",this,self.parentElement.offsetWidth)
+      //console.log("ack",this,self.parentElement.offsetWidth)
       width = self.parentElement.offsetWidth - margin.left - margin.right;
       height = self.parentElement.offsetHeight - margin.top - margin.bottom;
       x = d3.scaleTime().range([0, width]);

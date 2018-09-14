@@ -56,9 +56,6 @@ function NodeSelected(e, node) {
                 	/* TODO:  This is where we need to add code to bind the telemetry
                 	 *   and commands to the server.
                 	 */
-                  if(item.hasOwnProperty("element")){
-                    item.element[0].dispatchEvent(stce);
-                  }
                 	//console.log('stackCreated:',item);
                 });
 
@@ -139,7 +136,7 @@ function InitLayout(mlyt){
 
     /* This event is fired when a component is created, which renders selected page onto created component */
     mlyt.on("itemCreated", (item) => {
-      console.log("item created",item)
+      
 
       item.on('resize',function() {
         dataPlotElements.forEach((e)=>{
@@ -171,11 +168,7 @@ function InitLayout(mlyt){
     });
 
     mlyt.on('stackCreated', (item) => {
-      console.log("Stack Created [P]", item)
-      item.callDownwards('constructIt',[item]);
-      // if(item.hasOwnProperty("element")){
-      //   item.element[0].dispatchEvent(stce);
-      // }
+
     	/* TODO:  This is where we need to add code to bind the telemetry
     	 *   and commands to the server.
     	 */
