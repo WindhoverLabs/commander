@@ -353,6 +353,36 @@ header > button {
 
 }
 
+.led-basic{
+  width: 12.5px;
+  height: 12.5px;
+  border-radius: 50px;
+  background-color: Black
+}
+.led-on{
+
+  background-color: Green !important;
+}
+.led-off{
+
+  background-color: Red !important;
+}
+
+path {
+  stroke: #5f8e9e;
+  stroke-width: 2;
+  fill: none;
+}
+.axis path, .axis line {
+    fill: none;
+    stroke: #5f8e9e;
+    stroke-width: 1;
+    shape-rendering: crispEdges;
+}
+.axis .tick{
+  color:#5f8e9e;
+}
+
 @media only screen and (max-width: 992px) {
   .nav-text-adjust {
     margin: -8px 10px;

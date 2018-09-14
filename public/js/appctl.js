@@ -80,7 +80,7 @@ function fakeDirData(id) {
         "ext": "/scripts",
         "lazyLoad": true,
     }];
-    
+
     let testNode =   {
         "icon": "fa fa-file",
         "path": "/flow_general",
@@ -94,7 +94,7 @@ function fakeDirData(id) {
         "ext": "/apps/flow",
         "path": "flow_general"
     }
-    
+
     let testNode1 =   {
         "icon": "fa fa-file",
         "path": "/flow_hk",
@@ -108,7 +108,7 @@ function fakeDirData(id) {
         "ext": "/apps/flow",
         "path": "flow_hk"
     }
-  
+
     let testNode2 =   {
         "icon": "fa fa-file",
         "path": "/flow_general",
@@ -122,7 +122,7 @@ function fakeDirData(id) {
         "ext": "/apps/flow",
         "path": "flow_appctl"
     }
-  
+
     let testNode3 =   {
         "icon": "fa fa-file",
         "path": "/flow_general",
@@ -136,7 +136,7 @@ function fakeDirData(id) {
         "ext": "/apps/flow",
         "path": "flow_diag"
     }
-  
+
     let testNode4 =   {
         "icon": "fa fa-file",
         "path": "/flow_general",
@@ -150,7 +150,7 @@ function fakeDirData(id) {
         "ext": "/apps/flow",
         "path": "flow_graph"
     }
-  
+
     let testNode5 =   {
         "icon": "fa fa-file",
         "path": "/flow_general",
@@ -164,7 +164,7 @@ function fakeDirData(id) {
         "ext": "/apps/flow",
         "path": "flow_config"
     }
-  
+
     let testNode6 = {
         "icon": "fa fa-gear",
         "text": "Indicator",
@@ -172,25 +172,25 @@ function fakeDirData(id) {
         "selectable":true,
         "checkable":false,
     }
-  
+
     let result = undefined;
     switch(id) {
         case 1:
             result = testData;
             break;
-    
+
         case 2:
             result = [testNode1,testNode2,testNode3,testNode4,testNode];
             break;
-    
+
         case 3:
             result = [testNode5];
             break;
-    
+
         case 4:
             result = [testNode6];
             break;
-    
+
         default:
             result = [testNode5];
     }
@@ -226,7 +226,7 @@ function NodeSelected(e, node) {
             componentName: 'Blank',
             componentState: { text: 'text', link: '/ws' + node.path}
         };
-        
+
         if( myLayout.selectedItem === null ) {
             alert( 'Container not selected. Choose any container to load component.' );
         } else {
@@ -236,7 +236,7 @@ function NodeSelected(e, node) {
     } else if(node.type === 'config') {
         $.get('ws/' + node.path,(response) => {
         	var jsonObj = JSON.parse(response);
-    	    
+
             if( response !== null ) {
                 myLayout.destroy()
                 myLayout = new window.GoldenLayout( jsonObj, $('#layoutContainer') );
@@ -245,7 +245,7 @@ function NodeSelected(e, node) {
                 console.log("Layout cannot be loaded.")
             }
         });
-        
+
         InitScrollBar();
     }
 }
@@ -322,7 +322,7 @@ function InitLayout(mlyt){
             });
         });
     });
-  
+
     /* Initalize layout */
     mlyt.init();
 
@@ -332,17 +332,17 @@ function InitLayout(mlyt){
             if(item.hasOwnProperty('layout')) {
                 let link = undefined;
                 let id = undefined;
-                
+
                 if(item.config.hasOwnProperty("id")) {
                     id = item.config.id;
                 }
-                
+
                 if(item.config.hasOwnProperty("componentState")) {
                     if(item.config.componentState.hasOwnProperty("link")) {
                         link = item.config.componentState.link;
                     }
                 }
-              
+
                 if(id!=undefined && link!=undefined) {
                     item.container._contentElement.load("/"+link);
                     item.container._contentElement.css("overflow","auto");
@@ -350,7 +350,7 @@ function InitLayout(mlyt){
             }
         }
     });
-    
+
     mlyt.on("stateChanged",function(){
         InitScrollBar();
     });
@@ -365,10 +365,10 @@ function SaveLayout() {
     {
         name += form.val()+"_"
     }
-    
+
     /* add timestamp */
     name += Date.now();
-  
+
     /* stringify state config */
     let state = JSON.stringify( myLayout.toConfig() );
     localStorage.setItem( name, state );
@@ -390,7 +390,7 @@ function GetStoredLayoutList() {
 function LoadLayout() {
     /* if a layout exists, destroy it */
     myLayout.destroy()
-  
+
     /* retrieve and load saved layout */
     let formVal = $("[id='select0']").val();
     let key = GetStoredLayoutList()[formVal];
@@ -401,7 +401,7 @@ function LoadLayout() {
     } else {
         console.log("Layout cannot be loaded.")
     }
-    
+
     InitScrollBar();
 }
 
@@ -412,7 +412,7 @@ function InitModal() {
     $(".modal-content").draggable({
         containment: "document"
     });
-  
+
     /* show */
     $("#genericInputModal").on('show.bs.modal',(e) => {
         HideMenu('widget');
@@ -423,7 +423,7 @@ function InitModal() {
         let custom = btn.data('custom');
         let item = "";
         let inputsIds = [];
-        
+
         /* set title */
         $('#modalTitle').text(title);
 
@@ -438,7 +438,7 @@ function InitModal() {
                     inputsIds.push("inputField"+e)
                     $('#modalForm').append(item);
                     break;
-          
+
                 case "dropdown":
                     item = "<div class='form-group'>"
                       +"<label class='col-form-label' id=labelField"+e+" for=inputField"+e+">"+custom[e].label+"</label>"
@@ -455,7 +455,7 @@ function InitModal() {
                         $('#select'+e).append(html)
                     }
                     break;
-          
+
                 default:
                     console.log("Unknown data passed as attribute");
             }
@@ -464,15 +464,15 @@ function InitModal() {
         /* set submit action */
         $('#modalSubmit')[0].onclick = window[submit];
     });
-    
+
     /* hide */
     $("#genericInputModal").on('hidden.bs.modal',(e) => {
         /* replace title */
         $("#modalTitle").text('Title Placeholder');
-        
+
         /* Remove all attached children*/
         $("#modalForm").empty();
-        
+
         /* Unset submit action */
         $('#modalSubmit')[0].onclick = null;
     });
@@ -504,7 +504,7 @@ function InitMenuState(){
             HideMenu("panel");
         }
     });
-  
+
     $("#layoutMenuToggle").click(() => {
         let open = $("#layoutMenuContainer").data("open");
         if(!open) {
@@ -515,7 +515,7 @@ function InitMenuState(){
             HideMenu("layout");
         }
     });
-  
+
     $("#widgetMenuToggle").click(() => {
         let open = $("#widgetMenuContainer").data("open");
         if(!open) {
@@ -533,11 +533,11 @@ function InitToolTips() {
     $('[data-toggle="tooltip"]').tooltip({
         "container":"false"
     });
-    
+
     $('[data-toggle="tooltip"]').on('show.bs.tooltip', function (e) {
         $("#tooltips").text(e.target.dataset.originalTitle);
     });
-  
+
     $('[data-toggle="tooltip"]').on('hide.bs.tooltip', function (e) {
         $("#tooltips").text("ToolTips");
     });
@@ -556,7 +556,7 @@ function InitScrollBar(){
     setTimeout(function(){
         $('.os-theme-dark').overlayScrollbars({"autoUpdate":true });
     }, 10);
-    
+
     setTimeout(function(){
         $('.os-theme-dark').overlayScrollbars({"autoUpdate":true });
     }, 100);
@@ -566,7 +566,7 @@ function InitScrollBar(){
     setTimeout(function(){
         $('.os-theme-dark').overlayScrollbars({"autoUpdate":true });
     }, 500);
-    
+
     setTimeout(function(){
         $('.os-theme-dark').overlayScrollbars({"autoUpdate":true });
     }, 1000);
@@ -586,7 +586,7 @@ function InitDraggable(){
     $("#topSnapable").sortable({
         revert: true
     });
-  
+
     // $(".indicator-draggable").draggable({
     //   containment: "nav",
     //   snap: "#topSnapable",

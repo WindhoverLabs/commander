@@ -7,9 +7,9 @@ CommanderClient.prototype.__proto__ = EventEmitter.prototype;
 function CommanderClient() {
     this.isSocketConnected = false;
 	this.socket;
-	
+
 	console.log('CommanderClient');
-	
+
 	this.connect();
 }
 
@@ -32,26 +32,42 @@ CommanderClient.prototype.getPanels = function (path, cb){
 	this.getDirectoryListing(path, 'pug', cb);
 };
 
+CommanderClient.prototype.getRandom = function (cb){
+  setInterval(function() {
+  var random_boolean = Math.random() >= 0.5;
+  cb(random_boolean);
+  }, 500);
+};
+var switch_ran = true
+CommanderClient.prototype.getRandomNumber = function (cb){
+  setInterval(function() {
+  var random = Math.random() ;
+  if(switch_ran){
+    cb(random);
+  }
+}, 100);
+};
+
 
 
 CommanderClient.prototype.getDirectoryListing = function (path, extension, cb){
 	var re = /(?:\.([^.]+))?$/;
-	
+
     if(this.isSocketConnected){
     	this.socket.emit('getDirectoryListing', path, function(result){
     		var entries = [];
     		var dirEntries = result.files;
-    		    		
+
             for(var i=0; i < dirEntries.length; ++i) {
             	var entry = dirEntries[i];
-            	
+
             	if(entry.hasOwnProperty('type')) {
             		if(entry.type == 'dir') {
             			/* This is a directory. */
                         entries.push(entry);
             		} else {
-                		var ext = re.exec(entry.name)[1]; 
-                		
+                		var ext = re.exec(entry.name)[1];
+
                 		if(ext != null) {
                 		    if(ext == extension) {
                                 entries.push(entry);
@@ -59,12 +75,12 @@ CommanderClient.prototype.getDirectoryListing = function (path, extension, cb){
                 		} else {
                             entries.push(entry);
                 		}
-            		}		
+            		}
             	} else {
                     entries.push(entry);
             	}
-            }       
-    		
+            }
+
             cb(entries);
         });
     };
@@ -131,7 +147,7 @@ CommanderClient.prototype.connect = function (){
 	    'reconnectDelayMax': 5000,
 	    'timeout': 5000
     });
-    
+
     this.socket.on('connect', function(){
         /* Connection established. */
         self.isSocketConnected = true;
@@ -143,37 +159,37 @@ CommanderClient.prototype.connect = function (){
         self.isSocketConnected = false;
         self.emit('connect_error', error);
     });
-    
+
     this.socket.on('connect_timeout', function(){
 		/* Connection timeout. */
 		self.isSocketConnected = false;
 		self.emit('connect_timeout');
 	});
-	
+
     this.socket.on('reconnect', function(number){
 		/* Reconnect occured. */
 		self.isSocketConnected = true;
 		self.emit('reconnect');
 	});
-	
+
     this.socket.on('reconnect_attempt', function(){
 		/* Reconnecting. */
 		self.isSocketConnected = false;
 		self.emit('reconnect_attempt');
 	});
-	
+
     this.socket.on('reconnecting', function(number){
 		/* Reconnect error occured */
 		self.isSocketConnected = false;
 		self.emit('reconnecting', number);
 	});
-	
+
     this.socket.on('reconnect_error', function(error){
 		/* Reconnect error occured */
 		self.isSocketConnected = false;
 		self.emit('reconnect_error', error);
 	});
-	
+
     this.socket.on('reconnect_failed', function(){
 		/* Reconnect failed. */
 		self.isSocketConnected = false;

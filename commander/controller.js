@@ -9,9 +9,7 @@
    Scrollbar
    Resize
    Widget Generation */
-
-
-
+var cre = new Event('component-resize-event');
 
 /* This function is triggered when a new node is rendered */
 function NodeRendered(e, node) {
@@ -38,40 +36,42 @@ function NodeSelected(e, node) {
             componentName: 'Blank',
             componentState: { text: 'text', link: '/ws' + node.path}
         };
-        
+
         if( myLayout.selectedItem === null ) {
             alert( 'Container not selected. Choose any container to load component.' );
         } else {
             myLayout.selectedItem.addChild( newItemConfig );
         }
-    } else if(node.type === 'config') {
+    }
+    else if(node.type === 'config') {
         $.get('ws/' + node.path,(response) => {
         	var jsonObj = JSON.parse(response);
-    	    
+
             if( response !== null ) {
                 myLayout.destroy()
                 myLayout = new window.GoldenLayout( jsonObj, $('#layoutContainer') );
-                
+
                 myLayout.on('stackCreated', (item) => {
                 	/* TODO:  This is where we need to add code to bind the telemetry
                 	 *   and commands to the server.
                 	 */
                 	console.log('stackCreated:' + item.type);
-                });                
-                
+                });
+
                 InitLayout(myLayout);
-                
+
             } else {
                 console.log("Layout cannot be loaded.")
             }
         });
-        
+
         InitScrollBar();
     }
 }
 
 /* Collapse all items in menu */
 function NodesCollapse(item) {
+
     $("#"+item+"MenuContainer").treeview('collapseAll', { silent: true });
 }
 
@@ -84,7 +84,6 @@ function WidgetNodeRendered(e, node) {
     element.attr("data-submit","CreateIndicator");
     element.attr("data-custom",'[{"label":"Indicator Name", "type":"field" },{"label":"Data Path", "type":"field" }, {"label":"Fontawesome Icon", "type":"field" }]');
     let clickFunction = element.onclick;
-    console.log(element)
 }
 
 
@@ -128,43 +127,61 @@ function InitLayout(mlyt){
                 link: container._config.componentState.link
             });
         });
+
     });
-  
+
     /* Initalize layout */
     mlyt.init();
 
     /* This event is fired when a component is created, which renders selected page onto created component */
     mlyt.on("itemCreated", (item) => {
-        if(item.type=="component") {
-            if(item.hasOwnProperty('layout')) {
-                let link = undefined;
-                let id = undefined;
-                
-                if(item.config.hasOwnProperty("id")) {
-                    id = item.config.id;
-                }
-                
-                if(item.config.hasOwnProperty("componentState")) {
-                    if(item.config.componentState.hasOwnProperty("link")) {
-                        link = item.config.componentState.link;
-                    }
-                }
-              
-                if(id!=undefined && link!=undefined) {
-                    item.container._contentElement.load("/"+link);
-                    item.container._contentElement.css("overflow","auto");
-                }
-            }
-        } 
+      console.log("item created",item)
+
+      item.on('resize',function() {
+        dataPlotElements.forEach((e)=>{
+          e.dispatchEvent(cre);
+        })
+      });
+
+      if(item.type=="component") {
+          // if(item.hasOwnProperty('layout')) {
+              var link = undefined;
+              // let id = undefined;
+              //
+              // if(item.config.hasOwnProperty("id")) {
+              //     id = item.config.id;
+              // }
+
+              if(item.config.hasOwnProperty("componentState")) {
+                  if(item.config.componentState.hasOwnProperty("link")) {
+                      link = item.config.componentState.link;
+                  }
+              }
+
+              if( link!=undefined) {
+                  item.container._contentElement.load(link);
+                  item.container._contentElement.css("overflow","auto");
+              }
+          // }
+      }
     });
-    
+
     mlyt.on('stackCreated', (item) => {
+      console.log("Stack Created")
     	/* TODO:  This is where we need to add code to bind the telemetry
     	 *   and commands to the server.
     	 */
-    	console.log('stackCreated:' + item.type);
     });
-    
+
+    // mlyt.on('componentCreated',function(component) {
+    //   console.log('Component created');
+    //   component.container.on('resize',function() {
+    //     dataPlotElements.forEach((e)=>{
+    //       e.dispatchEvent(cre);
+    //     })
+    //   });
+    // });
+
     mlyt.on("stateChanged",function(){
         InitScrollBar();
     });
@@ -179,10 +196,10 @@ function SaveLayout() {
     {
         name += form.val()+"_"
     }
-    
+
     /* add timestamp */
     name += Date.now();
-  
+
     /* stringify state config */
     let state = JSON.stringify( myLayout.toConfig() );
     localStorage.setItem( name, state );
@@ -204,7 +221,7 @@ function GetStoredLayoutList() {
 function LoadLayout() {
     /* if a layout exists, destroy it */
     myLayout.destroy()
-  
+
     /* retrieve and load saved layout */
     let formVal = $("[id='select0']").val();
     let key = GetStoredLayoutList()[formVal];
@@ -215,7 +232,7 @@ function LoadLayout() {
     } else {
         console.log("Layout cannot be loaded.")
     }
-    
+
     InitScrollBar();
 }
 
@@ -226,7 +243,7 @@ function InitModal() {
     $(".modal-content").draggable({
         containment: "document"
     });
-  
+
     /* show */
     $("#genericInputModal").on('show.bs.modal',(e) => {
         HideMenu('widget');
@@ -237,7 +254,7 @@ function InitModal() {
         let custom = btn.data('custom');
         let item = "";
         let inputsIds = [];
-        
+
         /* set title */
         $('#modalTitle').text(title);
 
@@ -252,7 +269,7 @@ function InitModal() {
                     inputsIds.push("inputField"+e)
                     $('#modalForm').append(item);
                     break;
-          
+
                 case "dropdown":
                     item = "<div class='form-group'>"
                       +"<label class='col-form-label' id=labelField"+e+" for=inputField"+e+">"+custom[e].label+"</label>"
@@ -269,7 +286,7 @@ function InitModal() {
                         $('#select'+e).append(html)
                     }
                     break;
-          
+
                 default:
                     console.log("Unknown data passed as attribute");
             }
@@ -278,15 +295,15 @@ function InitModal() {
         /* set submit action */
         $('#modalSubmit')[0].onclick = window[submit];
     });
-    
+
     /* hide */
     $("#genericInputModal").on('hidden.bs.modal',(e) => {
         /* replace title */
         $("#modalTitle").text('Title Placeholder');
-        
+
         /* Remove all attached children*/
         $("#modalForm").empty();
-        
+
         /* Unset submit action */
         $('#modalSubmit')[0].onclick = null;
     });
@@ -318,7 +335,7 @@ function InitMenuState(){
             HideMenu("panel");
         }
     });
-  
+
     $("#layoutMenuToggle").click(() => {
         let open = $("#layoutMenuContainer").data("open");
         if(!open) {
@@ -329,7 +346,7 @@ function InitMenuState(){
             HideMenu("layout");
         }
     });
-  
+
     $("#widgetMenuToggle").click(() => {
         let open = $("#widgetMenuContainer").data("open");
         if(!open) {
@@ -347,11 +364,11 @@ function InitToolTips() {
     $('[data-toggle="tooltip"]').tooltip({
         "container":"false"
     });
-    
+
     $('[data-toggle="tooltip"]').on('show.bs.tooltip', function (e) {
         $("#tooltips").text(e.target.dataset.originalTitle);
     });
-  
+
     $('[data-toggle="tooltip"]').on('hide.bs.tooltip', function (e) {
         $("#tooltips").text("ToolTips");
     });
@@ -370,7 +387,7 @@ function InitScrollBar(){
     setTimeout(function(){
         $('.os-theme-dark').overlayScrollbars({"autoUpdate":true });
     }, 10);
-    
+
     setTimeout(function(){
         $('.os-theme-dark').overlayScrollbars({"autoUpdate":true });
     }, 100);
@@ -380,7 +397,7 @@ function InitScrollBar(){
     setTimeout(function(){
         $('.os-theme-dark').overlayScrollbars({"autoUpdate":true });
     }, 500);
-    
+
     setTimeout(function(){
         $('.os-theme-dark').overlayScrollbars({"autoUpdate":true });
     }, 1000);
@@ -400,7 +417,7 @@ function InitDraggable(){
     $("#topSnapable").sortable({
         revert: true
     });
-  
+
     // $(".indicator-draggable").draggable({
     //   containment: "nav",
     //   snap: "#topSnapable",
@@ -439,10 +456,10 @@ function IndicatorCloseClick() {
 function UpdateLayoutNode(node, display) {
     session.getLayouts(node.path, function (dirEntries) {
         var entries = [];
-    
+
         for(var i=0; i < dirEntries.length; ++i) {
             var dirEntry = dirEntries[i];
-            
+
             var layoutEntry = {
                 name: dirEntry.name,
                 text: dirEntry.name,
@@ -452,7 +469,7 @@ function UpdateLayoutNode(node, display) {
                 selectable: false,
                 checkable: false
             };
-            
+
             if(dirEntry.type == 'dir') {
                 layoutEntry.lazyLoad = true;
                 layoutEntry.selectable = false;
@@ -461,10 +478,10 @@ function UpdateLayoutNode(node, display) {
                 layoutEntry.selectable = true;
                 layoutEntry.type = 'config';
             }
-            
+
             entries.push(layoutEntry);
         }
-        
+
         var tree = $('#layoutMenuContainer').treeview(true)
         tree.addNode(entries, node, node.index, { silent: true} );
         tree.expandNode(node, { silent: true, ignoreChildren: true } );
@@ -474,10 +491,10 @@ function UpdateLayoutNode(node, display) {
 function UpdatePanelNode(node, display) {
     session.getPanels(node.path, function (dirEntries) {
         var panelEntries = [];
-    
+
         for(var i=0; i < dirEntries.length; ++i) {
             var dirEntry = dirEntries[i];
-            
+
             var panelEntry = {
                 name: dirEntry.name,
                 text: dirEntry.name,
@@ -487,26 +504,24 @@ function UpdatePanelNode(node, display) {
                 selectable: true,
                 checkable: false
             };
-            
+
             if(dirEntry.type == 'dir') {
                 panelEntry.lazyLoad = true;
                 panelEntry.selectable = false;
-                console.log('dir');
             } else {
                 panelEntry.icon = 'fa fa-file';
                 panelEntry.lazyLoad = false;
                 panelEntry.selectable = true;
                 panelEntry.type = 'file';
                 panelEntry.url = 'ws/' + dirEntry.path;
-                console.log('file');
             }
-            
+
             panelEntries.push(panelEntry);
         }
-        
+
         var tree = $('#panelMenuContainer').treeview(true)
         tree.addNode(panelEntries, node, node.index, { silent: true} );
-        tree.expandNode(node, { silent: true, ignoreChildren: true } );    
+        tree.expandNode(node, { silent: true, ignoreChildren: true } );
     });
 }
 
@@ -514,9 +529,9 @@ function UpdatePanelNode(node, display) {
 var _session;
 
 /* appctl main - this script execution starts from here */
-$(()=>{     
-	session = new CommanderClient(); 
-    
+$(()=>{
+	session = new CommanderClient();
+
     var config = {
         settings: {
             selectionEnabled: true
@@ -535,13 +550,13 @@ $(()=>{
             }]
         }]
     };
-    
+
     session.on('connect', function() {
         console.log('connected');
-        
-        session.getPanels('', function (dirEntries) {              
+
+        session.getPanels('', function (dirEntries) {
             var panelEntries = [];
-            
+
             for(var i=0; i < dirEntries.length; ++i) {
                 var entry = {
                     name: dirEntries[i].name,
@@ -553,7 +568,7 @@ $(()=>{
                     selectable: false,
                     checkable: false
                 };
-                
+
                 panelEntries.push(entry);
             }
 
@@ -571,10 +586,10 @@ $(()=>{
                 onNodeRendered : NodeRendered,
                 onNodeSelected: NodeSelected,
             });
-    
-            session.getLayouts('', function (dirEntries) {                
+
+            session.getLayouts('', function (dirEntries) {
                 var entries = [];
-                
+
                 for(var i=0; i < dirEntries.length; ++i) {
                     console.log(dirEntries);
                     var entry = {
@@ -587,11 +602,11 @@ $(()=>{
                         selectable: false,
                         checkable: false
                     };
-                    
+
                     entries.push(entry);
                 }
                 myLayout = new window.GoldenLayout( config, $('#layoutContainer'));
-                
+
                 $('#layoutMenuContainer').treeview({
                     data: entries,
                     levels:1,
@@ -616,7 +631,7 @@ $(()=>{
                 //InitResizeCtl();
             });
         });
-        
+
         //session.getViews(function (views) {
         //    console.log(views);
         //});
@@ -637,7 +652,7 @@ $(()=>{
         //    console.log(result);
         //});
     });
-    
+
     //  myLayout = new window.GoldenLayout( config, $('#layoutContainer'));
     //  InitTreeView();
     //  InitLayout(myLayout);
