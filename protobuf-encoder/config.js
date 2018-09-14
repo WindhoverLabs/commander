@@ -38,7 +38,7 @@ var config = convict({
         format: 'int',
         default: 0
     },
-    definitions: [{
+    msgDefs: [{
         file: {
             doc: 'Input file.',
             format: String,

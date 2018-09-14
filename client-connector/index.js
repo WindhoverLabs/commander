@@ -41,6 +41,23 @@ var socket_io = require('socket.io');
 var path = require('path');
 var fs = require('fs');
 
+/* Event IDs */
+var EventEnum = Object.freeze(
+		{'INITIALIZED':              1,
+		 'SOCKET_CONNECT_ERROR':     2,
+		 'SOCKET_CONNECT_TIMEOUT':   3,
+		 'SOCKET_RECONNECT':         4,
+		 'SOCKET_RECONNECT_ATTEMPT': 5,
+		 'SOCKET_RECONNECTING':      6,
+		 'SOCKET_RECONNECT_ERROR':   7,
+		 'SOCKET_RECONNECT_FAILED':  8,
+		 'SOCKET_DISCONNECT':        9,
+		 'SOCKET_PING':             10,
+		 'SOCKET_PONG':             11,
+		 'MESSAGE_RECEIVED':        12,
+		 'SOCKET_PUBLIC_FUNCTION_CALL': 13}
+	);
+
 var emit = Emitter.prototype.emit;
 
 exports.events = [
@@ -74,42 +91,53 @@ function ClientConnector(workspace, configFile, app) {
     app.io = io;
 
     io.on('connection', function(socket) {
-    	socket.on('connect_error', function(socket) {
-    		console.log('Client: connect_error');
+    	var address = socket.handshake.address;
+    	
+    	socket.on('connect_error', function(err) {
+    		self.logErrorEvent(EventEnum.SOCKET_CONNECT_ERROR, 'SocketIO: Socket connect error.  \'' + err + '\'');
     	});
 
-    	socket.on('connect_timeout', function(socket) {
-    		console.log('Client: connect_timeout');
+    	socket.on('connect_timeout', function() {
+    		self.logErrorEvent(EventEnum.SOCKET_CONNECT_TIMEOUT, 'SocketIO: Socket timeout.');
     	});
 
-    	socket.on('reconnect', function(socket) {
-    		console.log('Client: reconnect');
+    	socket.on('reconnect', function(num) {
+    		self.logInfoEvent(EventEnum.SOCKET_RECONNECT, 'SocketIO: Socket successfully reconnected on attempt # \'' + num + '\'.');
     	});
 
-    	socket.on('reconnect_attempt', function(socket) {
-    		console.log('Client: reconnect_attempt');
+    	socket.on('reconnect_attempt', function() {
+    		self.logInfoEvent(EventEnum.SOCKET_RECONNECT_ATTEMPT, 'SocketIO: Socket reconnect attempt.');
     	});
 
-    	socket.on('reconnecting', function(socket) {
-    		console.log('Client: reconnecting');
+    	socket.on('reconnecting', function(num) {
+    		self.logInfoEvent(EventEnum.SOCKET_RECONNECTING, 'SocketIO: Socket reconnecting attempt # \'' + num + '\'.');
     	});
 
-    	socket.on('reconnect_error', function(socket) {
-    		console.log('Client: reconnect_error');
+    	socket.on('reconnect_error', function(err) {
+    		self.logErrorEvent(EventEnum.SOCKET_RECONNECT_ERROR, 'SocketIO: Socket reconnect error.  \'' + err + '\'.');
     	});
 
-    	socket.on('reconnect_failed', function(socket) {
-    		console.log('Client: reconnect_failed');
+    	socket.on('reconnect_failed', function() {
+    		self.logErrorEvent(EventEnum.SOCKET_RECONNECT_FAILED, 'SocketIO: Socket reconnect failed.');
     	});
 
-    	socket.on('disconnect', function(socket) {
-    		console.log('Client: disconnect');
+    	socket.on('disconnect', function() {
+    		self.logInfoEvent(EventEnum.SOCKET_DISCONNECT, 'SocketIO: Socket disconnected.');
+    	});
+
+    	socket.on('ping', function() {
+    		self.logDebugEvent(EventEnum.SOCKET_PING, 'SocketIO: Socket ping.');
+    	});
+
+    	socket.on('pong', function(latency) {
+    		self.logDebugEvent(EventEnum.SOCKET_PONG, 'SocketIO: Socket pong (' + latency + ' ms).');
     	});
 
     	for(var i in publicFunctions) {
     		(function(funcName) {
     	        socket.on(funcName, function() {
     	        	var cb = arguments[arguments.length-1];
+    	        	self.logDebugEvent(EventEnum.SOCKET_PUBLIC_FUNCTION_CALL, 'SocketIO: ' + funcName);
 	    	        self[funcName].apply(self, arguments);
     		    });
     	    })(publicFunctions[i]);
@@ -205,10 +233,26 @@ ClientConnector.prototype.setInstanceEmitter = function (newInstanceEmitter)
     		if(isEmpty(self.vars) == false) {
         		self.vars = {};
     		};
+
+    	    self.logDebugEvent(EventEnum.MESSAGE_RECEIVED, 'ServerEvents: Message received.');
     	}
 	});
 	
-	this.sendCmd('/CFE_ES/ES_NOOP');
+	//this.sendCmd({ops_path: '/CFE/SetMaxPRCount', args: {'Payload.MaxPRCount': 9}});
+	
+//	this.sendCmd({ops_path: '/CFE/ES_Noop'});
+	
+//	this.sendCmd({ops_path: '/CFE/StartApp', args: {
+//        'Payload.AppEntryPoint':'CF_AppMain',
+//        'Payload.Priority':100,
+//        'Payload.Application':'CF',
+//        'Payload.AppFileName':'/cf/apps/CF.so',
+//        'Payload.StackSize':32769,
+//        'Payload.ExceptionAction':1}});
+	
+//	this.sendCmd({ops_path: '/CFE/StopApp', args: {
+//        'Payload.Application':'CF',
+//        'Payload.AppFileName':'/cf/apps/cf.so'}});
 	
 //	this.requestCmdDefinition('/CFE_ES/ES_NOOP', function(definition) {
 //		console.log(definition);
@@ -221,19 +265,21 @@ ClientConnector.prototype.setInstanceEmitter = function (newInstanceEmitter)
 //	this.subscribe('/CFE_ES_HkPacket_t/Payload/PerfTriggerMask', function(update) {
 //		console.log(update);
 //	});
+	
+    this.logInfoEvent(EventEnum.INITIALIZED, 'Initialized');
 }
 
 
 
 ClientConnector.prototype.sendCmd = function (cmdName, args) {
-	this.instanceEmit(config.get('cmdSendStreamID'), cmdName);
+	this.instanceEmit(config.get('cmdSendStreamID'), cmdName, args);
 }
 
 
 
 ClientConnector.prototype.requestCmdDefinition = function (cmdName, cb) {
 	
-	this.instanceEmitter.on(config.get('cmdDefRspStreamIDPrefix') + cmdName, function(definition) {
+	this.instanceEmitter.once(config.get('cmdDefRspStreamIDPrefix') + ':' + cmdName, function(definition) {
     	cb(definition);
 	});
 	
@@ -243,7 +289,7 @@ ClientConnector.prototype.requestCmdDefinition = function (cmdName, cb) {
 
 
 ClientConnector.prototype.requestVarDefinition = function (varName, cb) {
-	this.instanceEmitter.on(config.get('varDefRspStreamIDPrefix') + varName, function(definition) {
+	this.instanceEmitter.once(config.get('varDefRspStreamIDPrefix') + ':' + varName, function(definition) {
     	cb(definition);
 	});
 	
@@ -255,7 +301,7 @@ ClientConnector.prototype.requestVarDefinition = function (varName, cb) {
 ClientConnector.prototype.subscribe = function (varName) {
 	var self = this;
 	
-	this.instanceEmitter.on(config.get('varUpdateStreamIDPrefix') + varName, function(update) {
+	this.instanceEmitter.on(config.get('varUpdateStreamIDPrefix') + ':' + varName, function(update) {
 		self.vars[varName] = update;
 	});
 }
@@ -269,11 +315,34 @@ ClientConnector.prototype.instanceEmit = function (streamID, msg)
 
 
 
-
 /**
  * Inherits from `EventEmitter`.
  */
 ClientConnector.prototype.__proto__ = Emitter.prototype;
+
+
+
+ClientConnector.prototype.logDebugEvent = function (eventID, text) {
+	this.instanceEmit('events-debug', {sender: this, component:'ClientConnector', eventID:eventID, text:text});
+}
+
+
+
+ClientConnector.prototype.logInfoEvent = function (eventID, text) {
+	this.instanceEmit('events-info', {sender: this, component:'ClientConnector', eventID:eventID, text:text});
+}
+
+
+
+ClientConnector.prototype.logErrorEvent = function (eventID, text) {
+	this.instanceEmit('events-error', {sender: this, component:'ClientConnector', eventID:eventID, text:text});
+}
+
+
+
+ClientConnector.prototype.logCriticalEvent = function (eventID, text) {
+	this.instanceEmit('events-critical', {sender: this, component:'ClientConnector', eventID:eventID, text:text});
+}
 
 
 

@@ -45,6 +45,13 @@ var convict = require('convict');
 var config = require('./config.js');
 const Sparkles = require('sparkles');
 var path = require('path');
+var dot = require('dot-object');
+
+/* Event IDs */
+var EventEnum = Object.freeze({
+		'INITIALIZED':       1,
+		'CMD_MSG_NOT_FOUND': 2
+	});
 
 var emit = Emitter.prototype.emit;
 
@@ -108,10 +115,10 @@ function ProtobufDecoder(configFile) {
       .uint16('length');
     
 	this.ccsdsCmdSecHdr = new Parser()
-	  .endianess('little')
+	  .endianess('big')
+	  .uint8('checksum')
 	  .bit1('reserved')
-	  .bit7('code')
-	  .uint8('checksum');
+	  .bit7('code');
 	
     switch(config.get('CFE_SB_PACKET_TIME_FORMAT')) {
       case 'CFE_SB_TIME_32_16_SUBS':
@@ -179,32 +186,30 @@ ProtobufDecoder.prototype.setInstanceEmitter = function (newInstanceEmitter)
 		    	var msgLength = message.PriHdr.length;
 		    	
 		    	if(msgLength > 1) {
-				    
-					var msgDef = self.getCmdDefByMsgIDandCC(msgID, cmdCode);
-			        
+					var msgDef = self.getCmdByName(cmdDef.operation.airliner_msg);
+			    	
 				    if(typeof msgDef !== 'undefined') {
 				    	var tlmJson = {};
-
-				    	self.processFields(message.fields, tlmJson);
 				    	
-				    	/* Now send the the message to all PB listeners. */
-				    	var pbMsgDef = tlmDef.proto.lookupType(msgDef.name + '_pb');
+				    	var pbMsgDef = msgDef.proto.lookupType(msgDef.name + '_pb');
+				    	
 				    	var pbMsg = pbMsgDef.create(tlmJson);
-				    	var pbBuffer = pbMsgDef.encode(pbMsg).finish();
-				    	var hdrBuffer = new Buffer(12)
-				  	    hdrBuffer.writeUInt16BE(msgID, 0);
-				        hdrBuffer.writeUInt16BE(1, 2);
-				  	    hdrBuffer.writeUInt16BE(pbBuffer.length - 1, 4);
-				  	    hdrBuffer.writeUInt16BE(0, 6);
-				  	    hdrBuffer.writeUInt16BE(0, 8);
-				  	    hdrBuffer.writeUInt16BE(0, 10);
-				        
-				        var msgBuffer = Buffer.concat([hdrBuffer, pbBuffer]);
-				        self.instanceEmit(config.get('jsonOutputStreamID'), msgBuffer);
+				    	
+				    	var msg = pbMsgDef.decode(message.payload);
+				    	
+				    	var obj = pbMsgDef.toObject(msg, {
+				    		long: String,
+				    		enums: String,
+				    		bytes: String
+				    	});
+				    	
+				    	var args = dot.dot(obj);
+				    	
+						self.sendCmd(cmdDef.ops_path, args);
+				    } else {
+				        this.logErrorEvent(EventEnum.CMD_MSG_NOT_FOUND, 'Command message \'' + cmdDef.operation.airliner_msg + '\' not found.');
 				    }
 		    	}
-		    		
-		        self.sendCmd(cmdDef.path);
 	    	})
 	    } else {	         
             var msgLength = message.PriHdr.length;
@@ -218,45 +223,28 @@ ProtobufDecoder.prototype.setInstanceEmitter = function (newInstanceEmitter)
 				    	var pbMsgDef = msgDef.proto.lookupType(tlmDef.symbol + '_pb');
 				    	var pbMsg = pbMsgDef.create(tlmJson);
 				    	var obj = pbMsgDef.decode(message.payload);
-                        //console.log(obj);
-					    self.instanceEmit(config.get('jsonOutputStreamID'), obj);
-
-//				 	   	self.processFields(message.fields, tlmJson);
-//			        	//console.log(tlmJson); 
-//					    	
-//					   	/* Now send the the message to all PB listeners. */
-//					   	var pbMsgDef = tlmDef.proto.lookupType(tlmDef.symbol + '_pb');
-//					   	var pbMsg = pbMsgDef.create(tlmJson);
-//					   	var pbBuffer = pbMsgDef.encode(pbMsg).finish();
-//					   	var hdrBuffer = new Buffer(12)
-//					    hdrBuffer.writeUInt16BE(msgID, 0);
-//					    hdrBuffer.writeUInt16BE(1, 2);
-//					    hdrBuffer.writeUInt16BE(pbBuffer.length - 1, 4);
-//					    hdrBuffer.writeUInt16BE(0, 6);
-//					    hdrBuffer.writeUInt16BE(0, 8);
-//					    hdrBuffer.writeUInt16BE(0, 10);
-//					        
-//					    var msgBuffer = Buffer.concat([hdrBuffer, pbBuffer]);
-//					    self.instanceEmit(config.get('binaryOutputStreamID'), msgBuffer);
+					    self.instanceEmit(config.get('jsonTlmOutputStreamID'), obj);;
 					}
 		        });
-		        //console.log(msgDef);
 		    }
 	    }
     });
+	
+    this.logInfoEvent(EventEnum.INITIALIZED, 'Initialized');
 }
 
 
 
 ProtobufDecoder.prototype.sendCmd = function (cmdName, args) {
-	this.instanceEmit(config.get('jsonOutputStreamID'), cmdName);
+	this.instanceEmit(config.get('jsonCmdOutputStreamID'), {ops_path: cmdName, args: args});
 }
 
 
 
-ProtobufDecoder.prototype.instanceEmit = function (streamID, msg)
-{
-	this.instanceEmitter.emit(streamID, msg);
+ProtobufDecoder.prototype.instanceEmit = function (streamID, msg) {
+	if(typeof this.instanceEmitter === 'object') {
+		this.instanceEmitter.emit(streamID, msg);
+	}
 }
 
 
@@ -271,7 +259,7 @@ ProtobufDecoder.prototype.requestCmdDefinition = function (msgID, cmdCode, cb) {
     	cb(definition);
 	}
 	
-	this.instanceEmitter.on(listenerChannel, cmdDefRspListener);
+	this.instanceEmitter.once(listenerChannel, cmdDefRspListener);
 	
 	this.instanceEmit(config.get('cmdDefReqStreamID'), {msgID: msgID, cmdCode: cmdCode});
 }
@@ -324,6 +312,17 @@ ProtobufDecoder.prototype.processFields = function (inJSON, outJSON) {
 
 
 
+ProtobufDecoder.prototype.getCmdDefByPath = function (path) {
+	for(var name in this.defs) {
+		var cmd = this.defs[name];
+		if(cmd.path == path){
+			return cmd;
+		}
+	}
+}
+
+
+
 ProtobufDecoder.prototype.getMsgDefBySymbolName = function (name) {
 	return this.defs[name];
 };
@@ -334,6 +333,17 @@ ProtobufDecoder.prototype.getCmdDefByMsgIDandCC = function (msgID, cmdCode) {
 	for(var name in this.defs) {
 		var cmd = this.defs[name];
 		if((cmd.msgID == msgID) && (cmd.commandCode == cmdCode)){
+			return cmd;
+		}
+	}
+}
+
+
+
+ProtobufDecoder.prototype.getCmdByName = function (name) {
+	for(var item in this.defs) {
+		var cmd = this.defs[item];
+		if(cmd.name == name){
 			return cmd;
 		}
 	}
@@ -381,4 +391,28 @@ ProtobufDecoder.prototype.isTelemetryMsg = function (msgID) {
 	} else {
 		return true;
 	}
+}
+
+
+
+ProtobufDecoder.prototype.logDebugEvent = function (eventID, text) {
+	this.instanceEmit('events-debug', {sender: this, component:'ProtobufDecoder', eventID:eventID, text:text});
+}
+
+
+
+ProtobufDecoder.prototype.logInfoEvent = function (eventID, text) {
+	this.instanceEmit('events-info', {sender: this, component:'ProtobufDecoder', eventID:eventID, text:text});
+}
+
+
+
+ProtobufDecoder.prototype.logErrorEvent = function (eventID, text) {
+	this.instanceEmit('events-error', {sender: this, component:'ProtobufDecoder', eventID:eventID, text:text});
+}
+
+
+
+ProtobufDecoder.prototype.logCriticalEvent = function (eventID, text) {
+	this.instanceEmit('events-critical', {sender: this, component:'ProtobufDecoder', eventID:eventID, text:text});
 }

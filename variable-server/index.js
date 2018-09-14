@@ -38,6 +38,11 @@ var convict = require('convict');
 var config = require('./config.js');
 const Sparkles = require('sparkles');
 
+/* Event IDs */
+var EventEnum = Object.freeze(
+		{'INITIALIZED': 1}
+	);
+
 var emit = Emitter.prototype.emit;
 
 exports = module.exports = VariableServer;
@@ -67,31 +72,31 @@ VariableServer.prototype.setInstanceEmitter = function (newInstanceEmitter)
 	var self = this;
 	this.instanceEmitter = newInstanceEmitter;
 
-	this.instanceEmitter.on(config.get('jsonInputStreamID'), function(message) {
-		var variables = message.fields;
-		
-    	for(var i = 0; i < variables.length; ++i) {
-    		var newVariable = variables[i];
+	this.instanceEmitter.on(config.get('jsonInputStreamID'), function(message) {		
+    	for(var itemID in message.fields) {
+    		var item = message.fields[itemID];
     		
-    		if(self.vars.hasOwnProperty(newVariable.engName) == false) {
+    		if(self.vars.hasOwnProperty(itemID) == false) {
     			/* This is the first time we've seen this variable and it does 
     			 * not already have a definition.  Create a new record. */
-        		var variable = {};
-    			self.vars[newVariable.engName] = variable;
+        		var variable = {opsPath: itemID};
+    			self.vars[itemID] = variable;
         		
     		} else {
     			/* We've already received this or have a predefinition. */
-    			var variable = self.vars[newVariable.engName];
+    			var variable = self.vars[itemID];
     		}
     	    
     		/* Update the current value. */
-    		variable.value = newVariable.value;
+    		variable.value = item.value;
     		
     		/* Publish the new value. */
-    		self.instanceEmit(config.get('varUpdateStreamIDPrefix') + newVariable.engName, variable);
+    		self.instanceEmit(config.get('varUpdateStreamIDPrefix') + itemID, variable);
     	}
     	self.instanceEmit(config.get('outputEventsStreamID'), 'message-received')
 	});
+	
+    this.logInfoEvent(EventEnum.INITIALIZED, 'Initialized');
 }
 
 
@@ -99,6 +104,30 @@ VariableServer.prototype.setInstanceEmitter = function (newInstanceEmitter)
 VariableServer.prototype.instanceEmit = function (streamID, msg)
 {
 	this.instanceEmitter.emit(streamID, msg);
+}
+
+
+
+VariableServer.prototype.logDebugEvent = function (eventID, text) {
+	this.instanceEmit('events-debug', {sender: this, component:'VariableServer', eventID:eventID, text:text});
+}
+
+
+
+VariableServer.prototype.logInfoEvent = function (eventID, text) {
+	this.instanceEmit('events-info', {sender: this, component:'VariableServer', eventID:eventID, text:text});
+}
+
+
+
+VariableServer.prototype.logErrorEvent = function (eventID, text) {
+	this.instanceEmit('events-error', {sender: this, component:'VariableServer', eventID:eventID, text:text});
+}
+
+
+
+VariableServer.prototype.logCriticalEvent = function (eventID, text) {
+	this.instanceEmit('events-critical', {sender: this, component:'VariableServer', eventID:eventID, text:text});
 }
 
 

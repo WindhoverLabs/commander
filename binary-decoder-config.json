@@ -40,13 +40,10 @@
     CFE_TIME_EPOCH_MINUTE:     0,
     CFE_TIME_EPOCH_SECOND:     0,
     msgDefs: [
-    	{file: './output.json'},
-    	{file: './output-cmd.json'},
-        {file: './mpc-symbols.json'},
-    	{file: './input.json'}
+    	{file: './airliner.json'}
     ],
     binaryInputStreamID:     'bin-tlm-stream',
     jsonOutputStreamID:      'json-tlm-stream',
-    varDefReqStreamID:       'var-def-request',
-    varDefRspStreamIDPrefix: 'var-def:'
+    tlmDefReqStreamID:       'var-def-request',
+    tlmDefRspStreamIDPrefix: 'var-def:'
 }

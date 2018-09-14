@@ -35,5 +35,7 @@
 {
     jsonInputStreamID:       'json-tlm-stream',
     binaryOutputStreamID:    'protobuf-tlm-stream',
-    definitions:            ['./airliner.json']
+    msgDefs: [
+    	{file: './airliner.json'}
+    ]
 }

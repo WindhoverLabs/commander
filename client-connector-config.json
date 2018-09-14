@@ -38,6 +38,6 @@
     varDefReqStreamID:       'var-def-request',
     varDefRspStreamIDPrefix: 'var-def:',
     cmdDefReqStreamID:       'cmd-def-request',
-    cmdDefRspStreamIDPrefix: 'cmd-def:',
+    cmdDefRspStreamIDPrefix: 'cmd-def',
     cmdSendStreamID:         'cmd-send'
 }

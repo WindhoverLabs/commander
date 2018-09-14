@@ -143,23 +143,23 @@ Commander.prototype.logEvent = function (instance, plugin, component, eventID, c
 
 	switch(criticality) {
 	    case 'DEBUG':
-	    	console.log(FgGreen + 'EVT' + FgWhite + ' | ' + FgCyan + dateString + FgWhite + ' | ' + FgWhite + instance + ' | ' + FgWhite + plugin + ' | ' + FgWhite + component + ' | ' + FgWhite + eventID + ' | ' + FgWhite + criticality + ' | ' + FgWhite + text);
+	    	console.log(FgGreen + 'EVT' + FgWhite + ' | ' + FgCyan + dateString + FgWhite + ' | ' + FgWhite + instance + ' | ' + FgWhite + component + ' | ' + FgWhite + plugin + ' | ' + FgWhite + eventID + ' | ' + FgWhite + criticality + FgWhite + ' | ' + FgWhite + text);
 	        break;
 	        
 	    case 'INFO':
-	    	console.log(FgGreen + 'EVT' + FgWhite + ' | ' + FgCyan + dateString + FgWhite + ' | ' + FgWhite + instance + ' | ' + FgWhite + plugin + ' | ' + FgWhite + component + ' | ' + FgWhite + eventID + ' | ' + FgWhite + criticality + ' | ' + FgWhite + text);
+	    	console.log(FgGreen + 'EVT' + FgWhite + ' | ' + FgCyan + dateString + FgWhite + ' | ' + FgWhite + instance + ' | ' + FgWhite + component + ' | ' + FgWhite + plugin + ' | ' + FgWhite + eventID + ' | ' + FgWhite + criticality + FgWhite + ' | ' + FgWhite + text);
 	        break;
 	        
 	    case 'ERROR':
-	    	console.log(FgGreen + 'EVT' + FgWhite + ' | ' + FgCyan + dateString + FgWhite + ' | ' + FgWhite + instance + ' | ' + FgWhite + plugin + ' | ' + FgWhite + component + ' | ' + FgWhite + eventID + ' | ' + FgRed + criticality + ' | ' + FgWhite + text);
+	    	console.log(FgGreen + 'EVT' + FgWhite + ' | ' + FgCyan + dateString + FgWhite + ' | ' + FgWhite + instance + ' | ' + FgWhite + component + ' | ' + FgWhite + plugin + ' | ' + FgWhite + eventID + ' | ' + FgRed + criticality + FgWhite + ' | ' + FgWhite + text);
 	        break;
 	        
 	    case 'CRIT':
-	    	console.log(FgGreen + 'EVT' + FgWhite + ' | ' + FgCyan + dateString + FgWhite + ' | ' + FgWhite + instance + ' | ' + FgWhite + plugin + ' | ' + FgWhite + component + ' | ' + FgWhite + eventID + ' | ' + BgRed + FgBlack + Blink + criticality + BgBlack + FgWhite + ' | ' + BgRed + FgBlack + Blink + text + BgBlack + FgWhite);
+	    	console.log(FgGreen + 'EVT' + FgWhite + ' | ' + FgCyan + dateString + FgWhite + ' | ' + FgWhite + instance + ' | ' + FgWhite + component + ' | ' + FgWhite + plugin + ' | ' + FgWhite + eventID + ' | ' + BgRed + FgBlack + Blink + criticality + BgBlack + FgWhite + ' | ' + BgRed + FgBlack + Blink + text + BgBlack + FgWhite);
 	        break;
 	    
 	    default:
-	    	console.log(FgGreen + 'EVT' + FgWhite + ' | ' + FgCyan + dateString + FgWhite + ' | ' + FgWhite + instance + ' | ' + FgWhite + plugin + ' | ' + FgWhite + component + ' | ' + FgWhite + eventID + ' | ' + FgMagenta + criticality + ' | ' + FgMagenta + text + FgWhite);
+	    	console.log(FgGreen + 'EVT' + FgWhite + ' | ' + FgCyan + dateString + FgWhite + ' | ' + FgWhite + instance + ' | ' + FgWhite + component + ' | ' + FgWhite + plugin + ' | ' + FgWhite + eventID + ' | ' + FgMagenta + criticality + FgWhite + ' | ' + FgMagenta + text + FgWhite);
 	        break;
 	}
 }
