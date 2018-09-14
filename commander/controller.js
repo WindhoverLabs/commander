@@ -172,9 +172,10 @@ function InitLayout(mlyt){
 
     mlyt.on('stackCreated', (item) => {
       console.log("Stack Created [P]", item)
-      if(item.hasOwnProperty("element")){
-        item.element[0].dispatchEvent(stce);
-      }
+      item.callDownwards('constructIt',[item]);
+      // if(item.hasOwnProperty("element")){
+      //   item.element[0].dispatchEvent(stce);
+      // }
     	/* TODO:  This is where we need to add code to bind the telemetry
     	 *   and commands to the server.
     	 */

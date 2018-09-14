@@ -12,8 +12,8 @@
 *    notice, this list of conditions and the following disclaimer in
 *    the documentation and/or other materials provided with the
 *    distribution.
-* 3. Neither the name Windhover Labs nor the names of its 
-*    contributors may be used to endorse or promote products derived 
+* 3. Neither the name Windhover Labs nor the names of its
+*    contributors may be used to endorse or promote products derived
 *    from this software without specific prior written permission.
 *
 * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
@@ -57,7 +57,7 @@ function VariableServer(configFile) {
     this.vars = {};
     var self = this;
     this.instanceEmitter;
-    
+
     /* Load environment dependent configuration */
     config.loadFile(configFile);
 
@@ -72,30 +72,30 @@ VariableServer.prototype.setInstanceEmitter = function (newInstanceEmitter)
 	var self = this;
 	this.instanceEmitter = newInstanceEmitter;
 
-	this.instanceEmitter.on(config.get('jsonInputStreamID'), function(message) {		
+	this.instanceEmitter.on(config.get('jsonInputStreamID'), function(message) {
     	for(var itemID in message.fields) {
     		var item = message.fields[itemID];
-    		
+
     		if(self.vars.hasOwnProperty(itemID) == false) {
-    			/* This is the first time we've seen this variable and it does 
+    			/* This is the first time we've seen this variable and it does
     			 * not already have a definition.  Create a new record. */
         		var variable = {opsPath: itemID};
     			self.vars[itemID] = variable;
-        		
+
     		} else {
     			/* We've already received this or have a predefinition. */
     			var variable = self.vars[itemID];
     		}
-    	    
+
     		/* Update the current value. */
     		variable.value = item.value;
-    		
+
     		/* Publish the new value. */
-    		self.instanceEmit(config.get('varUpdateStreamIDPrefix') + itemID, variable);
+    		self.instanceEmit(config.get('varUpdateStreamIDPrefix') + ':' + itemID, variable);
     	}
     	self.instanceEmit(config.get('outputEventsStreamID'), 'message-received')
 	});
-	
+
     this.logInfoEvent(EventEnum.INITIALIZED, 'Initialized');
 }
 

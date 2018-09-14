@@ -10,9 +10,12 @@ function assert(condition, message) {
 class Text extends HTMLElement{
   constructor(){
     super();
-    this.addEventListener('stack-created-event',(e)=>{
+    this.constructIt = function(e){
       console.log("happened",e)
-    },{capture : true})
+    }
+    // this.addEventListener('stack-created-event',(e)=>{
+    //   console.log("happened",e)
+    // },{bubling : true})
     // var self = this;
     // this.textContent = "---"
     //
