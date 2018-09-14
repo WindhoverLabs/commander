@@ -37,7 +37,7 @@
     jsonCmdOutputStreamID:   'cmd-send',
     binaryInputStreamID:     'protobuf-cmd-stream',
     cmdDefReqStreamID:       'cmd-def-request',
-    cmdDefRspStreamIDPrefix: 'cmd-def:',
+    cmdDefRspStreamIDPrefix: 'cmd-def',
     tlmDefReqStreamID:       'var-def-request',
     tlmDefRspStreamIDPrefix: 'var-def'
 }

@@ -247,7 +247,7 @@ ClientConnector.prototype.sendCmd = function (cmdName, args) {
 
 ClientConnector.prototype.requestCmdDefinition = function (cmdName, cb) {
 	
-	this.instanceEmitter.on(config.get('cmdDefRspStreamIDPrefix') + cmdName, function(definition) {
+	this.instanceEmitter.once(config.get('cmdDefRspStreamIDPrefix') + ':' + cmdName, function(definition) {
     	cb(definition);
 	});
 	
@@ -257,7 +257,7 @@ ClientConnector.prototype.requestCmdDefinition = function (cmdName, cb) {
 
 
 ClientConnector.prototype.requestVarDefinition = function (varName, cb) {
-	this.instanceEmitter.on(config.get('varDefRspStreamIDPrefix') + varName, function(definition) {
+	this.instanceEmitter.once(config.get('varDefRspStreamIDPrefix') + ':' + varName, function(definition) {
     	cb(definition);
 	});
 	
@@ -269,7 +269,7 @@ ClientConnector.prototype.requestVarDefinition = function (varName, cb) {
 ClientConnector.prototype.subscribe = function (varName) {
 	var self = this;
 	
-	this.instanceEmitter.on(config.get('varUpdateStreamIDPrefix') + varName, function(update) {
+	this.instanceEmitter.on(config.get('varUpdateStreamIDPrefix') + ':' + varName, function(update) {
 		self.vars[varName] = update;
 	});
 }

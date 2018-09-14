@@ -144,7 +144,7 @@ BinaryEncoder.prototype.setInstanceEmitter = function (newInstanceEmitter)
 			if(typeof cmdDef === 'undefined') {
 				/* TODO: Command definition not found.  ops_path is probably wrong. */
 			} else {
-		        self.instanceEmit(config.get('cmdDefRspStreamIDPrefix') + cmdReq.opsName, cmdDef);
+		        self.instanceEmit(config.get('cmdDefRspStreamIDPrefix') + ':' + cmdReq.opsName, cmdDef);
 			}
 		} else if (cmdReq.hasOwnProperty('msgID') && cmdReq.hasOwnProperty('cmdCode')) {
 			var cmdDef = self.getCmdDefByMsgIDandCC(cmdReq.msgID, cmdReq.cmdCode);
