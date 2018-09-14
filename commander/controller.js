@@ -136,13 +136,13 @@ function InitLayout(mlyt){
 
     /* This event is fired when a component is created, which renders selected page onto created component */
     mlyt.on("itemCreated", (item) => {
-      
 
-      item.on('resize',function() {
-        dataPlotElements.forEach((e)=>{
-          e.dispatchEvent(cre);
-        })
-      });
+      // console.log("item-->",item)
+      // item.on('resize',function() {
+      //   dataPlotElements.forEach((e)=>{
+      //     e.dispatchEvent(cre);
+      //   })
+      // });
 
       if(item.type=="component") {
           // if(item.hasOwnProperty('layout')) {
@@ -629,7 +629,7 @@ $(()=>{
                 //InitToolTips();
                 //InitPopover();
                 //InitScrollBar();
-                //InitResizeCtl();
+                InitResizeCtl();
             });
         });
 

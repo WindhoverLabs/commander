@@ -1,5 +1,6 @@
 /* Useful global variables and functions */
 var dataPlotElements = []
+var TextSubscriptions = []
 function assert(condition, message) {
     if (!condition) {
         throw message || "Assertion failed";
@@ -33,6 +34,14 @@ class Text extends HTMLElement{
     else{
       console.error("attribute, data-tlm is undefined")
     }
+    myLayout.on("itemDestroyed",(i)=>{
+
+      if(i.type="component" && isDescendant(i.element[0],this)){
+        console.log("item has beeen destroyed - this section can be used as destructor")
+        // console.log(this)
+        // console.log(isDescendant(i.element[0],this))
+      }
+    })
   }
 }
 
@@ -98,21 +107,50 @@ class DataPlot extends HTMLElement{
     var parseTime = d3.timeParse("%M:%S:%L")
     $(self).empty();
 
+    myLayout.on("stateChanged",(i)=>{
 
-    self.addEventListener('component-resize-event',(e)=>{
-      //console.log("ack",this,self.parentElement.offsetWidth)
-      width = self.parentElement.offsetWidth - margin.left - margin.right;
-      height = self.parentElement.offsetHeight - margin.top - margin.bottom;
-      x = d3.scaleTime().range([0, width]);
-      y = d3.scaleLinear().range([height, 0]);
-      xAxis = d3.axisBottom(x).tickFormat(formatTime);
-      yAxis = d3.axisLeft(y);
-      d3.select(self).select("svg")
-         .attr("width", width + margin.left + margin.right)
-         .attr("height", height + margin.top + margin.bottom);
-     d3.select(self).select("svg").select(".canvas")
-        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+        var validGraphUpdate = false;
+        for(var item in i.origin.contentItems){
+          if(isDescendant(i.origin.contentItems[item].element[0],this)){
+            validGraphUpdate = true;
+          }
+        }
+
+        if(validGraphUpdate){
+          //console.log("done")
+          console.log("valid resize event if fired -  adjusting graph to acommodate new size")
+          width = self.parentElement.offsetWidth - margin.left - margin.right;
+          height = self.parentElement.offsetHeight - margin.top - margin.bottom;
+
+          x = d3.scaleTime().range([0, width]);
+          y = d3.scaleLinear().range([height, 0]);
+          xAxis = d3.axisBottom(x).tickFormat(formatTime);
+          yAxis = d3.axisLeft(y);
+          d3.select(self).select("svg")
+             .attr("width", width + margin.left + margin.right)
+             .attr("height", height + margin.top + margin.bottom);
+          d3.select(self).select("svg").select(".canvas")
+             .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+        }
+
+
     })
+    // self.addEventListener('component-resize-event',(e)=>{
+    //   //console.log("ack",this,self.parentElement.offsetWidth)
+    //   width = self.parentElement.offsetWidth - margin.left - margin.right;
+    //   height = self.parentElement.offsetHeight - margin.top - margin.bottom;
+    //   x = d3.scaleTime().range([0, width]);
+    //   y = d3.scaleLinear().range([height, 0]);
+    //   xAxis = d3.axisBottom(x).tickFormat(formatTime);
+    //   yAxis = d3.axisLeft(y);
+    //   d3.select(self).select("svg")
+    //      .attr("width", width + margin.left + margin.right)
+    //      .attr("height", height + margin.top + margin.bottom);
+    //  d3.select(self).select("svg").select(".canvas")
+    //     .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+    // })
 
     session.getRandomNumber(function (val) {
 
@@ -127,6 +165,7 @@ class DataPlot extends HTMLElement{
         margin = { top: 30, right: 30, bottom: 30, left: 50 };
         width = self.parentElement.offsetWidth - margin.left - margin.right;
         height = 300 - margin.top - margin.bottom;
+
         x = d3.scaleTime().range([0, width]);
         y = d3.scaleLinear().range([height, 0]);
         xAxis = d3.axisBottom(x).tickFormat(formatTime);;
