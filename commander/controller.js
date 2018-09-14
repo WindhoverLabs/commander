@@ -10,6 +10,7 @@
    Resize
    Widget Generation */
 var cre = new Event('component-resize-event');
+var stce = new Event('stack-created-event');
 
 /* This function is triggered when a new node is rendered */
 function NodeRendered(e, node) {
@@ -22,7 +23,7 @@ function NodeRendered(e, node) {
             componentState: { text: "text", link: 'ws/' + node.path}
         };
 
-        myLayout.createDragSource( node.$el, newItemConfig );
+         myLayout.createDragSource( node.$el[0], newItemConfig );
     }
 }
 
@@ -55,7 +56,10 @@ function NodeSelected(e, node) {
                 	/* TODO:  This is where we need to add code to bind the telemetry
                 	 *   and commands to the server.
                 	 */
-                	console.log('stackCreated:' + item.type);
+                  if(item.hasOwnProperty("element")){
+                    item.element[0].dispatchEvent(stce);
+                  }
+                	//console.log('stackCreated:',item);
                 });
 
                 InitLayout(myLayout);
@@ -167,7 +171,10 @@ function InitLayout(mlyt){
     });
 
     mlyt.on('stackCreated', (item) => {
-      console.log("Stack Created")
+      console.log("Stack Created [P]", item)
+      if(item.hasOwnProperty("element")){
+        item.element[0].dispatchEvent(stce);
+      }
     	/* TODO:  This is where we need to add code to bind the telemetry
     	 *   and commands to the server.
     	 */

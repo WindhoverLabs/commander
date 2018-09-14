@@ -10,22 +10,31 @@ function assert(condition, message) {
 class Text extends HTMLElement{
   constructor(){
     super();
-    var self = this;
-    this.textContent = "---"
-
-    if(this.hasAttribute("data-tlm")){
-      /* TODO:subscribe */
-      session.getRandomNumber(function (val) {
-        self.textContent = val.toFixed(4)
-      })
-    }
-    else{
-      console.error("attribute, data-tlm is undefined")
-    }
+    this.addEventListener('stack-created-event',(e)=>{
+      console.log("happened",e)
+    },{capture : true})
+    // var self = this;
+    // this.textContent = "---"
+    //
+    // if(this.hasAttribute("data-tlm")){
+    //   /* TODO:subscribe */
+    //   session.getRandomNumber(function (val) {
+    //     self.textContent = val.toFixed(4)
+    //   })
+    // }
+    // else{
+    //   console.error("attribute, data-tlm is undefined")
+    // }
   }
-  connectedCallback(){}
-  disconnectedCallback() {}
-  attributeChangedCallback(name, oldValue, newValue) {}
+  connectedCallback(){
+    console.log("connectedCallback")
+  }
+  disconnectedCallback() {
+    console.log("disconnectedCallback")
+  }
+  attributeChangedCallback(name, oldValue, newValue) {
+    console.log("attributeChangedCallback")
+  }
 }
 
 class Button extends HTMLElement{
