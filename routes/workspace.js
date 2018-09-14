@@ -44,8 +44,6 @@ router.get('/*', function(req, res, next) {
 
 	switch(path.extname(req.url)) {
 	    case '.pug':
-	    	console.log('***************');
-	    	console.log(translatedPath);
 	        res.render(translatedPath, { title: 'Express' });
 	        break;
 	        
