@@ -42,7 +42,17 @@ var Promise = require('promise');
 var mergeJSON = require('merge-json');
 var convict = require('convict');
 var config = require('./config.js');
-const Sparkles = require('sparkles');
+
+/* Event IDs */
+var EventEnum = Object.freeze({
+		'INITIALIZED':         1,
+		'OPS_PATH_NOT_FOUND':  2,
+		'MSG_ID_NOT_FOUND':    3,
+		'INVALID_REQUEST':     4,
+		'APP_NOT_FOUND':       5,
+		'UNKNOWN_DATA_TYPE':   6,
+		'UNHANDLED_EXCEPTION': 7
+	});
 
 var emit = Emitter.prototype.emit;
 
@@ -134,8 +144,6 @@ function BinaryDecoder(configFile) {
     	var msgDefInput = JSON.parse(fs.readFileSync(inMsgDefs[i].file, 'utf8'));
     	this.defs = mergeJSON.merge(this.defs, msgDefInput);
     }
-    
-    //console.log(util.inspect(this.defs.Airliner.apps.CFE, {showHidden: false, depth: null}));
 };
 
 
@@ -154,7 +162,7 @@ BinaryDecoder.prototype.setInstanceEmitter = function (newInstanceEmitter)
 			var tlmDef = self.getTlmDefByPath(req.ops_path);
 			
 			if(typeof tlmDef === 'undefined') {
-				/* TODO: Command definition not found.  ops_path is probably wrong. */
+			    this.logErrorEvent(EventEnum.OPS_PATH_NOT_FOUND, 'TlmDefReq: Ops path not found.');
 			} else {
 		        self.instanceEmit(config.get('tlmDefRspStreamIDPrefix') + req.opsName, tlmDef);
 			}
@@ -162,15 +170,16 @@ BinaryDecoder.prototype.setInstanceEmitter = function (newInstanceEmitter)
 			var tlmDef = self.getTlmDefByMsgID(req.msgID);
 
 			if(typeof tlmDef === 'undefined') {
-				/* TODO: Telemetry definition not found.  ops_path is probably wrong. */
+			    this.logErrorEvent(EventEnum.MSG_ID_NOT_FOUND, 'TlmDefReq: Msg ID not found.');
 			} else {
 		        self.instanceEmit(config.get('tlmDefRspStreamIDPrefix') + ':' + req.msgID, tlmDef);
 			}
 		} else {
-			/* TODO:  Request is incorrect. */
-		    self.instanceEmit(config.get('tlmDefRspStreamIDPrefix') + ':' + req.msgID, undefined);
+		    this.logErrorEvent(EventEnum.INVALID_REQUEST, 'TlmDefReq: Invalid request.  \'' + req + '\'');
 		}
 	});
+	
+    this.logInfoEvent(EventEnum.INITIALIZED, 'Initialized');
 }
 
 
@@ -204,13 +213,13 @@ BinaryDecoder.prototype.getTlmDefByPath = function (path) {
     var appName = this.getAppNameFromPath(path);
     var operationName = this.getOperationFromPath(path);
     if(typeof operationName === 'undefined') {
-    	/* TODO:  Command ops path is incorrect. */
+	    this.logErrorEvent(EventEnum.OPS_PATH_NOT_FOUND, 'getTlmDefByPath: Ops path not found. \'' + path + '\'');
     	return undefined;
     } else {
 	    var appDefinition = this.getAppDefinition(appName);
 	    
 	    if(typeof appDefinition === 'undefined') {
-	    	/* TODO:  Command ops path is incorrect. */
+		    this.logErrorEvent(EventEnum.APP_NOT_FOUND, 'getTlmDefByPath: App not found. \'' + appName + '\'');
 	    	return undefined;
 	    } else {
 		    return appDefinition.operations[operationName];
@@ -450,7 +459,6 @@ BinaryDecoder.prototype.getField = function (buffer, fieldDef, bitOffset) {
 		if(fieldDef.hasOwnProperty('pb_field_rule')) {
 			switch(fieldDef.pb_field_rule) {
 				case 'repeated': {
-					/* TODO:  'repeated' is not yet fully implemented. */
 					var value = [];
 					switch(fieldDef.airliner_type) {
 						case 'uint8':
@@ -492,7 +500,7 @@ BinaryDecoder.prototype.getField = function (buffer, fieldDef, bitOffset) {
 							break;
 							
 						default:
-							console.log('TODO: Unknown data type \'' + fieldDef.airliner_type + '\'')
+						    this.logErrorEvent(EventEnum.UNKNOWN_DATA_TYPE, 'getField: Unknown data type. \'' + fieldDef.airliner_type + '\'');
 					}
 					break;
 				}
@@ -524,15 +532,14 @@ BinaryDecoder.prototype.getField = function (buffer, fieldDef, bitOffset) {
 							break;
 							
 						default:
-							console.log('TODO: Unknown data type \'' + fieldDef.airliner_type + '\'')
+						    this.logErrorEvent(EventEnum.UNKNOWN_DATA_TYPE, 'getField: Unknown data type. \'' + fieldDef.airliner_type + '\'');
 					}
 				    break;
 			    }
 		    }
 		}
 	} catch(err) {
-		console.log('TODO:  An exception occured in setField');
-		console.log(err);
+	    this.logErrorEvent(EventEnum.UNHANDLED_EXCEPTION, 'getField: Unhandled exception. \'' + err + '\'');
 	}
 	
 	return value;
@@ -551,292 +558,6 @@ BinaryDecoder.prototype.getTlmDefByMsgID = function (msgID) {
 
 
 
-//BinaryDecoder.prototype.getMsgDefByMsgID = function (msgID) {
-//	return this.tlmDefs[msgID];
-//}
-//
-//
-//
-//BinaryDecoder.prototype.addMessageParser = function (msgID, parser) {
-//	this.parsers[msgID] = parser;
-//}
-//
-//
-//
-//BinaryDecoder.prototype.addCommandDefinition = function (ops_name) {
-//	this.parsers[msgID] = parser;
-//}
-//
-//
-//
-//BinaryDecoder.prototype.isCommandMsg = function (msgID) {
-//	if((msgID & 0x1000) == 0x1000) {
-//		return true;
-//	} else {
-//		return false;
-//	}
-//}
-//
-//
-//
-//BinaryDecoder.prototype.isTelemetryMsg = function (msgID) {
-//	if((msgID & 0x1000) == 0x1000) {
-//		return false;
-//	} else {
-//		return true;
-//	}
-//}
-//
-//
-//
-//BinaryDecoder.prototype.parseMsgDefFile = function (msgDefs) {
-//	/* Get the config object. */
-//	var messages = msgDefs.Messages;
-//	
-//	/* Flatten the message definition from a hierarchical to ops names. */
-//	var msgDefInput = this.flattenMsgDefs(messages);
-//	
-//	for(var key in msgDefInput) {
-//		var msgDef = {};
-//		var symbol = {};
-//
-//		msgDef.symbol = msgDefInput[key].symbol;
-//		msgDef.msgID = msgDefInput[key].msgID;
-//		msgDef.path = key;
-//		msgDef.opsName = msgDef.path + '/' + msgDef.symbol;
-//		
-//		for(var i = 0; i < msgDefs.symbols.length; ++i) {
-//			if(msgDefs.symbols[i].name == msgDef.symbol) {
-//				symbol = msgDefs.symbols[i];
-//				break;
-//			}
-//		};
-//
-//		var engName = '/' + symbol.name;
-//		msgDef.engName = engName;
-//
-//		if(this.isCommandMsg(msgDef.msgID)) {
-//			var headerLength = this.cmdHeaderLength;
-//		} else {
-//			var headerLength = this.tlmHeaderLength;
-//		}
-//
-//		var bitPosition = 0;
-//		for(var i=0; i < symbol.fields.length; ++i) {
-//			var fieldName = symbol.fields[i].name;
-//			
-//			if(msgDefs.little_endian == true) {
-//				var endianTag = 'le';
-//			} else {
-//				var endianTag = 'be';
-//		    }
-//			
-//			msgDef.fields = {};
-//			
-//			bitPosition = this.msgParseFieldDef(msgDef.fields, symbol.fields[i], bitPosition, endianTag, headerLength, engName);
-//		}
-//
-//		msgDef.byteLength = bitPosition / 8;
-//		
-//		var filePath = msgDefInput[key].proto;
-//		
-//		if(this.isCommandMsg(msgDef.msgID)) {
-//			msgDef.commandCode = msgDefInput[key].cmdCode;
-//			
-//			this.cmdDefs[key] = msgDef;
-//		} else {
-//			this.tlmDefs[msgDef.msgID] = msgDef;
-//		}
-//	}	
-//}
-//
-//
-//
-//BinaryDecoder.prototype.flattenMsgDefs = function (obj, msgDefs, path) {
-//	if(typeof path === 'undefined') {
-//        path = '';
-//    }
-//    
-//    if(typeof msgDefs === 'undefined') {
-//        msgDefs = {};
-//    }
-//	
-//	for(var prop in obj) {
-//		var newPath = path + '/' + prop;
-//
-//		if(this.isMsgDef(obj[prop], newPath)) {
-//			msgDefs[newPath] = obj[prop];
-//		} else {
-//			this.flattenMsgDefs(obj[prop], msgDefs, newPath);
-//		}
-//	}
-//	
-//	return msgDefs
-//}
-//
-//
-//
-//BinaryDecoder.prototype.isMsgDef = function (obj, path) {
-//	/* First, check to see if the object has both message ID and symbol
-//	 * assigned to it.
-//	 */
-//	var hasMsgId = obj.hasOwnProperty('msgID');
-//	var hasSymbol = obj.hasOwnProperty('symbol');
-//	
-//	if(hasMsgId && hasSymbol) {
-//		/* It does.  This must be a message definition.  Return this object. */
-//		return true;
-//	}
-//	
-//	/* Now check to see if this object has one but not the other, so we can 
-//	 * let the operator now the definition is malformed.
-//	 */
-//	if(hasMsgId && !hasSymbol) {
-//		/* It has a message ID but not a symbol assigned.  Return nothing.*/
-//		console.log('Message definition for ' + path + ' is missing the symbol definition.');
-//		return false;
-//	}
-//
-//	if(!hasMsgId && hasSymbol) {
-//		/* It has a symbol ID but not a message ID assigned.  Return nothing.*/
-//		console.log('Message definition for ' + path + ' is missing the message ID definition.');
-//		return false;
-//	}
-//}
-//
-//
-//
-//BinaryDecoder.prototype.getCmdDefByOpsName = function (opsName) {
-//	return this.cmdDefs[opsName];
-//}
-//
-//
-//
-//BinaryDecoder.prototype.getCmdDefByMsgIDandCC = function (msgID, cmdCode) {
-//	for(var opsName in this.cmdDefs) {
-//		var cmd = this.cmdDefs[opsName];
-//		if((cmd.msgID == msgID) && (cmd.commandCode == cmdCode)){
-//			return cmd;
-//		}
-//	}
-//}
-//
-//
-//
-//BinaryDecoder.prototype.getTlmMsgDef = function (opsName) {
-//	for(var msgID in this.tlmDefs) {
-//		var tlm = this.tlmDefs[msgID];
-//		if(tlm.opsName == opsName)
-//			return tlm;
-//	}
-//}
-//
-//
-//
-//BinaryDecoder.prototype.getTlmItemDef = function (engName) {
-//	return this.cdd[engName];
-//}
-//
-//
-//
-//BinaryDecoder.prototype.msgParseFieldDef = function (msgDef, field, bitPosition, endian, headerLength, parentEngName) {
-//	var engName = parentEngName + '/' + field.name;
-//	
-//	
-//	if(typeof field.array !== 'undefined') {
-//		if(bitPosition >= headerLength) {
-//			if(typeof field.type.base_type !== 'undefined'){
-//				var newField =  {multiplicity: field.count, offset: bitPosition, engName: engName};
-//  			    switch(field.type.base_type) {
-// 		            case 'unsigned char':
-// 		            	newField.type = 'uint8';
-// 		        	    break;
-// 		        	
-// 		            case 'char':
-// 		            	newField.type = 'string';
-// 		                break;
-// 		        	
-// 		            case 'short unsigned int':
-// 		            	newField.type = 'uint16';
-// 		        	    break;
-// 		        	
-// 		            case 'short int':
-// 		            	newField.type = 'int16';
-// 		        	    break;
-// 		        	
-//			        case 'long unsigned int':
-// 		            	newField.type = 'uint32';
-// 		        	    break;
-// 		        	
-//			        case 'long int':
-// 		            	newField.type = 'int16';
-// 		        	    break;
-// 		        	
-// 		            default:
-// 		        	    console.log('Unsupported field.type.base_type \'' + field.type.base_type + '\'');
-//  			    }
-//                msgDef[field.name] = newField;	
-//			} else {	
-//			    //msgDef[field.name] = { fields: {}};	
-//				//for(var i=0; i < field.type.fields.length; ++i) {
-//				//	var nextMsgDef = msgDef[field.name].fields;
-//			    //	bitPosition = this.msgParseFieldDef(nextMsgDef, field.type.fields[i], bitPosition, endian, headerLength, engName);
-//				//}
-//			}
-//		}
-//		bitPosition += (field.type.bit_size * field.count);
-//	} else if(Array.isArray(field.fields)) {
-//	    msgDef[field.name] = { fields: {}};	
-//		msgDef[field.name].engName = engName;
-//		msgDef[field.name].offset = bitPosition;
-//		msgDef[field.name].bitLength = field.bit_size;
-//		for(var i=0; i < field.fields.length; ++i) {		
-//			var nextMsgDef = msgDef[field.name].fields;
-//	    	bitPosition = this.msgParseFieldDef(nextMsgDef, field.fields[i], bitPosition, endian, headerLength, engName);
-//		}
-//	} else {
-//		if(bitPosition >= headerLength) {
-//			var newField =  {offset: bitPosition, engName: engName};
-//			switch(field.base_type) {
-//		        case 'unsigned char':
-//		        	newField.type = 'uint8';
-//		        	break;
-//		        	
-//		        case 'char':
-//		        	newField.type = 'int8';
-//		        	break;
-//		        	
-//		        case 'short unsigned int':
-//		        	newField.type = 'uint16';
-//		        	break;
-//		        	
-//		        case 'short int':
-//		        	newField.type = 'int16';
-//		        	break;
-//		        	
-//		        case 'long unsigned int':
-//		        	newField.type = 'uint32';
-//		        	break;
-//		        	
-//		        case 'long int':
-//		        	newField.type = 'int32';
-//		        	break;
-// 		        	
-// 		        default:
-// 		        	console.log('Unsupported field.base_type \'' + field.base_type + '\'');
-//		    }
-//            msgDef[field.name] = newField;
-//		}
-//		bitPosition += field.bit_size;
-//	}
-//	
-//	this.cdd[engName] = newField;
-//	
-//	return bitPosition;
-//}
-//
-//
-//
 //BinaryDecoder.prototype.cfeTimeToJsTime = function(seconds, subseconds) {
 //    var microseconds;
 //
@@ -910,3 +631,27 @@ BinaryDecoder.prototype.getTlmDefByMsgID = function (msgID) {
 //BinaryDecoder.prototype.getCommandDef = function (ops_name) {	
 //	var retObj = {};
 //}
+
+
+
+BinaryDecoder.prototype.logDebugEvent = function (eventID, text) {
+	this.instanceEmit('events-debug', {sender: this, component:'BinaryDecoder', eventID:eventID, text:text});
+}
+
+
+
+BinaryDecoder.prototype.logInfoEvent = function (eventID, text) {
+	this.instanceEmit('events-info', {sender: this, component:'BinaryDecoder', eventID:eventID, text:text});
+}
+
+
+
+BinaryDecoder.prototype.logErrorEvent = function (eventID, text) {
+	this.instanceEmit('events-error', {sender: this, component:'BinaryDecoder', eventID:eventID, text:text});
+}
+
+
+
+BinaryDecoder.prototype.logCriticalEvent = function (eventID, text) {
+	this.instanceEmit('events-critical', {sender: this, component:'BinaryDecoder', eventID:eventID, text:text});
+}

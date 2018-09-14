@@ -47,6 +47,15 @@ const Sparkles = require('sparkles');
 var path = require('path');
 var dot = require('dot-object');
 
+/* Event IDs */
+var EventEnum = Object.freeze({
+		'INITIALIZED':            1,
+		'OPS_PATH_NOT_FOUND':     2,
+		'MSG_OPS_PATH_NOT_FOUND': 3,
+		'MSG_DEF_NOT_FOUND':      4,
+		'APP_NOT_FOUND':          5
+	});
+
 var emit = Emitter.prototype.emit;
 
 exports = module.exports = ProtobufEncoder;
@@ -154,7 +163,14 @@ function ProtobufEncoder(configFile) {
     	    }
     	})
         .buffer('payload', {readUntil: 'eof'});
-    
+};
+
+
+
+ProtobufEncoder.prototype.setInstanceEmitter = function (newInstanceEmitter)
+{
+	var self = this;
+	this.instanceEmitter = newInstanceEmitter;
     var inMsgDefs = config.get('msgDefs')
     
     for(var i = 0; i < inMsgDefs.length; ++i) {
@@ -167,14 +183,6 @@ function ProtobufEncoder(configFile) {
     for(var i = 0; i < protoFiles.length; i++) {
     	this.parseProtoFile('./' + protoFiles[i]);
     }
-};
-
-
-
-ProtobufEncoder.prototype.setInstanceEmitter = function (newInstanceEmitter)
-{
-	var self = this;
-	this.instanceEmitter = newInstanceEmitter;
 
 	this.instanceEmitter.on(config.get('jsonInputStreamID'), function(message) {
 		var tlmDef = self.getTlmDefByPath(message.opsPath);
@@ -212,13 +220,19 @@ ProtobufEncoder.prototype.setInstanceEmitter = function (newInstanceEmitter)
         	}
     	}
 	});
+	
+    this.logInfoEvent(EventEnum.INITIALIZED, 'Initialized');
 }
 
 
 
 ProtobufEncoder.prototype.instanceEmit = function (streamID, msg)
 {
-	this.instanceEmitter.emit(streamID, msg);
+	if(typeof this.instanceEmitter === 'object') {
+		this.instanceEmitter.emit(streamID, msg);
+	} else {
+		console.log('--- ' + msg.component + ', ' + msg.eventID + ', ' + msg.text);
+	}
 }
 
 
@@ -245,14 +259,19 @@ ProtobufEncoder.prototype.getMsgOpsPathFromFullOpsPath = function (opsPath) {
 ProtobufEncoder.prototype.getSymbolNameFromOpsPath = function (opsPath) {	
 	var msgOpsPath = this.getMsgOpsPathFromFullOpsPath(opsPath);
 	
-	var msgDef = this.getTlmDefByPath(msgOpsPath);
-	
-	if(typeof msgDef === 'undefined') {
-		console.log('TODO:  getSymbolNameFromOpsPath could not find message ops path for \'' + msgOpsPath + '\'');
-		return undefined;
+	if(typeof msgOpsPath === 'undefined') {
+	    this.logErrorEvent(EventEnum.OPS_PATH_NOT_FOUND, 'getSymbolNameFromOpsPath: Ops path not found.');
 	} else {
-		return msgDef.airliner_msg;
+		var msgDef = this.getTlmDefByPath(msgOpsPath);
+		
+		if(typeof msgDef === 'undefined') {
+		    this.logErrorEvent(EventEnum.MSG_OPS_PATH_NOT_FOUND, 'getSymbolNameFromOpsPath: Message ops path not found.');
+			return undefined;
+		} else {
+			return msgDef.airliner_msg;
+		}
 	}
+	
 }
 
 
@@ -299,7 +318,7 @@ ProtobufEncoder.prototype.parseProtoFile = function (filePath) {
     var msgDef = this.getMsgDefByName(structureName);
     
     if(typeof msgDef === 'undefined') {
-    	console.log('TODO:  Protobuf structure not found in definition file.')
+	    this.logErrorEvent(EventEnum.MSG_DEF_NOT_FOUND, 'parseProtoFile (\'' + filePath + '\'): Message definition not found. \'' + structureName + '\'.');
     } else {
     	msgDef.proto_root = new protobuf.Root();
 
@@ -338,7 +357,7 @@ ProtobufEncoder.prototype.getMsgDefByPath = function (path) {
     var tlmDef = this.getTlmDefByPath(path);
     
     if(typeof tlmDef === 'undefined') {
-    	console.log('TODO: getMsgDefByPath failed to find path');
+	    this.logErrorEvent(EventEnum.OPS_PATH_NOT_FOUND, 'getMsgDefByPath:  Ops path not found. \'' + path + '\'.');
     	return undefined;
     } else {
     	return tlmDef.airliner_msg;
@@ -349,19 +368,47 @@ ProtobufEncoder.prototype.getMsgDefByPath = function (path) {
 
 ProtobufEncoder.prototype.getTlmDefByPath = function (path) {
     var appName = this.getAppNameFromPath(path);
-    var operationName = this.getOperationFromPath(path);
-    if(typeof operationName === 'undefined') {
-    	/* TODO:  Command ops path is incorrect. */
-    	return undefined;
+    if(typeof appName === 'undefined') {
+	    this.logErrorEvent(EventEnum.APP_NOT_FOUND, 'getTlmDefByPath:  App not found in path. \'' + path + '\'.');
     } else {
-	    var appDefinition = this.getAppDefinition(appName);
-	    
-	    if(typeof appDefinition === 'undefined') {
-	    	/* TODO:  Command ops path is incorrect. */
+	    var operationName = this.getOperationFromPath(path);
+	    if(typeof operationName === 'undefined') {
+		    this.logErrorEvent(EventEnum.OPS_PATH_NOT_FOUND, 'getTlmDefByPath:  Ops path not found. \'' + path + '\'.');
 	    	return undefined;
 	    } else {
-		    return appDefinition.operations[operationName];
+		    var appDefinition = this.getAppDefinition(appName);
+		    
+		    if(typeof appDefinition === 'undefined') {
+			    this.logErrorEvent(EventEnum.APP_NOT_FOUND, 'getTlmDefByPath:  App not found. \'' + appName + '\'.');
+		    	return undefined;
+		    } else {
+			    return appDefinition.operations[operationName];
+		    }
 	    }
     }
+}
+
+
+
+ProtobufEncoder.prototype.logDebugEvent = function (eventID, text) {
+	this.instanceEmit('events-debug', {sender: this, component:'PE', eventID:eventID, text:text});
+}
+
+
+
+ProtobufEncoder.prototype.logInfoEvent = function (eventID, text) {
+	this.instanceEmit('events-info', {sender: this, component:'PE', eventID:eventID, text:text});
+}
+
+
+
+ProtobufEncoder.prototype.logErrorEvent = function (eventID, text) {
+	this.instanceEmit('events-error', {sender: this, component:'PE', eventID:eventID, text:text});
+}
+
+
+
+ProtobufEncoder.prototype.logCriticalEvent = function (eventID, text) {
+	this.instanceEmit('events-critical', {sender: this, component:'PE', eventID:eventID, text:text});
 }
 

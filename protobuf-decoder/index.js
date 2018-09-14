@@ -46,23 +46,12 @@ var config = require('./config.js');
 const Sparkles = require('sparkles');
 var path = require('path');
 var dot = require('dot-object');
-var JsonFlattener = require('flat');
 
-JsonFlattener({
-    this: [
-        { contains: 'arrays' },
-        { preserving: {
-              them: 'for you'
-        }}
-    ]
-}, {
-    safe: true
-})
-
-var EventEnum = Object.freeze(
-		{'INITIALIZED': 1},
-		{'CMD_MSG_NOT_FOUND': 2}
-	);
+/* Event IDs */
+var EventEnum = Object.freeze({
+		'INITIALIZED':       1,
+		'CMD_MSG_NOT_FOUND': 2
+	});
 
 var emit = Emitter.prototype.emit;
 

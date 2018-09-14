@@ -38,6 +38,11 @@ var convict = require('convict');
 var config = require('./config.js');
 const Sparkles = require('sparkles');
 
+/* Event IDs */
+var EventEnum = Object.freeze(
+		{'INITIALIZED': 1}
+	);
+
 var emit = Emitter.prototype.emit;
 
 exports = module.exports = VariableServer;
@@ -90,6 +95,8 @@ VariableServer.prototype.setInstanceEmitter = function (newInstanceEmitter)
     	}
     	self.instanceEmit(config.get('outputEventsStreamID'), 'message-received')
 	});
+	
+    this.logInfoEvent(EventEnum.INITIALIZED, 'Initialized');
 }
 
 
@@ -97,6 +104,30 @@ VariableServer.prototype.setInstanceEmitter = function (newInstanceEmitter)
 VariableServer.prototype.instanceEmit = function (streamID, msg)
 {
 	this.instanceEmitter.emit(streamID, msg);
+}
+
+
+
+VariableServer.prototype.logDebugEvent = function (eventID, text) {
+	this.instanceEmit('events-debug', {sender: this, component:'VariableServer', eventID:eventID, text:text});
+}
+
+
+
+VariableServer.prototype.logInfoEvent = function (eventID, text) {
+	this.instanceEmit('events-info', {sender: this, component:'VariableServer', eventID:eventID, text:text});
+}
+
+
+
+VariableServer.prototype.logErrorEvent = function (eventID, text) {
+	this.instanceEmit('events-error', {sender: this, component:'VariableServer', eventID:eventID, text:text});
+}
+
+
+
+VariableServer.prototype.logCriticalEvent = function (eventID, text) {
+	this.instanceEmit('events-critical', {sender: this, component:'VariableServer', eventID:eventID, text:text});
 }
 
 

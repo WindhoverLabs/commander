@@ -10,31 +10,33 @@ function CommanderInstance(name, server) {
 	this.emitter = new Emitter();
 	var self = this;
 
+	/* TODO:  Add event filtering. */
+	
 	this.emitter.on('events-debug', function(eventObj) {
-		var component = '---';
-		var eventID = '---';
-		var text = '---';
-		var pluginName = '---';
-		
-		for(var appID in self.apps) {
-			if(eventObj.sender == self.apps[appID].appObj) {
-				pluginName = self.apps[appID].name;
-			}
-		}
-			
-		if(eventObj.hasOwnProperty('component')) {
-			component = eventObj.component;
-		}
-			
-		if(eventObj.hasOwnProperty('eventID')) {
-			eventID = eventObj.eventID;
-		}
-		
-		if(eventObj.hasOwnProperty('text')) {
-			text = eventObj.text;
-		}
-		
-		self.logEvent(component, pluginName, eventID, 'DEBUG', text);
+//		var component = '---';
+//		var eventID = '---';
+//		var text = '---';
+//		var pluginName = '---';
+//		
+//		for(var appID in self.apps) {
+//			if(eventObj.sender == self.apps[appID].appObj) {
+//				pluginName = self.apps[appID].name;
+//			}
+//		}
+//			
+//		if(eventObj.hasOwnProperty('component')) {
+//			component = eventObj.component;
+//		}
+//			
+//		if(eventObj.hasOwnProperty('eventID')) {
+//			eventID = eventObj.eventID;
+//		}
+//		
+//		if(eventObj.hasOwnProperty('text')) {
+//			text = eventObj.text;
+//		}
+//		
+//		self.logEvent(component, pluginName, eventID, 'DEBUG', text);
 	});
 
 	this.emitter.on('events-info', function(eventObj) {

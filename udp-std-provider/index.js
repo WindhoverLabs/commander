@@ -40,10 +40,14 @@ var convict = require('convict');
 const dgram = require('dgram');
 var convict = require('convict');
 
+/* Event IDs */
+var EventEnum = Object.freeze({
+		'INITIALIZED':             1,
+		'UDP_ERROR':               2,
+		'UDP_CONNECTOR_LISTENING': 3
+	});
+
 var emit = Emitter.prototype.emit;
-var Sparkles = require('sparkles');
-
-
 
 exports.events = [
 ];
@@ -98,21 +102,16 @@ function UdpStdProvider(configFile) {
 
 	this.inputStreamID = this.config.get('inputStreamID');
 	this.outputStreamID = this.config.get('outputStreamID');
-	
-    var sparkles = Sparkles('airliner');
     
     this.listener.on('error', (err) => {
-        console.log(`UDP connector error:\n${err.stack}`);
+	    this.logCriticalEvent(EventEnum.UDP_ERROR, `UDP connector error:\n${err}.`);
         server.close();
     });
 
     this.listener.on('listening', () => {
         const address = this.listener.address();
-        console.log(`UDP connector listening ${address.address}:${address.port}`);
+	    this.logInfoEvent(EventEnum.UDP_CONNECTOR_LISTENING, `UDP connector listening ${address.address}:${address.port}`);
     });
-    
-    console.log(`Starting binary UDP listener on port ${this.config.get('inPort')}`);
-    this.listener.bind(this.config.get('inPort'));
 };
 
 
@@ -123,23 +122,23 @@ UdpStdProvider.prototype.setInstanceEmitter = function (newInstanceEmitter)
     var self = this;
     
     this.listener.on('message', (msg, rinfo) => {
-//        if(self.config.get('inPort') == 5109) {
-//        	console.log(msg);
-//        }
-
         self.instanceEmitter.emit(self.config.get('outputStreamID'), msg);
     });
     
 	this.instanceEmitter.on(this.config.get('inputStreamID'), function(buffer) {
 		self.sender.send(buffer, 0, buffer.length, self.config.get('outPort'), self.config.get('outAddress'));
 	});
+    
+    this.listener.bind(this.config.get('inPort'));
+
+    this.logInfoEvent(EventEnum.INITIALIZED, `Starting binary UDP listener on port ${this.config.get('inPort')}`);
 }
 
 
 
 UdpStdProvider.prototype.instanceEmit = function (streamID, msg)
 {
-	instanceEmitter.emit(streamID, msg);
+	this.instanceEmitter.emit(streamID, msg);
 }
 
 
@@ -152,6 +151,30 @@ UdpStdProvider.prototype.__proto__ = Emitter.prototype;
 
 UdpStdProvider.prototype.send = function (text) {
 };
+
+
+
+UdpStdProvider.prototype.logDebugEvent = function (eventID, text) {
+	this.instanceEmit('events-debug', {sender: this, component:'UdpStdProvider', eventID:eventID, text:text});
+}
+
+
+
+UdpStdProvider.prototype.logInfoEvent = function (eventID, text) {
+	this.instanceEmit('events-info', {sender: this, component:'UdpStdProvider', eventID:eventID, text:text});
+}
+
+
+
+UdpStdProvider.prototype.logErrorEvent = function (eventID, text) {
+	this.instanceEmit('events-error', {sender: this, component:'UdpStdProvider', eventID:eventID, text:text});
+}
+
+
+
+UdpStdProvider.prototype.logCriticalEvent = function (eventID, text) {
+	this.instanceEmit('events-critical', {sender: this, component:'UdpStdProvider', eventID:eventID, text:text});
+}
 
 
 
