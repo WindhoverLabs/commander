@@ -162,7 +162,7 @@ BinaryDecoder.prototype.setInstanceEmitter = function (newInstanceEmitter)
 			var tlmDef = self.getTlmDefByPath(req.ops_path);
 			
 			if(typeof tlmDef === 'undefined') {
-			    this.logErrorEvent(EventEnum.OPS_PATH_NOT_FOUND, 'TlmDefReq: Ops path not found.');
+				self.logErrorEvent(EventEnum.OPS_PATH_NOT_FOUND, 'TlmDefReq: Ops path not found.');
 			} else {
 		        self.instanceEmit(config.get('tlmDefRspStreamIDPrefix') + req.opsName, tlmDef);
 			}
@@ -170,7 +170,7 @@ BinaryDecoder.prototype.setInstanceEmitter = function (newInstanceEmitter)
 			var tlmDef = self.getTlmDefByMsgID(req.msgID);
 
 			if(typeof tlmDef === 'undefined') {
-			    this.logErrorEvent(EventEnum.MSG_ID_NOT_FOUND, 'TlmDefReq: Msg ID not found.');
+			    self.logErrorEvent(EventEnum.MSG_ID_NOT_FOUND, 'TlmDefReq: Msg ID not found.');
 			} else {
 		        self.instanceEmit(config.get('tlmDefRspStreamIDPrefix') + ':' + req.msgID, tlmDef);
 			}

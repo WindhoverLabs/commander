@@ -175,7 +175,7 @@ ProtobufDecoder.prototype.setInstanceEmitter = function (newInstanceEmitter)
 	var self = this;
 	this.instanceEmitter = newInstanceEmitter;
 	
-	this.instanceEmitter.on(config.get('binaryInputStreamID'), function(buffer) {
+	this.instanceEmitter.on(config.get('binaryInputStreamID'), function(buffer) {		
 	    var message = self.ccsds.parse(buffer);
 	    var msgID = buffer.readUInt16BE(0);
 	    
@@ -183,9 +183,12 @@ ProtobufDecoder.prototype.setInstanceEmitter = function (newInstanceEmitter)
 		    var cmdCode = message.SecHdr.code;
 	    	
 	    	self.requestCmdDefinition(msgID, cmdCode, function (cmdDef) {
-		    	var msgLength = message.PriHdr.length;
-		    	
-		    	if(msgLength > 1) {
+		    	if(cmdDef.operation.airliner_msg === '') {
+		    		/* This command has no arguments.  No payload to parse.  Just send the command ops path. */
+		    		
+					self.sendCmd(cmdDef.ops_path, args);
+		    	} else {
+		    		/* This command does have arguments.  Parse the protobuf payload. */
 					var msgDef = self.getCmdByName(cmdDef.operation.airliner_msg);
 			    	
 				    if(typeof msgDef !== 'undefined') {
@@ -287,28 +290,6 @@ ProtobufDecoder.prototype.requestTlmDefinition = function (msgID, cb) {
  * Inherits from `EventEmitter`.
  */
 ProtobufDecoder.prototype.__proto__ = Emitter.prototype;
-
-
-ProtobufDecoder.prototype.processFields = function (inJSON, outJSON) {		
-	for(var i = 0; i < inJSON.length; ++i) {
-	    var engName = inJSON[i].engName;
-
-		var path = engName.split('/');
-		
-		var tmpObj = outJSON;
-		for(var j = 2; j < path.length; ++j) {
-			if(outJSON.hasOwnProperty(path[j]) == false) {
-				/* Property doesn't exist.  Add it. */
-				if(j == path.length - 1) {
-					tmpObj[path[j]] = inJSON[i].value;
-				} else {
-					tmpObj[path[j]] = {};
-				}
-			}
-			tmpObj = tmpObj[path[j]]
-		}
-	}
-}
 
 
 
