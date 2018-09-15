@@ -1,4 +1,11 @@
 # Custom HTML Tags
+## NOTE:
+- Chrome is currently the only browser that supports Custom Elements v1 natively, and is active by default.
+- As of September 2018, Firefox support for Custom Elements can be enabled with the following steps
+    - Type in the search bar `about:config`.
+    - search for `dom.webcomponents.shadowdom.enabled` click to `enable`.
+    - serch for `dom.webcomponents.customelements.enabled` click to `enable`.
+
 
 Custom tags will be used extend regular html tags such as span, button, div etc; by encapsulating data and logic into these tags. This document will expain how to properly define comander custom tags.
 #### <cmdr-text>

@@ -12,8 +12,8 @@
 *    notice, this list of conditions and the following disclaimer in
 *    the documentation and/or other materials provided with the
 *    distribution.
-* 3. Neither the name Windhover Labs nor the names of its 
-*    contributors may be used to endorse or promote products derived 
+* 3. Neither the name Windhover Labs nor the names of its
+*    contributors may be used to endorse or promote products derived
 *    from this software without specific prior written permission.
 *
 * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
@@ -85,14 +85,14 @@ function ClientConnector(workspace, configFile, app) {
 
     /* Perform validation */
     config.validate({allowed: 'strict'});
-    
+
   //Socket.io
     var io = socket_io();
     app.io = io;
 
     io.on('connection', function(socket) {
     	var address = socket.handshake.address;
-    	
+
     	socket.on('connect_error', function(err) {
     		self.logErrorEvent(EventEnum.SOCKET_CONNECT_ERROR, 'SocketIO: Socket connect error.  \'' + err + '\'');
     	});
@@ -142,7 +142,7 @@ function ClientConnector(workspace, configFile, app) {
     		    });
     	    })(publicFunctions[i]);
     	}
-    });    
+    });
 };
 
 
@@ -237,35 +237,34 @@ ClientConnector.prototype.setInstanceEmitter = function (newInstanceEmitter)
     	    self.logDebugEvent(EventEnum.MESSAGE_RECEIVED, 'ServerEvents: Message received.');
     	}
 	});
-	
-	//this.sendCmd({ops_path: '/CFE/SetMaxPRCount', args: {'Payload.MaxPRCount': 9}});
-	
-//	this.sendCmd({ops_path: '/CFE/ES_Noop'});
-	
-//	this.sendCmd({ops_path: '/CFE/StartApp', args: {
-//        'Payload.AppEntryPoint':'CF_AppMain',
-//        'Payload.Priority':100,
-//        'Payload.Application':'CF',
-//        'Payload.AppFileName':'/cf/apps/CF.so',
-//        'Payload.StackSize':32769,
-//        'Payload.ExceptionAction':1}});
-	
-//	this.sendCmd({ops_path: '/CFE/StopApp', args: {
-//        'Payload.Application':'CF',
-//        'Payload.AppFileName':'/cf/apps/cf.so'}});
-	
-//	this.requestCmdDefinition('/CFE_ES/ES_NOOP', function(definition) {
-//		console.log(definition);
-//	});
-	
+
+	// this.sendCmd({ops_path: '/CFE/SetMaxPRCount', args: {'Payload.MaxPRCount': 9}});
+	//
+	// this.sendCmd({ops_path: '/CFE/ES_Noop'});
+
+  // this.sendCmd({ops_path: '/CFE/StopApp', args: {
+	//   	'Payload.Application':'CF'}});
+
+	// this.sendCmd({ops_path: '/CFE/StartApp', args: {
+  //      'Payload.AppEntryPoint':'CF_AppMain',
+  //      'Payload.Priority':100,
+  //      'Payload.Application':'CF',
+  //      'Payload.AppFileName':'/cf/apps/CF.so',
+  //      'Payload.StackSize':32769,
+  //      'Payload.ExceptionAction':1}});
+
+  	//this.requestCmdDefinition('/CFE/ES_NOOP', function(definition) {
+		//    console.log(definition);
+   	//});
+
 //	this.requestVarDefinition('/CFE_ES_HkPacket_t/Payload/PerfTriggerMask', function(definition) {
 //		console.log(definition);
 //	});
-	
-//	this.subscribe('/CFE_ES_HkPacket_t/Payload/PerfTriggerMask', function(update) {
-//		console.log(update);
-//	});
-	
+
+	// this.subscribe('/CFE/ES_HK/Payload.PerfTriggerMask', function(update) {
+	// 	console.log(update);
+	// });
+
     this.logInfoEvent(EventEnum.INITIALIZED, 'Initialized');
 }
 
@@ -278,11 +277,11 @@ ClientConnector.prototype.sendCmd = function (cmdName, args) {
 
 
 ClientConnector.prototype.requestCmdDefinition = function (cmdName, cb) {
-	
+
 	this.instanceEmitter.once(config.get('cmdDefRspStreamIDPrefix') + ':' + cmdName, function(definition) {
     	cb(definition);
 	});
-	
+
 	this.instanceEmit(config.get('cmdDefReqStreamID'), cmdName);
 }
 
@@ -292,7 +291,7 @@ ClientConnector.prototype.requestVarDefinition = function (varName, cb) {
 	this.instanceEmitter.once(config.get('varDefRspStreamIDPrefix') + ':' + varName, function(definition) {
     	cb(definition);
 	});
-	
+
 	this.instanceEmit(config.get('varDefReqStreamID'), varName);
 }
 
@@ -300,8 +299,9 @@ ClientConnector.prototype.requestVarDefinition = function (varName, cb) {
 
 ClientConnector.prototype.subscribe = function (varName) {
 	var self = this;
-	
+
 	this.instanceEmitter.on(config.get('varUpdateStreamIDPrefix') + ':' + varName, function(update) {
+		console.log(update)
 		self.vars[varName] = update;
 	});
 }

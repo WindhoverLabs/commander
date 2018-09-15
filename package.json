@@ -38,7 +38,6 @@
     "svg.js": "^2.6.5",
     "websocket": "^1.0.26",
     "wolfy87-eventemitter": "^5.2.5",
-    "@webcomponents/webcomponentsjs": "^2.0.0",
     "d3":"^5.0.0"
   }
 }
