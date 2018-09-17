@@ -42,6 +42,10 @@ var Promise = require('promise');
 var mergeJSON = require('merge-json');
 var convict = require('convict');
 var config = require('./config.js');
+var Int64LE = require('int64-buffer').Int64LE;
+var Int64BE = require('int64-buffer').Int64BE;
+var Uint64LE = require('int64-buffer').Uint64LE;
+var Uint64BE = require('int64-buffer').Uint64BE;
 
 /* Event IDs */
 var EventEnum = Object.freeze({
@@ -391,10 +395,6 @@ BinaryDecoder.prototype.getFieldFromOperationalName = function (msgDef, opName, 
 	var fieldName = fieldPathArray[0];
 	var fieldDef = msgDef.fields[fieldName];
 	
-	if(typeof bitOffset === 'undefined') {
-		bitOffset = fieldDef.bit_offset;
-	}
-	
 	var fieldType = fieldDef.airliner_type;
 	
 	var fieldMsgDef = this.getMsgDefByName(fieldType);
@@ -432,9 +432,8 @@ BinaryDecoder.prototype.processBinaryMessage = function (buffer) {
 			for(var opNameID in def.msgDef.operational_names) {
 				var fieldNames = def.msgDef.operational_names[opNameID].field_path.split('.');
 				var fieldName = fieldNames[0];
-				var field = def.msgDef.fields[fieldName];
 
-				var fieldDef = this.getFieldFromOperationalName(def.msgDef, def.msgDef.operational_names[opNameID].field_path);
+				var fieldDef = this.getFieldFromOperationalName(def.msgDef, def.msgDef.operational_names[opNameID].field_path, 0);
 				
 				var opsPath = def.opsPath + '/' + def.msgDef.operational_names[opNameID].field_path;
 				
@@ -453,7 +452,7 @@ BinaryDecoder.prototype.processBinaryMessage = function (buffer) {
 
 
 BinaryDecoder.prototype.getField = function (buffer, fieldDef, bitOffset) {	
-	try{			
+	//try{			
 		var value;
 		
 		if(fieldDef.hasOwnProperty('pb_field_rule')) {
@@ -495,6 +494,36 @@ BinaryDecoder.prototype.getField = function (buffer, fieldDef, bitOffset) {
 							}
 							break;
 							
+						case 'float':
+							for(var i = 0; i < fieldDef.array_length; ++i) {
+								value.push(buffer.readFloatLE((bitOffset / 8) + i));
+							}
+							break;
+							
+						case 'double':
+							for(var i = 0; i < fieldDef.array_length; ++i) {
+								value.push(buffer.readDoubleLE((bitOffset / 8) + i));
+							}
+							break;
+							
+						case 'boolean':
+							for(var i = 0; i < fieldDef.array_length; ++i) {
+								value.push(buffer.readUInt8((bitOffset / 8) + i));
+							}
+							break;
+							
+						case 'uint64':
+							for(var i = 0; i < fieldDef.array_length; ++i) {
+								value.push(new Uint64LE(buffer, (bitOffset / 8) + i));
+							}
+							break;
+							
+						case 'int64':
+							for(var i = 0; i < fieldDef.array_length; ++i) {
+								value.push(new Int64LE(buffer, (bitOffset / 8) + i));
+							}
+							break;
+							
 						case 'char':
 							value = buffer.read(bitOffset / 8, fieldDef.array_length);
 							break;
@@ -509,10 +538,6 @@ BinaryDecoder.prototype.getField = function (buffer, fieldDef, bitOffset) {
 					switch(fieldDef.airliner_type) {
 						case 'uint8':
 							value = buffer.readUInt8(bitOffset / 8);
-							break;
-							
-						case 'string':
-							value = buffer.read(bitOffset / 8);
 							break;
 							
 						case 'uint16':
@@ -531,6 +556,26 @@ BinaryDecoder.prototype.getField = function (buffer, fieldDef, bitOffset) {
 							value = buffer.readInt32LE(bitOffset / 8);
 							break;
 							
+						case 'float':
+							value = buffer.readFloatLE(bitOffset / 8);
+							break;
+							
+						case 'double':
+							value = buffer.readDoubleLE(bitOffset / 8);
+							break;
+							
+						case 'boolean':
+							value = buffer.readUInt8(bitOffset / 8);
+							break;
+							
+						case 'uint64':
+							value = new Uint64LE(buffer, bitOffset / 8);
+							break;
+							
+						case 'uint64':
+							value = new Int64LE(buffer, bitOffset / 8);
+							break;
+							
 						default:
 						    this.logErrorEvent(EventEnum.UNKNOWN_DATA_TYPE, 'getField: Unknown data type. \'' + fieldDef.airliner_type + '\'');
 					}
@@ -538,9 +583,9 @@ BinaryDecoder.prototype.getField = function (buffer, fieldDef, bitOffset) {
 			    }
 		    }
 		}
-	} catch(err) {
-	    this.logErrorEvent(EventEnum.UNHANDLED_EXCEPTION, 'getField: Unhandled exception. \'' + err + '\'');
-	}
+	//} catch(err) {
+	//    this.logErrorEvent(EventEnum.UNHANDLED_EXCEPTION, 'getField: Unhandled exception. \'' + err + ' - ' + err.stack + '\'');
+	//}
 	
 	return value;
 }

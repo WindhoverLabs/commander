@@ -7,12 +7,14 @@
     "postinstall": "node -e \"var s='../sage',d='node_modules/sage',fs=require('fs');fs.exists(d,function(e){e||fs.symlinkSync(s,d,'dir')});\""
   },
   "dependencies": {
+    "@webcomponents/webcomponentsjs": "^2.0.0",
     "binary-parser": "^1.3.2",
     "bootstrap": "^4.1.3",
     "browser-sync": "^2.24.6",
     "cesium": "^1.48.0",
     "convict": "^4.3.2",
     "cookie-parser": "^1.4.3",
+    "d3": "^5.0.0",
     "debug": "^3.1.0",
     "dot-object": "^1.7.0",
     "eventemitter": "^0.3.3",
@@ -22,11 +24,13 @@
     "font-mfizz": "^2.4.1",
     "google-protobuf": "^3.6.1",
     "http-errors": "^1.7.0",
+    "int64-buffer": "^0.1.10",
     "jquery": "^3.3.1",
     "jquery-ui-dist": "^1.12.1",
     "json-merge": "^1.2.0",
     "merge-json": "0.1.0-b.3",
     "morgan": "^1.9.0",
+    "node-int64": "^0.4.0",
     "overlayscrollbars": "^1.5.1",
     "patternfly-bootstrap-treeview": "^2.1.5",
     "popper.js": "^1.14.4",
@@ -37,8 +41,6 @@
     "sparkles": "^1.0.1",
     "svg.js": "^2.6.5",
     "websocket": "^1.0.26",
-    "wolfy87-eventemitter": "^5.2.5",
-    "@webcomponents/webcomponentsjs": "^2.0.0",
-    "d3":"^5.0.0"
+    "wolfy87-eventemitter": "^5.2.5"
   }
 }
