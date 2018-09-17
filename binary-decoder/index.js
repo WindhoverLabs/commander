@@ -46,6 +46,7 @@ var Int64LE = require('int64-buffer').Int64LE;
 var Int64BE = require('int64-buffer').Int64BE;
 var Uint64LE = require('int64-buffer').Uint64LE;
 var Uint64BE = require('int64-buffer').Uint64BE;
+var Long = require('long');
 
 /* Event IDs */
 var EventEnum = Object.freeze({
@@ -269,95 +270,6 @@ BinaryDecoder.prototype.instanceEmit = function (streamID, msg)
 BinaryDecoder.prototype.__proto__ = Emitter.prototype;
 
 
-//BinaryDecoder.prototype.processBinaryFields = function (tlmDef, buffer, parsedTlm) {	
-//	for(var fieldName in tlmDef.fields) {
-//		var field = tlmDef.fields[fieldName];
-//		var symbolName = field.symbolName;
-//		var opsName = field.opsName;
-//		var engName = field.engName;
-//
-//		var telemItem = {'engName': engName};
-//
-//		if(field.hasOwnProperty('multiplicity')) {
-//		    switch(field.type) {
-//				case 'uint8':
-//					telemItem.value = [];
-//					for(var i = 0; i < field.multiplicity; ++i) {
-//						telemItem.value[i] = buffer.readUInt8((field.offset / 8) + i);
-//					}
-//					break;
-//					
-//				case 'string':
-//					telemItem.value = buffer.toString("utf-8", field.offset / 8, field.multiplicity).replace(/\0/g, '');
-//					break;
-//						
-//				case 'uint16':
-//					telemItem.value = [];
-//					for(var i = 0; i < field.multiplicity; ++i) {
-//						telemItem.value[i] = buffer.readUInt16LE((field.offset / 8) + i);
-//					}
-//					break;
-//						
-//				case 'int16':
-//					telemItem.value = [];
-//					for(var i = 0; i < field.multiplicity; ++i) {
-//						telemItem.value[i] = buffer.readInt16LE((field.offset / 8) + i);
-//					}
-//					break;
-//						
-//				case 'uint32':
-//					telemItem.value = [];
-//					for(var i = 0; i < field.multiplicity; ++i) {
-//						telemItem.value[i] = buffer.readUInt32LE((field.offset / 8) + i);
-//					}
-//					break;
-//						
-//				case 'int32':
-//					telemItem.value = [];
-//					for(var i = 0; i < field.multiplicity; ++i) {
-//						telemItem.value[i] = buffer.readInt32LE((field.offset / 8) + i);
-//					}
-//					break;
-//				}
-//		    parsedTlm.push(telemItem);
-//		} else if(field.hasOwnProperty('type')) {
-//			switch(field.type) {
-//				case 'uint8':
-//					telemItem.value = buffer.readUInt8(field.offset / 8);
-//					break;
-//					
-//				case 'string':
-//					telemItem.value = buffer.toString('ascii', field.offset / 8, (field.offset / 8) + field.length);
-//					break;
-//					
-//				case 'uint16':
-//					telemItem.value = buffer.readUInt16LE(field.offset / 8);
-//					break;
-//					
-//				case 'int16':
-//					telemItem.value = buffer.readInt16LE(field.offset / 8);
-//					break;
-//					
-//				case 'uint32':
-//					telemItem.value = buffer.readUInt32LE(field.offset / 8);
-//					break;
-//					
-//				case 'int32':
-//					telemItem.value = buffer.readInt32LE(field.offset / 8);
-//					break;
-//			}
-//		    parsedTlm.push(telemItem);
-//		} else if(typeof field === 'object'){
-//			//telemItem.value = new Buffer(field.bitLength / 8);
-//			var startOffset = field.offset / 8;
-//			var stopOffset = startOffset + field.bitLength / 8;
-//			//buffer.copy(telemItem.value, 0, startOffset, stopOffset);
-//			this.processBinaryFields(field, buffer, parsedTlm);
-//		}
-//	}
-//}
-
-
 
 BinaryDecoder.prototype.getMsgDefByName = function (msgName) {
 	for(var appID in this.defs.Airliner.apps) {
@@ -451,6 +363,161 @@ BinaryDecoder.prototype.processBinaryMessage = function (buffer) {
 
 
 
+BinaryDecoder.prototype.getFieldAsPbType = function (buffer, fieldDef, bitOffset) {
+	//try{			
+	var value;
+	
+	if(fieldDef.hasOwnProperty('pb_field_rule')) {
+		switch(fieldDef.pb_field_rule) {
+			case 'repeated': {
+				var value = [];
+				switch(fieldDef.pb_type) {
+					case 'uint8':
+						for(var i = 0; i < fieldDef.array_length; ++i) {
+							value.push(buffer.readUInt8((bitOffset / 8) + i));
+						}
+						break;
+						
+					case 'int8':
+						for(var i = 0; i < fieldDef.array_length; ++i) {
+							value.push(buffer.readInt8((bitOffset / 8) + i));
+						}
+						break;
+						
+					case 'string':
+						value = buffer.read(bitOffset / 8, fieldDef.array_length);
+						break;
+						
+					case 'uint16':
+						for(var i = 0; i < fieldDef.array_length; ++i) {
+							value.push(buffer.readUInt16LE((bitOffset / 8) + i));
+						}
+						break;
+						
+					case 'int16':
+						for(var i = 0; i < fieldDef.array_length; ++i) {
+							value.push(buffer.readInt16LE((bitOffset / 8) + i));
+						}
+						break;
+						
+					case 'uint32':
+						for(var i = 0; i < fieldDef.array_length; ++i) {
+							value.push(buffer.readUInt32LE((bitOffset / 8) + i));
+						}
+						break;
+						
+					case 'int32':
+						for(var i = 0; i < fieldDef.array_length; ++i) {
+							value.push(buffer.readInt32LE((bitOffset / 8) + i));
+						}
+						break;
+						
+					case 'float':
+						for(var i = 0; i < fieldDef.array_length; ++i) {
+							value.push(buffer.readFloatLE((bitOffset / 8) + i));
+						}
+						break;
+						
+					case 'double':
+						for(var i = 0; i < fieldDef.array_length; ++i) {
+							value.push(buffer.readDoubleLE((bitOffset / 8) + i));
+						}
+						break;
+						
+					case 'boolean':
+						for(var i = 0; i < fieldDef.array_length; ++i) {
+							value.push(buffer.readUInt8((bitOffset / 8) + i));
+						}
+						break;
+						
+					case 'uint64':
+						for(var i = 0; i < fieldDef.array_length; ++i) {
+							var uint64Value = new Uint64LE(buffer, (bitOffset / 8) + i);
+							value.push(uint64Value.toString(10));
+						}
+						break;
+						
+					case 'int64':
+						for(var i = 0; i < fieldDef.array_length; ++i) {
+							var int64Value = new Int64LE(buffer, (bitOffset / 8) + i);
+							value.push(int64Value.toString(10));
+						}
+						break;
+						
+					case 'char':
+						value = buffer.read(bitOffset / 8, fieldDef.array_length);
+						break;
+						
+					default:
+						this.logErrorEvent(EventEnum.UNKNOWN_DATA_TYPE, 'getFieldAsPbType: Unknown data type. \'' + fieldDef.airliner_type + '\'');
+				}
+				break;
+			}
+		
+		    case 'required': {
+				switch(fieldDef.pb_type) {
+					case 'uint8':
+						value = buffer.readUInt8(bitOffset / 8);
+						break;
+						
+					case 'int8':
+						value = buffer.readInt8(bitOffset / 8);
+						break;
+						
+					case 'uint16':
+						value = buffer.readUInt16LE(bitOffset / 8);
+						break;
+						
+					case 'int16':
+						value = buffer.readInt16LE(bitOffset / 8);
+						break;
+						
+					case 'uint32':
+						value = buffer.readUInt32LE(bitOffset / 8);
+						break;
+						
+					case 'int32':
+						value = buffer.readInt32LE(bitOffset / 8);
+						break;
+						
+					case 'float':
+						value = buffer.readFloatLE(bitOffset / 8);
+						break;
+						
+					case 'double':
+						value = buffer.readDoubleLE(bitOffset / 8);
+						break;
+						
+					case 'boolean':
+						value = buffer.readUInt8(bitOffset / 8);
+						break;
+						
+					case 'uint64':
+						var uint64Value = new Uint64LE(buffer, bitOffset / 8);
+						value = uint64Value.toString(10);
+						break;
+						
+					case 'int64':
+						var int64Value = new Int64LE(buffer, bitOffset / 8);
+						value = int64Value.toString(10);
+						break;
+						
+					default:
+						this.logErrorEvent(EventEnum.UNKNOWN_DATA_TYPE, 'getFieldAsPbType: Unknown data type. \'' + fieldDef.airliner_type + '\'');
+				}
+			    break;
+		    }
+	    }
+	}
+//} catch(err) {
+//    this.logErrorEvent(EventEnum.UNHANDLED_EXCEPTION, 'getFieldAsPbType: Unhandled exception. \'' + err + ' - ' + err.stack + '\'');
+//}
+
+return value;
+}
+
+
+
 BinaryDecoder.prototype.getField = function (buffer, fieldDef, bitOffset) {	
 	//try{			
 		var value;
@@ -463,6 +530,12 @@ BinaryDecoder.prototype.getField = function (buffer, fieldDef, bitOffset) {
 						case 'uint8':
 							for(var i = 0; i < fieldDef.array_length; ++i) {
 								value.push(buffer.readUInt8((bitOffset / 8) + i));
+							}
+							break;
+							
+						case 'int8':
+							for(var i = 0; i < fieldDef.array_length; ++i) {
+								value.push(buffer.readInt8((bitOffset / 8) + i));
 							}
 							break;
 							
@@ -514,13 +587,15 @@ BinaryDecoder.prototype.getField = function (buffer, fieldDef, bitOffset) {
 							
 						case 'uint64':
 							for(var i = 0; i < fieldDef.array_length; ++i) {
-								value.push(new Uint64LE(buffer, (bitOffset / 8) + i));
+								var uint64Value = new Uint64LE(buffer, (bitOffset / 8) + i);
+								value.push(uint64Value.toString(10));
 							}
 							break;
 							
 						case 'int64':
 							for(var i = 0; i < fieldDef.array_length; ++i) {
-								value.push(new Int64LE(buffer, (bitOffset / 8) + i));
+								var int64Value = new Int64LE(buffer, (bitOffset / 8) + i);
+								value.push(int64Value.toString(10));
 							}
 							break;
 							
@@ -529,7 +604,15 @@ BinaryDecoder.prototype.getField = function (buffer, fieldDef, bitOffset) {
 							break;
 							
 						default:
-						    this.logErrorEvent(EventEnum.UNKNOWN_DATA_TYPE, 'getField: Unknown data type. \'' + fieldDef.airliner_type + '\'');
+							var nextFieldDef = this.getMsgDefByName(fieldDef.airliner_type);
+						
+						    if(typeof nextFieldDef === 'undefined') {
+						    	this.getFieldAsPbType(buffer.fieldDef, bitOffset);
+						    } else {
+							    for(var i = 0; i < fieldDef.array_length; ++i) {
+							    	this.getField(buffer, nextFieldDef, bitOffset);
+							    }
+						    }
 					}
 					break;
 				}
@@ -538,6 +621,10 @@ BinaryDecoder.prototype.getField = function (buffer, fieldDef, bitOffset) {
 					switch(fieldDef.airliner_type) {
 						case 'uint8':
 							value = buffer.readUInt8(bitOffset / 8);
+							break;
+							
+						case 'int8':
+							value = buffer.readInt8(bitOffset / 8);
 							break;
 							
 						case 'uint16':
@@ -569,15 +656,23 @@ BinaryDecoder.prototype.getField = function (buffer, fieldDef, bitOffset) {
 							break;
 							
 						case 'uint64':
-							value = new Uint64LE(buffer, bitOffset / 8);
+							var uint64Value = new Uint64LE(buffer, bitOffset / 8);
+							value = uint64Value.toString(10);
 							break;
 							
 						case 'uint64':
-							value = new Int64LE(buffer, bitOffset / 8);
+							var int64Value = new Int64LE(buffer, bitOffset / 8);
+							value = int64Value.toString(10);
 							break;
 							
 						default:
-						    this.logErrorEvent(EventEnum.UNKNOWN_DATA_TYPE, 'getField: Unknown data type. \'' + fieldDef.airliner_type + '\'');
+							var nextFieldDef = this.getMsgDefByName(fieldDef.airliner_type);
+						
+						    if(typeof nextFieldDef === 'undefined') {
+						    	this.getFieldAsPbType(buffer.fieldDef, bitOffset);
+						    } else {
+							    this.getField(buffer, nextFieldDef, bitOffset);
+						    }
 					}
 				    break;
 			    }

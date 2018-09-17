@@ -43219,6 +43219,9 @@
                             "Timestamp": {
 			                    "field_path": "Timestamp"
 			                },
+                            "Prev_Timestamp": {
+			                    "field_path": "Previous.Timestamp"
+			                },
 			                "Prev_Lat": {
 			                    "field_path": "Previous.Lat"
 			                },
@@ -43306,6 +43309,9 @@
 			                "Prev_AccelerationIsForce": {
 			                    "field_path": "Previous.AccelerationIsForce"
 			                },
+                            "Cur_Timestamp": {
+			                    "field_path": "Current.Timestamp"
+			                },
 			                "Cur_Lat": {
 			                    "field_path": "Current.Lat"
 			                },
@@ -43392,6 +43398,9 @@
 			                },
 			                "Cur_AccelerationIsForce": {
 			                    "field_path": "Current.AccelerationIsForce"
+			                },
+                            "Next_Timestamp": {
+			                    "field_path": "Next.Timestamp"
 			                },
 			                "Next_Lat": {
 			                    "field_path": "Next.Lat"

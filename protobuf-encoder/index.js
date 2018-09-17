@@ -46,6 +46,7 @@ var config = require('./config.js');
 const Sparkles = require('sparkles');
 var path = require('path');
 var dot = require('dot-object');
+var Long = require('long');
 
 /* Event IDs */
 var EventEnum = Object.freeze({
@@ -200,11 +201,13 @@ ProtobufEncoder.prototype.setInstanceEmitter = function (newInstanceEmitter)
             		var msgID = tlmDef.airliner_mid;
             		
             	    if(typeof symbolName !== 'undefined') {
-            	    	var tlmJson = self.convertJsonToProtoJson(message.fields);    	    	
+            	    	var tlmJson = self.convertJsonToProtoJson(message.fields);  
                 		
             	    	var pbMsgDef = msgDef.proto_root.lookupType(symbolName + '_pb');
             	    	var pbMsg = pbMsgDef.create(tlmJson);
+
             	    	var pbBuffer = pbMsgDef.encode(pbMsg).finish();
+            	    	
             	    	var hdrBuffer = new Buffer(12)
             	  	    hdrBuffer.writeUInt16BE(msgID, 0);
             	        hdrBuffer.writeUInt16BE(1, 2);
