@@ -18,8 +18,8 @@ var config = convict({
         format: String,
         default: ''
     },
-    cmdStreamID: {
-        doc: 'Commands to the variable server.',
+    reqSubscribeStreamID: {
+        doc: 'Stream ID for subscription requests.',
         format: String,
         default: ''
     },

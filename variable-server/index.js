@@ -40,7 +40,8 @@ const Sparkles = require('sparkles');
 
 /* Event IDs */
 var EventEnum = Object.freeze(
-		{'INITIALIZED': 1}
+		{'INITIALIZED': 1},
+		{'INVALID_SUBSCRIPTION_REQUEST': 2}
 	);
 
 var emit = Emitter.prototype.emit;
@@ -57,6 +58,7 @@ function VariableServer(configFile) {
     this.vars = {};
     var self = this;
     this.instanceEmitter;
+    this.subscribers = {};
 
     /* Load environment dependent configuration */
     config.loadFile(configFile);
@@ -67,12 +69,12 @@ function VariableServer(configFile) {
 
 
 
-VariableServer.prototype.setInstanceEmitter = function (newInstanceEmitter)
-{
+VariableServer.prototype.setInstanceEmitter = function (newInstanceEmitter) {
 	var self = this;
 	this.instanceEmitter = newInstanceEmitter;
 
 	this.instanceEmitter.on(config.get('jsonInputStreamID'), function(message) {
+		var subscribersToUpdate = {};
     	for(var itemID in message.fields) {
     		var item = message.fields[itemID];
 
@@ -89,14 +91,107 @@ VariableServer.prototype.setInstanceEmitter = function (newInstanceEmitter)
 
     		/* Update the current value. */
     		variable.value = item.value;
+    		
+    		/* Now loop through all the subscribers, if any. */
+    		for(var subscriber in variable.subscribers) {
+    			/* First make sure this subscriber callback still exists. */
+    			if(typeof variable.subscribers[subscriber] !== 'function') {
+    				/* It doesn't exist.  It must have been destroyed.  Delete
+    				 * the reference to this callback.
+    				 */
+    				delete variable.subscribers[subscriber];
+    			} else {
+	    			if(subscribersToUpdate.hasOwnProperty(subscriber) == false) {
+	    				/* This is the first time in this function call that we've
+	    				 * processed a variable for this particular subscriber.
+	    				 * Create a new subscriber record in this temporary 
+	    				 * object.
+	    				 */
+	    				subscribersToUpdate[subscriber] = {cb: variable.subscribers[subscriber], variables: {}};
+	    			}
 
-    		/* Publish the new value. */
-    		self.instanceEmit(config.get('varUpdateStreamIDPrefix') + ':' + itemID, variable);
+	    			subscribersToUpdate[subscriber].variables[itemID] = {};
+    			
+	    			var updatedVariable = subscribersToUpdate[subscriber].variables[itemID];
+    			
+	    			updatedVariable['value'] = variable.value;
+    			}
+    		}
     	}
+    	
+    	/* Lastly, loop through all the subscriptions to update, and send them
+    	 * an array of updates.
+    	 */
+		for(var subscriber in subscribersToUpdate) {
+			var callback = subscribersToUpdate[subscriber].cb;
+			
+			/* Make sure this callback still exists. */
+			if(typeof callback === 'function') {
+				callback(subscribersToUpdate[subscriber].variables);
+			}
+		}
+    	
     	self.instanceEmit(config.get('outputEventsStreamID'), 'message-received')
 	});
 
+	this.instanceEmitter.on(config.get('reqSubscribeStreamID'), function(req, cb) {
+		if(req.cmd === 'subscribe') {
+			if(typeof req.opsPath === 'string' || req.opsPath instanceof String) {			
+				self.addSubscriber(req, cb);
+			} else if(Array.isArray(req.opsPath)) {
+				for(var i=0; i < req.opsPath.length; ++i) {	
+					self.addSubscriber(req.opsPath[i], cb);
+				}
+			} else {
+				this.logErrorEvent(EventEnum.INVALID_SUBSCRIPTION_REQUEST, 'Subscription request invalid. \'' + req + '\'');
+			}
+		} else if(req.cmd === 'unsubscribe') {
+			if(typeof req.opsPath === 'string' || req.opsPath instanceof String) {			
+				self.removeSubscriber(req, cb);
+			} else if(Array.isArray(req.opsPath)) {
+				for(var i=0; i < req.opsPath.length; ++i) {	
+					self.removeSubscriber(req.opsPath[i], cb);
+				}
+			} else {
+				this.logErrorEvent(EventEnum.INVALID_SUBSCRIPTION_REQUEST, 'Subscription request invalid. \'' + req + '\'');
+			}
+		}
+	});
+
     this.logInfoEvent(EventEnum.INITIALIZED, 'Initialized');
+}
+
+
+
+VariableServer.prototype.addSubscriber = function (opsPath, cb) {
+	if(this.vars.hasOwnProperty(opsPath) == false) {
+		/* We have not received this variable yet and it does
+		 * not already have a predefinition.  Create a new record. */
+		var variable = {opsPath: opsPath};
+		this.vars[opsPath] = variable;
+	} else {
+		/* We've already received this or have a predefinition. */
+		var variable = this.vars[opsPath];
+	}
+	
+	if(variable.hasOwnProperty('subscribers') == false) {
+		variable['subscribers'] = {};
+	} 
+	
+	variable.subscribers[cb] = cb;
+}
+
+
+
+VariableServer.prototype.removeSubscriber = function (opsPath, cb) {
+	if(this.vars.hasOwnProperty(opsPath) == true) {
+		/* We've already received this or have a predefinition. */
+		var variable = this.vars[opsPath];
+		
+		if(variable.hasOwnProperty('subscribers') == true) {
+			variable.subscribers[cb] = {};
+		} 
+	}
 }
 
 

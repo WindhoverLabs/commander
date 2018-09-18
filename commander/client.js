@@ -7,6 +7,7 @@ CommanderClient.prototype.__proto__ = EventEmitter.prototype;
 function CommanderClient() {
     this.isSocketConnected = false;
 	this.socket;
+	this.subscriptions = {};
 
 	console.log('CommanderClient');
 
@@ -107,13 +108,44 @@ CommanderClient.prototype.getTlmDefs = function (cb){
 
 
 
+CommanderClient.prototype.updateTelemetry = function (items) {
+	var self = this;
+	
+	for(var itemID in items) {
+		var subs = self.subscriptions[itemID];
+		for(var funcName in subs) {
+			var cb = subs[funcName].cb;
+			var elm = subs[funcName].elm;
+			var param = {val: items[itemID].value};
+			cb(param, elm);
+		}
+	}
+}
+
+
+
 CommanderClient.prototype.subscribe = function (tlmObj, elm, cb){
     if(this.isSocketConnected){
+    	var tlmOpsPaths = [];
+    	
+    	for(var i=0; i < tlmObj.tlm.length; ++i) {
+    		var opsPath = tlmObj.tlm[i].name;
+    		tlmOpsPaths.push(opsPath);
+        	
+        	if(this.subscriptions.hasOwnProperty(opsPath) == false) {
+        		this.subscriptions[opsPath] = {};
+        	}
+        	
+        	this.subscriptions[opsPath][cb] = {cb:cb, elm:elm};
+        	console.log(this.subscriptions[opsPath][cb]);
+    	}
+    	
+    	this.socket.emit('subscribe', tlmOpsPaths);
 
-      setInterval(function(){
-        var random = Math.random() ;
-        cb({val:random,req:tlmObj},elm);
-      },500);
+      //setInterval(function(){
+      //  var random = Math.random() ;
+      //  cb({val:random,req:tlmObj},elm);
+      //},500);
 
       /*TODO: implement subscribe functionality and the call back function
       in our case will be processTelemetryUpdate on line 316 - element.js*/
@@ -192,5 +224,9 @@ CommanderClient.prototype.connect = function (){
 		/* Reconnect failed. */
 		self.isSocketConnected = false;
 		self.emit('reconnect_failed');
+	});
+
+    this.socket.on('telemetry-update', function(items){
+    	self.updateTelemetry(items);
 	});
 };

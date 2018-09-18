@@ -42,6 +42,11 @@ var config = convict({
         doc: 'Command send',
         format: String,
         default: ''
+    },
+    reqSubscribeStreamID: {
+        doc: 'Stream ID for subscription requests.',
+        format: String,
+        default: ''
     }
 });
 

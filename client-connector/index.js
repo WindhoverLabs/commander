@@ -70,7 +70,6 @@ var publicFunctions = [
 	'getDirectoryListing',
 	'getCmdDefs',
 	'getTlmDefs',
-	'subscribe',
 	'sendCommand'
 ];
 
@@ -132,6 +131,14 @@ function ClientConnector(workspace, configFile, app) {
     	socket.on('pong', function(latency) {
     		self.logDebugEvent(EventEnum.SOCKET_PONG, 'SocketIO: Socket pong (' + latency + ' ms).');
     	});
+
+    	socket.on('subscribe', function(opsPaths) {
+    		self.subscribe(opsPaths, updateTelemetry);
+    	});
+    		
+        function updateTelemetry(update) {
+        	socket.emit('telemetry-update', update);
+        }
 
     	for(var i in publicFunctions) {
     		(function(funcName) {
@@ -237,35 +244,49 @@ ClientConnector.prototype.setInstanceEmitter = function (newInstanceEmitter)
     	    self.logDebugEvent(EventEnum.MESSAGE_RECEIVED, 'ServerEvents: Message received.');
     	}
 	});
+	
+//	setTimeout(function () {
+		// this.sendCmd({ops_path: '/CFE/SetMaxPRCount', args: {'Payload.MaxPRCount': 9}});
+		//
+		// this.sendCmd({ops_path: '/CFE/ES_Noop'});
 
-	// this.sendCmd({ops_path: '/CFE/SetMaxPRCount', args: {'Payload.MaxPRCount': 9}});
-	//
-	// this.sendCmd({ops_path: '/CFE/ES_Noop'});
+	  // this.sendCmd({ops_path: '/CFE/StopApp', args: {
+		//   	'Payload.Application':'CF'}});
 
-  // this.sendCmd({ops_path: '/CFE/StopApp', args: {
-	//   	'Payload.Application':'CF'}});
+		// this.sendCmd({ops_path: '/CFE/StartApp', args: {
+	  //      'Payload.AppEntryPoint':'CF_AppMain',
+	  //      'Payload.Priority':100,
+	  //      'Payload.Application':'CF',
+	  //      'Payload.AppFileName':'/cf/apps/CF.so',
+	  //      'Payload.StackSize':32769,
+	  //      'Payload.ExceptionAction':1}});
 
-	// this.sendCmd({ops_path: '/CFE/StartApp', args: {
-  //      'Payload.AppEntryPoint':'CF_AppMain',
-  //      'Payload.Priority':100,
-  //      'Payload.Application':'CF',
-  //      'Payload.AppFileName':'/cf/apps/CF.so',
-  //      'Payload.StackSize':32769,
-  //      'Payload.ExceptionAction':1}});
+	  	//this.requestCmdDefinition('/CFE/ES_NOOP', function(definition) {
+			//    console.log(definition);
+	   	//});
 
-  	//this.requestCmdDefinition('/CFE/ES_NOOP', function(definition) {
-		//    console.log(definition);
-   	//});
+//		this.requestVarDefinition('/CFE_ES_HkPacket_t/Payload/PerfTriggerMask', function(definition) {
+//			console.log(definition);
+//		});
 
-//	this.requestVarDefinition('/CFE_ES_HkPacket_t/Payload/PerfTriggerMask', function(definition) {
-//		console.log(definition);
-//	});
+		// this.subscribe('/CFE/ES_HK/Payload.PerfTriggerMask', function(update) {
+		// 	console.log(update);
+		// });
 
-	// this.subscribe('/CFE/ES_HK/Payload.PerfTriggerMask', function(update) {
-	// 	console.log(update);
-	// });
+//		self.subscribe(['/CFE/ES_HK/Payload.ProcessorResets', '/CFE/ES_HK/Payload.CFEMinorVersion'], self.updateTelemetry);
+//		
+//		setTimeout(function () {
+//			self.unsubscribe(['/CFE/ES_HK/Payload.CFEMinorVersion'], self.updateTelemetry);
+//		}, 2000);
+//	}, 1000);
 
     this.logInfoEvent(EventEnum.INITIALIZED, 'Initialized');
+}
+
+
+
+ClientConnector.prototype.updateTelemetry = function (update) {
+ 	console.log(update);
 }
 
 
@@ -297,13 +318,18 @@ ClientConnector.prototype.requestVarDefinition = function (varName, cb) {
 
 
 
-ClientConnector.prototype.subscribe = function (varName) {
+ClientConnector.prototype.subscribe = function (varName, cb) {
 	var self = this;
+	
+	this.instanceEmitter.emit(config.get('reqSubscribeStreamID'), {cmd: 'subscribe', opsPath: varName}, cb);
+}
 
-	this.instanceEmitter.on(config.get('varUpdateStreamIDPrefix') + ':' + varName, function(update) {
-		console.log(update)
-		self.vars[varName] = update;
-	});
+
+
+ClientConnector.prototype.unsubscribe = function (varName, cb) {
+	var self = this;
+	
+	this.instanceEmitter.emit(config.get('reqSubscribeStreamID'), {cmd: 'unsubscribe', opsPath: varName}, cb);
 }
 
 

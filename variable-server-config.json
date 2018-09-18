@@ -35,6 +35,6 @@
 {
     jsonInputStreamID:       'json-tlm-stream',
     outputEventsStreamID:    'var-server-events',
-    cmdStreamID:             'var-server-cmds',
+    reqSubscribeStreamID:    'subscribe-request',
     varUpdateStreamIDPrefix: 'var-update'
 }
