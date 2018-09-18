@@ -532,6 +532,7 @@ function UpdatePanelNode(node, display) {
 
 
 var _session;
+var _sescon_never = true; /* flag to indicate that session was never connected atleast once */
 
 /* appctl main - this script execution starts from here */
 $(()=>{
@@ -567,106 +568,110 @@ $(()=>{
     session.on('connect', function() {
 
         console.log('session connected');
+        if(_sescon_never){
+          session.getPanels('', function (dirEntries) {
+              var panelEntries = [];
 
-        session.getPanels('', function (dirEntries) {
-            var panelEntries = [];
+              for(var i=0; i < dirEntries.length; ++i) {
+                  var entry = {
+                      name: dirEntries[i].name,
+                      text: dirEntries[i].name,
+                      path: dirEntries[i].path,
+                      type: dirEntries[i].type,
+                      lazyLoad: true,
+                      ext: dirEntries[i].path,
+                      selectable: false,
+                      checkable: false
+                  };
 
-            for(var i=0; i < dirEntries.length; ++i) {
-                var entry = {
-                    name: dirEntries[i].name,
-                    text: dirEntries[i].name,
-                    path: dirEntries[i].path,
-                    type: dirEntries[i].type,
-                    lazyLoad: true,
-                    ext: dirEntries[i].path,
-                    selectable: false,
-                    checkable: false
-                };
+                  panelEntries.push(entry);
+              }
 
-                panelEntries.push(entry);
-            }
+              $('#panelMenuContainer').treeview({
+                  data: panelEntries,
+                  levels:1,
+                  backColor: '#343a40',//grey
+                  selectedBackColor: "#fff",
+                  selectedColor:"#343a40",
+                  onhoverColor:"#fff",
+                  wrapNodeText:true,
+                  collapseIcon: 'fa fa-minus',
+                  expandIcon: 'fa fa-plus',
+                  lazyLoad: UpdatePanelNode,
+                  onNodeRendered : NodeRendered,
+                  onNodeSelected: NodeSelected,
+              });
+          });
+          session.getLayouts('', function (dirEntries) {
+              var entries = [];
 
-            $('#panelMenuContainer').treeview({
-                data: panelEntries,
-                levels:1,
-                backColor: '#343a40',//grey
-                selectedBackColor: "#fff",
-                selectedColor:"#343a40",
-                onhoverColor:"#fff",
-                wrapNodeText:true,
-                collapseIcon: 'fa fa-minus',
-                expandIcon: 'fa fa-plus',
-                lazyLoad: UpdatePanelNode,
-                onNodeRendered : NodeRendered,
-                onNodeSelected: NodeSelected,
-            });
-        });
-        session.getLayouts('', function (dirEntries) {
-            var entries = [];
+              for(var i=0; i < dirEntries.length; ++i) {
+                  var entry = {
+                      name: dirEntries[i].name,
+                      text: dirEntries[i].name,
+                      path: dirEntries[i].path,
+                      type: dirEntries[i].type,
+                      lazyLoad: true,
+                      ext: dirEntries[i].path,
+                      selectable: false,
+                      checkable: false
+                  };
 
-            for(var i=0; i < dirEntries.length; ++i) {
-                var entry = {
-                    name: dirEntries[i].name,
-                    text: dirEntries[i].name,
-                    path: dirEntries[i].path,
-                    type: dirEntries[i].type,
-                    lazyLoad: true,
-                    ext: dirEntries[i].path,
-                    selectable: false,
-                    checkable: false
-                };
+                  entries.push(entry);
+              }
 
-                entries.push(entry);
-            }
+              $('#layoutMenuContainer').treeview({
+                  data: entries,
+                  levels:1,
+                  backColor: '#343a40',//grey
+                  selectedBackColor: "#fff",
+                  selectedColor:"#343a40",
+                  onhoverColor:"#fff",
+                  wrapNodeText:true,
+                  collapseIcon: 'fa fa-minus',
+                  expandIcon: 'fa fa-plus',
+                  lazyLoad: UpdateLayoutNode,
+                  onNodeRendered : NodeRendered,
+                  onNodeSelected: NodeSelected,
+              });
+          });
 
-            $('#layoutMenuContainer').treeview({
-                data: entries,
-                levels:1,
-                backColor: '#343a40',//grey
-                selectedBackColor: "#fff",
-                selectedColor:"#343a40",
-                onhoverColor:"#fff",
-                wrapNodeText:true,
-                collapseIcon: 'fa fa-minus',
-                expandIcon: 'fa fa-plus',
-                lazyLoad: UpdateLayoutNode,
-                onNodeRendered : NodeRendered,
-                onNodeSelected: NodeSelected,
-            });
-        });
-
-        /* Load a landing page layout for the first time */
-        myLayout = new window.GoldenLayout( config, $('#layoutContainer'));
-        baseLayout = myLayout;
-        InitLayout(myLayout);
-        window.dispatchEvent(new CustomEvent('first-layout-load-complete'));
+          /* Load a landing page layout for the first time */
+          myLayout = new window.GoldenLayout( config, $('#layoutContainer'));
+          InitLayout(myLayout);
+          window.dispatchEvent(new CustomEvent('first-layout-load-complete'));
+          _sescon_never = false;
+          
 
 
-        InitModal();
-        InitMenuState();
-        //InitToolTips();
-        //InitPopover();
-        //InitScrollBar();
-        InitResizeCtl();
 
-        //session.getViews(function (views) {
-        //    console.log(views);
-        //});
-        //
-        //session.getCmdDefs(function (cmdDefs) {
-        //    console.log(cmdDefs);
-        //});
-        //
-        //session.getTlmDefs(function (tlmDefs) {
-        //    console.log(tlmDefs);
-        //});
-        //
-        //session.subscribe(function (params) {
-        //    console.log(params);
-        //});
-        //
-        //session.sendCommand(function (result) {
-        //    console.log(result);
-        //});
+          InitModal();
+          InitMenuState();
+          //InitToolTips();
+          //InitPopover();
+          //InitScrollBar();
+          InitResizeCtl();
+
+          //session.getViews(function (views) {
+          //    console.log(views);
+          //});
+          //
+          //session.getCmdDefs(function (cmdDefs) {
+          //    console.log(cmdDefs);
+          //});
+          //
+          //session.getTlmDefs(function (tlmDefs) {
+          //    console.log(tlmDefs);
+          //});
+          //
+          //session.subscribe(function (params) {
+          //    console.log(params);
+          //});
+          //
+          //session.sendCommand(function (result) {
+          //    console.log(result);
+          //});
+        }
+
     });
 });

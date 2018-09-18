@@ -110,36 +110,39 @@ CommanderClient.prototype.getTlmDefs = function (cb){
 
 CommanderClient.prototype.updateTelemetry = function (items) {
 	var self = this;
-	
+
 	for(var itemID in items) {
 		var subs = self.subscriptions[itemID];
 		for(var funcName in subs) {
 			var cb = subs[funcName].cb;
-			var elm = subs[funcName].elm;
-			var param = {val: items[itemID].value};
-			cb(param, elm);
+      var opsPath = subs[funcName].opsPath;
+			var param = {
+        val: items[itemID].value,
+        opsPath:opsPath
+      };
+			cb(param);
 		}
 	}
 }
 
 
 
-CommanderClient.prototype.subscribe = function (tlmObj, elm, cb){
+CommanderClient.prototype.subscribe = function (tlmObj, cb){
     if(this.isSocketConnected){
     	var tlmOpsPaths = [];
-    	
-    	for(var i=0; i < tlmObj.tlm.length; ++i) {
-    		var opsPath = tlmObj.tlm[i].name;
+
+    	for(var i=0; i < tlmObj.length; ++i) {
+    		var opsPath = tlmObj[i].name;
     		tlmOpsPaths.push(opsPath);
-        	
+
         	if(this.subscriptions.hasOwnProperty(opsPath) == false) {
         		this.subscriptions[opsPath] = {};
         	}
-        	
-        	this.subscriptions[opsPath][cb] = {cb:cb, elm:elm};
+
+        	this.subscriptions[opsPath][cb] = {cb:cb,opsPath:opsPath};
         	console.log(this.subscriptions[opsPath][cb]);
     	}
-    	
+
     	this.socket.emit('subscribe', tlmOpsPaths);
 
       //setInterval(function(){
