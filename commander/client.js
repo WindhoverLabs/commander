@@ -38,17 +38,6 @@ CommanderClient.prototype.getRandom = function (cb){
   cb(random_boolean);
   }, 500);
 };
-var switch_ran = true
-CommanderClient.prototype.getRandomNumber = function (cb){
-  setInterval(function() {
-  var random = Math.random() ;
-  if(switch_ran){
-    cb(random);
-  }
-}, 100);
-};
-
-
 
 CommanderClient.prototype.getDirectoryListing = function (path, extension, cb){
 	var re = /(?:\.([^.]+))?$/;
@@ -118,11 +107,20 @@ CommanderClient.prototype.getTlmDefs = function (cb){
 
 
 
-CommanderClient.prototype.subscribe = function (cb){
-    if(!this.isSocketConnected){
-    	this.socket.emit('subscribe', function(params){
-            cb(params);
-        });
+CommanderClient.prototype.subscribe = function (tlmObj, elm, cb){
+    if(this.isSocketConnected){
+
+      setInterval(function(){
+        var random = Math.random() ;
+        cb({val:random,req:tlmObj},elm);
+      },500);
+
+      /*TODO: implement subscribe functionality and the call back function
+      in our case will be processTelemetryUpdate on line 316 - element.js*/
+    	// this.socket.emit('subscribe', function(params){
+      //       cb(params);
+      //   });
+
     };
 };
 

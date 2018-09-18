@@ -49,8 +49,10 @@ function NodeSelected(e, node) {
         	var jsonObj = JSON.parse(response);
 
             if( response !== null ) {
+
                 myLayout.destroy()
                 myLayout = new window.GoldenLayout( jsonObj, $('#layoutContainer') );
+                window.dispatchEvent(new CustomEvent('first-layout-load-complete'));
 
                 myLayout.on('stackCreated', (item) => {
                 	/* TODO:  This is where we need to add code to bind the telemetry
@@ -58,6 +60,7 @@ function NodeSelected(e, node) {
                 	 */
                 	//console.log('stackCreated:',item);
                 });
+
 
                 InitLayout(myLayout);
 
@@ -111,6 +114,7 @@ var _config = {
 
 /* Declare Layout */
 var myLayout;
+var baseLayout;
 
 /* Initalize layout */
 function InitLayout(mlyt){
@@ -531,29 +535,38 @@ var _session;
 
 /* appctl main - this script execution starts from here */
 $(()=>{
-	session = new CommanderClient();
+    session = new CommanderClient();
 
     var config = {
-        settings: {
-            selectionEnabled: true
-        },
-        content: [{
-            type: 'row',
-            content: [{
-                type:'component',
-                componentName: 'Blank',
-                componentState: { text: 'Component 1'}
+      settings : {
+        selectionEnabled: true
+      },
+      content: [
+        {
+          type: 'row',
+          content: [
+            {
+              type: 'component',
+              componentName: 'Blank',
+              componentState: {
+                text: 'Component 1'
+              }
             },
             {
-                type:'component',
-                componentName: 'Blank',
-                componentState: { text: 'Component 2'}
-            }]
-        }]
-    };
+              type: 'component',
+              componentName: 'Blank',
+              componentState: {
+                text: 'Component 2'
+              }
+            }
+          ]
+        }
+      ]
+    }
 
     session.on('connect', function() {
-        console.log('connected');
+
+        console.log('session connected');
 
         session.getPanels('', function (dirEntries) {
             var panelEntries = [];
@@ -587,51 +600,54 @@ $(()=>{
                 onNodeRendered : NodeRendered,
                 onNodeSelected: NodeSelected,
             });
+        });
+        session.getLayouts('', function (dirEntries) {
+            var entries = [];
 
-            session.getLayouts('', function (dirEntries) {
-                var entries = [];
+            for(var i=0; i < dirEntries.length; ++i) {
+                var entry = {
+                    name: dirEntries[i].name,
+                    text: dirEntries[i].name,
+                    path: dirEntries[i].path,
+                    type: dirEntries[i].type,
+                    lazyLoad: true,
+                    ext: dirEntries[i].path,
+                    selectable: false,
+                    checkable: false
+                };
 
-                for(var i=0; i < dirEntries.length; ++i) {
-                    console.log(dirEntries);
-                    var entry = {
-                        name: dirEntries[i].name,
-                        text: dirEntries[i].name,
-                        path: dirEntries[i].path,
-                        type: dirEntries[i].type,
-                        lazyLoad: true,
-                        ext: dirEntries[i].path,
-                        selectable: false,
-                        checkable: false
-                    };
+                entries.push(entry);
+            }
 
-                    entries.push(entry);
-                }
-                myLayout = new window.GoldenLayout( config, $('#layoutContainer'));
-
-                $('#layoutMenuContainer').treeview({
-                    data: entries,
-                    levels:1,
-                    backColor: '#343a40',//grey
-                    selectedBackColor: "#fff",
-                    selectedColor:"#343a40",
-                    onhoverColor:"#fff",
-                    wrapNodeText:true,
-                    collapseIcon: 'fa fa-minus',
-                    expandIcon: 'fa fa-plus',
-                    lazyLoad: UpdateLayoutNode,
-                    onNodeRendered : NodeRendered,
-                    onNodeSelected: NodeSelected,
-                });
-
-                InitLayout(myLayout);
-                InitModal();
-                InitMenuState();
-                //InitToolTips();
-                //InitPopover();
-                //InitScrollBar();
-                InitResizeCtl();
+            $('#layoutMenuContainer').treeview({
+                data: entries,
+                levels:1,
+                backColor: '#343a40',//grey
+                selectedBackColor: "#fff",
+                selectedColor:"#343a40",
+                onhoverColor:"#fff",
+                wrapNodeText:true,
+                collapseIcon: 'fa fa-minus',
+                expandIcon: 'fa fa-plus',
+                lazyLoad: UpdateLayoutNode,
+                onNodeRendered : NodeRendered,
+                onNodeSelected: NodeSelected,
             });
         });
+
+        /* Load a landing page layout for the first time */
+        myLayout = new window.GoldenLayout( config, $('#layoutContainer'));
+        baseLayout = myLayout;
+        InitLayout(myLayout);
+        window.dispatchEvent(new CustomEvent('first-layout-load-complete'));
+
+
+        InitModal();
+        InitMenuState();
+        //InitToolTips();
+        //InitPopover();
+        //InitScrollBar();
+        InitResizeCtl();
 
         //session.getViews(function (views) {
         //    console.log(views);
@@ -653,14 +669,4 @@ $(()=>{
         //    console.log(result);
         //});
     });
-
-    //  myLayout = new window.GoldenLayout( config, $('#layoutContainer'));
-    //  InitTreeView();
-    //  InitLayout(myLayout);
-    //  InitModal();
-    //  InitMenuState();
-    //  InitToolTips();
-    //  InitPopover();
-    //  InitScrollBar();
-    //  InitResizeCtl();
 });
