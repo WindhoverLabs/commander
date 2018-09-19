@@ -40,6 +40,7 @@ var fs = require('fs');
 const util = require('util');
 var mergeJSON = require('merge-json');
 var convict = require('convict');
+var path = require('path');
 var config = require('./config.js');
 
 /* Event IDs */
@@ -61,8 +62,9 @@ exports = module.exports = BinaryEncoder;
 var listenerCount = Emitter.listenerCount ||
 function (emitter, type) { return emitter.listeners(type).length }
 
-function BinaryEncoder(configFile) {
+function BinaryEncoder(workspace, configFile) {
     this.defs;
+    this.workspace = workspace;
     this.cmdHeaderLength = 64;
     this.sequence = 0;
     this.cdd = {};
@@ -132,10 +134,15 @@ function BinaryEncoder(configFile) {
     	})
         .buffer('payload', {readUntil: 'eof'});
     
-    var inMsgDefs = config.get('msgDefs')
+    var inMsgDefs = config.get('msgDefs');
     
     for(var i = 0; i < inMsgDefs.length; ++i) {
-    	var msgDefInput = JSON.parse(fs.readFileSync(inMsgDefs[i].file, 'utf8'));
+    	if(typeof process.env.AIRLINER_MSG_DEF_PATH === 'undefined') {
+    		var fullPath = path.join(this.workspace, config.get('msgDefPath'), inMsgDefs[i].file);
+    	} else {
+    		var fullPath = path.join(process.env.AIRLINER_MSG_DEF_PATH, inMsgDefs[i].file);
+    	}
+    	var msgDefInput = JSON.parse(fs.readFileSync(fullPath, 'utf8'));
     	this.defs = mergeJSON.merge(this.defs, msgDefInput);
     }
 };

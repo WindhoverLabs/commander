@@ -97,10 +97,11 @@ function recFindByExt(base, ext, files, result)
 var listenerCount = Emitter.listenerCount ||
 function (emitter, type) { return emitter.listeners(type).length }
 
-function ProtobufEncoder(configFile) {
+function ProtobufEncoder(workspace, configFile) {
     this.parsers = {};
     this.instanceEmitter;
     this.defs = {};
+    this.workspace = workspace;
     
     /* Load environment dependent configuration */
     config.loadFile(configFile);
@@ -175,14 +176,25 @@ ProtobufEncoder.prototype.setInstanceEmitter = function (newInstanceEmitter)
     var inMsgDefs = config.get('msgDefs')
     
     for(var i = 0; i < inMsgDefs.length; ++i) {
-    	var msgDefInput = JSON.parse(fs.readFileSync(inMsgDefs[i].file, 'utf8'));
+    	if(typeof process.env.AIRLINER_MSG_DEF_PATH === 'undefined') {
+    		var fullPath = path.join(this.workspace, config.get('msgDefPath'), inMsgDefs[i].file);
+    	} else {
+    		var fullPath = path.join(process.env.AIRLINER_MSG_DEF_PATH, inMsgDefs[i].file);
+    	}
+    	
+    	var msgDefInput = JSON.parse(fs.readFileSync(fullPath, 'utf8'));
     	this.defs = mergeJSON.merge(this.defs, msgDefInput);
     }
-    
-    var protoFiles = recFindByExt('./proto_defs', 'proto');
+
+	if(typeof process.env.AIRLINER_PROTO_PATH === 'undefined') {
+		var fullPath = path.join(this.workspace, config.get('protobufDirectory'));
+	} else {
+		var fullPath = process.env.AIRLINER_PROTO_PATH;
+	}
+    var protoFiles = recFindByExt(fullPath, 'proto');
     
     for(var i = 0; i < protoFiles.length; i++) {
-    	this.parseProtoFile('./' + protoFiles[i]);
+    	this.parseProtoFile(protoFiles[i]);
     }
 
 	this.instanceEmitter.on(config.get('jsonInputStreamID'), function(message) {

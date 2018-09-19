@@ -46,6 +46,7 @@ var Int64LE = require('int64-buffer').Int64LE;
 var Int64BE = require('int64-buffer').Int64BE;
 var Uint64LE = require('int64-buffer').Uint64LE;
 var Uint64BE = require('int64-buffer').Uint64BE;
+var path = require('path');
 var Long = require('long');
 
 /* Event IDs */
@@ -72,8 +73,9 @@ exports.events = [
 var listenerCount = Emitter.listenerCount ||
 function (emitter, type) { return emitter.listeners(type).length }
 
-function BinaryDecoder(configFile) {
+function BinaryDecoder(workspace, configFile) {
     this.defs;
+    this.workspace = workspace;
     this.cmdHeaderLength = 64;
     this.sequence = 0;
     this.cdd = {};
@@ -146,7 +148,12 @@ function BinaryDecoder(configFile) {
     var inMsgDefs = config.get('msgDefs')
     
     for(var i = 0; i < inMsgDefs.length; ++i) {
-    	var msgDefInput = JSON.parse(fs.readFileSync(inMsgDefs[i].file, 'utf8'));
+    	if(typeof process.env.AIRLINER_MSG_DEF_PATH === 'undefined') {
+    		var fullPath = path.join(this.workspace, config.get('msgDefPath'), inMsgDefs[i].file);
+    	} else {
+    		var fullPath = path.join(process.env.AIRLINER_MSG_DEF_PATH, inMsgDefs[i].file);
+    	}
+    	var msgDefInput = JSON.parse(fs.readFileSync(fullPath, 'utf8'));
     	this.defs = mergeJSON.merge(this.defs, msgDefInput);
     }
 };

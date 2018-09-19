@@ -93,8 +93,9 @@ function recFindByExt(base, ext, files, result)
 var listenerCount = Emitter.listenerCount ||
 function (emitter, type) { return emitter.listeners(type).length }
 
-function ProtobufDecoder(configFile) {
+function ProtobufDecoder(workspace, configFile) {
     this.parsers = {};
+    this.workspace = workspace;
     this.instanceEmitter;
     this.defs = {};
     
@@ -160,12 +161,19 @@ function ProtobufDecoder(configFile) {
     	    }
     	})
         .buffer('payload', {readUntil: 'eof'});
-    
-    var protoFiles = recFindByExt('./proto_defs', 'proto');
+
+	if(typeof process.env.AIRLINER_PROTO_PATH === 'undefined') {
+		var fullPath = path.join(this.workspace, config.get('protobufDirectory'));
+	} else {
+		var fullPath = process.env.AIRLINER_PROTO_PATH;
+	}
+
+    var protoFiles = recFindByExt(fullPath, 'proto');
     
     for(var i = 0; i < protoFiles.length; i++) {
-    	this.parseProtoFile('./' + protoFiles[i]);
+    	this.parseProtoFile(protoFiles[i]);
     }
+    
 };
 
 

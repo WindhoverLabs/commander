@@ -38,6 +38,12 @@ var config = convict({
         format: 'int',
         default: 0
     },
+    msgDefPath: {
+        doc: 'Directory containing message definition JSON file, i.e. airliner.json.',
+        format: String,
+        default: '',
+        env: 'AIRLINER_MSG_DEF_PATH'
+    },
     msgDefs: [{
         file: {
             doc: 'Input file.',

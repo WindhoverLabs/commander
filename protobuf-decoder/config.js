@@ -7,8 +7,7 @@ var config = convict({
         format: ['production', 'development', 'test'],
         default: 'development',
         env: 'NODE_ENV'
-    },
-    CFE_SB_PACKET_TIME_FORMAT: {
+    },    CFE_SB_PACKET_TIME_FORMAT: {
         doc: 'CFE SB time format.',
         format: ['CFE_SB_TIME_32_16_SUBS','CFE_SB_TIME_32_32_SUBS','CFE_SB_TIME_32_32_M_20'],
         default: 'CFE_SB_TIME_32_16_SUBS'
@@ -45,6 +44,12 @@ var config = convict({
             default: ''
         }
     }],
+    protobufDirectory: {
+        doc: 'Directory containing all the Proto Buffer definition files (*.proto).',
+        format: String,
+        default: '',
+        env: 'AIRLINER_PROTOBUF_PATH'
+    },
     binaryInputStreamID: {
         doc: 'Input binary stream from binary data provider.',
         format: String,

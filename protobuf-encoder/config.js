@@ -8,6 +8,12 @@ var config = convict({
         default: 'development',
         env: 'NODE_ENV'
     },
+    msgDefPath: {
+        doc: 'Directory containing message definition JSON file, i.e. airliner.json.',
+        format: String,
+        default: '',
+        env: 'AIRLINER_MSG_DEF_PATH'
+    },
     CFE_SB_PACKET_TIME_FORMAT: {
         doc: 'CFE SB time format.',
         format: ['CFE_SB_TIME_32_16_SUBS','CFE_SB_TIME_32_32_SUBS','CFE_SB_TIME_32_32_M_20'],
@@ -54,6 +60,12 @@ var config = convict({
         doc: 'Output binary stream from encoder to binary data provider.',
         format: String,
         default: ''
+    },
+    protobufDirectory: {
+        doc: 'Directory containing all the Proto Buffer definition files (*.proto).',
+        format: String,
+        default: '',
+        env: 'AIRLINER_PROTOBUF_PATH'
     }
 });
 

@@ -33,9 +33,20 @@
 
 // an example configuration file
 {
-    jsonInputStreamID:       'json-tlm-stream',
-    binaryOutputStreamID:    'protobuf-tlm-stream',
+    CFE_SB_PACKET_TIME_FORMAT: 'CFE_SB_TIME_32_16_SUBS',
+    CFE_TIME_EPOCH_YEAR:       1980,
+    CFE_TIME_EPOCH_DAY:        1,
+    CFE_TIME_EPOCH_HOUR:       0,
+    CFE_TIME_EPOCH_MINUTE:     0,
+    CFE_TIME_EPOCH_SECOND:     0,
+    msgDefPath:                '/msg_defs',
     msgDefs: [
-    	{file: './airliner.json'}
-    ]
+    	{file: '/airliner.json'}
+    ],
+    jsonInputStreamID:       'json-cmd-stream',
+    binaryOutputStreamID:    'bin-cmd-stream',
+    cmdDefReqStreamID:       'cmd-def-request',
+    cmdDefRspStreamIDPrefix: 'cmd-def',
+    cmdSendStreamID:         'cmd-send',
+    tlmSendStreamID:         'tlm-send',
 }

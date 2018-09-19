@@ -38,12 +38,9 @@ var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 var socket_io = require( "socket.io" );
 var fs = require('fs');
-var sage = require('./sage');
 
 var indexRouter = require('./routes/index');
 var workspaceRouter = require('./routes/workspace');
-var test1 = require('./routes/testpage1');
-var test2 = require('./routes/testpage2');
 
 
 const util = require('util');
@@ -56,7 +53,7 @@ var ClientConnector = require('./client-connector');
 var ProtobufEncoder = require('./protobuf-encoder');
 var ProtobufDecoder = require('./protobuf-decoder');
 
-var workspace = path.join(__dirname, '/workspace');
+var CMDR_WORKSPACE = process.env.CMDR_WORKSPACE || path.join(__dirname, '/workspace');
 
 var app = express();
 
@@ -81,7 +78,6 @@ if(fs.existsSync(fsw_config_file)) {
 };
 
 // view engine setup
-console.log(workspace);
 app.set('views', [path.join(__dirname, 'workspace'),path.join(__dirname, 'views')]);
 app.set('view engine', 'pug');
 
@@ -96,8 +92,7 @@ app.use('/sage', express.static(path.join(__dirname, 'sage')));
 app.use('/commander', express.static(path.join(__dirname, 'commander')));
 app.use('/', indexRouter);
 app.use('/ws', workspaceRouter);
-app.use('/*config', test2);
-app.use('/flow*', test1);
+//app.use('/flow*', test1);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
@@ -116,15 +111,15 @@ app.use(function(err, req, res, next) {
 });
 
 
-var commander = new Commander(workspace, './config/development.json');
-var binaryEncoder = new BinaryEncoder('./binary-encoder-config.json');
-var binaryDecoder = new BinaryDecoder('./binary-decoder-config.json');
-var variableServer = new VariableServer('./variable-server-config.json');
-var fswConnector = new UdpStdProvider('./udpstdprovider-config.json');
-var pylinerConnector = new UdpStdProvider('./pyliner-connector-config.json');
-var clientConnector = new ClientConnector(workspace, './client-connector-config.json', app);
-var protobufEncoder = new ProtobufEncoder('./protobuf-encoder-config.json');
-var protobufDecoder = new ProtobufDecoder('./protobuf-decoder-config.json');
+var commander = new Commander(CMDR_WORKSPACE, './config/development.json');
+var binaryEncoder = new BinaryEncoder(CMDR_WORKSPACE, `${CMDR_WORKSPACE}/etc/binary-encoder-config.json`);
+var binaryDecoder = new BinaryDecoder(CMDR_WORKSPACE, `${CMDR_WORKSPACE}/etc/binary-decoder-config.json`);
+var variableServer = new VariableServer(`${CMDR_WORKSPACE}/etc/variable-server-config.json`);
+var fswConnector = new UdpStdProvider(`${CMDR_WORKSPACE}/etc/udpstdprovider-config.json`);
+var pylinerConnector = new UdpStdProvider(`${CMDR_WORKSPACE}/etc/pyliner-connector-config.json`);
+var clientConnector = new ClientConnector(CMDR_WORKSPACE, `${CMDR_WORKSPACE}/etc/client-connector-config.json`, app);
+var protobufEncoder = new ProtobufEncoder(CMDR_WORKSPACE, `${CMDR_WORKSPACE}/etc/protobuf-encoder-config.json`);
+var protobufDecoder = new ProtobufDecoder(CMDR_WORKSPACE, `${CMDR_WORKSPACE}/etc/protobuf-decoder-config.json`);
 
 var airliner = commander.addInstance('airliner', function(instance) {
 	instance.addApp('binary-encoder',    binaryEncoder);
