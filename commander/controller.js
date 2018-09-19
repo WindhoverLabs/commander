@@ -333,7 +333,7 @@ function InitMenuState(){
     $("#panelMenuToggle").click(() => {
         let open = $("#panelMenuContainer").data("open");
         if(!open){
-            HideMenu("widget");
+            //HideMenu("widget");
             HideMenu("layout");
             ShowMenu("panel");
         } else {
@@ -344,7 +344,7 @@ function InitMenuState(){
     $("#layoutMenuToggle").click(() => {
         let open = $("#layoutMenuContainer").data("open");
         if(!open) {
-            HideMenu("widget");
+            //HideMenu("widget");
             HideMenu("panel");
             ShowMenu("layout");
         } else {
@@ -352,16 +352,16 @@ function InitMenuState(){
         }
     });
 
-    $("#widgetMenuToggle").click(() => {
-        let open = $("#widgetMenuContainer").data("open");
-        if(!open) {
-            HideMenu("layout");
-            HideMenu("panel");
-            ShowMenu("widget");
-        } else {
-            HideMenu("widget");
-        }
-    });
+    // $("#widgetMenuToggle").click(() => {
+    //     let open = $("#widgetMenuContainer").data("open");
+    //     if(!open) {
+    //         HideMenu("layout");
+    //         HideMenu("panel");
+    //         ShowMenu("widget");
+    //     } else {
+    //         HideMenu("widget");
+    //     }
+    // });
 }
 
 /* ToolTips */
@@ -641,7 +641,7 @@ $(()=>{
           InitLayout(myLayout);
           window.dispatchEvent(new CustomEvent('first-layout-load-complete'));
           _sescon_never = false;
-          
+
 
 
 

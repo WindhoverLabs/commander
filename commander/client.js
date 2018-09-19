@@ -117,7 +117,7 @@ CommanderClient.prototype.updateTelemetry = function (items) {
 			var cb = subs[funcName].cb;
       var opsPath = subs[funcName].opsPath;
 			var param = {
-        val: items[itemID].value,
+        val: Math.random(),//items[itemID].value,
         opsPath:opsPath
       };
 			cb(param);
@@ -125,7 +125,24 @@ CommanderClient.prototype.updateTelemetry = function (items) {
 	}
 }
 
+CommanderClient.prototype.unsubscribe = function (tlmObj){
+    if(this.isSocketConnected){
+    	var tlmOpsPaths = [];
 
+    	for(var i=0; i < tlmObj.length; ++i) {
+    		var opsPath = tlmObj[i].name;
+    		tlmOpsPaths.push(opsPath);
+
+        if(this.subscriptions.hasOwnProperty(opsPath)) {
+          delete this.subscriptions[opsPath];
+        }
+        console.log('unsubscribed')
+    	}
+
+    	this.socket.emit('unsubscribe', tlmOpsPaths);
+
+    };
+};
 
 CommanderClient.prototype.subscribe = function (tlmObj, cb){
     if(this.isSocketConnected){
@@ -144,17 +161,6 @@ CommanderClient.prototype.subscribe = function (tlmObj, cb){
     	}
 
     	this.socket.emit('subscribe', tlmOpsPaths);
-
-      //setInterval(function(){
-      //  var random = Math.random() ;
-      //  cb({val:random,req:tlmObj},elm);
-      //},500);
-
-      /*TODO: implement subscribe functionality and the call back function
-      in our case will be processTelemetryUpdate on line 316 - element.js*/
-    	// this.socket.emit('subscribe', function(params){
-      //       cb(params);
-      //   });
 
     };
 };
