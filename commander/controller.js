@@ -257,6 +257,8 @@ function InitModal() {
         let title = btn.data('title');
         let submit = btn.data('submit');
         let custom = btn.data('custom');
+        let info = btn.data('commander');
+        $("#genericInputModal").attr('data-info',JSON.stringify(info));
         let item = "";
         let inputsIds = [];
 

@@ -74,7 +74,7 @@ class Button extends HTMLElement{
 
 }
 
-class DataPlot extends HTMLElement{
+class DataPlotCE extends HTMLElement{
   constructor(){
     super();
     var parsedData = []

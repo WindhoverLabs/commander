@@ -16,5 +16,5 @@
                 td
                   div(data-commander={tlm:[{name:'/CFE/ES_HK/Payload.ProcessorResets'}]} data-format='led')   
     footer.btn-group(role="group")
-      button.btn.btn-primary(data-sage={cmd:{name:'/CFS/FLOW/NoOp'}}) No-Op
-      button.btn.btn-primary(data-sage={cmd:{name:'/CFS/FLOW/Reset'}}) Reset      
+      button.btn.btn-primary(data-commander={cmd:{name:'/CFE/SetMaxPRCount'}} data-format='cmd') Set MaxPRCount      
+      button.btn.btn-primary(data-commander={cmd:{name:'/CFE/ES_Noop'}} data-format='cmd') No-Op

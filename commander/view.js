@@ -1,3 +1,6 @@
+var subscriptions = {};
+var windows = {};
+
 function assert(condition, message) {
     if (!condition) {
         throw message || "Assertion failed";
@@ -6,6 +9,19 @@ function assert(condition, message) {
 
 function genRandomKey(){
   return Math.random().toString(36).slice(2)
+}
+
+function generateUUID(){
+  var d = new Date().getTime();
+  if(window.performance && typeof window.performance.now === "function"){
+    d += performance.now(); //use high-precision timer if available
+  }
+  var uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    var r = (d + Math.random()*16)%16 | 0;
+    d = Math.floor(d/16);
+    return (c=='x' ? r : (r&0x3|0x8)).toString(16);
+  });
+  return uuid;
 }
 
 function isDescendant(parent, child) {
@@ -19,11 +35,8 @@ function isDescendant(parent, child) {
      return false;
 }
 
-var subscriptions = {};
-var windows = {};
-
 function processTelemetryUpdate(param){
-  console.log(param)
+  // console.log(param)
   var value = param.val;
   var opsPath = param.opsPath;
   // console.log(param)
@@ -54,6 +67,37 @@ function processTelemetryLedUpdate(param){
       }
     }
   }
+}
+
+function isTemplateCommand(commandInfo) {
+  var found = false;
+  if(commandInfo.hasOwnProperty('argument')){
+    if(commandInfo.argument.length > 0){
+      /* Look for at least 1 unspecified value. */
+      for(i=0; i < commandInfo.argument.length; i++){
+        if(!commandInfo.argument[i].hasOwnProperty('value')){
+          found = true;
+        }
+      }
+    }
+  }
+  return found;
+}
+
+function sendCmd(){
+  var args = {};
+
+  var labels = $("#genericInputModal").find('label');
+  for(var i = 0; i < labels.length ; ++i){
+    var label = labels[i].textContent;
+    var value = labels[i].control.value;
+    args[label] = value;
+  }
+  var cmdObj = JSON.parse($("#genericInputModal").attr('data-info'));
+  console.log(cmdObj)
+  console.log('sendCommand',{ops_path:cmdObj.cmd.name,args:args})
+  session.sendCommand({ops_path:cmdObj.cmd.name,args:args})
+
 }
 
 class DataPlot{
@@ -179,7 +223,6 @@ class DataPlot{
 
 }
 
-
 class Panel {
 
   constructor(panelElm){
@@ -289,6 +332,113 @@ class Panel {
     }
   }
 
+  getCmdInfo(f,d,s){
+    var jsonObj;
+    if (typeof d === 'string' || d instanceof String) {
+      // it's a string
+      jsonObj = JSON.parse(d);
+    }
+    else if (typeof d === 'object' || d instanceof Object) {
+      // it's an object
+      jsonObj = d;
+    }
+    else {
+      // it's something else
+      return;
+    }
+
+    if (jsonObj.hasOwnProperty('cmd')) {
+      var cmdObj = jsonObj.cmd;
+      var btnObj = $(s);
+      session.getCmdDefs({name:cmdObj.name},function(cmdInfo){
+        if(cmdObj.hasOwnProperty('uuid')){
+          /* We already bound this element. */
+        } else {
+          if(cmdObj.name == cmdInfo.qualifiedName){
+               var uuid = generateUUID();
+               cmdInfo.uuid = uuid;
+               cmdObj.uuid = uuid;
+               btnObj.attr('data-commander',JSON.stringify(jsonObj));
+               /* Copy any arguments we have from the command button into the cmdInfo struct. */
+               if(cmdObj.hasOwnProperty('argument')){
+                 for(var i = 0; i < cmdObj.argument.length; i++){
+                   for (var j = 0; j < cmdInfo.arfument.length; j++){
+                     if (cmdInfo.argument[j].name == cmdObj.argument[i].name) {
+                       cmdInfo.argument[j].value = cmdObj.argument[i].value;
+                     }
+                   }
+                 }
+               }
+               var cmdOut = JSON.parse(JSON.stringify(cmdInfo));
+               if (isTemplateCommand(cmdOut) == false) {
+                 /* This is a fully instantiated command.  No need to
+                  * create a popup form.  Just send the command when
+                  * the user clicks the button. */
+                  btnObj.click(function(eventObject){
+                    var args = [];
+                    if(cmdOut.hasOwnProperty('argument')){
+                      for(var i = 0; i < cmdOut.argument.length; i++){
+                        args.push({name: cmdOut.argument[i].name,value:cmdOut.argument[i].value.toString()});
+                      }
+                    }
+                    // console.log({name:cmdOut.qualifiedName,args:args});
+                    session.sendCommand({ops_path:cmdOut.qualifiedName});
+                  });
+
+               }else{
+                 /* This is not a fully instantiated command.  We need to
+                  * present a popup form to allow the user to enter the
+                  * remaining command arguments before sending the command.
+                  *
+                  * First, generate UUIDs to be used later as element IDs. */
+                  for (i = 0; i < cmdOut.argument.length; i++) {
+                    cmdOut.argument[i].uuid = uuid + "_" + cmdOut.argument[i].name;
+                  }
+                  /* Next set stringLength for string parameters to be used for form validation later. */
+                  for (i = 0; i < cmdOut.argument.length; i++) {
+                    if (cmdOut.argument[i].type == "STRING") {
+                      /* Add a new stringLength (in bytes) attribute for parameter validation later. */
+                      cmdOut.argument[i].stringLength = cmdOut.argument[i].type.dataEncoding.sizeInBits / 8;
+                    }
+                  }
+                  console.log('***>',cmdOut,btnObj);
+                  /* Make button fire modal */
+                  btnObj.attr('data-toggle','modal');
+                  btnObj.attr('data-target','#genericInputModal');
+                  btnObj.attr('data-title','Submit '+cmdOut.name+' Arguments');
+                  btnObj.attr('data-submit','sendCmd');
+                  var argArray = [];
+                  for(var i in cmdOut.argument){
+                    var label = cmdOut.argument[i].name
+                    var type = cmdOut.argument[i].type.engType
+                    if(type == 'integer'){
+                      /* integer action */
+                    }
+                    else if(type == 'float'){
+                      /* float action */
+                    }
+                    else if(type == 'string'){
+                      /* string action */
+                    }
+                    else if(type == 'enumeration'){
+                      /* enumeration action */
+                    }
+                    argArray.push({
+                      'label':label,
+                      'type':'field'
+                    })
+                  }
+                  btnObj.attr('data-custom',JSON.stringify(argArray));
+
+
+               }
+             }
+        }
+        console.log(cmdInfo)
+      });
+    }
+  }
+
   loadPanel(){
 
     var cls = this;
@@ -318,6 +468,9 @@ class Panel {
             break;
           case 'dataplot':
             cls.subscribeDataplot(format,data,self)
+            break;
+          case 'cmd':
+            cls.getCmdInfo(format,data,self);
             break;
         }
       });
@@ -400,7 +553,6 @@ class Panel {
   }
 
 }
-
 
 window.addEventListener('first-layout-load-complete',()=>{
 
