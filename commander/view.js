@@ -102,6 +102,7 @@ function sendCmd(){
 }
 
 
+
 class Panel {
 
   constructor(panelElm){
