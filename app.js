@@ -57,26 +57,6 @@ var CMDR_WORKSPACE = process.env.CMDR_WORKSPACE || path.join(__dirname, '/worksp
 
 var app = express();
 
-////Socket.io
-//var io = socket_io();
-//app.io = io;
-
-// Workspace
-var workspace_path = path.join(process.env.YAMCS_WORKSPACE, '/web');
-var fsw_config_file = path.join(process.env.YAMCS_WORKSPACE, '/etc/fsw-config.json');
-var fsw_config = {};
-if(fs.existsSync(fsw_config_file)) {
-    fs.readFile(fsw_config_file, function (err, data) {
-        if(err === null) {
-        	fsw_config = JSON.parse(data);
-        }
-        else
-        {
-     	    console.log(err);
-        }
-    });
-};
-
 // view engine setup
 app.set('views', [path.join(__dirname, 'workspace'),path.join(__dirname, 'views')]);
 app.set('view engine', 'pug');

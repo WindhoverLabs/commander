@@ -368,7 +368,7 @@ CommanderClient.prototype.updateTelemetry = function (items) {
 			var cb = subs[funcName].cb;
       var opsPath = subs[funcName].opsPath;
 			var param = {
-        val: Math.random(),//items[itemID].value,
+        val: items[itemID].value,
         opsPath:opsPath
       };
 			cb(param);

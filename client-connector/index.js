@@ -135,7 +135,8 @@ function ClientConnector(workspace, configFile, app) {
     	socket.on('subscribe', function(opsPaths) {
     		self.subscribe(opsPaths, updateTelemetry);
     	});
-			socket.on('sendCmd', function(cmdObj) {
+
+	socket.on('sendCmd', function(cmdObj) {
     		self.sendCmd(cmdObj);
     	});
 
@@ -146,7 +147,6 @@ function ClientConnector(workspace, configFile, app) {
     	for(var i in publicFunctions) {
     		(function(funcName) {
     	        socket.on(funcName, function() {
-								console.log(funcName)
     	        	var cb = arguments[arguments.length-1];
     	        	self.logDebugEvent(EventEnum.SOCKET_PUBLIC_FUNCTION_CALL, 'SocketIO: ' + funcName);
 	    	        self[funcName].apply(self, arguments);
@@ -248,7 +248,7 @@ ClientConnector.prototype.setInstanceEmitter = function (newInstanceEmitter)
     	    self.logDebugEvent(EventEnum.MESSAGE_RECEIVED, 'ServerEvents: Message received.');
     	}
 	});
-
+	
 //	setTimeout(function () {
 		// this.sendCmd({ops_path: '/CFE/SetMaxPRCount', args: {'Payload.MaxPRCount': 9}});
 		//
@@ -278,7 +278,7 @@ ClientConnector.prototype.setInstanceEmitter = function (newInstanceEmitter)
 		// });
 
 //		self.subscribe(['/CFE/ES_HK/Payload.ProcessorResets', '/CFE/ES_HK/Payload.CFEMinorVersion'], self.updateTelemetry);
-//
+//		
 //		setTimeout(function () {
 //			self.unsubscribe(['/CFE/ES_HK/Payload.CFEMinorVersion'], self.updateTelemetry);
 //		}, 2000);
@@ -324,7 +324,7 @@ ClientConnector.prototype.requestVarDefinition = function (varName, cb) {
 
 ClientConnector.prototype.subscribe = function (varName, cb) {
 	var self = this;
-
+	
 	this.instanceEmitter.emit(config.get('reqSubscribeStreamID'), {cmd: 'subscribe', opsPath: varName}, cb);
 }
 
@@ -332,7 +332,7 @@ ClientConnector.prototype.subscribe = function (varName, cb) {
 
 ClientConnector.prototype.unsubscribe = function (varName, cb) {
 	var self = this;
-
+	
 	this.instanceEmitter.emit(config.get('reqSubscribeStreamID'), {cmd: 'unsubscribe', opsPath: varName}, cb);
 }
 

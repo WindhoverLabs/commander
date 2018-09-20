@@ -330,87 +330,83 @@ BinaryEncoder.prototype.getCmdByteLength = function (cmd) {
 
 BinaryEncoder.prototype.setField = function (buffer, fieldDef, bitOffset, value) {	
 	try{			
-		if(fieldDef.hasOwnProperty('pb_field_rule')) {
-			switch(fieldDef.pb_field_rule) {
-				case 'repeated': {
-					switch(fieldDef.airliner_type) {
-						case 'uint8':
-							for(var i = 0; i < fieldDef.array_length; ++i) {
-							    buffer.writeUInt8(value, bitOffset / 8);
-							}
-							break;
-							
-						case 'string':
-							buffer.write(value, bitOffset / 8, fieldDef.array_length);
-							break;
-							
-						case 'uint16':
-							for(var i = 0; i < fieldDef.array_length; ++i) {
-								buffer.writeUInt16LE(value, (bitOffset / 8) + i);
-							}
-							break;
-							
-						case 'int16':
-							for(var i = 0; i < fieldDef.array_length; ++i) {
-								buffer.writeInt16LE(value, (bitOffset / 8) + i);
-							}
-							break;
-							
-						case 'uint32':
-							for(var i = 0; i < fieldDef.array_length; ++i) {
-								buffer.writeUInt32LE(value, (bitOffset / 8) + i);
-							}
-							break;
-							
-						case 'int32':
-							for(var i = 0; i < fieldDef.array_length; ++i) {
-								buffer.writeInt32LE(value, (bitOffset / 8) + i);
-							}
-							break;
-							
-						case 'char':
-							buffer.write(value, bitOffset / 8, fieldDef.array_length);
-							break;
-							
-						default:
-						    this.logErrorEvent(EventEnum.UNKNOWN_DATA_TYPE, 'setField: Unknown data type.  \'' + fieldDef.airliner_type + '\'');
+		if(fieldDef.array_length > 1) {
+			switch(fieldDef.airliner_type) {
+				case 'char':
+					buffer.write(value, bitOffset / 8, fieldDef.array_length);
+					break;
+				
+				case 'uint8':
+					for(var i = 0; i < fieldDef.array_length; ++i) {
+					    buffer.writeUInt8(value, bitOffset / 8);
 					}
 					break;
-				}
-			
-			    case 'required': {
-					switch(fieldDef.airliner_type) {
-						case 'uint8':
-							buffer.writeUInt8(value, bitOffset / 8);
-							break;
-							
-						case 'string':
-							buffer.write(value, bitOffset / 8);
-							break;
-							
-						case 'uint16':
-							buffer.writeUInt16LE(value, bitOffset / 8);
-							break;
-							
-						case 'int16':
-							buffer.writeInt16LE(value, bitOffset / 8);
-							break;
-							
-						case 'uint32':
-							buffer.writeUInt32LE(value, bitOffset / 8);
-							break;
-							
-						case 'int32':
-							buffer.writeInt32LE(value, bitOffset / 8);
-							break;
-							
-						default:
-						    this.logErrorEvent(EventEnum.UNKNOWN_DATA_TYPE, 'setField: Unknown data type.  \'' + fieldDef.airliner_type + '\'');
+					
+				case 'string':
+					buffer.write(value, bitOffset / 8, fieldDef.array_length);
+					break;
+					
+				case 'uint16':
+					for(var i = 0; i < fieldDef.array_length; ++i) {
+						buffer.writeUInt16LE(value, (bitOffset / 8) + i);
 					}
-				    break;
-			    }
-		    }
-		}
+					break;
+					
+				case 'int16':
+					for(var i = 0; i < fieldDef.array_length; ++i) {
+						buffer.writeInt16LE(value, (bitOffset / 8) + i);
+					}
+					break;
+					
+				case 'uint32':
+					for(var i = 0; i < fieldDef.array_length; ++i) {
+						buffer.writeUInt32LE(value, (bitOffset / 8) + i);
+					}
+					break;
+					
+				case 'int32':
+					for(var i = 0; i < fieldDef.array_length; ++i) {
+						buffer.writeInt32LE(value, (bitOffset / 8) + i);
+					}
+					break;
+					
+				default:
+				    this.logErrorEvent(EventEnum.UNKNOWN_DATA_TYPE, 'setField: Unknown data type.  \'' + fieldDef.airliner_type + '\'');
+			}
+		} else {
+			switch(fieldDef.airliner_type) {
+				case 'char':
+					buffer.writeUInt8(value, bitOffset / 8);
+					break;
+				
+				case 'uint8':
+					buffer.writeUInt8(value, bitOffset / 8);
+					break;
+					
+				case 'string':
+					buffer.write(value, bitOffset / 8);
+					break;
+					
+				case 'uint16':
+					buffer.writeUInt16LE(value, bitOffset / 8);
+					break;
+					
+				case 'int16':
+					buffer.writeInt16LE(value, bitOffset / 8);
+					break;
+					
+				case 'uint32':
+					buffer.writeUInt32LE(value, bitOffset / 8);
+					break;
+					
+				case 'int32':
+					buffer.writeInt32LE(value, bitOffset / 8);
+					break;
+					
+				default:
+				    this.logErrorEvent(EventEnum.UNKNOWN_DATA_TYPE, 'setField: Unknown data type.  \'' + fieldDef.airliner_type + '\'');
+			}
+	    }
 	} catch(err) {
 	    this.logErrorEvent(EventEnum.UNHANDLED_EXCEPTION, 'setField: Unhandled exception. \'' + err + '\'');
 	}
