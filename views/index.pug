@@ -61,10 +61,10 @@ html(lang='en-us')
               i#layoutMenuIcon.fa.fa-cubes
             div#layoutMenuContainer.menuContainer(data-open="false")
         ul.navbar-nav.wh-nav-btn(data-toggle="tooltip" title="Load page layout")
-            button.btn.btn-outline-primary( data-toggle="modal" data-target="#genericInputModal" data-title="Load Layout" data-submit="LoadLayout" data-custom='[{"label":"Load Layout", "type":"dropdown", "getItem":"GetStoredLayoutList"}]') 
+            button.btn.btn-outline-primary( data-toggle="modal" data-target="#genericInputModal" data-title="Load Layout" data-submit="LoadLayout" data-custom='[{"label":"Load Layout", "type":"select", "dtype":"enumeration", "getItem":"GetStoredLayoutList"}]') 
               i.fa.fa-download
         ul.navbar-nav.wh-nav-btn(data-toggle="tooltip" title="Save page layout")
-            button.btn.btn-outline-primary(data-toggle="modal" data-target="#genericInputModal" data-title="Save Layout" data-submit="SaveLayout" data-custom='[{"label":"Save Layout", "type":"field" }]') 
+            button.btn.btn-outline-primary(data-toggle="modal" data-target="#genericInputModal" data-title="Save Layout" data-submit="SaveLayout" data-custom='[{"label":"Save Layout", "type":"field", "dtype":"string"}]') 
               i.fa.fa-save 
     div.ui.main.text.container
       #wrapper

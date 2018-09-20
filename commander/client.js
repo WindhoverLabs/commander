@@ -316,13 +316,27 @@ CommanderClient.prototype.getCmdDefs = function (cmdObj,cb){
             {
               "name": "Payload.MaxPRCount",
               "type": {
-                "engType": "integer",
+                "engType": "enumeration",
                 "dataEncoding": {
                   "type": "INTEGER",
                   "littleEndian": true,
                   "sizeInBits": 16,
                   "encoding": "unsigned"
-                }
+                },
+                "enumValue":[
+                  {
+                    "value":0,
+                    "label":"A"
+                  },
+                  {
+                    "value":1,
+                    "label":"B"
+                  },
+                  {
+                    "value":2,
+                    "label":"C"
+                  }
+                ]
               }
             }
           ],
@@ -408,7 +422,7 @@ CommanderClient.prototype.subscribe = function (tlmObj, cb){
         	}
 
         	this.subscriptions[opsPath][cb] = {cb:cb,opsPath:opsPath};
-        	console.log(this.subscriptions[opsPath][cb]);
+        	// console.log(this.subscriptions[opsPath][cb]);
     	}
 
     	this.socket.emit('subscribe', tlmOpsPaths);

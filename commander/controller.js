@@ -96,7 +96,8 @@ function WidgetNodeRendered(e, node) {
 /* Initial configuration */
 var _config = {
     settings: {
-        selectionEnabled: true
+        selectionEnabled: true,
+        showPopoutIcon: false,
     },
     content: [{
         type: 'row',
@@ -251,56 +252,67 @@ function InitModal() {
 
     /* show */
     $("#genericInputModal").on('show.bs.modal',(e) => {
-        HideMenu('widget');
-        let btn = $(e.relatedTarget);
-        console.log(e)
-        let title = btn.data('title');
-        let submit = btn.data('submit');
-        let custom = btn.data('custom');
-        let info = btn.data('commander');
-        $("#genericInputModal").attr('data-info',JSON.stringify(info));
-        let item = "";
-        let inputsIds = [];
+        // HideMenu('widget');
+        if(e.hasOwnProperty('relatedTarget')){
+          let btn = $(e.relatedTarget);
+          let title = btn.data('title');
+          let submit = btn.data('submit');
+          let custom = btn.data('custom');
+          let info = btn.data('commander');
+          $("#genericInputModal").attr('data-info',JSON.stringify(info));
+          let item = "";
 
-        /* set title */
-        $('#modalTitle').text(title);
+          /* set title */
+          $('#modalTitle').text(title);
 
-        /* set custom data */
-        for(let e in custom) {
-            switch(custom[e].type) {
-                case "field":
-                    item = "<div class='form-group'>"
-                      +"<label class='col-form-label' id=labelField"+e+" for=inputField"+e+">"+custom[e].label+"</label>"
-                      +"<input class='form-control' type='text' id=inputField"+e+">"
-                      +"</div>"
-                    inputsIds.push("inputField"+e)
-                    $('#modalForm').append(item);
-                    break;
+          /* set custom data */
+          for(let e in custom) {
+              switch(custom[e].type) {
+                  case "field":
+                      item = "<div class='form-group'>"
+                        +"<label class='col-form-label' id=labelField"+e+" for=inputField"+e+">"+custom[e].label+"</label>"
+                      if(custom[e].dtype == 'integer'){
+                        item += "<input class='form-control' type='number' value='0' id=inputField"+e+">"
+                      } else if (custom[e].dtype == 'float') {
+                        item += "<input class='form-control' type='number' value='0.0' step='0.001' id=inputField"+e+">"
+                      } else if (custom[e].dtype == 'string') {
+                        item += "<input class='form-control' type='text' value='0' id=inputField"+e+">"
+                      }
+                      item +="</div>"
+                      $('#modalForm').append(item);
+                      break;
 
-                case "dropdown":
-                    item = "<div class='form-group'>"
-                      +"<label class='col-form-label' id=labelField"+e+" for=inputField"+e+">"+custom[e].label+"</label>"
-                      +"<select class='custom-select mr-sm-2'id=select"+e+">"
-                      +"<option selected>Choose..</option>"
-                      +"</select>"
-                      +"</div>"
-                    $('#modalForm').append(item)
-                    inputsIds.push("select"+e)
-                    let options = window[custom[e].getItem].call()
-                    console.log(options);
-                    for(let i in options){
-                        let html = "<option value="+i+">"+options[i]+"</option>"
+                  case "select":
+                      item = "<div class='form-group'>"
+                        +"<label class='col-form-label' id=labelField"+e+" for=select"+e+">"+custom[e].label+"</label>"
+                        +"<select class='custom-select mr-sm-2'id=select"+e+">"
+                        +"<option selected>Choose..</option>"
+                        +"</select>"
+                        +"</div>"
+                      $('#modalForm').append(item)
+                      // inputsIds.push("select"+e)
+                      let options = null
+                      if(typeof custom[e].getItem == 'string'){
+                        options = window[custom[e].getItem].call()
+                      } else if (typeof custom[e].getItem == 'object') {
+                        options = custom[e].getItem
+                      }
+                      console.log(custom[e]);
+                      options.forEach((sel)=>{
+                        let html = "<option value="+sel.value+">"+sel.label+"</option>"
                         $('#select'+e).append(html)
-                    }
-                    break;
+                      });
+                      break;
 
-                default:
-                    console.log("Unknown data passed as attribute");
-            }
+                  default:
+                      console.log("Unknown data passed as attribute");
+              }
+          }
+
+          /* set submit action */
+          $('#modalSubmit')[0].onclick = window[submit];
+
         }
-
-        /* set submit action */
-        $('#modalSubmit')[0].onclick = window[submit];
     });
 
     /* hide */
@@ -542,7 +554,8 @@ $(()=>{
 
     var config = {
       settings : {
-        selectionEnabled: true
+        selectionEnabled: true,
+        showPopoutIcon: false
       },
       content: [
         {
