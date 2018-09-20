@@ -45,6 +45,5 @@
     ],
     binaryInputStreamID:     'bin-tlm-stream',
     jsonOutputStreamID:      'json-tlm-stream',
-    tlmDefReqStreamID:       'var-def-request',
-    tlmDefRspStreamIDPrefix: 'var-def:'
+    tlmDefReqStreamID:       'var-def-request'
 }

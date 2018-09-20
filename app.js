@@ -36,7 +36,7 @@ var express = require('express');
 var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
-var socket_io = require( "socket.io" );
+var socket_io = require('socket.io');
 var fs = require('fs');
 
 var indexRouter = require('./routes/index');
@@ -56,26 +56,6 @@ var ProtobufDecoder = require('./protobuf-decoder');
 var CMDR_WORKSPACE = process.env.CMDR_WORKSPACE || path.join(__dirname, '/workspace');
 
 var app = express();
-
-////Socket.io
-//var io = socket_io();
-//app.io = io;
-
-// Workspace
-var workspace_path = path.join(process.env.YAMCS_WORKSPACE, '/web');
-var fsw_config_file = path.join(process.env.YAMCS_WORKSPACE, '/etc/fsw-config.json');
-var fsw_config = {};
-if(fs.existsSync(fsw_config_file)) {
-    fs.readFile(fsw_config_file, function (err, data) {
-        if(err === null) {
-        	fsw_config = JSON.parse(data);
-        }
-        else
-        {
-     	    console.log(err);
-        }
-    });
-};
 
 // view engine setup
 app.set('views', [path.join(__dirname, 'workspace'),path.join(__dirname, 'views')]);
@@ -131,15 +111,6 @@ var airliner = commander.addInstance('airliner', function(instance) {
 	instance.addApp('protobuf-encoder',  protobufEncoder);
 	instance.addApp('protobuf-decoder',  protobufDecoder);
 });
-
-
-//instance.addApp('binary-encoder',    binaryEncoder);
-//instance.addApp('binary-decoder',    binaryDecoder);
-//instance.addApp('fsw-connector',     fswConnector);
-//instance.addApp('pyliner-connector', pylinerConnector);
-//instance.addApp('variable-server',   variableServer);
-//instance.addApp('client-connector',  clientConnector);
-//instance.addApp('protobuf-encoder',  protobufEncoder);
 
 
 module.exports = app;

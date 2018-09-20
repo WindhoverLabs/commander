@@ -135,7 +135,8 @@ function ClientConnector(workspace, configFile, app) {
     	socket.on('subscribe', function(opsPaths) {
     		self.subscribe(opsPaths, updateTelemetry);
     	});
-			socket.on('sendCmd', function(cmdObj) {
+
+	socket.on('sendCmd', function(cmdObj) {
     		self.sendCmd(cmdObj);
     	});
 
@@ -146,7 +147,6 @@ function ClientConnector(workspace, configFile, app) {
     	for(var i in publicFunctions) {
     		(function(funcName) {
     	        socket.on(funcName, function() {
-								console.log(funcName)
     	        	var cb = arguments[arguments.length-1];
     	        	self.logDebugEvent(EventEnum.SOCKET_PUBLIC_FUNCTION_CALL, 'SocketIO: ' + funcName);
 	    	        self[funcName].apply(self, arguments);
@@ -185,8 +185,126 @@ ClientConnector.prototype.getDirectoryListing = function(inPath, cb) {
 
 
 
-ClientConnector.prototype.getCmdDefs = function(cb) {
-	cb('getCmdDefs');
+ClientConnector.prototype.getCmdDefs = function(cmdObj, cb) {
+	this.instanceEmitter.emit(config.get('cmdDefReqStreamID'), {opsPath: cmdObj.name}, function(resp) {
+		cb(resp);
+	});
+	
+//    if(req.name=='/CFE/ES_Noop'){
+//      cb({
+//        "name": "NoOp",
+//        "qualifiedName": "/CFE/ES_Noop",
+//        "alias": [
+//          {
+//            "name": "NoOp",
+//            "namespace": "/CFS/CFE_ES"
+//          }
+//        ],
+//        "baseCommand": {
+//          "name": "cfs-cmd",
+//          "qualifiedName": "/CFS/cfs-cmd",
+//          "alias": [
+//            {
+//              "name": "cfs-cmd",
+//              "namespace": "/CFS"
+//            }
+//          ],
+//          "abstract": true,
+//          "argument": [
+//            {
+//              "name": "ccsds-apid",
+//              "type": {
+//                "engType": "integer",
+//                "dataEncoding": {
+//                  "type": "INTEGER",
+//                  "littleEndian": false,
+//                  "sizeInBits": 11,
+//                  "encoding": "unsigned"
+//                }
+//              }
+//            },
+//            {
+//              "name": "timeId",
+//              "initialValue": "0",
+//              "type": {
+//                "engType": "integer",
+//                "dataEncoding": {
+//                  "type": "INTEGER",
+//                  "littleEndian": false,
+//                  "sizeInBits": 2,
+//                  "encoding": "unsigned"
+//                }
+//              }
+//            },
+//            {
+//              "name": "checksumIndicator",
+//              "initialValue": "1",
+//              "type": {
+//                "engType": "integer",
+//                "dataEncoding": {
+//                  "type": "INTEGER",
+//                  "littleEndian": false,
+//                  "sizeInBits": 1,
+//                  "encoding": "unsigned"
+//                }
+//              }
+//            },
+//            {
+//              "name": "packet-type",
+//              "initialValue": "1",
+//              "type": {
+//                "engType": "integer",
+//                "dataEncoding": {
+//                  "type": "INTEGER",
+//                  "littleEndian": true,
+//                  "sizeInBits": 4,
+//                  "encoding": "unsigned"
+//                }
+//              }
+//            },
+//            {
+//              "name": "packet-id",
+//              "initialValue": "0",
+//              "type": {
+//                "engType": "integer",
+//                "dataEncoding": {
+//                  "type": "INTEGER",
+//                  "littleEndian": true,
+//                  "sizeInBits": 32,
+//                  "encoding": "unsigned"
+//                }
+//              }
+//            },
+//            {
+//              "name": "cfs-cmd-code",
+//              "type": {
+//                "engType": "integer",
+//                "dataEncoding": {
+//                  "type": "INTEGER",
+//                  "littleEndian": true,
+//                  "sizeInBits": 7,
+//                  "encoding": "unsigned"
+//                }
+//              }
+//            }
+//          ],
+//          "url": "http://localhost:8090/api/mdb/Bebop_2_SITL/commands/CFS/cfs-cmd"
+//        },
+//        "abstract": false,
+//        "argumentAssignment": [
+//          {
+//            "name": "ccsds-apid",
+//            "value": "6"
+//          },
+//          {
+//            "name": "cfs-cmd-code",
+//            "value": "0"
+//          }
+//        ],
+//        "url": "http://localhost:8090/api/mdb/Bebop_2_SITL/commands/CFS/CFE_ES/NoOp",
+//        "uuid": "65dd8102-01d4-49fb-b473-9605b314f0e1"
+//      });
+//    }
 }
 
 
@@ -248,7 +366,7 @@ ClientConnector.prototype.setInstanceEmitter = function (newInstanceEmitter)
     	    self.logDebugEvent(EventEnum.MESSAGE_RECEIVED, 'ServerEvents: Message received.');
     	}
 	});
-
+	
 //	setTimeout(function () {
 		// this.sendCmd({ops_path: '/CFE/SetMaxPRCount', args: {'Payload.MaxPRCount': 9}});
 		//
@@ -278,7 +396,7 @@ ClientConnector.prototype.setInstanceEmitter = function (newInstanceEmitter)
 		// });
 
 //		self.subscribe(['/CFE/ES_HK/Payload.ProcessorResets', '/CFE/ES_HK/Payload.CFEMinorVersion'], self.updateTelemetry);
-//
+//		
 //		setTimeout(function () {
 //			self.unsubscribe(['/CFE/ES_HK/Payload.CFEMinorVersion'], self.updateTelemetry);
 //		}, 2000);
@@ -301,17 +419,6 @@ ClientConnector.prototype.sendCmd = function (cmdName, args) {
 
 
 
-ClientConnector.prototype.requestCmdDefinition = function (cmdName, cb) {
-
-	this.instanceEmitter.once(config.get('cmdDefRspStreamIDPrefix') + ':' + cmdName, function(definition) {
-    	cb(definition);
-	});
-
-	this.instanceEmit(config.get('cmdDefReqStreamID'), cmdName);
-}
-
-
-
 ClientConnector.prototype.requestVarDefinition = function (varName, cb) {
 	this.instanceEmitter.once(config.get('varDefRspStreamIDPrefix') + ':' + varName, function(definition) {
     	cb(definition);
@@ -324,7 +431,7 @@ ClientConnector.prototype.requestVarDefinition = function (varName, cb) {
 
 ClientConnector.prototype.subscribe = function (varName, cb) {
 	var self = this;
-
+	
 	this.instanceEmitter.emit(config.get('reqSubscribeStreamID'), {cmd: 'subscribe', opsPath: varName}, cb);
 }
 
@@ -332,7 +439,7 @@ ClientConnector.prototype.subscribe = function (varName, cb) {
 
 ClientConnector.prototype.unsubscribe = function (varName, cb) {
 	var self = this;
-
+	
 	this.instanceEmitter.emit(config.get('reqSubscribeStreamID'), {cmd: 'unsubscribe', opsPath: varName}, cb);
 }
 

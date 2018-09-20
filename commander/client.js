@@ -34,10 +34,10 @@ CommanderClient.prototype.getPanels = function (path, cb){
 };
 
 CommanderClient.prototype.getRandom = function (cb){
-  setInterval(function() {
-  var random_boolean = Math.random() >= 0.5;
-  cb(random_boolean);
-  }, 500);
+    setInterval(function() {
+        var random_boolean = Math.random() >= 0.5;
+        cb(random_boolean);
+    }, 500);
 };
 
 CommanderClient.prototype.getDirectoryListing = function (path, extension, cb){
@@ -90,126 +90,11 @@ CommanderClient.prototype.getViews = function (cb){
 
 CommanderClient.prototype.getCmdDefs = function (cmdObj,cb){
     if(this.isSocketConnected){
-
-    	// this.socket.emit('requestCmdDefinition', cmdObj, function(cmdDefs){
-      //       cb(cmdDefs);
-      //   });
-      /* stubs */
-      if(cmdObj.name=='/CFE/ES_Noop'){
-        cb({
-          "name": "NoOp",
-          "qualifiedName": "/CFE/ES_Noop",
-          "alias": [
-            {
-              "name": "NoOp",
-              "namespace": "/CFS/CFE_ES"
-            }
-          ],
-          "baseCommand": {
-            "name": "cfs-cmd",
-            "qualifiedName": "/CFS/cfs-cmd",
-            "alias": [
-              {
-                "name": "cfs-cmd",
-                "namespace": "/CFS"
-              }
-            ],
-            "abstract": true,
-            "argument": [
-              {
-                "name": "ccsds-apid",
-                "type": {
-                  "engType": "integer",
-                  "dataEncoding": {
-                    "type": "INTEGER",
-                    "littleEndian": false,
-                    "sizeInBits": 11,
-                    "encoding": "unsigned"
-                  }
-                }
-              },
-              {
-                "name": "timeId",
-                "initialValue": "0",
-                "type": {
-                  "engType": "integer",
-                  "dataEncoding": {
-                    "type": "INTEGER",
-                    "littleEndian": false,
-                    "sizeInBits": 2,
-                    "encoding": "unsigned"
-                  }
-                }
-              },
-              {
-                "name": "checksumIndicator",
-                "initialValue": "1",
-                "type": {
-                  "engType": "integer",
-                  "dataEncoding": {
-                    "type": "INTEGER",
-                    "littleEndian": false,
-                    "sizeInBits": 1,
-                    "encoding": "unsigned"
-                  }
-                }
-              },
-              {
-                "name": "packet-type",
-                "initialValue": "1",
-                "type": {
-                  "engType": "integer",
-                  "dataEncoding": {
-                    "type": "INTEGER",
-                    "littleEndian": true,
-                    "sizeInBits": 4,
-                    "encoding": "unsigned"
-                  }
-                }
-              },
-              {
-                "name": "packet-id",
-                "initialValue": "0",
-                "type": {
-                  "engType": "integer",
-                  "dataEncoding": {
-                    "type": "INTEGER",
-                    "littleEndian": true,
-                    "sizeInBits": 32,
-                    "encoding": "unsigned"
-                  }
-                }
-              },
-              {
-                "name": "cfs-cmd-code",
-                "type": {
-                  "engType": "integer",
-                  "dataEncoding": {
-                    "type": "INTEGER",
-                    "littleEndian": true,
-                    "sizeInBits": 7,
-                    "encoding": "unsigned"
-                  }
-                }
-              }
-            ],
-            "url": "http://localhost:8090/api/mdb/Bebop_2_SITL/commands/CFS/cfs-cmd"
-          },
-          "abstract": false,
-          "argumentAssignment": [
-            {
-              "name": "ccsds-apid",
-              "value": "6"
-            },
-            {
-              "name": "cfs-cmd-code",
-              "value": "0"
-            }
-          ],
-          "url": "http://localhost:8090/api/mdb/Bebop_2_SITL/commands/CFS/CFE_ES/NoOp",
-          "uuid": "65dd8102-01d4-49fb-b473-9605b314f0e1"
+        this.socket.emit('getCmdDefs', cmdObj, function(cmdDefs){
+            cb(cmdDefs);
         });
-      }
+        
+      /* stubs */
 
       if(cmdObj.name=='/CFE/SetMaxPRCount'){
         cb({
@@ -382,7 +267,7 @@ CommanderClient.prototype.updateTelemetry = function (items) {
 			var cb = subs[funcName].cb;
       var opsPath = subs[funcName].opsPath;
 			var param = {
-        val: Math.random(),//items[itemID].value,
+        val: items[itemID].value,
         opsPath:opsPath
       };
 			cb(param);

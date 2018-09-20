@@ -260,36 +260,18 @@ ProtobufDecoder.prototype.instanceEmit = function (streamID, msg) {
 
 
 
-ProtobufDecoder.prototype.requestCmdDefinition = function (msgID, cmdCode, cb) {
-	var self = this;
-	
-	var listenerChannel = config.get('cmdDefRspStreamIDPrefix') + ':' + msgID + ':' + cmdCode;
-	
-	function cmdDefRspListener(definition) {
-		self.instanceEmitter.removeListener(listenerChannel, cmdDefRspListener);
-    	cb(definition);
-	}
-	
-	this.instanceEmitter.once(listenerChannel, cmdDefRspListener);
-	
-	this.instanceEmit(config.get('cmdDefReqStreamID'), {msgID: msgID, cmdCode: cmdCode});
+ProtobufDecoder.prototype.requestCmdDefinition = function (msgID, cmdCode, cb) {	
+	this.instanceEmitter.on(config.get('cmdDefReqStreamID'), {msgID: msgID, cmdCode: cmdCode}, function(resp) {
+    	cb(resp);
+	});
 }
 
 
 
-ProtobufDecoder.prototype.requestTlmDefinition = function (msgID, cb) {
-	var self = this;
-	
-	var listenerChannel = config.get('tlmDefRspStreamIDPrefix') + ':' + msgID;
-	
-	function tlmDefRspListener(definition) {
-		self.instanceEmitter.removeListener(listenerChannel, tlmDefRspListener);
-    	cb(definition);
-	}
-	
-	this.instanceEmitter.on(listenerChannel, tlmDefRspListener);
-	
-	this.instanceEmit(config.get('tlmDefReqStreamID'), {msgID: msgID});
+ProtobufDecoder.prototype.requestTlmDefinition = function (msgID, cb) {	
+	this.instanceEmitter.on(config.get('tlmDefReqStreamID'), {msgID: msgID}, function(resp) {
+    	cb(resp);
+	});
 }
 
 
