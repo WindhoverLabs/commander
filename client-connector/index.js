@@ -185,8 +185,126 @@ ClientConnector.prototype.getDirectoryListing = function(inPath, cb) {
 
 
 
-ClientConnector.prototype.getCmdDefs = function(cb) {
-	cb('getCmdDefs');
+ClientConnector.prototype.getCmdDefs = function(cmdObj, cb) {
+	this.instanceEmitter.emit(config.get('cmdDefReqStreamID'), {opsPath: cmdObj.name}, function(resp) {
+		cb(resp);
+	});
+	
+//    if(req.name=='/CFE/ES_Noop'){
+//      cb({
+//        "name": "NoOp",
+//        "qualifiedName": "/CFE/ES_Noop",
+//        "alias": [
+//          {
+//            "name": "NoOp",
+//            "namespace": "/CFS/CFE_ES"
+//          }
+//        ],
+//        "baseCommand": {
+//          "name": "cfs-cmd",
+//          "qualifiedName": "/CFS/cfs-cmd",
+//          "alias": [
+//            {
+//              "name": "cfs-cmd",
+//              "namespace": "/CFS"
+//            }
+//          ],
+//          "abstract": true,
+//          "argument": [
+//            {
+//              "name": "ccsds-apid",
+//              "type": {
+//                "engType": "integer",
+//                "dataEncoding": {
+//                  "type": "INTEGER",
+//                  "littleEndian": false,
+//                  "sizeInBits": 11,
+//                  "encoding": "unsigned"
+//                }
+//              }
+//            },
+//            {
+//              "name": "timeId",
+//              "initialValue": "0",
+//              "type": {
+//                "engType": "integer",
+//                "dataEncoding": {
+//                  "type": "INTEGER",
+//                  "littleEndian": false,
+//                  "sizeInBits": 2,
+//                  "encoding": "unsigned"
+//                }
+//              }
+//            },
+//            {
+//              "name": "checksumIndicator",
+//              "initialValue": "1",
+//              "type": {
+//                "engType": "integer",
+//                "dataEncoding": {
+//                  "type": "INTEGER",
+//                  "littleEndian": false,
+//                  "sizeInBits": 1,
+//                  "encoding": "unsigned"
+//                }
+//              }
+//            },
+//            {
+//              "name": "packet-type",
+//              "initialValue": "1",
+//              "type": {
+//                "engType": "integer",
+//                "dataEncoding": {
+//                  "type": "INTEGER",
+//                  "littleEndian": true,
+//                  "sizeInBits": 4,
+//                  "encoding": "unsigned"
+//                }
+//              }
+//            },
+//            {
+//              "name": "packet-id",
+//              "initialValue": "0",
+//              "type": {
+//                "engType": "integer",
+//                "dataEncoding": {
+//                  "type": "INTEGER",
+//                  "littleEndian": true,
+//                  "sizeInBits": 32,
+//                  "encoding": "unsigned"
+//                }
+//              }
+//            },
+//            {
+//              "name": "cfs-cmd-code",
+//              "type": {
+//                "engType": "integer",
+//                "dataEncoding": {
+//                  "type": "INTEGER",
+//                  "littleEndian": true,
+//                  "sizeInBits": 7,
+//                  "encoding": "unsigned"
+//                }
+//              }
+//            }
+//          ],
+//          "url": "http://localhost:8090/api/mdb/Bebop_2_SITL/commands/CFS/cfs-cmd"
+//        },
+//        "abstract": false,
+//        "argumentAssignment": [
+//          {
+//            "name": "ccsds-apid",
+//            "value": "6"
+//          },
+//          {
+//            "name": "cfs-cmd-code",
+//            "value": "0"
+//          }
+//        ],
+//        "url": "http://localhost:8090/api/mdb/Bebop_2_SITL/commands/CFS/CFE_ES/NoOp",
+//        "uuid": "65dd8102-01d4-49fb-b473-9605b314f0e1"
+//      });
+//    }
 }
 
 
@@ -297,17 +415,6 @@ ClientConnector.prototype.updateTelemetry = function (update) {
 
 ClientConnector.prototype.sendCmd = function (cmdName, args) {
 	this.instanceEmit(config.get('cmdSendStreamID'), cmdName, args);
-}
-
-
-
-ClientConnector.prototype.requestCmdDefinition = function (cmdName, cb) {
-
-	this.instanceEmitter.once(config.get('cmdDefRspStreamIDPrefix') + ':' + cmdName, function(definition) {
-    	cb(definition);
-	});
-
-	this.instanceEmit(config.get('cmdDefReqStreamID'), cmdName);
 }
 
 

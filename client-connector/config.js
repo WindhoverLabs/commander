@@ -33,11 +33,6 @@ var config = convict({
         format: String,
         default: ''
     },
-    cmdDefRspStreamIDPrefix: {
-        doc: 'Prefix of the stream ID that command updates will be sent out.  The full stream name is prefix + command name',
-        format: String,
-        default: ''
-    },
     cmdSendStreamID: {
         doc: 'Command send',
         format: String,

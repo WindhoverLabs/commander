@@ -325,20 +325,19 @@ BinaryDecoder.prototype.getFieldFromOperationalName = function (msgDef, opName, 
 			if(fieldMsgDef.hasOwnProperty('operational_names')) {
 				fieldPathArray.shift();
 				var nextFieldName = fieldPathArray[0];
-				return this.getFieldFromOperationalName(fieldMsgDef, nextFieldName, bitOffset);
+				return this.getFieldFromOperationalName(fieldMsgDef, nextFieldName, fieldDef.bit_offset + bitOffset);
 			}
 		}
 	} else {
-		return {fieldDef: fieldDef, bitOffset: bitOffset + fieldDef.bit_offset};
+		return {fieldDef: fieldDef, bitOffset: fieldDef.bit_offset + bitOffset};
 	}
 }
 
 
 
 BinaryDecoder.prototype.processBinaryMessage = function (buffer) {
-//	var parsedTlm = [];
-	
     var msgID = buffer.readUInt16BE(0);
+    
     
 	var message = this.ccsds.parse(buffer);
 	
@@ -347,7 +346,7 @@ BinaryDecoder.prototype.processBinaryMessage = function (buffer) {
 	var parsedTlm = {};
 	
     if(typeof def !== 'undefined') {
-		if(def.msgDef.hasOwnProperty('operational_names')) {
+		if(def.msgDef.hasOwnProperty('operational_names')) {		    
 			for(var opNameID in def.msgDef.operational_names) {
 				var fieldNames = def.msgDef.operational_names[opNameID].field_path.split('.');
 				var fieldName = fieldNames[0];
@@ -370,7 +369,6 @@ BinaryDecoder.prototype.processBinaryMessage = function (buffer) {
 		
 		var pbMsg = def.msgDef.proto_msg;
 		var symbolName = pbMsg.substring(0, pbMsg.length - 3);
-		
     	this.instanceEmit(config.get('jsonOutputStreamID'), {fields:parsedTlm, opsPath: def.opsPath, symbol:symbolName, msgID:msgID});
     }
 };
@@ -703,6 +701,26 @@ BinaryDecoder.prototype.getTlmDefByMsgID = function (msgID) {
 		if(tlm.msgID == msgID){
 			return tlm;
 		}
+	}
+}
+
+
+
+BinaryDecoder.prototype.isCommandMsg = function (msgID) {
+	if((msgID & 0x1000) == 0x1000) {
+		return true;
+	} else {
+		return false;
+	}
+}
+
+
+
+BinaryDecoder.prototype.isTelemetryMsg = function (msgID) {
+	if((msgID & 0x1000) == 0x1000) {
+		return false;
+	} else {
+		return true;
 	}
 }
 

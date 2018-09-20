@@ -36,7 +36,7 @@ var express = require('express');
 var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
-var socket_io = require( "socket.io" );
+var socket_io = require('socket.io');
 var fs = require('fs');
 
 var indexRouter = require('./routes/index');
@@ -111,15 +111,6 @@ var airliner = commander.addInstance('airliner', function(instance) {
 	instance.addApp('protobuf-encoder',  protobufEncoder);
 	instance.addApp('protobuf-decoder',  protobufDecoder);
 });
-
-
-//instance.addApp('binary-encoder',    binaryEncoder);
-//instance.addApp('binary-decoder',    binaryDecoder);
-//instance.addApp('fsw-connector',     fswConnector);
-//instance.addApp('pyliner-connector', pylinerConnector);
-//instance.addApp('variable-server',   variableServer);
-//instance.addApp('client-connector',  clientConnector);
-//instance.addApp('protobuf-encoder',  protobufEncoder);
 
 
 module.exports = app;

@@ -154,25 +154,19 @@ BinaryEncoder.prototype.setInstanceEmitter = function (newInstanceEmitter)
 	var self = this;
 	this.instanceEmitter = newInstanceEmitter;
 
-	this.instanceEmitter.on(config.get('cmdDefReqStreamID'), function(cmdReq) {
+	this.instanceEmitter.on(config.get('cmdDefReqStreamID'), function(cmdReq, cb) {
 		if(cmdReq.hasOwnProperty('opsPath')) {
-			var cmdDef = self.getCmdDefByPath(cmdReq.ops_path);
+			var cmdDef = self.getCmdDefByPath(cmdReq.opsPath);
 			
-			if(typeof cmdDef === 'undefined') {
-			    this.logErrorEvent(EventEnum.OPS_PATH_NOT_FOUND, 'CmdDefReq: Ops path not found.');
-			} else {
-		        self.instanceEmit(config.get('cmdDefRspStreamIDPrefix') + ':' + cmdReq.opsName, cmdDef);
-			}
+			cb(cmdDef);
 		} else if (cmdReq.hasOwnProperty('msgID') && cmdReq.hasOwnProperty('cmdCode')) {
 			var cmdDef = self.getCmdDefByMsgIDandCC(cmdReq.msgID, cmdReq.cmdCode);
-
-			if(typeof cmdDef === 'undefined') {
-			    this.logErrorEvent(EventEnum.MSG_ID_NOT_FOUND, 'CmdDefReq: Msg ID not found.');
-			} else {
-		        self.instanceEmit(config.get('cmdDefRspStreamIDPrefix') + ':' + cmdReq.msgID + ':' + cmdReq.cmdCode, cmdDef);
-			}
+			
+			cb(cmdDef);
 		} else {
 		    this.logErrorEvent(EventEnum.INVALID_REQUEST, 'CmdDefReq: Invalid request.  \'' + req + '\'');
+			
+			cb(undefined);
 		}
 	});
 
@@ -245,31 +239,26 @@ BinaryEncoder.prototype.getOperationFromPath = function (path) {
 
 
 
-BinaryEncoder.prototype.getCmdDefByPath = function (path) {
-    var appName = this.getAppNameFromPath(path);
-    var operationName = this.getOperationFromPath(path);
-    if(typeof operationName === 'undefined') {
-	    this.logErrorEvent(EventEnum.OPS_PATH_NOT_FOUND, 'getCmdDefByPath: Ops path not found.  \'' + path + '\'');
-    	return undefined;
-    } else {
-	    var appDefinition = this.getAppDefinition(appName);
-	    
-	    if(typeof appDefinition === 'undefined') {
-		    this.logErrorEvent(EventEnum.APP_NOT_FOUND, 'getCmdDefByPath: App not found.  \'' + appName + '\'');
-	    	return undefined;
-	    } else {
-		    return appDefinition.operations[operationName];
-	    }
-    }
-}
-
-
-
 BinaryEncoder.prototype.getAppDefinition = function (appName) {
 	for(var appID in this.defs.Airliner.apps) {
 		var app = this.defs.Airliner.apps[appID];
 		if(app.app_name == appName) {
 			return app;
+		}
+	}
+}
+
+
+
+BinaryEncoder.prototype.getOperationByPath = function (inOpsPath) {
+	for(var appID in this.defs.Airliner.apps) {
+		var app = this.defs.Airliner.apps[appID];
+		for(var opID in app.operations) {
+			var operation = app.operations[opID];
+			var opsPath = '/' + appID + '/' + opID
+			if(opsPath === inOpsPath) {
+				return {ops_path:opsPath, operation:operation};
+			}
 		}
 	}
 }
@@ -299,6 +288,34 @@ BinaryEncoder.prototype.getCmdDefByMsgIDandCC = function (msgID, cmdCode) {
 	}
 	
 	return cmdDef;
+}
+
+
+
+BinaryEncoder.prototype.getCmdDefByPath = function (opsPath) {
+	var cmdDef = this.getOperationByPath(opsPath);
+    var result = {opsPath: opsPath};
+    
+    if(typeof cmdDef === 'undefined') {
+	    this.logErrorEvent(EventEnum.OPS_PATH_NOT_FOUND, 'getCmdDefByPath: Ops path not found.  \'' + path + '\'');
+	    return undefined;
+    } else {
+    	console.log(cmdDef);
+    	if(typeof cmdDef.operation === 'undefined') {
+    	    this.logErrorEvent(EventEnum.OPS_PATH_NOT_FOUND, 'getCmdDefByPath: Ops path not found.  \'' + path + '\'');
+    	    return undefined;
+    	} else {
+    		if(cmdDef.operation.airliner_msg !== '') {
+    			var opNames = this.getCmdOpNamesStripHeader(cmdDef.operation.airliner_msg);
+    			var tmp = this.getCmdDefByMsgIDandCC(0x1806, 20);
+    			var opNames2 = this.getCmdOpNamesStripHeader(tmp.operation.airliner_msg);
+        		console.log(1, tmp);
+    			console.log(2, opNames2);
+    		}
+    	}
+    }
+	
+	return result;
 }
 
 
@@ -475,7 +492,27 @@ BinaryEncoder.prototype.getFieldFromOperationalName = function (msgDef, opName, 
 			}
 		}
 	} else {
-		return {fieldDef: fieldDef, bitOffset: bitOffset + fieldDef.bit_offset};
+		return {fieldDef: fieldDef, bitOffset: fieldDef.bit_offset + bitOffset};
+	}
+}
+
+
+
+BinaryEncoder.prototype.isCommandMsg = function (msgID) {
+	if((msgID & 0x1000) == 0x1000) {
+		return true;
+	} else {
+		return false;
+	}
+}
+
+
+
+BinaryEncoder.prototype.isTelemetryMsg = function (msgID) {
+	if((msgID & 0x1000) == 0x1000) {
+		return false;
+	} else {
+		return true;
 	}
 }
 
