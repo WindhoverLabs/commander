@@ -353,7 +353,7 @@ BinaryDecoder.prototype.processBinaryMessage = function (buffer) {
 
 				var fieldDef = this.getFieldFromOperationalName(def.msgDef, def.msgDef.operational_names[opNameID].field_path, 0);
 				
-				var opsPath = def.opsPath + '/' + def.msgDef.operational_names[opNameID].field_path;
+				var opsPath = def.opsPath + '/' + opNameID;
 				
 				parsedTlm[opsPath] = {};
 				
