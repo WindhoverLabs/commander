@@ -219,6 +219,10 @@ ProtobufEncoder.prototype.setInstanceEmitter = function (newInstanceEmitter)
             	    	var pbMsg = pbMsgDef.create(tlmJson);
 
             	    	var pbBuffer = pbMsgDef.encode(pbMsg).finish();
+
+				    	//var msg2 = pbMsgDef.decode(pbBuffer);
+				    	
+				    	//console.log(msg2);
             	    	
             	    	var hdrBuffer = new Buffer(12)
             	  	    hdrBuffer.writeUInt16BE(msgID, 0);

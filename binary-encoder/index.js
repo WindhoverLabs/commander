@@ -270,8 +270,9 @@ BinaryEncoder.prototype.getOperationByMsgIDandCC = function (msgID, cmdCode) {
 		var app = this.defs.Airliner.apps[appID];
 		for(var opID in app.operations) {
 			var operation = app.operations[opID];
+			var opsPath = '/' + appID + '/' + opID
 			if((parseInt(operation.airliner_mid) == msgID) && (operation.airliner_cc == cmdCode)) {
-				var result = {ops_path: '/' + appID + '/' + opID, operation: operation};
+				var result = {ops_path:opsPath, operation: operation};
 				return result;
 			}
 		}
@@ -429,19 +430,20 @@ BinaryEncoder.prototype.setField = function (buffer, fieldDef, bitOffset, value)
 
 
 BinaryEncoder.prototype.sendCommand = function (cmd, args) {	
-	var msgDef = this.getMsgDefByName(cmd.airliner_msg);
-	var byteLength = this.getCmdByteLength(cmd);
+	var opDef = this.getOperationByPath(cmd.opsPath);
+	var byteLength = this.getCmdByteLength(opDef.operation);
 	var buffer = new Buffer(byteLength);
 	buffer.fill(0x00);
 	
-	buffer.writeUInt16BE(cmd.airliner_mid, 0);
+	buffer.writeUInt16BE(opDef.operation.airliner_mid, 0);
 	buffer.writeUInt16BE(this.sequence, 2);
 	buffer.writeUInt16BE(byteLength - 7, 4);
-	buffer.writeUInt8(cmd.airliner_cc, 7);
+	buffer.writeUInt8(opDef.operation.airliner_cc, 7);
 	buffer.writeUInt8(0, 6);
 	
 	this.sequence++;
 	
+	var msgDef = this.getMsgDefByName(opDef.operation.airliner_msg);
 	if(typeof msgDef === 'object') {
 		if(msgDef.hasOwnProperty('operational_names')) {
 			for(var opNameID in msgDef.operational_names) {

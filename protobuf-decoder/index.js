@@ -193,7 +193,7 @@ ProtobufDecoder.prototype.setInstanceEmitter = function (newInstanceEmitter)
 	    	self.requestCmdDefinition(msgID, cmdCode, function (cmdDef) {
 		    	if(cmdDef.operation.airliner_msg === '') {
 		    		/* This command has no arguments.  No payload to parse.  Just send the command ops path. */
-		    		
+		    		var args = [];
 					self.sendCmd(cmdDef.ops_path, args);
 		    	} else {
 		    		/* This command does have arguments.  Parse the protobuf payload. */
@@ -261,17 +261,21 @@ ProtobufDecoder.prototype.instanceEmit = function (streamID, msg) {
 
 
 ProtobufDecoder.prototype.requestCmdDefinition = function (msgID, cmdCode, cb) {	
-	this.instanceEmitter.on(config.get('cmdDefReqStreamID'), {msgID: msgID, cmdCode: cmdCode}, function(resp) {
-    	cb(resp);
-	});
+	if(typeof this.instanceEmitter === 'object') {
+		this.instanceEmitter.emit(config.get('cmdDefReqStreamID'), {msgID: msgID, cmdCode: cmdCode}, function(resp) {
+			cb(resp);
+		});
+	};
 }
 
 
 
-ProtobufDecoder.prototype.requestTlmDefinition = function (msgID, cb) {	
-	this.instanceEmitter.on(config.get('tlmDefReqStreamID'), {msgID: msgID}, function(resp) {
-    	cb(resp);
-	});
+ProtobufDecoder.prototype.requestTlmDefinition = function (msgID, cb) {		
+	if(typeof this.instanceEmitter === 'object') {
+		this.instanceEmitter.emit(config.get('tlmDefReqStreamID'), {msgID: msgID}, function(resp) {
+	    	cb(resp);
+		});
+	};
 }
 
 
