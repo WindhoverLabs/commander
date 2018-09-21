@@ -10,11 +10,11 @@
               tr
                 th Cmd Count
                 td
-                  div.sage-tlm(data-commander={tlm:[{name:'/CFE/ES_HK/Payload.CmdCounter'}]} data-format='text') ---
+                  div.sage-tlm(data-commander={tlm:[{name:'/CFE/ES_HK/CmdCounter'}]} data-format='text') ---
               tr
                 th Error Count
                 td
-                  div(data-commander={tlm:[{name:'/CFE/ES_HK/Payload.ProcessorResets'}]} data-format='led')   
+                  div(data-commander={tlm:[{name:'/CFE/ES_HK/MaxProcessorResets'}]} data-format='led')   
     footer.btn-group(role="group")
       button.btn.btn-primary(data-commander={cmd:{name:'/CFE/SetMaxPRCount'}} data-format='cmd') Set MaxPRCount      
       button.btn.btn-primary(data-commander={cmd:{name:'/CFE/ES_Noop'}} data-format='cmd') No-Op
