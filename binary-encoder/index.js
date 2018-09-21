@@ -157,7 +157,7 @@ BinaryEncoder.prototype.setInstanceEmitter = function (newInstanceEmitter)
 	this.instanceEmitter.on(config.get('cmdDefReqStreamID'), function(cmdReq, cb) {
 		if(cmdReq.hasOwnProperty('opsPath')) {
 			var cmdDef = self.getCmdDefByPath(cmdReq.opsPath);
-			
+
 			cb(cmdDef);
 		} else if (cmdReq.hasOwnProperty('msgID') && cmdReq.hasOwnProperty('cmdCode')) {
 			var cmdDef = self.getCmdDefByMsgIDandCC(cmdReq.msgID, cmdReq.cmdCode);
@@ -294,13 +294,12 @@ BinaryEncoder.prototype.getCmdDefByMsgIDandCC = function (msgID, cmdCode) {
 
 BinaryEncoder.prototype.getCmdDefByPath = function (opsPath) {
 	var cmdDef = this.getOperationByPath(opsPath);
-    var result = {opsPath: opsPath};
+    var result = {opsPath: opsPath, args: []};
     
     if(typeof cmdDef === 'undefined') {
 	    this.logErrorEvent(EventEnum.OPS_PATH_NOT_FOUND, 'getCmdDefByPath: Ops path not found.  \'' + path + '\'');
 	    return undefined;
     } else {
-    	console.log(cmdDef);
     	if(typeof cmdDef.operation === 'undefined') {
     	    this.logErrorEvent(EventEnum.OPS_PATH_NOT_FOUND, 'getCmdDefByPath: Ops path not found.  \'' + path + '\'');
     	    return undefined;
@@ -309,9 +308,7 @@ BinaryEncoder.prototype.getCmdDefByPath = function (opsPath) {
     			var opNames = this.getCmdOpNamesStripHeader(cmdDef.operation.airliner_msg);
     			var tmp = this.getCmdDefByMsgIDandCC(0x1806, 20);
     			var opNames2 = this.getCmdOpNamesStripHeader(tmp.operation.airliner_msg);
-        		console.log(1, tmp);
-    			console.log(2, opNames2);
-    		}
+    		} 
     	}
     }
 	
