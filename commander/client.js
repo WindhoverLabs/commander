@@ -90,157 +90,159 @@ CommanderClient.prototype.getViews = function (cb){
 
 CommanderClient.prototype.getCmdDefs = function (cmdObj,cb){
     if(this.isSocketConnected){
-        this.socket.emit('getCmdDefs', cmdObj, function(cmdDefs){
-            cb(cmdDefs);
+        this.socket.emit('getCmdDefs', cmdObj, function(cmdDefs) {
+        	var outCmdDefs = {name:cmdDefs.opsPath, argument:cmdDefs.args};
+        	
+            cb(outCmdDefs);
         });
         
       /* stubs */
 
-      if(cmdObj.name=='/CFE/SetMaxPRCount'){
-        cb({
-          "name": "SetMaxPRCount",
-          "qualifiedName": "/CFE/SetMaxPRCount",
-          "alias": [
-            {
-              "name": "SetMaxPRCount",
-              "namespace": "/CFS/CFE_ES"
-            }
-          ],
-          "baseCommand": {
-            "name": "cfs-cmd",
-            "qualifiedName": "/CFS/cfs-cmd",
-            "alias": [
-              {
-                "name": "cfs-cmd",
-                "namespace": "/CFS"
-              }
-            ],
-            "abstract": true,
-            "argument": [
-              {
-                "name": "ccsds-apid",
-                "type": {
-                  "engType": "integer",
-                  "dataEncoding": {
-                    "type": "INTEGER",
-                    "littleEndian": false,
-                    "sizeInBits": 11,
-                    "encoding": "unsigned"
-                  }
-                }
-              },
-              {
-                "name": "timeId",
-                "initialValue": "0",
-                "type": {
-                  "engType": "integer",
-                  "dataEncoding": {
-                    "type": "INTEGER",
-                    "littleEndian": false,
-                    "sizeInBits": 2,
-                    "encoding": "unsigned"
-                  }
-                }
-              },
-              {
-                "name": "checksumIndicator",
-                "initialValue": "1",
-                "type": {
-                  "engType": "integer",
-                  "dataEncoding": {
-                    "type": "INTEGER",
-                    "littleEndian": false,
-                    "sizeInBits": 1,
-                    "encoding": "unsigned"
-                  }
-                }
-              },
-              {
-                "name": "packet-type",
-                "initialValue": "1",
-                "type": {
-                  "engType": "integer",
-                  "dataEncoding": {
-                    "type": "INTEGER",
-                    "littleEndian": true,
-                    "sizeInBits": 4,
-                    "encoding": "unsigned"
-                  }
-                }
-              },
-              {
-                "name": "packet-id",
-                "initialValue": "0",
-                "type": {
-                  "engType": "integer",
-                  "dataEncoding": {
-                    "type": "INTEGER",
-                    "littleEndian": true,
-                    "sizeInBits": 32,
-                    "encoding": "unsigned"
-                  }
-                }
-              },
-              {
-                "name": "cfs-cmd-code",
-                "type": {
-                  "engType": "integer",
-                  "dataEncoding": {
-                    "type": "INTEGER",
-                    "littleEndian": true,
-                    "sizeInBits": 7,
-                    "encoding": "unsigned"
-                  }
-                }
-              }
-            ],
-            "url": "http://localhost:8090/api/mdb/Bebop_2_SITL/commands/CFS/cfs-cmd"
-          },
-          "abstract": false,
-          "argument": [
-            {
-              "name": "Payload.MaxPRCount",
-              "type": {
-                "engType": "enumeration",
-                "dataEncoding": {
-                  "type": "INTEGER",
-                  "littleEndian": true,
-                  "sizeInBits": 16,
-                  "encoding": "unsigned"
-                },
-                "enumValue":[
-                  {
-                    "value":0,
-                    "label":"A"
-                  },
-                  {
-                    "value":1,
-                    "label":"B"
-                  },
-                  {
-                    "value":2,
-                    "label":"C"
-                  }
-                ]
-              }
-            }
-          ],
-          "argumentAssignment": [
-            {
-              "name": "ccsds-apid",
-              "value": "6"
-            },
-            {
-              "name": "cfs-cmd-code",
-              "value": "20"
-            }
-          ],
-          "url": "http://localhost:8090/api/mdb/Bebop_2_SITL/commands/CFS/CFE_ES/SetMaxPRCount",
-          "uuid": "915bd538-910b-49dd-af34-407c7d92b4e4"
-        });
-      }
-
-
+//      if(cmdObj.name=='/CFE/SetMaxPRCount'){
+//        cb({
+//          "name": "SetMaxPRCount",
+//          "qualifiedName": "/CFE/SetMaxPRCount",
+//          "alias": [
+//            {
+//              "name": "SetMaxPRCount",
+//              "namespace": "/CFS/CFE_ES"
+//            }
+//          ],
+//          "baseCommand": {
+//            "name": "cfs-cmd",
+//            "qualifiedName": "/CFS/cfs-cmd",
+//            "alias": [
+//              {
+//                "name": "cfs-cmd",
+//                "namespace": "/CFS"
+//              }
+//            ],
+//            "abstract": true,
+//            "argument": [
+//              {
+//                "name": "ccsds-apid",
+//                "type": {
+//                  "engType": "integer",
+//                  "dataEncoding": {
+//                    "type": "INTEGER",
+//                    "littleEndian": false,
+//                    "sizeInBits": 11,
+//                    "encoding": "unsigned"
+//                  }
+//                }
+//              },
+//              {
+//                "name": "timeId",
+//                "initialValue": "0",
+//                "type": {
+//                  "engType": "integer",
+//                  "dataEncoding": {
+//                    "type": "INTEGER",
+//                    "littleEndian": false,
+//                    "sizeInBits": 2,
+//                    "encoding": "unsigned"
+//                  }
+//                }
+//              },
+//              {
+//                "name": "checksumIndicator",
+//                "initialValue": "1",
+//                "type": {
+//                  "engType": "integer",
+//                  "dataEncoding": {
+//                    "type": "INTEGER",
+//                    "littleEndian": false,
+//                    "sizeInBits": 1,
+//                    "encoding": "unsigned"
+//                  }
+//                }
+//              },
+//              {
+//                "name": "packet-type",
+//                "initialValue": "1",
+//                "type": {
+//                  "engType": "integer",
+//                  "dataEncoding": {
+//                    "type": "INTEGER",
+//                    "littleEndian": true,
+//                    "sizeInBits": 4,
+//                    "encoding": "unsigned"
+//                  }
+//                }
+//              },
+//              {
+//                "name": "packet-id",
+//                "initialValue": "0",
+//                "type": {
+//                  "engType": "integer",
+//                  "dataEncoding": {
+//                    "type": "INTEGER",
+//                    "littleEndian": true,
+//                    "sizeInBits": 32,
+//                    "encoding": "unsigned"
+//                  }
+//                }
+//              },
+//              {
+//                "name": "cfs-cmd-code",
+//                "type": {
+//                  "engType": "integer",
+//                  "dataEncoding": {
+//                    "type": "INTEGER",
+//                    "littleEndian": true,
+//                    "sizeInBits": 7,
+//                    "encoding": "unsigned"
+//                  }
+//                }
+//              }
+//            ],
+//            "url": "http://localhost:8090/api/mdb/Bebop_2_SITL/commands/CFS/cfs-cmd"
+//          },
+//          "abstract": false,
+//          "argument": [
+//            {
+//              "name": "Payload.MaxPRCount",
+//              "type": {
+//                "engType": "enumeration",
+//                "dataEncoding": {
+//                  "type": "INTEGER",
+//                  "littleEndian": true,
+//                  "sizeInBits": 16,
+//                  "encoding": "unsigned"
+//                },
+//                "enumValue":[
+//                  {
+//                    "value":0,
+//                    "label":"A"
+//                  },
+//                  {
+//                    "value":1,
+//                    "label":"B"
+//                  },
+//                  {
+//                    "value":2,
+//                    "label":"C"
+//                  }
+//                ]
+//              }
+//            }
+//          ],
+//          "argumentAssignment": [
+//            {
+//              "name": "ccsds-apid",
+//              "value": "6"
+//            },
+//            {
+//              "name": "cfs-cmd-code",
+//              "value": "20"
+//            }
+//          ],
+//          "url": "http://localhost:8090/api/mdb/Bebop_2_SITL/commands/CFS/CFE_ES/SetMaxPRCount",
+//          "uuid": "915bd538-910b-49dd-af34-407c7d92b4e4"
+//        });
+//      }
+//
+//
 
 
     };
@@ -317,7 +319,7 @@ CommanderClient.prototype.subscribe = function (tlmObj, cb){
 
 
 
-CommanderClient.prototype.sendCommand = function (cmdObj){
+CommanderClient.prototype.sendCommand = function (cmdObj) {
     if(this.isSocketConnected){
     	this.socket.emit('sendCmd', cmdObj);
     };

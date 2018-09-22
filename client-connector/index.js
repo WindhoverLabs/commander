@@ -383,10 +383,6 @@ ClientConnector.prototype.setInstanceEmitter = function (newInstanceEmitter)
 	  //      'Payload.StackSize':32769,
 	  //      'Payload.ExceptionAction':1}});
 
-	  	//this.requestCmdDefinition('/CFE/ES_NOOP', function(definition) {
-			//    console.log(definition);
-	   	//});
-
 //		this.requestVarDefinition('/CFE_ES_HkPacket_t/Payload/PerfTriggerMask', function(definition) {
 //			console.log(definition);
 //		});
@@ -396,11 +392,18 @@ ClientConnector.prototype.setInstanceEmitter = function (newInstanceEmitter)
 		// });
 
 //		self.subscribe(['/CFE/ES_HK/Payload.ProcessorResets', '/CFE/ES_HK/Payload.CFEMinorVersion'], self.updateTelemetry);
-//		
+		
 //		setTimeout(function () {
-//			self.unsubscribe(['/CFE/ES_HK/Payload.CFEMinorVersion'], self.updateTelemetry);
+//	  	    self.getCmdDefs({name: '/CFE/ES_Noop'}, function(definition) {
+//			    //console.log(definition);
+//	   	    });
+//
+//	  	    self.getCmdDefs({name: '/CFE/SetMaxPRCount'}, function(definition) {
+//	  	        //console.log('**********************');
+//				//console.log(definition);
+//		   	});
 //		}, 2000);
-//	}, 1000);
+	//}, 1000);
 
     this.logInfoEvent(EventEnum.INITIALIZED, 'Initialized');
 }

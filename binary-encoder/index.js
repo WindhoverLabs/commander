@@ -156,9 +156,19 @@ BinaryEncoder.prototype.setInstanceEmitter = function (newInstanceEmitter)
 
 	this.instanceEmitter.on(config.get('cmdDefReqStreamID'), function(cmdReq, cb) {
 		if(cmdReq.hasOwnProperty('opsPath')) {
-			var cmdDef = self.getCmdDefByPath(cmdReq.opsPath);
+			var outCmdDef = {opsPath:cmdReq.opsPath, args:[]};
+			var opDef = self.getOperationByPath(cmdReq.opsPath);
 
-			cb(cmdDef);
+			var msgDef = self.getMsgDefByName(opDef.operation.airliner_msg);
+			if(typeof msgDef === 'object') {
+
+				var args = self.getCmdOpNamesStripHeader(msgDef);
+				for(var argID in args) {
+					outCmdDef.args.push({name:argID, type:args[argID].dataType, bitSize:args[argID].bitSize});
+				}
+			}
+			
+			cb(outCmdDef);
 		} else if (cmdReq.hasOwnProperty('msgID') && cmdReq.hasOwnProperty('cmdCode')) {
 			var cmdDef = self.getCmdDefByMsgIDandCC(cmdReq.msgID, cmdReq.cmdCode);
 			
@@ -199,9 +209,8 @@ BinaryEncoder.prototype.getCmdOpNamesStripHeader = function (cmdDef) {
 			var field = cmdDef.fields[fieldName];
 	
 			var fieldDef = this.getFieldFromOperationalName(cmdDef, opNameID);
-			
-			if(fieldDef.bitOffset > this.cmdHeaderLength) {
-				opsPaths[opNameID] = {dataType: fieldDef.fieldDef.airliner_type};
+			if((fieldDef.bitOffset * 8) > this.cmdHeaderLength) {
+				opsPaths[opNameID] = {dataType: fieldDef.fieldDef.airliner_type, bitSize: fieldDef.fieldDef.bit_size};
 			}
 		}
 	}
@@ -453,9 +462,9 @@ BinaryEncoder.prototype.sendCommand = function (cmd, args) {
 		
 				var arg_path = msgDef.operational_names[opNameID].field_path;
 				
-				if(args.hasOwnProperty(arg_path)) {
+				if(args.hasOwnProperty(opNameID)) {
 					var fieldDef = this.getFieldFromOperationalName(msgDef, opNameID);
-					this.setField(buffer, fieldDef.fieldDef, fieldDef.bitOffset, args[arg_path]);
+					this.setField(buffer, fieldDef.fieldDef, fieldDef.bitOffset, args[opNameID]);
 				}
 			}
 		}
