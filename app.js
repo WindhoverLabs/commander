@@ -40,77 +40,78 @@ var socket_io = require('socket.io');
 var fs = require('fs');
 
 var indexRouter = require('./routes/index');
-var workspaceRouter = require('./routes/workspace');
+//var workspaceRouter = require('./routes/workspace');
 
 
 const util = require('util');
-var Commander = require('./commander');
-var BinaryEncoder = require('./binary-encoder');
-var BinaryDecoder = require('./binary-decoder');
-var UdpStdProvider = require('./udp-std-provider');
-var VariableServer = require('./variable-server');
-var ClientConnector = require('./client-connector');
-var ProtobufEncoder = require('./protobuf-encoder');
-var ProtobufDecoder = require('./protobuf-decoder');
 
-var CMDR_WORKSPACE = process.env.CMDR_WORKSPACE || path.join(__dirname, '/workspace');
+global.CDR_WORKSPACE = process.env.CDR_WORKSPACE || path.join(__dirname, '/workspace');
+global.CDR_INSTALL_DIR = __dirname;
 
-var app = express();
+global.NODE_APP = express();
 
 // view engine setup
-app.set('views', [path.join(__dirname, 'workspace'),path.join(__dirname, 'views')]);
-app.set('view engine', 'pug');
+global.NODE_APP.set('views', [path.join(__dirname, 'workspace'),path.join(__dirname, 'views')]);
+global.NODE_APP.set('view engine', 'pug');
 
-app.use(logger('dev'));
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
-app.use(cookieParser());
-app.use(express.static(path.join(__dirname, 'public')));
-app.use('/scripts', express.static(__dirname + '/node_modules/'));
-app.use('/js', express.static(__dirname + '/public/js/'));
-app.use('/sage', express.static(path.join(__dirname, 'sage')));
-app.use('/commander', express.static(path.join(__dirname, 'commander')));
-app.use('/', indexRouter);
-app.use('/ws', workspaceRouter);
-//app.use('/flow*', test1);
+global.NODE_APP.use(logger('dev'));
+global.NODE_APP.use(express.json());
+global.NODE_APP.use(express.urlencoded({ extended: false }));
+global.NODE_APP.use(cookieParser());
+global.NODE_APP.use(express.static(path.join(__dirname, 'public')));
+global.NODE_APP.use('/scripts', express.static(__dirname + '/node_modules/'));
+global.NODE_APP.use('/js', express.static(__dirname + '/public/js/'));
+global.NODE_APP.use('/sage', express.static(path.join(__dirname, 'sage')));
+global.NODE_APP.use('/commander', express.static(path.join(__dirname, 'commander')));
+global.NODE_APP.use('/', indexRouter);
 
-// catch 404 and forward to error handler
-app.use(function(req, res, next) {
-    next(createError(404));
-});
+global.PANELS_TREE = [];
+global.LAYOUT_TREE = [];
 
-// error handler
-app.use(function(err, req, res, next) {
-    // set locals, only providing error in development
-    res.locals.message = err.message;
-    res.locals.error = req.app.get('env') === 'development' ? err : {};
+//global.NODE_APP.use('/ws', workspaceRouter);
+//global.NODE_APP.use('/flow*', test1);
 
-    // render the error page
-    res.status(err.status || 500);
-    res.render('error');
-});
+var commander = require(CDR_WORKSPACE); 
 
-
-var commander = new Commander(CMDR_WORKSPACE, './config/development.json');
-var binaryEncoder = new BinaryEncoder(CMDR_WORKSPACE, `${CMDR_WORKSPACE}/etc/binary-encoder-config.json`);
-var binaryDecoder = new BinaryDecoder(CMDR_WORKSPACE, `${CMDR_WORKSPACE}/etc/binary-decoder-config.json`);
-var variableServer = new VariableServer(`${CMDR_WORKSPACE}/etc/variable-server-config.json`);
-var fswConnector = new UdpStdProvider(`${CMDR_WORKSPACE}/etc/udpstdprovider-config.json`);
-var pylinerConnector = new UdpStdProvider(`${CMDR_WORKSPACE}/etc/pyliner-connector-config.json`);
-var clientConnector = new ClientConnector(CMDR_WORKSPACE, `${CMDR_WORKSPACE}/etc/client-connector-config.json`, app);
-var protobufEncoder = new ProtobufEncoder(CMDR_WORKSPACE, `${CMDR_WORKSPACE}/etc/protobuf-encoder-config.json`);
-var protobufDecoder = new ProtobufDecoder(CMDR_WORKSPACE, `${CMDR_WORKSPACE}/etc/protobuf-decoder-config.json`);
-
-var airliner = commander.addInstance('airliner', function(instance) {
-	instance.addApp('binary-encoder',    binaryEncoder);
-	instance.addApp('binary-decoder',    binaryDecoder);
-	instance.addApp('fsw-connector',     fswConnector);
-	instance.addApp('pyliner-connector', pylinerConnector);
-	instance.addApp('variable-server',   variableServer);
-	instance.addApp('client-connector',  clientConnector);
-	instance.addApp('protobuf-encoder',  protobufEncoder);
-	instance.addApp('protobuf-decoder',  protobufDecoder);
-});
+//var commander = new Commander(CDR_WORKSPACE, './config/development.json');
+//var binaryEncoder = new BinaryEncoder(CDR_WORKSPACE, `${CDR_WORKSPACE}/etc/binary-encoder-config.json`);
+//var binaryDecoder = new BinaryDecoder(CDR_WORKSPACE, `${CDR_WORKSPACE}/etc/binary-decoder-config.json`);
+//var variableServer = new VariableServer(`${CDR_WORKSPACE}/etc/variable-server-config.json`);
+//var fswConnector = new UdpStdProvider(`${CDR_WORKSPACE}/etc/udpstdprovider-config.json`);
+//var pylinerConnector = new UdpStdProvider(`${CDR_WORKSPACE}/etc/pyliner-connector-config.json`);
+//var clientConnector = new ClientConnector(CDR_WORKSPACE, `${CDR_WORKSPACE}/etc/client-connector-config.json`, global.NODE_APP);
+//var protobufEncoder = new ProtobufEncoder(CDR_WORKSPACE, `${CDR_WORKSPACE}/etc/protobuf-encoder-config.json`);
+//var protobufDecoder = new ProtobufDecoder(CDR_WORKSPACE, `${CDR_WORKSPACE}/etc/protobuf-decoder-config.json`);
+//
+//var airliner = commander.addInstance('airliner', function(instance) {
+//	instance.addApp('binary-encoder',    binaryEncoder);
+//	instance.addApp('binary-decoder',    binaryDecoder);
+//	instance.addApp('fsw-connector',     fswConnector);
+//	instance.addApp('pyliner-connector', pylinerConnector);
+//	instance.addApp('variable-server',   variableServer);
+//	instance.addApp('client-connector',  clientConnector);
+//	instance.addApp('protobuf-encoder',  protobufEncoder);
+//	instance.addApp('protobuf-decoder',  protobufDecoder);
+//});
 
 
-module.exports = app;
+
+////catch 404 and forward to error handler
+//global.NODE_APP.use(function(req, res, next) {
+// next(createError(404));
+//});
+//
+////error handler
+//global.NODE_APP.use(function(err, req, res, next) {
+// // set locals, only providing error in development
+// res.locals.message = err.message;
+// //res.locals.error = req.global.NODE_APP.get('env') === 'development' ? err : {};
+// res.locals.error = err;
+//
+// // render the error page
+// res.status(err.status || 500);
+// res.render('error');
+//});
+
+
+module.exports = global.NODE_APP;
