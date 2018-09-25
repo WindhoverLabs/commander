@@ -12,8 +12,8 @@
 *    notice, this list of conditions and the following disclaimer in
 *    the documentation and/or other materials provided with the
 *    distribution.
-* 3. Neither the name Windhover Labs nor the names of its 
-*    contributors may be used to endorse or promote products derived 
+* 3. Neither the name Windhover Labs nor the names of its
+*    contributors may be used to endorse or promote products derived
 *    from this software without specific prior written permission.
 *
 * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
@@ -36,7 +36,10 @@ var router = express.Router();
 var path = require('path');
 var url = require('url');
 
-var workspace = path.join(__dirname + '/..', '/workspace/web');
+var workspace = path.join(process.env.CMDR_WORKSPACE + '/web');
+console.log(workspace)
+
+// var workspace = path.join(__dirname + '/..', '/workspace/web');
 
 /* GET home page. */
 router.get('/*', function(req, res, next) {
@@ -46,7 +49,7 @@ router.get('/*', function(req, res, next) {
 	    case '.pug':
 	        res.render(translatedPath, { title: 'Express' });
 	        break;
-	        
+
 	    default:
 	    	var options = {};
 	    	res.sendFile(translatedPath, options, function(error) {

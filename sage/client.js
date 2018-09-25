@@ -664,6 +664,7 @@ function SageTimeSeriesDataplot(domObject, objData) {
 
     if(objTlm.length > 0)
     {
+        console.log('objTlm',objTlm)
         session.subscribe({
           homogeneity: self.objMergedData.homogeneity,
           'tlm': objTlm}, function(params) {

@@ -197,7 +197,7 @@ function InitLayout(mlyt){
 function SaveLayout() {
     /* now save the state */
     let form = $("[id='inputField0']");
-    let name = "LAYOUT_"
+    let name = ""
     if(form.val() != "")
     {
         name += form.val()+"_"
@@ -208,19 +208,21 @@ function SaveLayout() {
 
     /* stringify state config */
     let state = JSON.stringify( myLayout.toConfig() );
-    localStorage.setItem( name, state );
+    var blob = new Blob([state],{type:"text/json;charset=utf-8"});
+    saveAs(blob,name+'.json')
+    // localStorage.setItem( name, state );
     console.log(name + " stored")
 }
 
 /* Get Layouts from browser's local storage */
 function GetStoredLayoutList() {
-    list = [];
-    for (let key in localStorage) {
-        if(key.search('LAYOUT_')!=-1){
-            list.push(key)
-        }
-    }
-    return list;
+    // list = [];
+    // for (let key in localStorage) {
+    //     if(key.search('LAYOUT_')!=-1){
+    //         list.push(key)
+    //     }
+    // }
+    // return list;
 }
 
 /* Load Layout */
@@ -229,17 +231,37 @@ function LoadLayout() {
     myLayout.destroy()
 
     /* retrieve and load saved layout */
-    let formVal = $("[id='select0']").val();
-    let key = GetStoredLayoutList()[formVal];
-    let savedState = localStorage.getItem( key );
-    if( savedState !== null ) {
-        myLayout = new window.GoldenLayout( JSON.parse( savedState ), $('#layoutContainer') );
-        InitLayout(myLayout);
-    } else {
-        console.log("Layout cannot be loaded.")
-    }
-
-    InitScrollBar();
+    // let formVal = $("[id='select0']").val();
+    // let key = GetStoredLayoutList()[formVal];
+    // let savedState = localStorage.getItem( key );
+    var files = document.getElementById('browse0').files;
+    var reader = new FileReader();
+    reader.onload = (function (theFile) {
+      return function (e) {
+        try {
+					savedState = JSON.parse(e.target.result);
+          console.log(savedState)
+          if( savedState !== null ) {
+            myLayout = new window.GoldenLayout(  savedState , $('#layoutContainer') );
+            InitLayout(myLayout);
+          }
+          else{
+            console.log("Layout cannot be loaded.")
+          }
+          InitScrollBar();
+				} catch (ex) {
+					console.error('ex when trying to parse json = ' + ex);
+				}
+      }
+    })(files[0]);
+    reader.readAsText(files[0]);
+    // if( savedState !== null ) {
+    //     myLayout = new window.GoldenLayout( JSON.parse( savedState ), $('#layoutContainer') );
+    //     InitLayout(myLayout);
+    // } else {
+    //     console.log("Layout cannot be loaded.")
+    // }
+    // InitScrollBar();
 }
 
 /* Modal */
@@ -276,7 +298,7 @@ function InitModal() {
                       } else if (custom[e].dtype == 'float') {
                         item += "<input class='form-control' type='number' value='0.0' step='0.001' id=inputField"+e+">"
                       } else if (custom[e].dtype == 'string') {
-                        item += "<input class='form-control' type='text' value='0' id=inputField"+e+">"
+                        item += "<input class='form-control' type='text' value='enter value' id=inputField"+e+">"
                       }
                       item +="</div>"
                       $('#modalForm').append(item);
@@ -303,7 +325,13 @@ function InitModal() {
                         $('#select'+e).append(html)
                       });
                       break;
-
+                  case "browse":
+                      item = "<div class='form-group'>"
+                        +"<label class='col-form-label' id=labelField"+e+" for=browse"+e+">"+custom[e].label+"</label>"
+                        +"<input type='file' class='form-control-file' id='browse"+e+"'>"
+                        +"</div>"
+                      $('#modalForm').append(item)
+                      break;
                   default:
                       console.log("Unknown data passed as attribute");
               }
