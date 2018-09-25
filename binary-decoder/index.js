@@ -308,29 +308,34 @@ BinaryDecoder.prototype.getMsgDefByMsgID = function (msgID) {
 
 
 
+BinaryDecoder.prototype.getFieldObjFromPbMsg = function (pbMsgDef, fieldPathArray, bitOffset) {
+	var fieldName = fieldPathArray[0];  
+	
+	var fieldDef = pbMsgDef.fields[fieldName];  
+	
+	var pbType = fieldDef.pb_type;             
+	
+	if(fieldPathArray.length == 1) {
+		return {fieldDef: fieldDef, bitOffset: fieldDef.bit_offset + bitOffset};
+	} else {
+		var childMsgDef = pbMsgDef.required_pb_msgs[fieldDef.pb_type];
+
+		fieldPathArray.shift();
+		
+		return this.getFieldObjFromPbMsg(childMsgDef, fieldPathArray, fieldDef.bit_offset + bitOffset);
+	}
+
+}
+
+
+
 BinaryDecoder.prototype.getFieldFromOperationalName = function (msgDef, opName, bitOffset) {
 	var op = msgDef.operational_names[opName];
-	var fieldPathArray = opName.split('.');
-	var fieldName = fieldPathArray[0];
-	var fieldDef = msgDef.fields[fieldName];
-	
-	var fieldType = fieldDef.airliner_type;
-	
-	var fieldMsgDef = this.getMsgDefByName(fieldType);
-	
-	if(typeof fieldMsgDef === 'object') {
-		if(fieldPathArray.length == 1) {
-			return fieldMsgDef;
-		} else {
-			if(fieldMsgDef.hasOwnProperty('operational_names')) {
-				fieldPathArray.shift();
-				var nextFieldName = fieldPathArray[0];
-				return this.getFieldFromOperationalName(fieldMsgDef, nextFieldName, fieldDef.bit_offset + bitOffset);
-			}
-		}
-	} else {
-		return {fieldDef: fieldDef, bitOffset: fieldDef.bit_offset + bitOffset};
-	}
+	var fieldPathArray = opName.split('.');  
+
+	var pbMsg = this.getFieldObjFromPbMsg(msgDef, fieldPathArray, bitOffset);
+
+	return pbMsg; 
 }
 
 
@@ -463,7 +468,7 @@ BinaryDecoder.prototype.getFieldAsPbType = function (buffer, fieldDef, bitOffset
 					break;
 					
 				default:
-					this.logErrorEvent(EventEnum.UNKNOWN_DATA_TYPE, 'getFieldAsPbType: Unknown data type. \'' + fieldDef + '\'');
+					this.logErrorEvent(EventEnum.UNKNOWN_DATA_TYPE, 'getFieldAsPbType: Unknown data type. \'' + fieldDef.pb_type + '\'');
 			}
 		} else {
 			switch(fieldDef.pb_type) {
@@ -518,7 +523,7 @@ BinaryDecoder.prototype.getFieldAsPbType = function (buffer, fieldDef, bitOffset
 					break;
 					
 				default:
-					this.logErrorEvent(EventEnum.UNKNOWN_DATA_TYPE, 'getFieldAsPbType: Unknown data type. \'' + fieldDef + '\'');
+					this.logErrorEvent(EventEnum.UNKNOWN_DATA_TYPE, 'getFieldAsPbType: Unknown data type. \'' + JSON.stringify(fieldDef.pb_type) + '\'');
 			}
 		}
 	} catch(err) {

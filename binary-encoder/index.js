@@ -475,33 +475,34 @@ BinaryEncoder.prototype.sendCommand = function (cmd, args) {
 
 
 
-BinaryEncoder.prototype.getFieldFromOperationalName = function (msgDef, opName, bitOffset) {
-	var op = msgDef.operational_names[opName].field_path;
-	var fieldPathArray = op.split('.');
-	var fieldName = fieldPathArray[0];
-	var fieldDef = msgDef.fields[fieldName];
+BinaryEncoder.prototype.getFieldObjFromPbMsg = function (pbMsgDef, fieldPathArray, bitOffset) {
+	var fieldName = fieldPathArray[0];  
 	
-	if(typeof bitOffset === 'undefined') {
-		bitOffset = fieldDef.bit_offset;
-	}
+	var fieldDef = pbMsgDef.fields[fieldName];  
 	
-	var fieldType = fieldDef.airliner_type;
+	var pbType = fieldDef.pb_type;             
 	
-	var fieldMsgDef = this.getMsgDefByName(fieldType);
-	
-	if(typeof fieldMsgDef === 'object') {
-		if(fieldPathArray.length == 1) {
-			return fieldMsgDef;
-		} else {
-			if(fieldMsgDef.hasOwnProperty('operational_names')) {
-				fieldPathArray.shift();
-				var nextFieldName = fieldPathArray[0];
-				return this.getFieldFromOperationalName(fieldMsgDef, nextFieldName, bitOffset);
-			}
-		}
-	} else {
+	if(fieldPathArray.length == 1) {
 		return {fieldDef: fieldDef, bitOffset: fieldDef.bit_offset + bitOffset};
+	} else {
+		var childMsgDef = pbMsgDef.required_pb_msgs[fieldDef.pb_type];
+
+		fieldPathArray.shift();
+		
+		return this.getFieldObjFromPbMsg(childMsgDef, fieldPathArray, fieldDef.bit_offset + bitOffset);
 	}
+
+}
+
+
+
+BinaryEncoder.prototype.getFieldFromOperationalName = function (msgDef, opName, bitOffset) {
+	var op = msgDef.operational_names[opName];
+	var fieldPathArray = opName.split('.');  
+
+	var pbMsg = this.getFieldObjFromPbMsg(msgDef, fieldPathArray, bitOffset);
+
+	return pbMsg; 
 }
 
 
