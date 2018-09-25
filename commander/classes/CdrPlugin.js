@@ -3,7 +3,7 @@
 var path = require('path');
 
 module.exports = class CdrPlugin {
-	constructor(webRoot) {
+	constructor(webRoot, urlBase) {
 		if(new.target === CdrPlugin) {
 			throw new TypeError('Cannot construct CdrPlugin instances directly');
 		}
@@ -21,19 +21,19 @@ module.exports = class CdrPlugin {
 		if(typeof panels !== 'undefined') {
 			global.PANELS_TREE.push(panels);
 			
-			global.NODE_APP.set('views', '/home/users/mbenson/git/airliner/build/typhoon_h480/sitl/target/commander/commander_workspace/plugins/cfe/web');
+			var appViews = global.NODE_APP.get('views');
+			appViews.push(webRoot);
 
 			this.processPanelsTree(panels);
 		}
 	}
 
 	processPanelsTree(panels) {
-		if(panels.hasOwnProperty('path')) {
+		if(panels.hasOwnProperty('urlPath')) {
 			var self = this;
-			var basePath =  panels.path;
-			console.log('Registering ' + basePath);
-			global.NODE_APP.get(basePath, function (req, res) {
-				res.render(path.join(self.webRoot, basePath));
+			console.log('Registering ' + panels.urlPath);
+			global.NODE_APP.get(panels.urlPath, function (req, res) {
+				res.render(path.join(self.webRoot, panels.filePath));
 			});
 		}
 		
