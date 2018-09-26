@@ -3,8 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "start": "node ./bin/www",
-    "postinstall": "node -e \"var s='../sage',d='node_modules/sage',fs=require('fs');fs.exists(d,function(e){e||fs.symlinkSync(s,d,'dir')});\""
+    "start": "node ./bin/www"
   },
   "dependencies": {
     "@webcomponents/webcomponentsjs": "^2.0.0",
