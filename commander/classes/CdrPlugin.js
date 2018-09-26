@@ -4,9 +4,9 @@ var path = require('path');
 
 module.exports = class CdrPlugin {
 	constructor(webRoot, urlBase) {
-		if(new.target === CdrPlugin) {
-			throw new TypeError('Cannot construct CdrPlugin instances directly');
-		}
+		//if(new.target === CdrPlugin) {
+		//	throw new TypeError('Cannot construct CdrPlugin instances directly');
+		//}
 		if (this.getPanels === undefined) {
 		    // or maybe test typeof this.method === "function"
 		    throw new TypeError('Must override getPanels');
