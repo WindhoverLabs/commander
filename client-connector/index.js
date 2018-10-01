@@ -66,14 +66,6 @@ exports.events = [
 var listenerCount = Emitter.listenerCount ||
 function (emitter, type) { return emitter.listeners(type).length }
 
-var publicFunctions = [
-	'getDirectoryListing',
-	'getCmdDefs',
-	'getTlmDefs',
-	'sendCommand',
-	'getPanels'
-];
-
 function ClientConnector(workspace, configFile, app) {
     this.vars = {};
     var self = this;

@@ -41,16 +41,42 @@ const util = require('util');
 var protobuf = require('protobufjs');
 var mergeJSON = require('merge-json');
 var convict = require('convict');
+var socket_io = require('socket.io');
 var CommanderInstance = require('./commander_instance.js');
 var CommanderApp = require('./commander_app.js');
+var path = require('path');
+
+/* Event IDs */
+var EventEnum = Object.freeze(
+		{'INITIALIZED':              1,
+		 'SOCKET_CONNECT_ERROR':     2,
+		 'SOCKET_CONNECT_TIMEOUT':   3,
+		 'SOCKET_RECONNECT':         4,
+		 'SOCKET_RECONNECT_ATTEMPT': 5,
+		 'SOCKET_RECONNECTING':      6,
+		 'SOCKET_RECONNECT_ERROR':   7,
+		 'SOCKET_RECONNECT_FAILED':  8,
+		 'SOCKET_DISCONNECT':        9,
+		 'SOCKET_PING':             10,
+		 'SOCKET_PONG':             11,
+		 'MESSAGE_RECEIVED':        12,
+		 'SOCKET_PUBLIC_FUNCTION_CALL': 13}
+	);
 
 var emit = Emitter.prototype.emit;
-var sparkles = require('sparkles')();
 
 exports = module.exports = Commander;
 
 var listenerCount = Emitter.listenerCount ||
 function (emitter, type) { return emitter.listeners(type).length }
+
+var publicFunctions = [
+	'getDirectoryListing',
+	'getCmdDefs',
+	'getTlmDefs',
+	'sendCommand',
+	'getPanels'
+];
 
 var config = require('./config.js');
 
@@ -59,6 +85,7 @@ const ROOT_INSTANCE_NAME = 'ROOT';
 function Commander(workspace, configFile) {
     this.workspace = workspace;
     this.instances = {};
+    var self = this;
     
     /* Load environment dependent configuration */
     config.loadFile(configFile);
@@ -74,8 +101,347 @@ function Commander(workspace, configFile) {
     for(var i = 0; i < cfgInstances.length; ++i) {
 		this.instances[cfgInstances[i].name] = new CommanderInstance(this, cfgInstances[i]);
     }
+
+    //Socket.io
+    var io = socket_io();
+    global.NODE_APP.io = io;
+
+    io.on('connection', function(socket) {
+	  	var address = socket.handshake.address;
+	
+	  	socket.on('connect_error', function(err) {
+	  		self.logErrorEvent(EventEnum.SOCKET_CONNECT_ERROR, 'SocketIO: Socket connect error.  \'' + err + '\'');
+	  	});
+	
+	  	socket.on('connect_timeout', function() {
+	  		self.logErrorEvent(EventEnum.SOCKET_CONNECT_TIMEOUT, 'SocketIO: Socket timeout.');
+	  	});
+	
+	  	socket.on('reconnect', function(num) {
+	  		self.logInfoEvent(EventEnum.SOCKET_RECONNECT, 'SocketIO: Socket successfully reconnected on attempt # \'' + num + '\'.');
+	  	});
+	
+	  	socket.on('reconnect_attempt', function() {
+	  		self.logInfoEvent(EventEnum.SOCKET_RECONNECT_ATTEMPT, 'SocketIO: Socket reconnect attempt.');
+	  	});
+	
+	  	socket.on('reconnecting', function(num) {
+	  		self.logInfoEvent(EventEnum.SOCKET_RECONNECTING, 'SocketIO: Socket reconnecting attempt # \'' + num + '\'.');
+	  	});
+	
+	  	socket.on('reconnect_error', function(err) {
+	  		self.logErrorEvent(EventEnum.SOCKET_RECONNECT_ERROR, 'SocketIO: Socket reconnect error.  \'' + err + '\'.');
+	  	});
+	
+	  	socket.on('reconnect_failed', function() {
+	  		self.logErrorEvent(EventEnum.SOCKET_RECONNECT_FAILED, 'SocketIO: Socket reconnect failed.');
+	  	});
+	
+	  	socket.on('disconnect', function() {
+	  		self.logInfoEvent(EventEnum.SOCKET_DISCONNECT, 'SocketIO: Socket disconnected.');
+	  	});
+	
+	  	socket.on('ping', function() {
+	  		self.logDebugEvent(EventEnum.SOCKET_PING, 'SocketIO: Socket ping.');
+	  	});
+	
+	  	socket.on('pong', function(latency) {
+	  		self.logDebugEvent(EventEnum.SOCKET_PONG, 'SocketIO: Socket pong (' + latency + ' ms).');
+	  	});
+	
+	  	socket.on('subscribe', function(opsPaths) {
+	  		self.subscribe(opsPaths, updateTelemetry);
+	  	});
+	
+	    socket.on('sendCmd', function(cmdObj) {
+	  		self.sendCmd(cmdObj);
+	  	});
+	
+	    function updateTelemetry(update) {
+	      	socket.emit('telemetry-update', update);
+	    }
+	
+	  	for(var i in publicFunctions) {
+	  		(function(funcName) {
+	  	        socket.on(funcName, function() {
+	  	        	var cb = arguments[arguments.length-1];
+	  	        	self.logDebugEvent(EventEnum.SOCKET_PUBLIC_FUNCTION_CALL, 'SocketIO: ' + funcName);
+	    	        self[funcName].apply(self, arguments);
+	  		    });
+	  	    })(publicFunctions[i]);
+	  	}
+	});
     
     return this;
+}
+
+
+
+Commander.prototype.getPanelsByPath = function (paths, panelsObj) {    
+    if(paths.length == 1) {
+        if(paths[0] === '') {
+            return panelsObj;
+        } else {
+            for(var i = 0; i < panelsObj.length; ++i) {
+                if(panelsObj[i].name === paths[0]) {
+                    return panelsObj[i].nodes;
+                }
+            }
+        }
+    } else {
+        var thisObjPath = paths.shift();
+        for(var i = 0; i < panelsObj.length; ++i) {
+            if(panelsObj[i].name === thisObjPath) {
+                return this.getPanelsByPath(paths, panelsObj[i].nodes);
+            }
+        }
+        
+    }
+}
+
+
+
+Commander.prototype.getPanels = function(inPath, cb) {
+    var outObj = {};    
+    var paths = inPath.split('/');
+    
+    cb(this.getPanelsByPath(paths, global.PANELS_TREE));
+}
+
+
+
+Commander.prototype.getDirectoryListing = function(inPath, cb) {
+    var outFiles = [];
+    var fullPath = path.join(this.workspace + '/web', inPath);
+
+    fs.readdir(fullPath, function (err, files) {
+        if (err == null) {
+            for (var i = 0; i < files.length; ++i) {
+                var currentFile = fullPath + '/' + files[i];
+                var stats = fs.statSync(currentFile);
+                var transPath = inPath + '/' + files[i];
+                var entry = {path: transPath, name: files[i], size: stats.size, mtime: stats.mtime};
+                if (stats.isFile()) {
+                    entry.type = 'file';
+                } else if (stats.isDirectory()) {
+                    entry.type = 'dir';
+                } else {
+                    entry.type = 'unknown';
+                }
+                outFiles.push(entry);
+            };
+        };
+        cb({err: err, path: inPath, files: outFiles});
+    });
+}
+
+
+
+Commander.prototype.getCmdDefs = function(cmdObj, cb) {
+	this.instanceEmitter.emit(config.get('cmdDefReqStreamID'), {opsPath: cmdObj.name}, function(resp) {
+		cb(resp);
+	});
+	
+//    if(req.name=='/CFE/ES_Noop'){
+//      cb({
+//        "name": "NoOp",
+//        "qualifiedName": "/CFE/ES_Noop",
+//        "alias": [
+//          {
+//            "name": "NoOp",
+//            "namespace": "/CFS/CFE_ES"
+//          }
+//        ],
+//        "baseCommand": {
+//          "name": "cfs-cmd",
+//          "qualifiedName": "/CFS/cfs-cmd",
+//          "alias": [
+//            {
+//              "name": "cfs-cmd",
+//              "namespace": "/CFS"
+//            }
+//          ],
+//          "abstract": true,
+//          "argument": [
+//            {
+//              "name": "ccsds-apid",
+//              "type": {
+//                "engType": "integer",
+//                "dataEncoding": {
+//                  "type": "INTEGER",
+//                  "littleEndian": false,
+//                  "sizeInBits": 11,
+//                  "encoding": "unsigned"
+//                }
+//              }
+//            },
+//            {
+//              "name": "timeId",
+//              "initialValue": "0",
+//              "type": {
+//                "engType": "integer",
+//                "dataEncoding": {
+//                  "type": "INTEGER",
+//                  "littleEndian": false,
+//                  "sizeInBits": 2,
+//                  "encoding": "unsigned"
+//                }
+//              }
+//            },
+//            {
+//              "name": "checksumIndicator",
+//              "initialValue": "1",
+//              "type": {
+//                "engType": "integer",
+//                "dataEncoding": {
+//                  "type": "INTEGER",
+//                  "littleEndian": false,
+//                  "sizeInBits": 1,
+//                  "encoding": "unsigned"
+//                }
+//              }
+//            },
+//            {
+//              "name": "packet-type",
+//              "initialValue": "1",
+//              "type": {
+//                "engType": "integer",
+//                "dataEncoding": {
+//                  "type": "INTEGER",
+//                  "littleEndian": true,
+//                  "sizeInBits": 4,
+//                  "encoding": "unsigned"
+//                }
+//              }
+//            },
+//            {
+//              "name": "packet-id",
+//              "initialValue": "0",
+//              "type": {
+//                "engType": "integer",
+//                "dataEncoding": {
+//                  "type": "INTEGER",
+//                  "littleEndian": true,
+//                  "sizeInBits": 32,
+//                  "encoding": "unsigned"
+//                }
+//              }
+//            },
+//            {
+//              "name": "cfs-cmd-code",
+//              "type": {
+//                "engType": "integer",
+//                "dataEncoding": {
+//                  "type": "INTEGER",
+//                  "littleEndian": true,
+//                  "sizeInBits": 7,
+//                  "encoding": "unsigned"
+//                }
+//              }
+//            }
+//          ],
+//          "url": "http://localhost:8090/api/mdb/Bebop_2_SITL/commands/CFS/cfs-cmd"
+//        },
+//        "abstract": false,
+//        "argumentAssignment": [
+//          {
+//            "name": "ccsds-apid",
+//            "value": "6"
+//          },
+//          {
+//            "name": "cfs-cmd-code",
+//            "value": "0"
+//          }
+//        ],
+//        "url": "http://localhost:8090/api/mdb/Bebop_2_SITL/commands/CFS/CFE_ES/NoOp",
+//        "uuid": "65dd8102-01d4-49fb-b473-9605b314f0e1"
+//      });
+//    }
+}
+
+
+
+Commander.prototype.getTlmDefs = function(cb) {
+	cb('getTlmDefs');
+}
+
+
+
+Commander.prototype.sendCommand = function(cb) {
+	cb('sendCommand');
+}
+
+
+
+//Speed up calls to hasOwnProperty
+var hasOwnProperty = Object.prototype.hasOwnProperty;
+
+function isEmpty(obj) {
+
+    // null and undefined are "empty"
+    if (obj == null) return true;
+
+    // Assume if it has a length property with a non-zero value
+    // that that property is correct.
+    if (obj.length > 0)    return false;
+    if (obj.length === 0)  return true;
+
+    // If it isn't an object at this point
+    // it is empty, but it can't be anything *but* empty
+    // Is it empty?  Depends on your application.
+    if (typeof obj !== "object") return true;
+
+    // Otherwise, does it have any properties of its own?
+    // Note that this doesn't handle
+    // toString and valueOf enumeration bugs in IE < 9
+    for (var key in obj) {
+        if (hasOwnProperty.call(obj, key)) return false;
+    }
+}
+
+
+
+Commander.prototype.updateTelemetry = function (update) {
+ 	//console.log(update);
+}
+
+
+
+Commander.prototype.sendCmd = function (cmdName, args) {
+	this.instanceEmit(config.get('cmdSendStreamID'), cmdName, args);
+}
+
+
+
+Commander.prototype.requestVarDefinition = function (varName, cb) {
+	this.instanceEmitter.once(config.get('varDefRspStreamIDPrefix') + ':' + varName, function(definition) {
+    	cb(definition);
+	});
+
+	this.instanceEmit(config.get('varDefReqStreamID'), varName);
+}
+
+
+
+Commander.prototype.subscribe = function (varName, cb) {
+	var self = this;
+	
+	this.instanceEmitter.emit(config.get('reqSubscribeStreamID'), {cmd: 'subscribe', opsPath: varName}, cb);
+}
+
+
+
+Commander.prototype.unsubscribe = function (varName, cb) {
+	var self = this;
+	
+	this.instanceEmitter.emit(config.get('reqSubscribeStreamID'), {cmd: 'unsubscribe', opsPath: varName}, cb);
+}
+
+
+
+Commander.prototype.instanceEmit = function (streamID, msg)
+{
+	this.instanceEmitter.emit(streamID, msg);
 }
 
 
@@ -98,6 +464,30 @@ Commander.prototype.addInstance = function (name, cb) {
 	if(typeof cb === 'function') {
 		cb(this.instances[name]);
 	};
+}
+
+
+
+Commander.prototype.logDebugEvent = function (eventID, text) {
+	this.logEvent(ROOT_INSTANCE_NAME, 'Commander', 'Client', eventID, 'DEBUG', text);
+}
+
+
+
+Commander.prototype.logInfoEvent = function (eventID, text) {
+	this.logEvent(ROOT_INSTANCE_NAME, 'Commander', 'Client', eventID, 'INFO', text);
+}
+
+
+
+Commander.prototype.logErrorEvent = function (eventID, text) {
+	this.logEvent(ROOT_INSTANCE_NAME, 'Commander', 'Client', eventID, 'ERROR', text);
+}
+
+
+
+Commander.prototype.logCriticalEvent = function (eventID, text) {
+	this.logEvent(ROOT_INSTANCE_NAME, 'Commander', 'Client', eventID, 'CRIT', text);
 }
 
 
