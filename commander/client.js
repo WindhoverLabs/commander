@@ -29,9 +29,21 @@ CommanderClient.prototype.getLayouts = function (path, cb){
 
 
 
-CommanderClient.prototype.getPanels = function (path, cb){
+CommanderClient.prototype.getPanels2 = function (path, cb){
+    console.log('********************');
+    console.log(path);
 	this.getDirectoryListing(path, 'pug', cb);
 };
+
+
+
+CommanderClient.prototype.getPanels = function (path, cb) {
+    this.socket.emit('getPanels', path, function(result){
+        cb(result);
+    });
+};
+
+
 
 CommanderClient.prototype.getRandom = function (cb){
     setInterval(function() {
@@ -39,6 +51,8 @@ CommanderClient.prototype.getRandom = function (cb){
         cb(random_boolean);
     }, 500);
 };
+
+
 
 CommanderClient.prototype.getDirectoryListing = function (path, extension, cb){
 	var re = /(?:\.([^.]+))?$/;

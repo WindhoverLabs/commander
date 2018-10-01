@@ -20,7 +20,7 @@ function NodeRendered(e, node) {
             title: node.text,
             type: 'component',
             componentName: 'Blank',
-            componentState: { text: "text", link: 'ws/' + node.path}
+            componentState: { text: "text", link: node.urlPath}
         };
 
          myLayout.createDragSource( node.$el[0], newItemConfig );
@@ -35,7 +35,7 @@ function NodeSelected(e, node) {
             title: node.text,
             type: 'component',
             componentName: 'Blank',
-            componentState: { text: 'text', link: '/ws' + node.path}
+            componentState: { text: 'text', link: '/ws3' + node.path}
         };
 
         if( myLayout.selectedItem === null ) {
@@ -45,7 +45,7 @@ function NodeSelected(e, node) {
         }
     }
     else if(node.type === 'config') {
-        $.get('ws/' + node.path,(response) => {
+        $.get('ws2/' + node.path,(response) => {
         	var jsonObj = JSON.parse(response);
 
             if( response !== null ) {
@@ -513,18 +513,21 @@ function UpdatePanelNode(node, display) {
 
         for(var i=0; i < dirEntries.length; ++i) {
             var dirEntry = dirEntries[i];
-
+            
             var panelEntry = {
                 name: dirEntry.name,
-                text: dirEntry.name,
-                path: dirEntry.path,
-                type: dirEntry.type,
-                ext: dirEntry.path,
+                text: dirEntry.text,
+                path: node.path + '/' + dirEntry.name,
+                urlPath: dirEntry.urlPath,
+                //type: dirEntry.type,
+                //ext: dirEntry.type,
+                //lazyLoad: true,
+                //ext: dirEntries[i].path,
                 selectable: true,
                 checkable: false
             };
-
-            if(dirEntry.type == 'dir') {
+            
+            if(dirEntry.hasOwnProperty('nodes')) {
                 panelEntry.lazyLoad = true;
                 panelEntry.selectable = false;
             } else {
@@ -532,15 +535,49 @@ function UpdatePanelNode(node, display) {
                 panelEntry.lazyLoad = false;
                 panelEntry.selectable = true;
                 panelEntry.type = 'file';
-                panelEntry.url = 'ws/' + dirEntry.path;
+                panelEntry.url = 'ws1/' + dirEntry.path;
             }
 
             panelEntries.push(panelEntry);
         }
-
         var tree = $('#panelMenuContainer').treeview(true)
         tree.addNode(panelEntries, node, node.index, { silent: true} );
         tree.expandNode(node, { silent: true, ignoreChildren: true } );
+
+//        console.log('2 getPanels');
+//        console.log(dirEntries);
+//        var panelEntries = [];
+//
+//        for(var i=0; i < dirEntries.length; ++i) {
+//            var dirEntry = dirEntries[i];
+//
+//            var panelEntry = {
+//                name: dirEntry.name,
+//                text: dirEntry.text,
+//                path: dirEntry.path,
+//                //type: dirEntry.type,
+//                //ext: dirEntry.path,
+//                selectable: true,
+//                checkable: false
+//            };
+//
+//            if(dirEntry.type == 'dir') {
+//                panelEntry.lazyLoad = true;
+//                panelEntry.selectable = false;
+//            } else {
+//                panelEntry.icon = 'fa fa-file';
+//                panelEntry.lazyLoad = false;
+//                panelEntry.selectable = true;
+//                panelEntry.type = 'file';
+//                panelEntry.url = 'ws/' + dirEntry.path;
+//            }
+//
+//            panelEntries.push(panelEntry);
+//        }
+//
+//        var tree = $('#panelMenuContainer').treeview(true)
+//        tree.addNode(panelEntries, node, node.index, { silent: true} );
+//        tree.expandNode(node, { silent: true, ignoreChildren: true } );
     });
 }
 
@@ -581,7 +618,6 @@ $(()=>{
     }
 
     session.on('connect', function() {
-
         console.log('session connected');
         if(_sescon_never){
           session.getPanels('', function (dirEntries) {
@@ -590,8 +626,8 @@ $(()=>{
               for(var i=0; i < dirEntries.length; ++i) {
                   var entry = {
                       name: dirEntries[i].name,
-                      text: dirEntries[i].name,
-                      path: dirEntries[i].path,
+                      text: dirEntries[i].text,
+                      path: dirEntries[i].name,
                       type: dirEntries[i].type,
                       lazyLoad: true,
                       ext: dirEntries[i].path,

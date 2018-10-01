@@ -70,7 +70,8 @@ var publicFunctions = [
 	'getDirectoryListing',
 	'getCmdDefs',
 	'getTlmDefs',
-	'sendCommand'
+	'sendCommand',
+	'getPanels'
 ];
 
 function ClientConnector(workspace, configFile, app) {
@@ -136,7 +137,7 @@ function ClientConnector(workspace, configFile, app) {
     		self.subscribe(opsPaths, updateTelemetry);
     	});
 
-	socket.on('sendCmd', function(cmdObj) {
+	    socket.on('sendCmd', function(cmdObj) {
     		self.sendCmd(cmdObj);
     	});
 
@@ -155,6 +156,39 @@ function ClientConnector(workspace, configFile, app) {
     	}
     });
 };
+
+
+
+ClientConnector.prototype.getPanelsByPath = function (paths, panelsObj) {    
+    if(paths.length == 1) {
+        if(paths[0] === '') {
+            return panelsObj;
+        } else {
+            for(var i = 0; i < panelsObj.length; ++i) {
+                if(panelsObj[i].name === paths[0]) {
+                    return panelsObj[i].nodes;
+                }
+            }
+        }
+    } else {
+        var thisObjPath = paths.shift();
+        for(var i = 0; i < panelsObj.length; ++i) {
+            if(panelsObj[i].name === thisObjPath) {
+                return this.getPanelsByPath(paths, panelsObj[i].nodes);
+            }
+        }
+        
+    }
+}
+
+
+
+ClientConnector.prototype.getPanels = function(inPath, cb) {
+    var outObj = {};    
+    var paths = inPath.split('/');
+    
+    cb(this.getPanelsByPath(paths, global.PANELS_TREE));
+}
 
 
 
@@ -411,7 +445,7 @@ ClientConnector.prototype.setInstanceEmitter = function (newInstanceEmitter)
 
 
 ClientConnector.prototype.updateTelemetry = function (update) {
- 	console.log(update);
+ 	//console.log(update);
 }
 
 
