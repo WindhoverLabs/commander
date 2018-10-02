@@ -156,5 +156,10 @@ CommanderInstance.prototype.addApp = function (name, newAppObj) {
 
 
 
+CommanderInstance.prototype.emit = function(streamID, obj, callback) {
+    this.emitter.emit(streamID, obj, callback);
+}
+
+
 
 exports = module.exports = CommanderInstance;

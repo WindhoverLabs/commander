@@ -24,7 +24,9 @@ CommanderClient.prototype.isSocketConnected = function() {
 
 
 CommanderClient.prototype.getLayouts = function (path, cb){
-	this.getDirectoryListing(path, 'layout', cb);
+    this.socket.emit('getLayouts', path, function(result){
+        cb(result);
+    });
 };
 
 

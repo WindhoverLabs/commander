@@ -8,6 +8,31 @@ var config = convict({
         default: 'development',
         env: 'NODE_ENV'
     },
+    varServerEventsStreamID: {
+        doc: 'Variable Server events stream.',
+        format: String,
+        default: ''
+    },
+    varDefReqStreamID: {
+        doc: 'Variable definition request',
+        format: String,
+        default: ''
+    },
+    cmdDefReqStreamID: {
+        doc: 'Command definition request',
+        format: String,
+        default: ''
+    },
+    cmdSendStreamID: {
+        doc: 'Command send',
+        format: String,
+        default: ''
+    },
+    reqSubscribeStreamID: {
+        doc: 'Stream ID for subscription requests.',
+        format: String,
+        default: ''
+    },
     instances: [
     	{
 	    	name: {

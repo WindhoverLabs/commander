@@ -35,7 +35,7 @@ function NodeSelected(e, node) {
             title: node.text,
             type: 'component',
             componentName: 'Blank',
-            componentState: { text: 'text', link: '/ws3' + node.path}
+            componentState: { text: 'text', link: node.path}
         };
 
         if( myLayout.selectedItem === null ) {
@@ -45,11 +45,10 @@ function NodeSelected(e, node) {
         }
     }
     else if(node.type === 'config') {
-        $.get('ws2/' + node.path,(response) => {
+        $.get(node.urlPath,(response) => {
         	var jsonObj = JSON.parse(response);
 
             if( response !== null ) {
-
                 myLayout.destroy()
                 myLayout = new window.GoldenLayout( jsonObj, $('#layoutContainer') );
                 window.dispatchEvent(new CustomEvent('first-layout-load-complete'));
@@ -208,6 +207,7 @@ function SaveLayout() {
 
     /* stringify state config */
     let state = JSON.stringify( myLayout.toConfig() );
+    console.log(myLayout.toConfig());
     localStorage.setItem( name, state );
     console.log(name + " stored")
 }
@@ -225,6 +225,7 @@ function GetStoredLayoutList() {
 
 /* Load Layout */
 function LoadLayout() {
+    console.log('LoadLayout 1');
     /* if a layout exists, destroy it */
     myLayout.destroy()
 
@@ -478,25 +479,29 @@ function UpdateLayoutNode(node, display) {
 
         for(var i=0; i < dirEntries.length; ++i) {
             var dirEntry = dirEntries[i];
-
+            
             var layoutEntry = {
                 name: dirEntry.name,
-                text: dirEntry.name,
-                path: dirEntry.path,
-                type: dirEntry.type,
-                ext: dirEntry.path,
-                selectable: false,
+                text: dirEntry.text,
+                path: node.path + '/' + dirEntry.name,
+                urlPath: dirEntry.urlPath,
+                //type: dirEntry.type,
+                //ext: dirEntry.type,
+                //lazyLoad: true,
+                //ext: dirEntries[i].path,
+                selectable: true,
                 checkable: false
             };
-
-            if(dirEntry.type == 'dir') {
+            
+            if(dirEntry.hasOwnProperty('nodes')) {
                 layoutEntry.lazyLoad = true;
                 layoutEntry.selectable = false;
             } else {
                 layoutEntry.lazyLoad = false;
                 layoutEntry.selectable = true;
                 layoutEntry.type = 'config';
-            }
+                layoutEntry.url = dirEntry.urlPath;
+            }                
 
             entries.push(layoutEntry);
         }
@@ -535,7 +540,7 @@ function UpdatePanelNode(node, display) {
                 panelEntry.lazyLoad = false;
                 panelEntry.selectable = true;
                 panelEntry.type = 'file';
-                panelEntry.url = 'ws1/' + dirEntry.path;
+                panelEntry.url = dirEntry.urlPath;
             }
 
             panelEntries.push(panelEntry);
@@ -659,8 +664,8 @@ $(()=>{
               for(var i=0; i < dirEntries.length; ++i) {
                   var entry = {
                       name: dirEntries[i].name,
-                      text: dirEntries[i].name,
-                      path: dirEntries[i].path,
+                      text: dirEntries[i].text,
+                      path: dirEntries[i].name,
                       type: dirEntries[i].type,
                       lazyLoad: true,
                       ext: dirEntries[i].path,

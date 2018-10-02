@@ -48,18 +48,18 @@ var path = require('path');
 
 /* Event IDs */
 var EventEnum = Object.freeze(
-		{'INITIALIZED':              1,
-		 'SOCKET_CONNECT_ERROR':     2,
-		 'SOCKET_CONNECT_TIMEOUT':   3,
-		 'SOCKET_RECONNECT':         4,
-		 'SOCKET_RECONNECT_ATTEMPT': 5,
-		 'SOCKET_RECONNECTING':      6,
-		 'SOCKET_RECONNECT_ERROR':   7,
-		 'SOCKET_RECONNECT_FAILED':  8,
-		 'SOCKET_DISCONNECT':        9,
-		 'SOCKET_PING':             10,
-		 'SOCKET_PONG':             11,
-		 'MESSAGE_RECEIVED':        12,
+		{'INITIALIZED':                  1,
+		 'SOCKET_CONNECT_ERROR':         2,
+		 'SOCKET_CONNECT_TIMEOUT':       3,
+		 'SOCKET_RECONNECT':             4,
+		 'SOCKET_RECONNECT_ATTEMPT':     5,
+		 'SOCKET_RECONNECTING':          6,
+		 'SOCKET_RECONNECT_ERROR':       7,
+		 'SOCKET_RECONNECT_FAILED':      8,
+		 'SOCKET_DISCONNECT':            9,
+		 'SOCKET_PING':                 10,
+		 'SOCKET_PONG':                 11,
+		 'MESSAGE_RECEIVED':            12,
 		 'SOCKET_PUBLIC_FUNCTION_CALL': 13}
 	);
 
@@ -75,7 +75,8 @@ var publicFunctions = [
 	'getCmdDefs',
 	'getTlmDefs',
 	'sendCommand',
-	'getPanels'
+	'getPanels',
+    'getLayouts'
 ];
 
 var config = require('./config.js');
@@ -177,6 +178,12 @@ function Commander(workspace, configFile) {
 
 
 
+Commander.prototype.setDefaultInstance = function (instance) {
+    this.defaultInstance = instance;
+}
+
+
+
 Commander.prototype.getPanelsByPath = function (paths, panelsObj) {    
     if(paths.length == 1) {
         if(paths[0] === '') {
@@ -201,11 +208,43 @@ Commander.prototype.getPanelsByPath = function (paths, panelsObj) {
 
 
 
+Commander.prototype.getLayoutsByPath = function (paths, layoutsObj) {    
+    if(paths.length == 1) {
+        if(paths[0] === '') {
+            return layoutsObj;
+        } else {
+            for(var i = 0; i < layoutsObj.length; ++i) {
+                if(layoutsObj[i].name === paths[0]) {
+                    return layoutsObj[i].nodes;
+                }
+            }
+        }
+    } else {
+        var thisObjPath = paths.shift();
+        for(var i = 0; i < layoutsObj.length; ++i) {
+            if(layoutsObj[i].name === thisObjPath) {
+                return this.getLayoutsByPath(paths, layoutsObj[i].nodes);
+            }
+        }
+    }
+}
+
+
+
 Commander.prototype.getPanels = function(inPath, cb) {
     var outObj = {};    
     var paths = inPath.split('/');
     
     cb(this.getPanelsByPath(paths, global.PANELS_TREE));
+}
+
+
+
+Commander.prototype.getLayouts = function(inPath, cb) {
+    var outObj = {};    
+    var paths = inPath.split('/');
+    
+    cb(this.getLayoutsByPath(paths, global.LAYOUTS_TREE));
 }
 
 
@@ -238,9 +277,11 @@ Commander.prototype.getDirectoryListing = function(inPath, cb) {
 
 
 Commander.prototype.getCmdDefs = function(cmdObj, cb) {
-	this.instanceEmitter.emit(config.get('cmdDefReqStreamID'), {opsPath: cmdObj.name}, function(resp) {
-		cb(resp);
-	});
+    if(typeof this.defaultInstance.emit === 'function') {
+        this.defaultInstance.emit(config.get('cmdDefReqStreamID'), {opsPath: cmdObj.name}, function(resp) {
+            cb(resp);
+        });
+    };
 	
 //    if(req.name=='/CFE/ES_Noop'){
 //      cb({
@@ -408,17 +449,10 @@ Commander.prototype.updateTelemetry = function (update) {
 
 
 Commander.prototype.sendCmd = function (cmdName, args) {
-	this.instanceEmit(config.get('cmdSendStreamID'), cmdName, args);
-}
-
-
-
-Commander.prototype.requestVarDefinition = function (varName, cb) {
-	this.instanceEmitter.once(config.get('varDefRspStreamIDPrefix') + ':' + varName, function(definition) {
-    	cb(definition);
-	});
-
-	this.instanceEmit(config.get('varDefReqStreamID'), varName);
+    //if(this.defaultInstance.hasOwnProperty('emit')) {
+        console.log(cmdName);
+	    this.defaultInstance.emit(config.get('cmdSendStreamID'), cmdName, args);
+    //}
 }
 
 
@@ -426,23 +460,21 @@ Commander.prototype.requestVarDefinition = function (varName, cb) {
 Commander.prototype.subscribe = function (varName, cb) {
 	var self = this;
 	
-	this.instanceEmitter.emit(config.get('reqSubscribeStreamID'), {cmd: 'subscribe', opsPath: varName}, cb);
+	//if(this.defaultInstance.hasOwnProperty('emit')) {
+	    this.defaultInstance.emit(config.get('reqSubscribeStreamID'), {cmd: 'subscribe', opsPath: varName}, cb);
+	//}
 }
 
 
 
 Commander.prototype.unsubscribe = function (varName, cb) {
 	var self = this;
-	
-	this.instanceEmitter.emit(config.get('reqSubscribeStreamID'), {cmd: 'unsubscribe', opsPath: varName}, cb);
+
+    //if(this.defaultInstance.hasOwnProperty('emit')) {
+	    this.defaultInstance.emit(config.get('reqSubscribeStreamID'), {cmd: 'unsubscribe', opsPath: varName}, cb);
+    //}
 }
 
-
-
-Commander.prototype.instanceEmit = function (streamID, msg)
-{
-	this.instanceEmitter.emit(streamID, msg);
-}
 
 
 /**

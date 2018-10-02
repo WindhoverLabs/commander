@@ -1,6 +1,7 @@
 "use strict";
 
 var path = require('path');
+var fs = require('fs');
 
 module.exports = class CdrPlugin {
 	constructor(webRoot, urlBase) {
@@ -11,6 +12,10 @@ module.exports = class CdrPlugin {
 		    // or maybe test typeof this.method === "function"
 		    throw new TypeError('Must override getPanels');
 		}
+        if (this.getLayouts === undefined) {
+            // or maybe test typeof this.method === "function"
+            throw new TypeError('Must override getLayouts');
+        }
 		if (typeof webRoot === 'undefined') {
 		    throw new TypeError('Must supply web root in constructor');
 		}
@@ -26,6 +31,16 @@ module.exports = class CdrPlugin {
 
 			this.processPanelsTree(panels);
 		}
+        
+        var layouts = this.getLayouts();
+        if(typeof layouts !== 'undefined') {
+            global.LAYOUTS_TREE.push(layouts);
+            
+            var appViews = global.NODE_APP.get('views');
+            appViews.push(webRoot);
+
+            this.processLayoutsTree(layouts);
+        }
 	}
 
 	processPanelsTree(panels) {
@@ -43,4 +58,38 @@ module.exports = class CdrPlugin {
 			}
 		}
 	}
+
+    processLayoutsTree(layouts) {
+        if(layouts.hasOwnProperty('urlPath')) {
+            var self = this;
+            console.log('Registering ' + layouts.urlPath);
+            global.NODE_APP.get(layouts.urlPath, function (req, res) {
+                readJSONFile(path.join(self.webRoot, layouts.filePath), function (err, json) {
+                    res.send(json);
+                });
+                
+            });
+        }
+        
+        if(layouts.hasOwnProperty('nodes')) {
+            for(var nodeID in layouts.nodes) {
+                this.processLayoutsTree(layouts.nodes[nodeID]);
+            }
+        }
+    }
 }
+
+
+function readJSONFile(filename, callback) {
+    fs.readFile(filename, function (err, data) {
+      if(err) {
+        callback(err);
+        return;
+      }
+      try {
+        callback(null, data);
+      } catch(exception) {
+        callback(exception);
+      }
+    });
+  }

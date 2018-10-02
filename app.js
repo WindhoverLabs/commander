@@ -66,7 +66,7 @@ global.NODE_APP.use('/commander', express.static(path.join(__dirname, 'commander
 global.NODE_APP.use('/', indexRouter);
 
 global.PANELS_TREE = [];
-global.LAYOUT_TREE = [];
+global.LAYOUTS_TREE = [];
 
 //global.NODE_APP.use('/ws', workspaceRouter);
 //global.NODE_APP.use('/flow*', test1);

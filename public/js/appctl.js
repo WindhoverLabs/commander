@@ -388,6 +388,8 @@ function GetStoredLayoutList() {
 
 /* Load Layout */
 function LoadLayout() {
+    console.log('LoadLayout 2');
+    
     /* if a layout exists, destroy it */
     myLayout.destroy()
 
