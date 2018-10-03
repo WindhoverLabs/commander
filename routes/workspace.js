@@ -37,7 +37,7 @@ var path = require('path');
 var url = require('url');
 
 var workspace = path.join(process.env.CMDR_WORKSPACE + '/web');
-console.log(workspace)
+console.log("###########",workspace)
 
 // var workspace = path.join(__dirname + '/..', '/workspace/web');
 

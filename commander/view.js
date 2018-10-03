@@ -42,6 +42,7 @@ function isDescendant(parent, child) {
 
 /* View generation */
 function processTelemetryUpdate(param){
+    console.log(param)
     var value = param.val;
     var opsPath = param.opsPath;
     if(opsPath in subscriptions){
