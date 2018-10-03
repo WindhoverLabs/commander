@@ -40,8 +40,9 @@ function isDescendant(parent, child) {
 
 
 /* View generation */
-function processTelemetryUpdate(param){
-    var value = param.val;
+function processTelemetryUpdate(param) {   
+    var sample = param.sample[param.sample.length - 1];
+    var value = sample.value;
     var opsPath = param.opsPath;
     if(opsPath in subscriptions){
         for(var i = 0; i < subscriptions[opsPath].length; ++i){
@@ -54,7 +55,9 @@ function processTelemetryUpdate(param){
 }
 
 function processTelemetryLedUpdate(param){
-    var value = param.val>=0.5;
+    var sample = param.sample[param.sample.length - 1];
+    var value = sample.value >= 0.5;
+
     var opsPath = param.opsPath;
     if(opsPath in subscriptions){
         for(var i = 0; i < subscriptions[opsPath].length; ++i){

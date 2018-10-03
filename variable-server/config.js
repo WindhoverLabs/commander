@@ -23,11 +23,19 @@ var config = convict({
         format: String,
         default: ''
     },
-    varUpdateStreamIDPrefix: {
-        doc: 'Prefix of the stream ID that variable updates will be sent out.  The full stream name is prefix + variable name',
-        format: String,
-        default: ''
-    }
+    persistence: [
+        {
+            name: {
+                doc: 'Variable name.',
+                format: 'String'
+            },
+            count: {
+                doc: 'Number of samples to retain.',
+                format: 'int',
+                default: 1
+            }
+        }
+    ]
 });
 
 module.exports = config;

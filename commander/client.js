@@ -283,11 +283,12 @@ CommanderClient.prototype.updateTelemetry = function (items) {
 		var subs = self.subscriptions[itemID];
 		for(var funcName in subs) {
 			var cb = subs[funcName].cb;
-      var opsPath = subs[funcName].opsPath;
+            var opsPath = subs[funcName].opsPath;
 			var param = {
-        val: items[itemID].value,
-        opsPath:opsPath
-      };
+              sample: items[itemID].sample,
+              opsPath:opsPath
+            };
+			
 			cb(param);
 		}
 	}

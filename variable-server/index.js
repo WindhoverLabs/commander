@@ -40,8 +40,9 @@ const Sparkles = require('sparkles');
 
 /* Event IDs */
 var EventEnum = Object.freeze(
-		{'INITIALIZED': 1},
-		{'INVALID_SUBSCRIPTION_REQUEST': 2}
+		{'INITIALIZED':                  1},
+		{'INVALID_SUBSCRIPTION_REQUEST': 2},
+		{'CONFIG_ERROR':                 3}
 	);
 
 var emit = Emitter.prototype.emit;
@@ -74,7 +75,9 @@ VariableServer.prototype.setInstanceEmitter = function (newInstanceEmitter) {
 	this.instanceEmitter = newInstanceEmitter;
 
 	this.instanceEmitter.on(config.get('jsonInputStreamID'), function(message) {
+	    var currentDateAndTime = new Date();
 		var subscribersToUpdate = {};
+		
     	for(var itemID in message.fields) {
     		var item = message.fields[itemID];
 
@@ -82,15 +85,26 @@ VariableServer.prototype.setInstanceEmitter = function (newInstanceEmitter) {
     			/* This is the first time we've seen this variable and it does
     			 * not already have a definition.  Create a new record. */
         		var variable = {opsPath: itemID};
+                variable.sample = [];
     			self.vars[itemID] = variable;
 
     		} else {
     			/* We've already received this or have a predefinition. */
     			var variable = self.vars[itemID];
+    			if(typeof variable.sample === 'undefined') {
+    			    variable.sample = [];
+    			}
     		}
+            
+            /* Update the current value. */
+            variable.sample.push({value: item.value, msgTime:item.msgTime, gndTime:currentDateAndTime});
 
-    		/* Update the current value. */
-    		variable.value = item.value;
+    		/* Get the persistence value and set the array of retained values accordingly. */
+    		var persistenceCount = self.getVariablePersistence(itemID);
+    		if(variable.sample.length > persistenceCount) {
+    		    /* The array is too big.  We need to take the oldest sample out. */
+    		    variable.sample.shift();
+    		}    		
     		
     		/* Now loop through all the subscribers, if any. */
     		for(var subscriber in variable.subscribers) {
@@ -114,7 +128,10 @@ VariableServer.prototype.setInstanceEmitter = function (newInstanceEmitter) {
     			
 	    			var updatedVariable = subscribersToUpdate[subscriber].variables[itemID];
     			
-	    			updatedVariable['value'] = variable.value;
+	    			/* Only sent subscribers a single sample, but still send it as an array of 1, so 
+	    			 * subscribers can use the same callback for the initial persisted data and the
+	    			 * periodic updated data. */
+	    			updatedVariable['sample'] = [variable.sample[variable.sample.length - 1]];
     			}
     		}
     	}
@@ -157,6 +174,13 @@ VariableServer.prototype.setInstanceEmitter = function (newInstanceEmitter) {
 			}
 		}
 	});
+    
+    var persistence = config.get('persistence');
+    if(typeof persistence !== 'undefined') {
+        for(var i = 0; i < persistence.length; ++i) {
+            this.setVariablePersistence(persistence[i].name, persistence[i].count);
+        }
+    }
 
     this.logInfoEvent(EventEnum.INITIALIZED, 'Initialized');
 }
@@ -172,6 +196,9 @@ VariableServer.prototype.addSubscriber = function (opsPath, cb) {
 	} else {
 		/* We've already received this or have a predefinition. */
 		var variable = this.vars[opsPath];
+		
+		/* Send however many values are currently persisted. */
+		cb(variable);
 	}
 	
 	if(variable.hasOwnProperty('subscribers') == false) {
@@ -179,6 +206,45 @@ VariableServer.prototype.addSubscriber = function (opsPath, cb) {
 	} 
 	
 	variable.subscribers[cb] = cb;
+}
+
+
+
+VariableServer.prototype.setVariablePersistence = function (opsPath, count) {
+    if(this.vars.hasOwnProperty(opsPath) == false) {
+        /* We have not received this variable yet and it does
+         * not already have a predefinition.  Create a new record. */
+        var variable = {opsPath: opsPath};
+        this.vars[opsPath] = variable;
+    } else {
+        /* We've already received this or have a predefinition. */
+        var variable = this.vars[opsPath];
+    }
+    
+    if(variable.hasOwnProperty('persistence') == false) {
+        /* We have not the persistence for this variable yet. */
+        variable.persistence = {};
+    } 
+    
+    variable.persistence = {count: count};
+}
+
+
+
+VariableServer.prototype.getVariablePersistence = function (opsPath) {
+    if(this.vars.hasOwnProperty(opsPath) == false) {
+        /* We have not received this variable yet and it does
+         * not already have a predefinition.  Return the default of 1. */
+        return 1;
+    } else {
+        /* We've already received this or have a predefinition. */
+        if(typeof this.vars[opsPath].persistence === 'undefined') {
+            /* Persistence is not set.  Return the default of 1. */
+            return 1;
+        } else {
+            return this.vars[opsPath].persistence.count;
+        }
+    }
 }
 
 

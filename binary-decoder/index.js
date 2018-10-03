@@ -343,8 +343,9 @@ BinaryDecoder.prototype.getFieldFromOperationalName = function (msgDef, opName, 
 BinaryDecoder.prototype.processBinaryMessage = function (buffer) {
     var msgID = buffer.readUInt16BE(0);
     
-    
 	var message = this.ccsds.parse(buffer);
+	
+	var msgTime = this.cfeTimeToJsTime(message.SecHdr.seconds, message.SecHdr.subSeconds);
 	
 	var def = this.getMsgDefByMsgID(msgID);
 
@@ -368,6 +369,7 @@ BinaryDecoder.prototype.processBinaryMessage = function (buffer) {
 					//console.log(fieldDef);
 				} else {
 					parsedTlm[opsPath].value = this.getField(buffer, fieldDef.fieldDef, fieldDef.bitOffset);
+					parsedTlm[opsPath].msgTime = msgTime;
 				}
 			}
 		}
@@ -731,79 +733,79 @@ BinaryDecoder.prototype.isTelemetryMsg = function (msgID) {
 
 
 
-//BinaryDecoder.prototype.cfeTimeToJsTime = function(seconds, subseconds) {
-//    var microseconds;
-//
-//    /* 0xffffdf00 subseconds = 999999 microseconds, so anything greater 
-//     * than that we set to 999999 microseconds, so it doesn't get to
-//     * a million microseconds */
-//  
-//    if(subseconds > 0xffffdf00)
-//    {
-//        microseconds = 999999;
-//    } else {
-//        /*
-//        **  Convert a 1/2^32 clock tick count to a microseconds count
-//        **
-//        **  Conversion factor is  ( ( 2 ** -32 ) / ( 10 ** -6 ) ).
-//        **
-//        **  Logic is as follows:
-//        **    x * ( ( 2 ** -32 ) / ( 10 ** -6 ) )
-//        **  = x * ( ( 10 ** 6  ) / (  2 ** 32 ) )
-//        **  = x * ( ( 5 ** 6 ) ( 2 ** 6 ) / ( 2 ** 26 ) ( 2 ** 6) )
-//        **  = x * ( ( 5 ** 6 ) / ( 2 ** 26 ) )
-//        **  = x * ( ( 5 ** 3 ) ( 5 ** 3 ) / ( 2 ** 7 ) ( 2 ** 7 ) (2 ** 12) )
-//        **
-//        **  C code equivalent:
-//        **  = ( ( ( ( ( x >> 7) * 125) >> 7) * 125) >> 12 )
-//        */   
-//
-//	      microseconds = (((((subseconds >> 7) * 125) >> 7) * 125) >> 12);
-//
-//        /* if the subseconds % 0x4000000 != 0 then we will need to
-//         * add 1 to the result. the & is a faster way of doing the % */  
-//        if ((subseconds & 0x3ffffff) != 0)
-//        {
-//          microseconds++;
-//        }
-//
-//        /* In the Micro2SubSecs conversion, we added an extra anomaly
-//         * to get the subseconds to bump up against the end point,
-//         * 0xFFFFF000. This must be accounted for here. Since we bumped
-//         * at the half way mark, we must "unbump" at the same mark 
-//         */
-//        if (microseconds > 500000)
-//        {
-//          microseconds --;
-//        }
-//    } /* end else */            
-//  
-//    /* Get a date with the correct year. */
-//    var jsDateTime = new Date("12/1/" + this.options.CFE_TIME_EPOCH_YEAR);
-//  
-//    /* Adjust days. */
-//    jsDateTime.setDate(jsDateTime.getDate() + (this.options.CFE_TIME_EPOCH_DAY-1));
-//  
-//    /* Adjust hours minutes and seconds. */
-//    jsDateTime.setTime(jsDateTime.getTime() + 
-//    		(this.options.CFE_TIME_EPOCH_HOUR * 3600000) + 
-//    		(this.options.CFE_TIME_EPOCH_MINUTE * 60000) + 
-//    		(this.options.CFE_TIME_EPOCH_SECOND * 1000));
-//  
-//    /* Add the CFE seconds. */
-//    jsDateTime.setTime(jsDateTime.getTime() + (seconds * 1000));
-//  
-//    /* Finally, add the CFE microseconds. */
-//    jsDateTime.setMilliseconds(jsDateTime.getMilliseconds() + (microseconds / 1000));
-//  
-//    return jsDateTime;
-//}
-//
-//
-//
-//BinaryDecoder.prototype.getCommandDef = function (ops_name) {	
-//	var retObj = {};
-//}
+BinaryDecoder.prototype.cfeTimeToJsTime = function(seconds, subseconds) {
+    var microseconds;
+
+    /* 0xffffdf00 subseconds = 999999 microseconds, so anything greater 
+     * than that we set to 999999 microseconds, so it doesn't get to
+     * a million microseconds */
+  
+    if(subseconds > 0xffffdf00)
+    {
+        microseconds = 999999;
+    } else {
+        /*
+        **  Convert a 1/2^32 clock tick count to a microseconds count
+        **
+        **  Conversion factor is  ( ( 2 ** -32 ) / ( 10 ** -6 ) ).
+        **
+        **  Logic is as follows:
+        **    x * ( ( 2 ** -32 ) / ( 10 ** -6 ) )
+        **  = x * ( ( 10 ** 6  ) / (  2 ** 32 ) )
+        **  = x * ( ( 5 ** 6 ) ( 2 ** 6 ) / ( 2 ** 26 ) ( 2 ** 6) )
+        **  = x * ( ( 5 ** 6 ) / ( 2 ** 26 ) )
+        **  = x * ( ( 5 ** 3 ) ( 5 ** 3 ) / ( 2 ** 7 ) ( 2 ** 7 ) (2 ** 12) )
+        **
+        **  C code equivalent:
+        **  = ( ( ( ( ( x >> 7) * 125) >> 7) * 125) >> 12 )
+        */   
+
+	      microseconds = (((((subseconds >> 7) * 125) >> 7) * 125) >> 12);
+
+        /* if the subseconds % 0x4000000 != 0 then we will need to
+         * add 1 to the result. the & is a faster way of doing the % */  
+        if ((subseconds & 0x3ffffff) != 0)
+        {
+          microseconds++;
+        }
+
+        /* In the Micro2SubSecs conversion, we added an extra anomaly
+         * to get the subseconds to bump up against the end point,
+         * 0xFFFFF000. This must be accounted for here. Since we bumped
+         * at the half way mark, we must "unbump" at the same mark 
+         */
+        if (microseconds > 500000)
+        {
+          microseconds --;
+        }
+    } /* end else */            
+  
+    /* Get a date with the correct year. */
+    var jsDateTime = new Date("12/1/" + config.get('CFE_TIME_EPOCH_YEAR'));
+  
+    /* Adjust days. */
+    jsDateTime.setDate(jsDateTime.getDate() + (config.get('CFE_TIME_EPOCH_DAY')-1));
+  
+    /* Adjust hours minutes and seconds. */
+    jsDateTime.setTime(jsDateTime.getTime() + 
+    		(config.get('CFE_TIME_EPOCH_HOUR') * 3600000) + 
+    		(config.get('CFE_TIME_EPOCH_MINUTE') * 60000) + 
+    		(config.get('CFE_TIME_EPOCH_SECOND') * 1000));
+  
+    /* Add the CFE seconds. */
+    jsDateTime.setTime(jsDateTime.getTime() + (seconds * 1000));
+  
+    /* Finally, add the CFE microseconds. */
+    jsDateTime.setMilliseconds(jsDateTime.getMilliseconds() + (microseconds / 1000));
+  
+    return jsDateTime;
+}
+
+
+
+BinaryDecoder.prototype.getCommandDef = function (ops_name) {	
+	var retObj = {};
+}
 
 
 

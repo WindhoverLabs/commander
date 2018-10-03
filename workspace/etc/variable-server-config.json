@@ -36,5 +36,8 @@
     jsonInputStreamID:       'json-tlm-stream',
     outputEventsStreamID:    'var-server-events',
     reqSubscribeStreamID:    'subscribe-request',
-    varUpdateStreamIDPrefix: 'var-update'
+    persistence: [
+        { name: '/CFE/ES_HK/CmdCounter', count: 100},
+        { name: '/CFE/ES_HK/ErrCounter', count: 50}
+    ]
 }

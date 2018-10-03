@@ -34,7 +34,6 @@
 // an example configuration file
 {
     varServerEventsStreamID: 'var-server-events',
-    varUpdateStreamIDPrefix: 'var-update',
     varDefReqStreamID:       'var-def-request',
     varDefRspStreamIDPrefix: 'var-def',
     cmdDefReqStreamID:       'cmd-def-request',
