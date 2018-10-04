@@ -15,8 +15,11 @@ html(lang='en-us')
     script(type="text/javascript" src='/scripts/socket.io-client/dist/socket.io.js')
     script(type="text/javascript" src="//golden-layout.com/files/latest/js/goldenlayout.min.js")
     script(type="text/javascript" src="/scripts/overlayscrollbars/js/jquery.overlayScrollbars.min.js")
-    script(type="text/javascript" src="/scripts/d3/dist/d3.min.js")
-
+    script(type="text/javascript" src="/scripts/jquery.flot/excanvas.min.js")
+    script(type="text/javascript" src="/scripts/jquery.flot/jquery.colorhelpers.js")
+    script(type="text/javascript" src="/scripts/jquery.flot/jquery.flot.js")
+    script(type="text/javascript" src="/scripts/jquery.flot/jquery.flot.time.js")
+    script(type="text/javascript" src="/scripts/file-saver/FileSaver.min.js")
 
     link(rel="stylesheet" type="text/css" href="/scripts/jquery-ui-dist/jquery-ui.min.css")
     link(rel="stylesheet" type="text/css" href="/scripts/overlayscrollbars/css/OverlayScrollbars.min.css")
@@ -61,10 +64,10 @@ html(lang='en-us')
               i#layoutMenuIcon.fa.fa-cubes
             div#layoutMenuContainer.menuContainer(data-open="false")
         ul.navbar-nav.wh-nav-btn(data-toggle="tooltip" title="Load page layout")
-            button.btn.btn-outline-primary( data-toggle="modal" data-target="#genericInputModal" data-title="Load Layout" data-submit="LoadLayout" data-custom='[{"label":"Load Layout", "type":"select", "dtype":"enumeration", "getItem":"GetStoredLayoutList"}]') 
+            button.btn.btn-outline-primary( data-toggle="modal" data-target="#genericInputModal" data-title="Load Layout" data-submit="LoadLayout" data-custom='[{"label":"Select Layout", "type":"browse", "dtype":"none", "getItem":"GetStoredLayoutList"}]') 
               i.fa.fa-download
         ul.navbar-nav.wh-nav-btn(data-toggle="tooltip" title="Save page layout")
-            button.btn.btn-outline-primary(data-toggle="modal" data-target="#genericInputModal" data-title="Save Layout" data-submit="SaveLayout" data-custom='[{"label":"Save Layout", "type":"field", "dtype":"string"}]') 
+            button.btn.btn-outline-primary(data-toggle="modal" data-target="#genericInputModal" data-title="Save Layout" data-submit="SaveLayout" data-custom='[{"label":"Enter Layout Name ", "type":"field", "dtype":"string"}]') 
               i.fa.fa-save 
     div.ui.main.text.container
       #wrapper
@@ -77,6 +80,7 @@ html(lang='en-us')
       ul.navbar-nav
         span#tooltips.nav-text-adjust ToolTips
         | Hello world 2
+    script(type="text/javascript" src='/commander/dataplot.js') 
     script(type="text/javascript" src='/commander/client.js') 
     script(type="text/javascript" src='/commander/controller.js')   
     script(type="text/javascript" src='/commander/view.js') 
