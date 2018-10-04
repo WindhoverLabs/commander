@@ -51,18 +51,12 @@ html(lang='en-us')
       #navbarSupportedContent.collapse.navbar-collapse
         ul#topSnapable.navbar-nav
         ul.navbar-nav.ml-auto(style="margin:5px;")
+        ul.navbar-nav.wh-nav-btn.menuDropdown(data-toggle="tooltip" title="Show/Hide Apps Menu")
+            button#MenuToggle.menuToggle.btn.btn-outline-primary
+              i#menuIcon.fa.fa-bars
         ul.navbar-nav.wh-nav-btn.menuDropdown(data-toggle="tooltip" title="Show/Hide Widget Menu")
             button#widgetMenuToggle.menuToggle.btn.btn-outline-primary
               i#widgetMenuIcon.fa.fa-clone 
-            div#widgetMenuContainer.menuContainer(data-open="false")
-        ul.navbar-nav.wh-nav-btn.menuDropdown(data-toggle="tooltip" title="Show/Hide Apps Menu")
-            button#panelMenuToggle.menuToggle.btn.btn-outline-primary
-              i#panelIcon.fa.fa-cube
-            div#panelMenuContainer.menuContainer(data-open="false")
-        ul.navbar-nav.wh-nav-btn.menuDropdown(data-toggle="tooltip" title="Show/Hide Layout Menu")
-            button#layoutMenuToggle.menuToggle.btn.btn-outline-primary
-              i#layoutMenuIcon.fa.fa-cubes
-            div#layoutMenuContainer.menuContainer(data-open="false")
         ul.navbar-nav.wh-nav-btn(data-toggle="tooltip" title="Load page layout")
             button.btn.btn-outline-primary( data-toggle="modal" data-target="#genericInputModal" data-title="Load Layout" data-submit="LoadLayout" data-custom='[{"label":"Select Layout", "type":"browse", "dtype":"none", "getItem":"GetStoredLayoutList"}]') 
               i.fa.fa-download
@@ -73,6 +67,12 @@ html(lang='en-us')
       #wrapper
         #layoutContainer
         #main-content
+        #side-bar
+          #flip.btn-group(ole="group" aria-label="Toggle Menus")
+            button#panelMenuToggle.btn.btn-outline-secondary(type="button") Panels
+            button#layoutMenuToggle.btn.btn-outline-secondary(type="button") Layout
+          div#panelMenuContainer.menuContainer(data-open="false")
+          div#layoutMenuContainer.menuContainer(data-open="false")
     nav#bottomNav.navbar.fixed-bottom.navbar-expand-lg.navbar-dark.bg-dark(style="max-height:10px;box-shadow: 0px 4px 15px #fff;")
       ul.navbar-nav.mr-auto
         span.nav-text-adjust 

@@ -88,6 +88,28 @@ html, body {
   visibility: visible;
 }
 
+#side-bar{
+  background-color: #343a40;
+  position: absolute;
+  width: 250px;
+  height: 100%;
+  z-index: 5000;
+  transform:translateX(-100%);
+  padding:0px;
+}
+
+#flip{
+  justify-content: center;
+  display: none;
+}
+#TheMenuContainer{
+  width: 100%;
+  background-color: #a2a2a2;
+  height: 95%;
+  border-radius: 5px;
+  margin: 5px;
+}
+
 #topSnapable {
   background: #686868;
   border-radius: 4px;
@@ -103,14 +125,28 @@ html, body {
   background: #FFF0;
   border: unset !important;
   width: 250px;
-  position: absolute;
+  /* position: absolute;
   top: 100%;
-  display: none;
   z-index: 1000;
   min-width: 10rem;
-  padding: .5rem 0;
+  padding: .5rem 0; */
+  display: none;
   margin: .6rem 0 0;
 }
+
+.list-group-item > .text{
+  text-overflow: ellipsis;
+
+  /* Required for text-overflow to do anything */
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.active {
+  box-shadow: none !important;
+}
+
+
 
 .menuShow {
   display: block !important;

@@ -373,6 +373,7 @@ function HideMenu(item){
 
 function InitMenuState(){
     $("#panelMenuToggle").click(() => {
+
         let open = $("#panelMenuContainer").data("open");
         if(!open){
             //HideMenu("widget");
@@ -614,6 +615,33 @@ function UpdatePanelNode(node, display) {
 }
 
 
+/* Side bar */
+var sidebar_open = false;
+function InitSidebar(){
+
+  $("#MenuToggle").on("click",()=>{
+    console.log("test-->  ",sidebar_open)
+    if(sidebar_open){
+      $("#side-bar").css("transform","translateX(-100%)")
+      $("#layoutContainer").css("margin-left","0%")
+      $("#layoutContainer").css("width","100%")
+      myLayout.updateSize();
+      sidebar_open = false;
+      $("#flip").css("display","none");
+    }
+    else{
+      $("#side-bar").css("transform","translateX(0%)")
+      $("#layoutContainer").css("margin-left","250px")
+      $("#layoutContainer").css("width","calc(100% - 250px)")
+      $("#flip").css("display","flex");
+      myLayout.updateSize();
+      sidebar_open = true;
+    }
+
+
+  });
+}
+
 var _session;
 var _sescon_never = true; /* flag to indicate that session was never connected atleast once */
 
@@ -680,6 +708,7 @@ $(()=>{
                   wrapNodeText:true,
                   collapseIcon: 'fa fa-minus',
                   expandIcon: 'fa fa-plus',
+                  showBorder:false,
                   lazyLoad: UpdatePanelNode,
                   onNodeRendered : NodeRendered,
                   onNodeSelected: NodeSelected,
@@ -713,6 +742,7 @@ $(()=>{
                   wrapNodeText:true,
                   collapseIcon: 'fa fa-minus',
                   expandIcon: 'fa fa-plus',
+                  showBorder:false,
                   lazyLoad: UpdateLayoutNode,
                   onNodeRendered : NodeRendered,
                   onNodeSelected: NodeSelected,
@@ -734,6 +764,7 @@ $(()=>{
           //InitPopover();
           //InitScrollBar();
           InitResizeCtl();
+          InitSidebar();
 
           //session.getViews(function (views) {
           //    console.log(views);
