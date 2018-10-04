@@ -20,7 +20,7 @@ function NodeRendered(e, node) {
             title: node.text,
             type: 'component',
             componentName: 'Blank',
-            componentState: { text: "text", link: node.urlPath}
+            componentState: { text: "text", link: 'ws/' + node.path}
         };
 
          myLayout.createDragSource( node.$el[0], newItemConfig );
@@ -35,7 +35,7 @@ function NodeSelected(e, node) {
             title: node.text,
             type: 'component',
             componentName: 'Blank',
-            componentState: { text: 'text', link: node.path}
+            componentState: { text: 'text', link: '/ws' + node.path}
         };
 
         if( myLayout.selectedItem === null ) {
@@ -45,10 +45,11 @@ function NodeSelected(e, node) {
         }
     }
     else if(node.type === 'config') {
-        $.get(node.urlPath,(response) => {
+        $.get('ws/' + node.path,(response) => {
         	var jsonObj = JSON.parse(response);
 
             if( response !== null ) {
+
                 myLayout.destroy()
                 myLayout = new window.GoldenLayout( jsonObj, $('#layoutContainer') );
                 window.dispatchEvent(new CustomEvent('first-layout-load-complete'));
@@ -226,7 +227,6 @@ function GetStoredLayoutList() {
 
 /* Load Layout */
 function LoadLayout() {
-    console.log('LoadLayout 1');
     /* if a layout exists, destroy it */
     myLayout.destroy()
 
@@ -507,29 +507,25 @@ function UpdateLayoutNode(node, display) {
 
         for(var i=0; i < dirEntries.length; ++i) {
             var dirEntry = dirEntries[i];
-            
+
             var layoutEntry = {
                 name: dirEntry.name,
-                text: dirEntry.text,
-                path: node.path + '/' + dirEntry.name,
-                urlPath: dirEntry.urlPath,
-                //type: dirEntry.type,
-                //ext: dirEntry.type,
-                //lazyLoad: true,
-                //ext: dirEntries[i].path,
-                selectable: true,
+                text: dirEntry.name,
+                path: dirEntry.path,
+                type: dirEntry.type,
+                ext: dirEntry.path,
+                selectable: false,
                 checkable: false
             };
-            
-            if(dirEntry.hasOwnProperty('nodes')) {
+
+            if(dirEntry.type == 'dir') {
                 layoutEntry.lazyLoad = true;
                 layoutEntry.selectable = false;
             } else {
                 layoutEntry.lazyLoad = false;
                 layoutEntry.selectable = true;
                 layoutEntry.type = 'config';
-                layoutEntry.url = dirEntry.urlPath;
-            }                
+            }
 
             entries.push(layoutEntry);
         }
@@ -546,21 +542,18 @@ function UpdatePanelNode(node, display) {
 
         for(var i=0; i < dirEntries.length; ++i) {
             var dirEntry = dirEntries[i];
-            
+
             var panelEntry = {
                 name: dirEntry.name,
-                text: dirEntry.text,
-                path: node.path + '/' + dirEntry.name,
-                urlPath: dirEntry.urlPath,
-                //type: dirEntry.type,
-                //ext: dirEntry.type,
-                //lazyLoad: true,
-                //ext: dirEntries[i].path,
+                text: dirEntry.name,
+                path: dirEntry.path,
+                type: dirEntry.type,
+                ext: dirEntry.path,
                 selectable: true,
                 checkable: false
             };
-            
-            if(dirEntry.hasOwnProperty('nodes')) {
+
+            if(dirEntry.type == 'dir') {
                 panelEntry.lazyLoad = true;
                 panelEntry.selectable = false;
             } else {
@@ -568,49 +561,15 @@ function UpdatePanelNode(node, display) {
                 panelEntry.lazyLoad = false;
                 panelEntry.selectable = true;
                 panelEntry.type = 'file';
-                panelEntry.url = dirEntry.urlPath;
+                panelEntry.url = 'ws/' + dirEntry.path;
             }
 
             panelEntries.push(panelEntry);
         }
+
         var tree = $('#panelMenuContainer').treeview(true)
         tree.addNode(panelEntries, node, node.index, { silent: true} );
         tree.expandNode(node, { silent: true, ignoreChildren: true } );
-
-//        console.log('2 getPanels');
-//        console.log(dirEntries);
-//        var panelEntries = [];
-//
-//        for(var i=0; i < dirEntries.length; ++i) {
-//            var dirEntry = dirEntries[i];
-//
-//            var panelEntry = {
-//                name: dirEntry.name,
-//                text: dirEntry.text,
-//                path: dirEntry.path,
-//                //type: dirEntry.type,
-//                //ext: dirEntry.path,
-//                selectable: true,
-//                checkable: false
-//            };
-//
-//            if(dirEntry.type == 'dir') {
-//                panelEntry.lazyLoad = true;
-//                panelEntry.selectable = false;
-//            } else {
-//                panelEntry.icon = 'fa fa-file';
-//                panelEntry.lazyLoad = false;
-//                panelEntry.selectable = true;
-//                panelEntry.type = 'file';
-//                panelEntry.url = 'ws/' + dirEntry.path;
-//            }
-//
-//            panelEntries.push(panelEntry);
-//        }
-//
-//        var tree = $('#panelMenuContainer').treeview(true)
-//        tree.addNode(panelEntries, node, node.index, { silent: true} );
-//        tree.expandNode(node, { silent: true, ignoreChildren: true } );
     });
 }
 
@@ -619,7 +578,7 @@ function UpdatePanelNode(node, display) {
 var sidebar_open = false;
 function InitSidebar(){
 
-  $("#MenuToggle").on("click",()=>{
+  $("#cdr-app-menu-toggle").on("click",()=>{
     console.log("test-->  ",sidebar_open)
     if(sidebar_open){
       $("#side-bar").css("transform","translateX(-100%)")
@@ -678,6 +637,7 @@ $(()=>{
     }
 
     session.on('connect', function() {
+
         console.log('session connected');
         if(_sescon_never){
           session.getPanels('', function (dirEntries) {
@@ -686,8 +646,8 @@ $(()=>{
               for(var i=0; i < dirEntries.length; ++i) {
                   var entry = {
                       name: dirEntries[i].name,
-                      text: dirEntries[i].text,
-                      path: dirEntries[i].name,
+                      text: dirEntries[i].name,
+                      path: dirEntries[i].path,
                       type: dirEntries[i].type,
                       lazyLoad: true,
                       ext: dirEntries[i].path,
@@ -708,7 +668,7 @@ $(()=>{
                   wrapNodeText:true,
                   collapseIcon: 'fa fa-minus',
                   expandIcon: 'fa fa-plus',
-                  showBorder:false,
+                  showBorder:true,
                   lazyLoad: UpdatePanelNode,
                   onNodeRendered : NodeRendered,
                   onNodeSelected: NodeSelected,
@@ -720,8 +680,8 @@ $(()=>{
               for(var i=0; i < dirEntries.length; ++i) {
                   var entry = {
                       name: dirEntries[i].name,
-                      text: dirEntries[i].text,
-                      path: dirEntries[i].name,
+                      text: dirEntries[i].name,
+                      path: dirEntries[i].path,
                       type: dirEntries[i].type,
                       lazyLoad: true,
                       ext: dirEntries[i].path,
@@ -742,7 +702,7 @@ $(()=>{
                   wrapNodeText:true,
                   collapseIcon: 'fa fa-minus',
                   expandIcon: 'fa fa-plus',
-                  showBorder:false,
+                  showBorder:true,
                   lazyLoad: UpdateLayoutNode,
                   onNodeRendered : NodeRendered,
                   onNodeSelected: NodeSelected,

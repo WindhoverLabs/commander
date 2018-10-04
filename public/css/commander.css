@@ -1,15 +1,16 @@
-/* App style */
-::-webkit-scrollbar {
-    width: 0px;
-    background: transparent; /* make scrollbar transparent */
+* {
+  margin: 0;
+  padding: 0;
+  list-style-type:none;
+}
+
+html {
+  height: 100%;
 }
 
 body {
   background-color:  #353535;
   color: #ffffff;
-}
-
-body {
   max-height: calc(100% - 57px) !important;
   height: calc(100% - 57px) !important;
 }
@@ -21,22 +22,78 @@ h2 {
   text-align: center;
 }
 
-html, body {
-  height: 100%;
-}
-
-* {
-  margin: 0;
-  padding: 0;
-  list-style-type:none;
-}
-
 .btn:focus { /* All buttons will not have focus feature  */
   box-shadow: none;
 }
 
 
-/* Modal */
+
+
+/******************************************
+  Commander Layout Level CSS
+*******************************************/
+
+.cdr-nav-top{
+  box-shadow: 0px 2px 25px #000;
+  padding: 0.25em 0em;
+  max-height: 38px;
+  height: 38px;
+}
+
+/* max-width < 992px - top navbar buttons */
+.cdr-xs-nav-toggle{
+  font-size:10px;
+  padding: 0.25rem 0.25rem;
+  margin: 5px 5px;
+}
+
+.cdr-nav-btn{
+  margin-bottom:unset;
+  margin-left: 5px;
+  margin-right: 5px;
+}
+
+.cdr-nav-icons{
+
+}
+
+@media only screen and (max-width: 991px) {
+
+  #cdr-nav-top-left-content,
+  #cdr-nav-top-right-content{
+    background-color: #000000b3;
+    position:relative;
+    width: 100%;
+  }
+
+  #cdr-nav-top-left-content>ul,
+  #cdr-nav-top-right-content>ul{
+    display: block;
+    margin:5px auto;
+    text-align: center;
+  }
+
+}
+
+
+
+#navbarBrand{
+  position:absolute;
+  width:100%;
+  text-align: center;
+  pointer-events: none;
+}
+
+#bottomNav{
+  box-shadow: 0px -4px 15px #000;
+  padding: 0.25em 0em;
+  max-height: 18px;
+  height: 18px;
+}
+
+/******************************************
+  Generic Modal
+*******************************************/
 
 .modal-content {
   background: #343a40;
@@ -50,13 +107,13 @@ html, body {
   border-top: unset;
 }
 
-/* Navigation Bar - Top */
 
-.wh-nav-btn{
-  margin-bottom:unset;
-  margin-left: 5px;
-  margin-right: 5px;
-}
+
+
+
+
+
+
 
 .indicator-draggable {
   border: 1px solid #ffae00;
@@ -68,13 +125,11 @@ html, body {
   color:white;
   cursor: pointer;
 }
-
 .indicator-val {
   position: relative;
   top: -2px;
   left: 10px;
 }
-
 .indicator-close {
   background-color: #f8f9facc !important;
   position: relative;
@@ -83,19 +138,20 @@ html, body {
   left: 9px;
   visibility: hidden;
 }
-
 .indicator-draggable:hover .indicator-close{
   visibility: visible;
 }
-
 #side-bar{
   background-color: #343a40;
   position: absolute;
   width: 250px;
-  height: 100%;
-  z-index: 5000;
+  height: calc(100% - 5px);
+  z-index: 1029;
   transform:translateX(-100%);
-  padding:0px;
+  padding: 10px 0px;
+  top: 3px;
+  border-radius: 0px 5px 5px 0px;
+  box-shadow: 0px 0px 15px #000;
 }
 
 #flip{
@@ -109,7 +165,6 @@ html, body {
   border-radius: 5px;
   margin: 5px;
 }
-
 #topSnapable {
   background: #686868;
   border-radius: 4px;
@@ -117,9 +172,7 @@ html, body {
 }
 
 /* Navigation Menu Bar - Left */
-.menuDropdown {
-  position: relative;
-}
+
 
 .menuContainer {
   background: #FFF0;
@@ -145,15 +198,11 @@ html, body {
 .active {
   box-shadow: none !important;
 }
-
-
-
 .menuShow {
   display: block !important;
   right: 0 !important;
   left: auto !important;
 }
-
 .menuContainer li {
   cursor: move;
   cursor: pointer;
@@ -161,7 +210,6 @@ html, body {
   /* color: #FFF; */
   font: 12px Arial, sans-serif;
 }
-
 .menuContainer li:hover {
   color: #343a40;
 }
@@ -189,7 +237,8 @@ html, body {
 }
 
 .main.container {
-  margin-top: 57px;
+  margin-top: 38px;
+  margin-bottom: 18px;
   background-color:  #353535;
 }
 
@@ -208,7 +257,7 @@ html, body {
 }
 
 #wrapper {
-  height: 97.9%;
+  height: 100%;
   position: relative;
   width: 100%;
   overflow: hidden;
@@ -422,11 +471,7 @@ path {
   color:#5f8e9e;
 }
 
-@media only screen and (max-width: 992px) {
-  .nav-text-adjust {
-    margin: -8px 10px;
-  }
-}
+
 
 @media only screen and (max-width: 1550px) {
   #topSnapable {
