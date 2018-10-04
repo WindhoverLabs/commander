@@ -51,7 +51,7 @@ function NodeSelected(e, node) {
             if( response !== null ) {
 
                 myLayout.destroy()
-                myLayout = new window.GoldenLayout( jsonObj, $('#layoutContainer') );
+                myLayout = new window.GoldenLayout( jsonObj, $('#cdr-layout-container') );
                 window.dispatchEvent(new CustomEvent('first-layout-load-complete'));
 
                 myLayout.on('stackCreated', (item) => {
@@ -242,7 +242,7 @@ function LoadLayout() {
 					savedState = JSON.parse(e.target.result);
           console.log(savedState)
           if( savedState !== null ) {
-            myLayout = new window.GoldenLayout(  savedState , $('#layoutContainer') );
+            myLayout = new window.GoldenLayout(  savedState , $('#cdr-layout-container') );
             InitLayout(myLayout);
           }
           else{
@@ -256,7 +256,7 @@ function LoadLayout() {
     })(files[0]);
     reader.readAsText(files[0]);
     // if( savedState !== null ) {
-    //     myLayout = new window.GoldenLayout( JSON.parse( savedState ), $('#layoutContainer') );
+    //     myLayout = new window.GoldenLayout( JSON.parse( savedState ), $('#cdr-layout-container') );
     //     InitLayout(myLayout);
     // } else {
     //     console.log("Layout cannot be loaded.")
@@ -359,22 +359,22 @@ function InitModal() {
 /* Side menu */
 /*Initialize menu state change functionality*/
 function ShowMenu(item){
-    $("#"+item+"MenuContainer").addClass("menuShow");
-    $("#"+item+"MenuToggle").addClass("active");
-    $("#"+item+"MenuContainer").data("open",true);
+    $("#cdr-"+item+"-menu-container").addClass("menuShow");
+    $("#cdr-"+item+"-menu-toggle").addClass("active");
+    $("#cdr-"+item+"-menu-container").data("open",true);
 }
 
 function HideMenu(item){
-    $("#"+item+"MenuContainer").removeClass("menuShow");
-    $("#"+item+"MenuToggle").removeClass("active");
-    $("#"+item+"MenuContainer").data("open",false);
-    NodesCollapse(item);
+    $("#cdr-"+item+"-menu-container").removeClass("menuShow");
+    $("#cdr-"+item+"-menu-toggle").removeClass("active");
+    $("#cdr-"+item+"-menu-container").data("open",false);
+    // NodesCollapse(item);
 }
 
 function InitMenuState(){
-    $("#panelMenuToggle").click(() => {
+    $("#cdr-panel-menu-toggle").click(() => {
 
-        let open = $("#panelMenuContainer").data("open");
+        let open = $("#cdr-panel-menu-container").data("open");
         if(!open){
             //HideMenu("widget");
             HideMenu("layout");
@@ -384,8 +384,8 @@ function InitMenuState(){
         }
     });
 
-    $("#layoutMenuToggle").click(() => {
-        let open = $("#layoutMenuContainer").data("open");
+    $("#cdr-layout-menu-toggle").click(() => {
+        let open = $("#cdr-layout-menu-container").data("open");
         if(!open) {
             //HideMenu("widget");
             HideMenu("panel");
@@ -507,7 +507,7 @@ function UpdateLayoutNode(node, display) {
 
         for(var i=0; i < dirEntries.length; ++i) {
             var dirEntry = dirEntries[i];
-            
+
             var layoutEntry = {
                 name: dirEntry.name,
                 text: dirEntry.text,
@@ -520,7 +520,7 @@ function UpdateLayoutNode(node, display) {
                 selectable: true,
                 checkable: false
             };
-            
+
             if(dirEntry.hasOwnProperty('nodes')) {
                 layoutEntry.lazyLoad = true;
                 layoutEntry.selectable = false;
@@ -529,12 +529,12 @@ function UpdateLayoutNode(node, display) {
                 layoutEntry.selectable = true;
                 layoutEntry.type = 'config';
                 layoutEntry.url = dirEntry.urlPath;
-            }                
+            }
 
             entries.push(layoutEntry);
         }
 
-        var tree = $('#layoutMenuContainer').treeview(true)
+        var tree = $('#cdr-layout-menu-container').treeview(true)
         tree.addNode(entries, node, node.index, { silent: true} );
         tree.expandNode(node, { silent: true, ignoreChildren: true } );
     });
@@ -546,7 +546,7 @@ function UpdatePanelNode(node, display) {
 
         for(var i=0; i < dirEntries.length; ++i) {
             var dirEntry = dirEntries[i];
-            
+
             var panelEntry = {
                 name: dirEntry.name,
                 text: dirEntry.text,
@@ -559,7 +559,7 @@ function UpdatePanelNode(node, display) {
                 selectable: true,
                 checkable: false
             };
-            
+
             if(dirEntry.hasOwnProperty('nodes')) {
                 panelEntry.lazyLoad = true;
                 panelEntry.selectable = false;
@@ -574,7 +574,7 @@ function UpdatePanelNode(node, display) {
             panelEntries.push(panelEntry);
         }
 
-        var tree = $('#panelMenuContainer').treeview(true)
+        var tree = $('#cdr-panel-menu-container').treeview(true)
         tree.addNode(panelEntries, node, node.index, { silent: true} );
         tree.expandNode(node, { silent: true, ignoreChildren: true } );
     });
@@ -588,18 +588,18 @@ function InitSidebar(){
   $("#cdr-app-menu-toggle").on("click",()=>{
     console.log("test-->  ",sidebar_open)
     if(sidebar_open){
-      $("#side-bar").css("transform","translateX(-100%)")
-      $("#layoutContainer").css("margin-left","0%")
-      $("#layoutContainer").css("width","100%")
+      $("#cdr-app-menu").css("transform","translateX(-100%)")
+      $("#cdr-layout-container").css("margin-left","0%")
+      $("#cdr-layout-container").css("width","100%")
       myLayout.updateSize();
       sidebar_open = false;
-      $("#flip").css("display","none");
+      $("#cdr-panel-layout-switch").css("display","none");
     }
     else{
-      $("#side-bar").css("transform","translateX(0%)")
-      $("#layoutContainer").css("margin-left","250px")
-      $("#layoutContainer").css("width","calc(100% - 250px)")
-      $("#flip").css("display","flex");
+      $("#cdr-app-menu").css("transform","translateX(0%)")
+      $("#cdr-layout-container").css("margin-left","250px")
+      $("#cdr-layout-container").css("width","calc(100% - 250px)")
+      $("#cdr-panel-layout-switch").css("display","flex");
       myLayout.updateSize();
       sidebar_open = true;
     }
@@ -665,7 +665,7 @@ $(()=>{
                   panelEntries.push(entry);
               }
 
-              $('#panelMenuContainer').treeview({
+              $('#cdr-panel-menu-container').treeview({
                   data: panelEntries,
                   levels:1,
                   backColor: '#343a40',//grey
@@ -675,7 +675,7 @@ $(()=>{
                   wrapNodeText:true,
                   collapseIcon: 'fa fa-minus',
                   expandIcon: 'fa fa-plus',
-                  showBorder:true,
+                  showBorder:false,
                   lazyLoad: UpdatePanelNode,
                   onNodeRendered : NodeRendered,
                   onNodeSelected: NodeSelected,
@@ -699,7 +699,7 @@ $(()=>{
                   entries.push(entry);
               }
 
-              $('#layoutMenuContainer').treeview({
+              $('#cdr-layout-menu-container').treeview({
                   data: entries,
                   levels:1,
                   backColor: '#343a40',//grey
@@ -709,7 +709,7 @@ $(()=>{
                   wrapNodeText:true,
                   collapseIcon: 'fa fa-minus',
                   expandIcon: 'fa fa-plus',
-                  showBorder:true,
+                  showBorder:false,
                   lazyLoad: UpdateLayoutNode,
                   onNodeRendered : NodeRendered,
                   onNodeSelected: NodeSelected,
@@ -717,7 +717,7 @@ $(()=>{
           });
 
           /* Load a landing page layout for the first time */
-          myLayout = new window.GoldenLayout( config, $('#layoutContainer'));
+          myLayout = new window.GoldenLayout( config, $('#cdr-layout-container'));
           InitLayout(myLayout);
           window.dispatchEvent(new CustomEvent('first-layout-load-complete'));
           _sescon_never = false;

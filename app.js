@@ -71,7 +71,7 @@ global.LAYOUTS_TREE = [];
 //global.NODE_APP.use('/ws', workspaceRouter);
 //global.NODE_APP.use('/flow*', test1);
 
-var commander = require(CDR_WORKSPACE); 
+var commander = require(CDR_WORKSPACE);
 
 //var commander = new Commander(CDR_WORKSPACE, './config/development.json');
 //var binaryEncoder = new BinaryEncoder(CDR_WORKSPACE, `${CDR_WORKSPACE}/etc/binary-encoder-config.json`);

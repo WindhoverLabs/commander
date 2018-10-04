@@ -3,8 +3,8 @@ cdr-nav-iconshtml(lang='en-us')
     meta(charset='utf-8')
     meta(http-equiv="X-UA-Compatible" content="IE=edge,chrome=1")
     meta(name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0")
-
     title Commander
+    <!-- JS Libraries -->
     script(type="text/javascript" src="/scripts/popper.js/dist/umd/popper.min.js")
     script(type="text/javascript" src="/scripts/jquery/dist/jquery.js")
     script(type="text/javascript" src="/scripts/jquery-ui-dist/jquery-ui.min.js")
@@ -20,7 +20,7 @@ cdr-nav-iconshtml(lang='en-us')
     script(type="text/javascript" src="/scripts/jquery.flot/jquery.flot.js")
     script(type="text/javascript" src="/scripts/jquery.flot/jquery.flot.time.js")
     script(type="text/javascript" src="/scripts/file-saver/FileSaver.min.js")
-
+    <!-- CSS Libraries -->
     link(rel="stylesheet" type="text/css" href="/scripts/jquery-ui-dist/jquery-ui.min.css")
     link(rel="stylesheet" type="text/css" href="/scripts/overlayscrollbars/css/OverlayScrollbars.min.css")
     link(rel="stylesheet" type="text/css" href="/scripts/patternfly-bootstrap-treeview/dist/bootstrap-treeview.min.css")
@@ -30,6 +30,7 @@ cdr-nav-iconshtml(lang='en-us')
     link(type="text/css" rel="stylesheet" href="//golden-layout.com/files/latest/css/goldenlayout-base.css")
     link(type="text/css" rel="stylesheet" href="//golden-layout.com/files/latest/css/goldenlayout-dark-theme.css")  
   body
+    <!-- Generic Modal Template -->
     div#genericInputModal.modal.fade(tabindex="-1" role="dialog" aria-labelledby="genericInputModal" aria-hidden="true")
       div.modal-dialog(role="document")
         div.modal-content
@@ -42,7 +43,7 @@ cdr-nav-iconshtml(lang='en-us')
           div.modal-footer
             button#modalSubmit.btn.btn-outline-primary(type="submit" data-dismiss="modal") OK
             button.btn.btn-outline-secondary(type="button" data-dismiss="modal") Close    
-    
+    <!-- Top Navigation Bar -->
     nav.cdr-nav-top.navbar.fixed-top.navbar-expand-lg.navbar-dark.bg-dark
       button.cdr-xs-nav-toggle.navbar-toggler(type="button" data-toggle="collapse" data-target="#cdr-nav-top-left-content" aria-controls="cdr-nav-top-left-content" aria-expanded="false" aria-label="Toggle navigation")
         span.navbar-toggler-icon
@@ -53,32 +54,31 @@ cdr-nav-iconshtml(lang='en-us')
             button#cdr-app-menu-toggle.btn.btn-outline-primary
               i.cdr-nav-icons.fa.fa-bars
         ul.navbar-nav.ml-auto
-      a#navbarBrand.navbar-brand(href="#")
+      a.cdr-nav-top-brand.navbar-brand(href="#")
         img(src="/img/Windhover-Mark-White.png" width="50" class="d-inline-block align-top" alt="")
       #cdr-nav-top-right-content.collapse.navbar-collapse
         ul.navbar-nav.ml-auto
         ul.navbar-nav.cdr-nav-btn
             button.btn.btn-outline-primary( data-toggle="modal" data-target="#genericInputModal" data-title="Load Layout" data-submit="LoadLayout" data-custom='[{"label":"Select Layout", "type":"browse", "dtype":"none", "getItem":"GetStoredLayoutList"}]') 
-              i.fa.fa-download
+              i.cdr-nav-icons.fa.fa-download
         ul.navbar-nav.cdr-nav-btn
             button.btn.btn-outline-primary(data-toggle="modal" data-target="#genericInputModal" data-title="Save Layout" data-submit="SaveLayout" data-custom='[{"label":"Enter Layout Name ", "type":"field", "dtype":"string"}]') 
-              i.fa.fa-save 
-    
-    div#centerContainer.ui.main.text.container
-      #wrapper
-        #layoutContainer
-        #main-content
-        #side-bar
-          #flip.btn-group(ole="group" aria-label="Toggle Menus")
-            button#panelMenuToggle.btn.btn-outline-secondary(type="button") Panels
-            button#layoutMenuToggle.btn.btn-outline-secondary(type="button") Layout
-          div#panelMenuContainer.menuContainer(data-open="false")
-          div#layoutMenuContainer.menuContainer(data-open="false")
-    
-    nav#bottomNav.navbar.fixed-bottom.navbar-expand-lg.navbar-dark.bg-dark
+              i.cdr-nav-icons.fa.fa-save 
+    <!-- Central Content Area -->
+    div.cdr-container.ui.main.text
+      div.cdr-content-wrapper
+        div#cdr-layout-container
+        div#cdr-app-menu 
+          div#cdr-panel-layout-switch.cdr-center-btn-group.btn-group(role="group" aria-label="Toggle Menus")
+            button#cdr-panel-menu-toggle.btn.btn-outline-secondary Panels
+            button#cdr-layout-menu-toggle.btn.btn-outline-secondary Layout
+          div#cdr-panel-menu-container.cdr-menu-container(data-open="false")
+          div#cdr-layout-menu-container.cdr-menu-container(data-open="false")
+    <!-- Bottom Navigation Bar -->
+    nav.cdr-nav-btm.navbar.fixed-bottom.navbar-expand-lg.navbar-dark.bg-dark
       ul.navbar-nav.mr-auto
       ul.navbar-nav
-    
+    <!-- Custom Scripts -->
     script(type="text/javascript" src='/commander/dataplot.js') 
     script(type="text/javascript" src='/commander/client.js') 
     script(type="text/javascript" src='/commander/controller.js')   
