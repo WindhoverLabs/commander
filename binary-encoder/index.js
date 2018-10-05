@@ -174,7 +174,7 @@ BinaryEncoder.prototype.setInstanceEmitter = function (newInstanceEmitter)
 			
 			cb(cmdDef);
 		} else {
-		    this.logErrorEvent(EventEnum.INVALID_REQUEST, 'CmdDefReq: Invalid request.  \'' + req + '\'');
+		    this.logErrorEvent(EventEnum.INVALID_REQUEST, 'CmdDefReq: Invalid request.  \'' + cmdReq + '\'');
 			
 			cb(undefined);
 		}

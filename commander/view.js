@@ -250,7 +250,7 @@ class Panel {
 		if (d.hasOwnProperty('cmd')) {
 			var cmdObj = d.cmd;
 			var btnObj = $(s);
-			session.getCmdDefs({name:cmdObj.name}, function(cmdInfo) {
+			session.getCmdDef({name:cmdObj.name}, function(cmdInfo) {
 				if(cmdObj.hasOwnProperty('uuid')) {
 					/* We already bound this element. */
 				} else {

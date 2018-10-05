@@ -169,29 +169,77 @@ BinaryDecoder.prototype.setInstanceEmitter = function (newInstanceEmitter)
     	self.processBinaryMessage(buffer);
 	});
 
-	this.instanceEmitter.on(config.get('tlmDefReqStreamID'), function(req) {
-		if(req.hasOwnProperty('opsPath')) {
-			var tlmDef = self.getTlmDefByPath(req.ops_path);
-			
-			if(typeof tlmDef === 'undefined') {
-				self.logErrorEvent(EventEnum.OPS_PATH_NOT_FOUND, 'TlmDefReq: Ops path not found.');
-			} else {
-		        self.instanceEmit(config.get('tlmDefRspStreamIDPrefix') + req.opsName, tlmDef);
-			}
-		} else if (req.hasOwnProperty('msgID')) {
-			var tlmDef = self.getTlmDefByMsgID(req.msgID);
-
-			if(typeof tlmDef === 'undefined') {
-			    self.logErrorEvent(EventEnum.MSG_ID_NOT_FOUND, 'TlmDefReq: Msg ID not found.');
-			} else {
-		        self.instanceEmit(config.get('tlmDefRspStreamIDPrefix') + ':' + req.msgID, tlmDef);
-			}
-		} else {
-		    this.logErrorEvent(EventEnum.INVALID_REQUEST, 'TlmDefReq: Invalid request.  \'' + req + '\'');
-		}
+	this.instanceEmitter.on(config.get('tlmDefReqStreamID'), function(tlmReqs, cb) {
+        if(typeof tlmReqs.length === 'number') {
+            /* This must be an array. */
+            var outTlmDefs = [];
+            for(var i = 0; i < tlmReqs.length; ++i) {
+                var tlmDef = self.getTlmDefByName(tlmReqs[i].name);
+                if(typeof tlmDef !== 'undefined') {
+                    outTlmDefs.push(tlmDef);
+                }
+            }
+            cb(outTlmDefs);
+        } else {
+            /* This is a single request. */
+            cb(self.getTlmDefByName(tlmReqs.name));
+        }
 	});
 	
     this.logInfoEvent(EventEnum.INITIALIZED, 'Initialized');
+}
+	
+	
+	
+BinaryDecoder.prototype.getTlmDefByName = function (name) {
+    var outTlmDef = {opsPath:name};
+    var fieldDef = this.getTlmDefByPath(name);
+
+    switch(fieldDef.airliner_type) {
+        case 'char':
+        case 'uint8':
+        case 'int8':
+        case 'string':
+        case 'uint16':
+        case 'int16':
+        case 'uint32':
+        case 'int32':
+        case 'float':
+        case 'double':
+        case 'boolean':
+        case 'uint64':
+        case 'int64':
+            outTlmDef.dataType = fieldDef.airliner_type;
+            break;
+            
+        default:
+            switch(fieldDef.pb_type) {
+                case 'char':
+                case 'uint8':
+                case 'int8':
+                case 'string':
+                case 'uint16':
+                case 'int16':
+                case 'uint32':
+                case 'int32':
+                case 'float':
+                case 'double':
+                case 'boolean':
+                case 'uint64':
+                case 'int64':
+                    outTlmDef.dataType = fieldDef.pb_type;
+                    break;
+                    
+                default:
+                    console.log("Data type not found");
+            }
+    }
+    
+    if(fieldDef.array_length != 0) {
+        outTlmDef.arrayLength = fieldDef.array_length;
+    }
+    
+    return outTlmDef;
 }
 
 
@@ -221,6 +269,21 @@ BinaryDecoder.prototype.getAppDefinition = function (appName) {
 
 
 
+BinaryDecoder.prototype.getOperationByPath = function (inOpsPath) {
+    for(var appID in this.defs.Airliner.apps) {
+        var app = this.defs.Airliner.apps[appID];
+        for(var opID in app.operations) {
+            var operation = app.operations[opID];
+            var opsPath = '/' + appID + '/' + opID;
+            if(opsPath === inOpsPath) {
+                return {ops_path:opsPath, operation:operation};
+            }
+        }
+    }
+}
+
+
+
 BinaryDecoder.prototype.getTlmDefByPath = function (path) {
     var appName = this.getAppNameFromPath(path);
     var operationName = this.getOperationFromPath(path);
@@ -234,7 +297,14 @@ BinaryDecoder.prototype.getTlmDefByPath = function (path) {
 		    this.logErrorEvent(EventEnum.APP_NOT_FOUND, 'getTlmDefByPath: App not found. \'' + appName + '\'');
 	    	return undefined;
 	    } else {
-		    return appDefinition.operations[operationName];
+	        var msgDef = this.getMsgDefByName(appDefinition.operations[operationName].airliner_msg);
+	        
+	        var splitName = path.split('/');
+	        var opNameID = splitName[3];
+	        var fieldPath = msgDef.operational_names[opNameID].field_path;
+	        
+	        var fieldDef = this.getFieldFromOperationalName(msgDef, fieldPath, 0);
+	        return fieldDef.fieldDef;
 	    }
     }
 }
