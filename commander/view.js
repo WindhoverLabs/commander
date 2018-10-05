@@ -192,6 +192,9 @@ class Panel {
                 else{
                     subscriptions[obj.name] = [s];
                     /* Subscribe */
+                    //session.getTlmDefs(d.tlm, function(tlmDef) {
+                    //    console.log(tlmDef);
+                    //});
                     session.subscribe(d.tlm, processTelemetryUpdate);
                 }
                 this.tlm.push({name:obj.name, nodeElm:s});

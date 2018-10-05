@@ -13,8 +13,8 @@ var config = convict({
         format: String,
         default: ''
     },
-    tlmDefReqStreamID: {
-        doc: 'Telemetry definition request',
+    varDefReqStreamID: {
+        doc: 'Variable definition request',
         format: String,
         default: ''
     },

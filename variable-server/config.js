@@ -18,21 +18,33 @@ var config = convict({
         format: String,
         default: ''
     },
+    varDefReqStreamID: {
+        doc: 'Stream ID for variable definition requests.',
+        format: String,
+        default: ''
+    },
+    tlmDefReqStreamID: {
+        doc: 'Stream ID for telemetry definition requests.',
+        format: String,
+        default: ''
+    },
     reqSubscribeStreamID: {
         doc: 'Stream ID for subscription requests.',
         format: String,
         default: ''
     },
-    persistence: [
+    variables: [
         {
             name: {
                 doc: 'Variable name.',
                 format: 'String'
             },
-            count: {
-                doc: 'Number of samples to retain.',
-                format: 'int',
-                default: 1
+            persistence: {
+                count: {
+                    doc: 'Number of samples to retain.',
+                    format: 'int',
+                    default: 1
+                }
             }
         }
     ]

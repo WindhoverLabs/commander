@@ -288,7 +288,7 @@ Commander.prototype.getCmdDef = function(cmdObj, cb) {
 
 Commander.prototype.getTlmDefs = function(tlmObjs, cb) {
     if(typeof this.defaultInstance.emit === 'function') {
-        this.defaultInstance.emit(config.get('tlmDefReqStreamID'), tlmObjs, function(resp) {
+        this.defaultInstance.emit(config.get('varDefReqStreamID'), tlmObjs, function(resp) {
             cb(resp);
         });
     };

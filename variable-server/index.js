@@ -104,7 +104,7 @@ VariableServer.prototype.setInstanceEmitter = function (newInstanceEmitter) {
     		if(variable.sample.length > persistenceCount) {
     		    /* The array is too big.  We need to take the oldest sample out. */
     		    variable.sample.shift();
-    		}    		
+    		}          
     		
     		/* Now loop through all the subscribers, if any. */
     		for(var subscriber in variable.subscribers) {
@@ -148,8 +148,32 @@ VariableServer.prototype.setInstanceEmitter = function (newInstanceEmitter) {
 			}
 		}
     	
-    	self.instanceEmit(config.get('outputEventsStreamID'), 'message-received')
+    	self.instanceEmit(config.get('outputEventsStreamID'), 'message-received');
 	});
+	
+    this.instanceEmitter.on(config.get('varDefReqStreamID'), function(req, cb) {
+        self.instanceEmit(config.get('tlmDefReqStreamID'), req, function(tlmDefs) {
+            if(typeof tlmDefs.length === 'number') {    
+                /* This must be an array. */
+                var outTlmDefs = [];
+                for(var i = 0; i < tlmDefs.length; ++i) {
+                    var outTlmDef = tlmDefs[i];
+                    outTlmDef.persistence = {};
+                    outTlmDef.persistence.count = self.getVariablePersistence(tlmDefs[i].opsPath);
+                    outTlmDef.timeout = self.getVariableTimeout(tlmDefs[i].opsPath);
+                    outTlmDefs.push(outTlmDef);
+                }
+                cb(outTlmDefs);
+            } else {
+                /* This is a single request. */
+                var outTlmDef = tlmDefs;
+                outTlmDef.persistence = {};
+                outTlmDef.persistence.count = self.getVariablePersistence(tlmDef.opsPath);
+                outTlmDef.timeout = self.getVariableTimeout(tlmDefs.opsPath);
+                cb(outTlmDef);
+            }
+        });
+    });
 
 	this.instanceEmitter.on(config.get('reqSubscribeStreamID'), function(req, cb) {
 		if(req.cmd === 'subscribe') {
@@ -175,10 +199,12 @@ VariableServer.prototype.setInstanceEmitter = function (newInstanceEmitter) {
 		}
 	});
     
-    var persistence = config.get('persistence');
-    if(typeof persistence !== 'undefined') {
-        for(var i = 0; i < persistence.length; ++i) {
-            this.setVariablePersistence(persistence[i].name, persistence[i].count);
+    var variables = config.get('variables');
+    if(typeof variables !== 'undefined') {
+        for(var i = 0; i < variables.length; ++i) {
+            if(typeof variables[i].persistence !== 'undefined') {
+                this.setVariablePersistence(variables[i].name, variables[i].persistence.count);
+            }
         }
     }
 
@@ -249,6 +275,45 @@ VariableServer.prototype.getVariablePersistence = function (opsPath) {
 
 
 
+VariableServer.prototype.setVariableTimeout = function (opsPath, timeout) {
+    if(this.vars.hasOwnProperty(opsPath) == false) {
+        /* We have not received this variable yet and it does
+         * not already have a predefinition.  Create a new record. */
+        var variable = {opsPath: opsPath};
+        this.vars[opsPath] = variable;
+    } else {
+        /* We've already received this or have a predefinition. */
+        var variable = this.vars[opsPath];
+    }
+    
+    if(variable.hasOwnProperty('timeout') == false) {
+        /* We have not the timeout for this variable yet. */
+        variable.timeout = {};
+    } 
+    
+    variable.timeout = timeout;
+}
+
+
+
+VariableServer.prototype.getVariableTimeout = function (opsPath) {
+    if(this.vars.hasOwnProperty(opsPath) == false) {
+        /* We have not received this variable yet and it does
+         * not already have a predefinition.  Return the default of 1. */
+        return 1;
+    } else {
+        /* We've already received this or have a predefinition. */
+        if(typeof this.vars[opsPath].timeout === 'undefined') {
+            /* Timeout is not set.  Return the default of 0. */
+            return 0;
+        } else {
+            return this.vars[opsPath].timeout;
+        }
+    }
+}
+
+
+
 VariableServer.prototype.removeSubscriber = function (opsPath, cb) {
 	if(this.vars.hasOwnProperty(opsPath) == true) {
 		/* We've already received this or have a predefinition. */
@@ -262,9 +327,9 @@ VariableServer.prototype.removeSubscriber = function (opsPath, cb) {
 
 
 
-VariableServer.prototype.instanceEmit = function (streamID, msg)
+VariableServer.prototype.instanceEmit = function (streamID, msg, cb)
 {
-	this.instanceEmitter.emit(streamID, msg);
+	this.instanceEmitter.emit(streamID, msg, cb);
 }
 
 
