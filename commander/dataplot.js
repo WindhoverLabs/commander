@@ -32,7 +32,7 @@ function mergeDeep(target, ...sources) {
 
 
 
-function CmdrTimeSeriesDataplot(domObject, objData) {
+function CmdrTimeSeriesDataplot(domObject, objData, params) {
     this.objData = objData;
     this.objMergedData = {};
     this.objTlm = [];
@@ -123,44 +123,26 @@ function CmdrTimeSeriesDataplot(domObject, objData) {
 
     if(this.objTlm.length > 0)
     {
-        // console.log('this.objTlm',this.objTlm);
-        /*{
-          homogeneity: self.objMergedData.homogeneity,
-          'tlm': objTlm}
-        */
-        session.subscribe(this.objTlm, function(params) {
-            // console.log(params)
-            count = count + 1;
-            if(self.objMergedData.ignore_count > 0){
-            	self.objMergedData.ignore_count = self.objMergedData.ignore_count - 1;
-    	    } else {
-    		    for(var i = 0; i < self.objTlm.length; ++i) {
-        	        if (self.values[i].length >= self.objMergedData.maxcount) {
-        	        	self.values[i] = self.values[i].slice(1);
-        	        }
-                  if(self.objTlm[i].name == params.opsPath){
-                    self.values[i].push([new Date(), params.val]);
-                  }
+        count = count + 1;
+        if(self.objMergedData.ignore_count > 0){
+        	self.objMergedData.ignore_count = self.objMergedData.ignore_count - 1;
+  	    } else {
+          var sample = params.sample[params.sample.length - 1];
+          var value = sample.value;
+  		    for(var i = 0; i < self.objTlm.length; ++i) {
+      	        if (self.values[i].length >= self.objMergedData.maxcount) {
+      	        	self.values[i] = self.values[i].slice(1);
+      	        }
+                if(self.objTlm[i].name == params.opsPath){
+                  self.values[i].push([new Date(sample.gndTime), value]);
+                }
+  	        }
 
-        	        // var value = params[i].engValue.floatValue;
+  		    if(self.objMergedData.update_interval <= 0) {
+  		    	update(self);
+  		    };
+  	    }
 
-        	    	/* compensation for boolean */
-        	    	// if(value == undefined){
-	        	    // 	if (params[i].engValue.booleanValue){
-	        	    // 		value = 1;
-	        	    // 	}else{
-	        	    // 		value = 0;
-	        	    // 	}
-        	    	// }
-
-
-    	        }
-
-    		    if(self.objMergedData.update_interval <= 0) {
-    		    	update(self);
-    		    };
-    	    }
-        });
 
         update();
     }
@@ -206,7 +188,8 @@ CmdrTimeSeriesDataplot.prototype.getUtilGraph = function(){
 CmdrTimeSeriesDataplot.prototype.addData = function(params) {
 
 	var self = this;
-
+  var sample = params.sample[params.sample.length - 1];
+  var value = sample.value;
 	self.count = self.count + 1;
     if(this.objMergedData.ignore_count > 0){
     	self.objMergedData.ignore_count = self.objMergedData.ignore_count - 1;
@@ -219,7 +202,7 @@ CmdrTimeSeriesDataplot.prototype.addData = function(params) {
 
 	        // var value = params[i].engValue.floatValue;
           if(self.objTlm[i].name == params.opsPath){
-            self.values[i].push([new Date(), params.val]);
+            self.values[i].push([new Date(sample.gndTime), value]);
           }
         }
     }
