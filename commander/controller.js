@@ -11,6 +11,7 @@
    Widget Generation */
 var cre = new Event('component-resize-event');
 var stce = new Event('stack-created-event');
+var llc = new CustomEvent('first-layout-load-complete');
 
 /* This function is triggered when a new node is rendered */
 function NodeRendered(e, node) {
@@ -51,8 +52,8 @@ function NodeSelected(e, node) {
             if( response !== null ) {
 
                 myLayout.destroy()
-                myLayout = new window.GoldenLayout( jsonObj, $('#cdr-layout-container') );
-                window.dispatchEvent(new CustomEvent('first-layout-load-complete'));
+                myLayout = new window.llc( jsonObj, $('#cdr-layout-container') );
+                window.dispatchEvent(llc);
 
                 myLayout.on('stackCreated', (item) => {
                 	/* TODO:  This is where we need to add code to bind the telemetry
@@ -200,16 +201,16 @@ function SaveLayout() {
     let name = ""
     if(form.val() != "")
     {
-        name += form.val()+"_"
+        name = form.val()
     }
-
+    name = name.replace(/ /g, '_');
     /* add timestamp */
-    name += Date.now();
+    // name += Date.now();
 
     /* stringify state config */
     let state = JSON.stringify( myLayout.toConfig() );
     var blob = new Blob([state],{type:"text/json;charset=utf-8"});
-    saveAs(blob,name+'.json')
+    saveAs(blob,name+'.lyt')
     // localStorage.setItem( name, state );
     console.log(name + " stored")
 }
@@ -242,7 +243,10 @@ function LoadLayout() {
 					savedState = JSON.parse(e.target.result);
           console.log(savedState)
           if( savedState !== null ) {
+            myLayout.destroy()
             myLayout = new window.GoldenLayout(  savedState , $('#cdr-layout-container') );
+
+            window.dispatchEvent(llc);
             InitLayout(myLayout);
           }
           else{
@@ -719,7 +723,7 @@ $(()=>{
           /* Load a landing page layout for the first time */
           myLayout = new window.GoldenLayout( config, $('#cdr-layout-container'));
           InitLayout(myLayout);
-          window.dispatchEvent(new CustomEvent('first-layout-load-complete'));
+          window.dispatchEvent(llc);
           _sescon_never = false;
 
 

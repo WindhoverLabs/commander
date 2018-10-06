@@ -257,7 +257,7 @@ class Panel {
                   /* Check if bound to atlest 1 element */
                   if(subscriptions[obj.name].hasOwnProperty('elms')) {
                     if (isArray(subscriptions[obj.name].elms) &&
-                        subscriptions[obj.name].elms.length == 1) {
+                        subscriptions[obj.name].elms.length > 0) {
                           subscriptions[obj.name].elms.push(s);
                           isBound = true;
                     }
@@ -514,7 +514,7 @@ class Panel {
   }
 
   loadPanel() {
-
+      console.log('load panel')
       var cls = this;
 
       assert(this.panelElm.hasOwnProperty('element'),'this.panelElm has no prop element');
@@ -602,9 +602,10 @@ class Panel {
 
 /* Event handlers */
 window.addEventListener('first-layout-load-complete',()=>{
-
+    console.log('check');
+    console.log(myLayout);
     myLayout.on('tabCreated',(t)=>{
-
+        console.log('tab')
         assert(t.hasOwnProperty('contentItem'),'has no prop contentItem');
         assert(typeof t.contentItem === 'object','contentItem is not of type object');
         assert(t.contentItem.hasOwnProperty('type'),'has no prop type');
