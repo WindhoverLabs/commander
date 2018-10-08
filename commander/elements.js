@@ -2,28 +2,27 @@
 var dataPlotElements = []
 var TextSubscriptions = []
 /* Custom Element Classes*/
-class Text extends HTMLElement{
-  constructor(){
+class Text extends HTMLElement {
+  constructor() {
     super();
 
     var self = this;
     this.textContent = "---";
 
-    if(self.hasAttribute("data-tlm")){
+    if (self.hasAttribute("data-tlm")) {
       /* TODO:subscribe */
-      session.getRandomNumber(function (val) {
+      session.getRandomNumber(function(val) {
         self.textContent = val.toFixed(4)
       })
-    }
-    else{
+    } else {
       console.error("attribute, data-tlm is undefined")
     }
 
 
 
-    myLayout.on("itemDestroyed",(i)=>{
+    myLayout.on("itemDestroyed", (i) => {
 
-      if(i.type="component" && cu.isDescendant(i.element[0],this)){
+      if (i.type = "component" && cu.isDescendant(i.element[0], this)) {
         console.log("item has beeen destroyed - this section can be used as destructor")
         // console.log(this)
         // console.log(cu.isDescendant(i.element[0],this))
@@ -32,35 +31,34 @@ class Text extends HTMLElement{
   }
 }
 
-class Button extends HTMLElement{
-  constructor(){
+class Button extends HTMLElement {
+  constructor() {
     super();
-    this.setAttribute("class","btn btn-primary");
+    this.setAttribute("class", "btn btn-primary");
     this.two_step = false;
     this.step_names = null;
     this.step = 0;
     this.text = null;
     this.data = null;
 
-    if(this.hasAttribute("data-steps")){
-        if(this.hasAttribute("data-cmd")){
-          this.step_names = $(this).data("steps")
-          cu.assert(typeof this.step_names ==="object")
-          cu.assert(this.step_names.length === 2)
-          this.textContent = this.step_names[this.step];
-          this.onclick = (e)=>{
-            this.step = this.step + 1;
-            if(this.step > this.step_names.length-1){
-              this.step = 0
-            }
-            //TODO: step1 logic
-            this.textContent = this.step_names[this.step];
-            //TODO: step2 logic
+    if (this.hasAttribute("data-steps")) {
+      if (this.hasAttribute("data-cmd")) {
+        this.step_names = $(this).data("steps")
+        cu.assert(typeof this.step_names === "object")
+        cu.assert(this.step_names.length === 2)
+        this.textContent = this.step_names[this.step];
+        this.onclick = (e) => {
+          this.step = this.step + 1;
+          if (this.step > this.step_names.length - 1) {
+            this.step = 0
           }
+          //TODO: step1 logic
+          this.textContent = this.step_names[this.step];
+          //TODO: step2 logic
         }
-    }
-    else if(this.hasAttribute("data-text")){
-      if(this.hasAttribute("data-cmd")){
+      }
+    } else if (this.hasAttribute("data-text")) {
+      if (this.hasAttribute("data-cmd")) {
         this.textContent = $(this).data("text");
         //TODO: send command code
       }
@@ -68,14 +66,14 @@ class Button extends HTMLElement{
 
   }
 
-  connectedCallback(){}
+  connectedCallback() {}
   disconnectedCallback() {}
   attributeChangedCallback(name, oldValue, newValue) {}
 
 }
 
-class DataPlotCE extends HTMLElement{
-  constructor(){
+class DataPlotCE extends HTMLElement {
+  constructor() {
     super();
     var parsedData = []
     var self = this;
@@ -87,40 +85,40 @@ class DataPlotCE extends HTMLElement{
     var x = null;
     var y = null;
     var xAxis = null;
-    var yAxis =null;
+    var yAxis = null;
     var valueline = null;
     var svg = null;
     var formatTime = d3.timeFormat("%M:%S:%L")
     var parseTime = d3.timeParse("%M:%S:%L")
     $(self).empty();
 
-    myLayout.on("stateChanged",(i)=>{
+    myLayout.on("stateChanged", (i) => {
 
 
-        var validGraphUpdate = false;
-        for(var item in i.origin.contentItems){
-          if(cu.isDescendant(i.origin.contentItems[item].element[0],this)){
-            validGraphUpdate = true;
-          }
+      var validGraphUpdate = false;
+      for (var item in i.origin.contentItems) {
+        if (cu.isDescendant(i.origin.contentItems[item].element[0], this)) {
+          validGraphUpdate = true;
         }
+      }
 
-        if(validGraphUpdate){
-          //console.log("done")
-          console.log("valid resize event if fired -  adjusting graph to acommodate new size")
-          width = self.parentElement.offsetWidth - margin.left - margin.right;
-          height = self.parentElement.offsetHeight - margin.top - margin.bottom;
+      if (validGraphUpdate) {
+        //console.log("done")
+        console.log("valid resize event if fired -  adjusting graph to acommodate new size")
+        width = self.parentElement.offsetWidth - margin.left - margin.right;
+        height = self.parentElement.offsetHeight - margin.top - margin.bottom;
 
-          x = d3.scaleTime().range([0, width]);
-          y = d3.scaleLinear().range([height, 0]);
-          xAxis = d3.axisBottom(x).tickFormat(formatTime);
-          yAxis = d3.axisLeft(y);
-          d3.select(self).select("svg")
-             .attr("width", width + margin.left + margin.right)
-             .attr("height", height + margin.top + margin.bottom);
-          d3.select(self).select("svg").select(".canvas")
-             .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+        x = d3.scaleTime().range([0, width]);
+        y = d3.scaleLinear().range([height, 0]);
+        xAxis = d3.axisBottom(x).tickFormat(formatTime);
+        yAxis = d3.axisLeft(y);
+        d3.select(self).select("svg")
+          .attr("width", width + margin.left + margin.right)
+          .attr("height", height + margin.top + margin.bottom);
+        d3.select(self).select("svg").select(".canvas")
+          .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-        }
+      }
 
 
     })
@@ -139,7 +137,7 @@ class DataPlotCE extends HTMLElement{
     //     .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
     // })
 
-    session.getRandomNumber(function (val) {
+    session.getRandomNumber(function(val) {
 
       var date = parseTime(formatTime(new Date()));
       parsedData.push({
@@ -147,9 +145,14 @@ class DataPlotCE extends HTMLElement{
         y: val
       });
 
-      if(parsedData.length == minPoints){
+      if (parsedData.length == minPoints) {
         dataPlotElements.push(self);
-        margin = { top: 30, right: 30, bottom: 30, left: 50 };
+        margin = {
+          top: 30,
+          right: 30,
+          bottom: 30,
+          left: 50
+        };
         width = self.parentElement.offsetWidth - margin.left - margin.right;
         height = 300 - margin.top - margin.bottom;
 
@@ -158,67 +161,67 @@ class DataPlotCE extends HTMLElement{
         xAxis = d3.axisBottom(x).tickFormat(formatTime);;
         yAxis = d3.axisLeft(y);
         valueline = d3.line()
-            .x(function (d) {
-              return x(d.x);
-            })
-            .y(function (d) {
-              return y(d.y);
-            });
+          .x(function(d) {
+            return x(d.x);
+          })
+          .y(function(d) {
+            return y(d.y);
+          });
         svg = d3.select(self)
-            .append("svg")
-            .attr("width", width + margin.left + margin.right)
-            .attr("height", height + margin.top + margin.bottom)
-            .append("g")
-            .attr("class", "canvas")
-            .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-        parsedData.forEach(function (d) {
-            d.x = d.x;
-            d.y = +d.y;
+          .append("svg")
+          .attr("width", width + margin.left + margin.right)
+          .attr("height", height + margin.top + margin.bottom)
+          .append("g")
+          .attr("class", "canvas")
+          .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+        parsedData.forEach(function(d) {
+          d.x = d.x;
+          d.y = +d.y;
         });
         // Scale the range of the data
-        x.domain(d3.extent(parsedData, function (d) {
-            return d.x;
-            }));
-        y.domain([0, d3.max(parsedData, function (d) {
-            return d.y;
-            })]);
+        x.domain(d3.extent(parsedData, function(d) {
+          return d.x;
+        }));
+        y.domain([0, d3.max(parsedData, function(d) {
+          return d.y;
+        })]);
         svg.append("path") // Add the valueline path.
-            .attr("d", valueline(parsedData));
+          .attr("d", valueline(parsedData));
         svg.append("g") // Add the X Axis
-            .attr("class", "x axis")
-            .attr("transform", "translate(0," + height + ")")
-            .call(xAxis);
+          .attr("class", "x axis")
+          .attr("transform", "translate(0," + height + ")")
+          .call(xAxis);
         svg.append("g") // Add the Y Axis
-            .attr("class", "y axis")
-            .call(yAxis);
+          .attr("class", "y axis")
+          .call(yAxis);
 
       }
 
-      if(parsedData.length > minPoints){
+      if (parsedData.length > minPoints) {
 
 
 
-        parsedData.forEach(function (d) {
-            d.x = d.x;
-            d.y = +d.y;
+        parsedData.forEach(function(d) {
+          d.x = d.x;
+          d.y = +d.y;
         });
         // Scale the range of the data
-        x.domain(d3.extent(parsedData, function (d) {
-            return d.x;
-            }));
-        y.domain([0, d3.max(parsedData, function (d) {
-            return d.y;
-            })]);
-        svg.select("path")   // change the line
-            .attr("d", valueline(parsedData));
+        x.domain(d3.extent(parsedData, function(d) {
+          return d.x;
+        }));
+        y.domain([0, d3.max(parsedData, function(d) {
+          return d.y;
+        })]);
+        svg.select("path") // change the line
+          .attr("d", valueline(parsedData));
         svg.select(".x.axis") // change the x axis
-            .call(xAxis);
+          .call(xAxis);
         svg.select(".y.axis") // change the y axis
-            .call(yAxis);
+          .call(yAxis);
 
       }
 
-      if(parsedData.length > maxPoints){
+      if (parsedData.length > maxPoints) {
 
         parsedData.shift();
 
@@ -229,22 +232,21 @@ class DataPlotCE extends HTMLElement{
   }
 }
 
-class Led extends HTMLElement{
-  constructor(){
+class Led extends HTMLElement {
+  constructor() {
     super();
     this.textContent = "";
     this.divElement = null;
     var self = this;
     var divElement = document.createElement("div");
-    divElement.setAttribute("class","led-basic");
+    divElement.setAttribute("class", "led-basic");
     this.appendChild(divElement)
 
-    session.getRandom(function (val) {
-      if(val){
-        divElement.setAttribute("class","led-basic led-on");
-      }
-      else{
-        divElement.setAttribute("class","led-basic led-off");
+    session.getRandom(function(val) {
+      if (val) {
+        divElement.setAttribute("class", "led-basic led-on");
+      } else {
+        divElement.setAttribute("class", "led-basic led-off");
       }
     });
 
@@ -259,20 +261,25 @@ class Led extends HTMLElement{
 
 /* Dataplot non-functional code*/
 
-class DataPlot{
+class DataPlot {
 
-  constructor(elm,tlmObj){
+  constructor(elm, tlmObj) {
 
     var parsedData = []
     var minPoints = 10;
     var maxPoints = 20;
-    var margin = { top: 30, right: 30, bottom: 30, left: 50 };
+    var margin = {
+      top: 30,
+      right: 30,
+      bottom: 30,
+      left: 50
+    };
     var width = 0;
     var height = 0;
     var x = null;
     var y = null;
     var xAxis = null;
-    var yAxis =null;
+    var yAxis = null;
     var valueline = null;
     var svg = null;
     var formatTime = d3.timeFormat("%M:%S:%L")
@@ -282,23 +289,23 @@ class DataPlot{
     width = elm.parentElement.offsetWidth - margin.left - margin.right;
     height = 300 - margin.top - margin.bottom;
     svg = d3.select(elm)
-        .append("svg")
-        .attr("width", width + margin.left + margin.right)
-        .attr("height", height + margin.top + margin.bottom)
-        .append("g")
-        .attr("class", "canvas")
-        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+      .append("svg")
+      .attr("width", width + margin.left + margin.right)
+      .attr("height", height + margin.top + margin.bottom)
+      .append("g")
+      .attr("class", "canvas")
+      .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
     x = d3.scaleTime().range([0, width]);
     y = d3.scaleLinear().range([height, 0]);
     xAxis = d3.axisBottom(x).tickFormat(formatTime);
     yAxis = d3.axisLeft(y);
     valueline = d3.line()
-        .x(function (d) {
-          return x(d.x);
-        })
-        .y(function (d) {
-          return y(d.y);
-        });
+      .x(function(d) {
+        return x(d.x);
+      })
+      .y(function(d) {
+        return y(d.y);
+      });
     this.elm = elm;
     this.minPoints = minPoints;
     this.maxPoints = maxPoints;
@@ -315,12 +322,12 @@ class DataPlot{
     this.height = height;
     this.margin = margin;
     this.paths = {};
-    for(var i = 0; i < tlmObj.length; ++i){
+    for (var i = 0; i < tlmObj.length; ++i) {
       this.paths[tlmObj[i].name] = []
     }
   }
 
-  update(op){
+  update(op) {
     this.paths[op.opsPath].push({
       t: this.parseTime(this.formatTime(new Date())),
       v: op.val
@@ -371,9 +378,9 @@ class DataPlot{
     console.log(this.paths)
   }
 
-  eatTail(){
-    for(var k in this.paths){
-      if(this.paths[k].length > this.maxPoints){
+  eatTail() {
+    for (var k in this.paths) {
+      if (this.paths[k].length > this.maxPoints) {
         this.paths[k].shift();
       }
     }
