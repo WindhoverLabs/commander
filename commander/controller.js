@@ -52,7 +52,7 @@ function NodeSelected(e, node) {
             if( response !== null ) {
 
                 myLayout.destroy()
-                myLayout = new window.llc( jsonObj, $('#cdr-layout-container') );
+                myLayout = new window.GoldenLayout( jsonObj, $('#cdr-layout-container') );
                 window.dispatchEvent(llc);
 
                 myLayout.on('stackCreated', (item) => {
@@ -66,7 +66,7 @@ function NodeSelected(e, node) {
                 InitLayout(myLayout);
 
             } else {
-                console.log("Layout cannot be loaded.")
+                cu.logInfo("Layout cannot be loaded.")
             }
         });
 
@@ -212,7 +212,7 @@ function SaveLayout() {
     var blob = new Blob([state],{type:"text/json;charset=utf-8"});
     saveAs(blob,name+'.lyt')
     // localStorage.setItem( name, state );
-    console.log(name + " stored")
+    cu.logInfo(name + " stored")
 }
 
 /* Get Layouts from browser's local storage */
@@ -241,7 +241,7 @@ function LoadLayout() {
       return function (e) {
         try {
 					savedState = JSON.parse(e.target.result);
-          console.log(savedState)
+          cu.logInfo(savedState)
           if( savedState !== null ) {
             myLayout.destroy()
             myLayout = new window.GoldenLayout(  savedState , $('#cdr-layout-container') );
@@ -250,7 +250,7 @@ function LoadLayout() {
             InitLayout(myLayout);
           }
           else{
-            console.log("Layout cannot be loaded.")
+            cu.logInfo("Layout cannot be loaded.")
           }
           InitScrollBar();
 				} catch (ex) {
@@ -323,7 +323,7 @@ function InitModal() {
                       } else if (typeof custom[e].getItem == 'object') {
                         options = custom[e].getItem
                       }
-                      console.log(custom[e]);
+                      cu.logInfo(custom[e]);
                       options.forEach((sel)=>{
                         let html = "<option value="+sel.value+">"+sel.label+"</option>"
                         $('#select'+e).append(html)
@@ -337,7 +337,7 @@ function InitModal() {
                       $('#modalForm').append(item)
                       break;
                   default:
-                      console.log("Unknown data passed as attribute");
+                      cu.logInfo("Unknown data passed as attribute");
               }
           }
 
@@ -458,14 +458,14 @@ function InitScrollBar(){
 /* Resize */
 function InitResizeCtl(){
     $(window).resize(() => {
-        console.log("resize-event");
+        cu.logInfo("resize-event");
         myLayout.updateSize();
     })
 }
 
 /* Draggable */
 function InitDraggable(){
-	console.log('InitDraggable');
+	cu.logInfo('InitDraggable');
     $("#topSnapable").sortable({
         revert: true
     });
@@ -494,7 +494,7 @@ function CreateIndicator() {
         );
         InitDraggable();
     } else {
-        console.log("Nav real estate - full, sell plots");
+        cu.logInfo("Nav real estate - full, sell plots");
     }
 }
 
@@ -590,7 +590,7 @@ var sidebar_open = false;
 function InitSidebar(){
 
   $("#cdr-app-menu-toggle").on("click",()=>{
-    console.log("test-->  ",sidebar_open)
+    cu.logInfo("test-->  ",sidebar_open)
     if(sidebar_open){
       $("#cdr-app-menu").css("transform","translateX(-100%)")
       $("#cdr-layout-container").css("margin-left","0%")
@@ -649,7 +649,7 @@ $(()=>{
 
     session.on('connect', function() {
 
-        console.log('session connected');
+        cu.logInfo('session connected');
         if(_sescon_never){
           session.getPanels('', function (dirEntries) {
               var panelEntries = [];

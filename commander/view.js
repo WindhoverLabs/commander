@@ -2,79 +2,7 @@
 /* Application Data*/
 var subscriptions = {};
 var dataplot_subscriptions = {};
-//var windows = {};
 
-/* Utility functions */
-function assert(condition, message) {
-    if (!condition) {
-        throw message || "Assertion failed";
-    }
-}
-
-function genRandomKey(){
-    return Math.random().toString(36).slice(2)
-}
-
-function generateUUID(){
-    var d = new Date().getTime();
-    if(window.performance && typeof window.performance.now === "function"){
-        d += performance.now(); // use high-precision timer if available
-    }
-    var uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-        var r = (d + Math.random()*16)%16 | 0;
-        d = Math.floor(d/16);
-        return (c=='x' ? r : (r&0x3|0x8)).toString(16);
-    });
-    return uuid;
-}
-
-function isDescendant(parent, child) {
-    var node = child.parentNode;
-    while (node != null) {
-        if (node == parent) {
-            return true;
-        }
-        node = node.parentNode;
-    }
-    return false;
-}
-
-function getJSONObj(str){
-
-  var JSONObj = undefined;
-  if (typeof str === 'string' || str instanceof String) {
-      // it's a string
-      JSONObj = JSON.parse(str);
-  }
-  else if (typeof str === 'object' || str instanceof Object) {
-      // it's an object
-      JSONObj = str;
-  }
-  else {
-      // it's something else
-      console.error('unknown data')
-  }
-  return JSONObj;
-}
-
-function isArray(obj){
-  /* Backwards compatability */
-  if (typeof Array.isArray === 'undefined') {
-    Array.isArray = function(obj) {
-      return (Object.prototype.toString.call(obj) === '[object Array]');
-    }
-  }
-  return Array.isArray(obj);
-}
-
-function getRandomColor() {
-  var letters = '0123456789abcdef';
-  var color = '#';
-  for (var i = 0; i < 6; i++) {
-    color += letters[Math.floor(Math.random() * 16)];
-  }
-  return color;
-}
 
 /* View generation */
 function processTelemetryUpdate(param) {
@@ -89,9 +17,9 @@ function processTelemetryUpdate(param) {
         }
         for(var i = 0; i < subscriptions[opsPath].elms.length; ++i){
             var nodeElm = subscriptions[opsPath].elms[i];
-            var reqObj = getJSONObj(nodeElm.getAttribute('data-cdr'));
+            var reqObj = cu.parseJSON(nodeElm.getAttribute('data-cdr'));
             var indicatorFormat = reqObj.indicator;
-            assert(indicatorFormat!=undefined,'indicator format is not found');
+            cu.assert(indicatorFormat!=undefined,'indicator format is not found');
             if(indicatorFormat=='text'){
                 if(opsPathDef != undefined) {
                   switch (opsPathDef.dataType) {
@@ -133,7 +61,7 @@ function processTelemetryUpdate(param) {
                ||nodeElm.getAttribute('plot-initialized')===false){
                 /* Upon seeing dataplot canvas we initialize canvas after
                 which will keep adding data to initialized canvas */
-                var tlmObj = getJSONObj(nodeElm.getAttribute('data-cdr'));
+                var tlmObj = cu.parseJSON(nodeElm.getAttribute('data-cdr'));
 
                 var dataPlotDef = {};
                 dataPlotDef['data'] = [];
@@ -141,19 +69,16 @@ function processTelemetryUpdate(param) {
 
                 if(tlmObj.hasOwnProperty('tlm')){
 
-                  assert(tlmObj.hasOwnProperty('label'),'label array doesnot exist');
-                  assert(tlmObj.tlm.length===tlmObj.label.length,'tlm and labels arrays have different lengths');
-                  assert(tlmObj.tlm.length > 0 && tlmObj.label.length > 0,'tlm and label arrays are empty');
+                  cu.assert(tlmObj.hasOwnProperty('label'),'label array doesnot exist');
+                  cu.assert(tlmObj.tlm.length===tlmObj.label.length,'tlm and labels arrays have different lengths');
+                  cu.assert(tlmObj.tlm.length > 0 && tlmObj.label.length > 0,'tlm and label arrays are empty');
 
                   var colorArr = []
                   if(!(tlmObj.hasOwnProperty('color') &&
-                    isArray(tlmObj.color) &&
+                    cu.isArray(tlmObj.color) &&
                     tlmObj.color.length == tlmObj.tlm.length)) {
                     for(var c = 0; c < tlmObj.tlm.length; ++c) {
-                      var clr = getRandomColor();
-                      while (clr in colorArr) {
-                        clr = getRandomColor();
-                      }
+                      var clr = cu.makeColor();
                       colorArr.push(clr);
                     }
                   }
@@ -171,10 +96,7 @@ function processTelemetryUpdate(param) {
 
                   }
 
-                  var generatedKey = genRandomKey();
-                  while (generatedKey in dataplot_subscriptions){
-                    generatedKey = genRandomKey();
-                  }
+                  var generatedKey = cu.makeKey();
                   nodeElm.setAttribute('plot-key',generatedKey);
                   dataplot_subscriptions[generatedKey] = new CmdrTimeSeriesDataplot(nodeElm, dataPlotDef,param)
 
@@ -256,7 +178,7 @@ class Panel {
                   var isBound = false;
                   /* Check if bound to atlest 1 element */
                   if(subscriptions[obj.name].hasOwnProperty('elms')) {
-                    if (isArray(subscriptions[obj.name].elms) &&
+                    if (cu.isArray(subscriptions[obj.name].elms) &&
                         subscriptions[obj.name].elms.length > 0) {
                           subscriptions[obj.name].elms.push(s);
                           isBound = true;
@@ -301,7 +223,7 @@ class Panel {
   				/* We already bound this element. */
   			} else {
   				if(cmdObj.name == cmdInfo.name) {
-  					var uuid = generateUUID();
+  					var uuid = cu.makeUUID();
   					cmdInfo.uuid = uuid;
   					cmdObj.uuid = uuid;
   					// btnObj.attr('data-cdr',JSON.stringify(d));
@@ -514,27 +436,27 @@ class Panel {
   }
 
   loadPanel() {
-      console.log('load panel')
+      cu.logInfo('load panel')
       var cls = this;
 
-      assert(this.panelElm.hasOwnProperty('element'),'this.panelElm has no prop element');
-      assert(typeof this.panelElm.element === 'object','this.panelElm.element is not of type object');
+      cu.assert(this.panelElm.hasOwnProperty('element'),'this.panelElm has no prop element');
+      cu.assert(typeof this.panelElm.element === 'object','this.panelElm.element is not of type object');
 
       setTimeout(()=>{
 
-          assert(this.panelElm.hasOwnProperty('config'),'this.panelElm has no prop config');
-          assert(typeof this.panelElm.config === 'object','this.panelElm.config is not of type object');
-          assert(this.panelElm.config.hasOwnProperty('title'),'this.panelElm.config has no prop title');
-          assert(typeof this.panelElm.config.title === 'string','this.panelElm.config.title is not of type title');
+          cu.assert(this.panelElm.hasOwnProperty('config'),'this.panelElm has no prop config');
+          cu.assert(typeof this.panelElm.config === 'object','this.panelElm.config is not of type object');
+          cu.assert(this.panelElm.config.hasOwnProperty('title'),'this.panelElm.config has no prop title');
+          cu.assert(typeof this.panelElm.config.title === 'string','this.panelElm.config.title is not of type title');
 
-          console.log('created panel : ',this.panelElm.config.title)
+          cu.logInfo('created panel : ',this.panelElm.config.title)
           this.title = this.panelElm.config.title;
           $(this.panelElm.element).find('[data-cdr]').each(function(){
 
-              var dataObj = getJSONObj($(this).attr('data-cdr'))
+              var dataObj = cu.parseJSON($(this).attr('data-cdr'))
               var self = this;
               var format = dataObj.indicator;
-              assert(format!=undefined,'indicator format is not found');
+              cu.assert(format!=undefined,'indicator format is not found');
               switch (format) {
                 case 'text':
                 case 'dataplot': {
@@ -557,16 +479,16 @@ class Panel {
   destroyPanelProceadure(){
       this.panelElm.on('itemDestroyed',(it)=>{
 
-          assert(it.hasOwnProperty('origin'),'has no prop origin');
-          assert(typeof it.origin === 'object','origin is not of type object');
-          assert(it.origin.hasOwnProperty('config'),'has no prop config');
-          assert(typeof it.origin.config === 'object','config is not of type object');
-          assert(it.origin.config.hasOwnProperty('type'),'has no prop type');
-          assert(typeof it.origin.config.type === 'string','type is not of type string');
+          cu.assert(it.hasOwnProperty('origin'),'has no prop origin');
+          cu.assert(typeof it.origin === 'object','origin is not of type object');
+          cu.assert(it.origin.hasOwnProperty('config'),'has no prop config');
+          cu.assert(typeof it.origin.config === 'object','config is not of type object');
+          cu.assert(it.origin.config.hasOwnProperty('type'),'has no prop type');
+          cu.assert(typeof it.origin.config.type === 'string','type is not of type string');
 
           if(it.origin.config.type=='component'){
               for(var i = 0; i < this.tlm.length; ++i){
-                  assert(Object.keys(subscriptions).length > 0 ,'subscriptions is empty');
+                  cu.assert(Object.keys(subscriptions).length > 0 ,'subscriptions is empty');
                   var opsPath = this.tlm[i].name;
                   var nodeElm = this.tlm[i].nodeElm;
                   if(opsPath in subscriptions){
@@ -590,7 +512,7 @@ class Panel {
                       }
                   }
               }
-              console.log('created panel : ', this.title);
+              cu.logInfo('created panel : ', this.title);
               this.tlm = [];
           }
       });
@@ -602,14 +524,11 @@ class Panel {
 
 /* Event handlers */
 window.addEventListener('first-layout-load-complete',()=>{
-    console.log('check');
-    console.log(myLayout);
     myLayout.on('tabCreated',(t)=>{
-        console.log('tab')
-        assert(t.hasOwnProperty('contentItem'),'has no prop contentItem');
-        assert(typeof t.contentItem === 'object','contentItem is not of type object');
-        assert(t.contentItem.hasOwnProperty('type'),'has no prop type');
-        assert(typeof t.contentItem.type === 'string','type is not of type string');
+        cu.assert(t.hasOwnProperty('contentItem'),'has no prop contentItem');
+        cu.assert(typeof t.contentItem === 'object','contentItem is not of type object');
+        cu.assert(t.contentItem.hasOwnProperty('type'),'has no prop type');
+        cu.assert(typeof t.contentItem.type === 'string','type is not of type string');
 
         if(t.contentItem.type == 'component'){
             var panel = new Panel(t.contentItem);

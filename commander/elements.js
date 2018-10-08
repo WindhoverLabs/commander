@@ -23,10 +23,10 @@ class Text extends HTMLElement{
 
     myLayout.on("itemDestroyed",(i)=>{
 
-      if(i.type="component" && isDescendant(i.element[0],this)){
+      if(i.type="component" && cu.isDescendant(i.element[0],this)){
         console.log("item has beeen destroyed - this section can be used as destructor")
         // console.log(this)
-        // console.log(isDescendant(i.element[0],this))
+        // console.log(cu.isDescendant(i.element[0],this))
       }
     })
   }
@@ -45,8 +45,8 @@ class Button extends HTMLElement{
     if(this.hasAttribute("data-steps")){
         if(this.hasAttribute("data-cmd")){
           this.step_names = $(this).data("steps")
-          assert(typeof this.step_names ==="object")
-          assert(this.step_names.length === 2)
+          cu.assert(typeof this.step_names ==="object")
+          cu.assert(this.step_names.length === 2)
           this.textContent = this.step_names[this.step];
           this.onclick = (e)=>{
             this.step = this.step + 1;
@@ -99,7 +99,7 @@ class DataPlotCE extends HTMLElement{
 
         var validGraphUpdate = false;
         for(var item in i.origin.contentItems){
-          if(isDescendant(i.origin.contentItems[item].element[0],this)){
+          if(cu.isDescendant(i.origin.contentItems[item].element[0],this)){
             validGraphUpdate = true;
           }
         }
@@ -390,7 +390,7 @@ class DataPlot{
 // destroyWindow(){
 //
 //   for(var i = 0; i < this.tlm.length; ++i){
-//     assert(Object.keys(subscriptions).length > 0 ,'subscriptions is empty');
+//     cu.assert(Object.keys(subscriptions).length > 0 ,'subscriptions is empty');
 //     var opsPath = this.tlm[i].name;
 //     var nodeElm = this.tlm[i].nodeElm;
 //     if(opsPath in subscriptions){
