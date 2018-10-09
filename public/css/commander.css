@@ -366,7 +366,7 @@ header > .widget-icon {
 .row {
   width:inherit;
   height: inherit;
-  padding: 1% !important;
+  padding: 3% 0% 0% 0% !important;
   overflow: auto;
   margin: unset !important;
 }
