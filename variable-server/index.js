@@ -224,7 +224,10 @@ VariableServer.prototype.addSubscriber = function (opsPath, cb) {
 		var variable = this.vars[opsPath];
 		
 		/* Send however many values are currently persisted. */
-		cb([variable]);
+		var outVar = {};
+		outVar[opsPath] = {};
+		outVar[opsPath].sample = variable.sample; 
+		cb(outVar);
 	}
 	
 	if(variable.hasOwnProperty('subscribers') == false) {
