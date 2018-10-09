@@ -45,14 +45,16 @@ var config = require('./config.js');
 
 /* Event IDs */
 var EventEnum = Object.freeze({
-		'INITIALIZED':              1,
-		'OPS_PATH_NOT_FOUND':       2,
-		'MSG_ID_NOT_FOUND':         3,
-		'INVALID_REQUEST':          4,
-		'APP_NOT_FOUND':            5,
-		'UNKNOWN_DATA_TYPE':        6,
-		'UNHANDLED_EXCEPTION':      7,
-		'FUNCTION_NOT_IMPLEMENTED': 8
+		'INITIALIZED':                1,
+		'OPS_PATH_NOT_FOUND':         2,
+		'MSG_ID_NOT_FOUND':           3,
+		'INVALID_REQUEST':            4,
+		'APP_NOT_FOUND':              5,
+		'UNKNOWN_DATA_TYPE':          6,
+		'UNHANDLED_EXCEPTION':        7,
+		'FUNCTION_NOT_IMPLEMENTED':   8,
+		'INVALID_COMMAND_ARGUMENTS': 10,
+		'COMMAND_DEFINITION':        11,
 	});
 
 var emit = Emitter.prototype.emit;
@@ -160,6 +162,7 @@ BinaryEncoder.prototype.setInstanceEmitter = function (newInstanceEmitter)
 			var opDef = self.getOperationByPath(cmdReq.opsPath);
 
 			var msgDef = self.getMsgDefByName(opDef.operation.airliner_msg);
+
 			if(typeof msgDef === 'object') {
 
 				var args = self.getCmdOpNamesStripHeader(msgDef);
@@ -167,14 +170,18 @@ BinaryEncoder.prototype.setInstanceEmitter = function (newInstanceEmitter)
 					outCmdDef.args.push({name:argID, type:args[argID].dataType, bitSize:args[argID].bitSize});
 				}
 			}
-			
+
+		    self.logDebugEvent(EventEnum.COMMAND_DEFINITION, 'CmdDefReq: \'' + cmdReq + '\'  Def: \'' + outCmdDef + '\'');
+		    
 			cb(outCmdDef);
 		} else if (cmdReq.hasOwnProperty('msgID') && cmdReq.hasOwnProperty('cmdCode')) {
 			var cmdDef = self.getCmdDefByMsgIDandCC(cmdReq.msgID, cmdReq.cmdCode);
+
+			self.logDebugEvent(EventEnum.COMMAND_DEFINITION, 'CmdDefReq: \'' + cmdReq + '\'  Def: \'' + cmdDef + '\'');
 			
 			cb(cmdDef);
 		} else {
-		    this.logErrorEvent(EventEnum.INVALID_REQUEST, 'CmdDefReq: Invalid request.  \'' + cmdReq + '\'');
+			self.logErrorEvent(EventEnum.INVALID_REQUEST, 'CmdDefReq: Invalid request.  \'' + cmdReq + '\'');
 			
 			cb(undefined);
 		}
@@ -208,7 +215,8 @@ BinaryEncoder.prototype.getCmdOpNamesStripHeader = function (cmdDef) {
 			var fieldName = fieldNames[0];
 			var field = cmdDef.fields[fieldName];
 	
-			var fieldDef = this.getFieldFromOperationalName(cmdDef, opNameID);
+			var fieldDef = this.getFieldFromOperationalName(cmdDef, opNameID, 0);
+
 			if((fieldDef.bitOffset * 8) > this.cmdHeaderLength) {
 				opsPaths[opNameID] = {dataType: fieldDef.fieldDef.airliner_type, bitSize: fieldDef.fieldDef.bit_size};
 			}
@@ -455,16 +463,20 @@ BinaryEncoder.prototype.sendCommand = function (cmd, args) {
 	var msgDef = this.getMsgDefByName(opDef.operation.airliner_msg);
 	if(typeof msgDef === 'object') {
 		if(msgDef.hasOwnProperty('operational_names')) {
-			for(var opNameID in msgDef.operational_names) {
-				var fieldNames = msgDef.operational_names[opNameID].field_path.split('.');
-				var fieldName = fieldNames[0];
-				var field = msgDef.fields[fieldName];
-		
-				var arg_path = msgDef.operational_names[opNameID].field_path;
-				
-				if(args.hasOwnProperty(opNameID)) {
-					var fieldDef = this.getFieldFromOperationalName(msgDef, opNameID);
-					this.setField(buffer, fieldDef.fieldDef, fieldDef.bitOffset, args[opNameID]);
+			if(typeof args === 'undefined') {
+			    this.logErrorEvent(EventEnum.INVALID_ARGUMENTS, 'Unable to send command \'' + cmd.opsPath + '\'.  Required args missing.');
+			} else {
+				for(var opNameID in msgDef.operational_names) {
+					var fieldNames = msgDef.operational_names[opNameID].field_path.split('.');
+					var fieldName = fieldNames[0];
+					var field = msgDef.fields[fieldName];
+			
+					var arg_path = msgDef.operational_names[opNameID].field_path;
+					
+					if(args.hasOwnProperty(opNameID)) {
+						var fieldDef = this.getFieldFromOperationalName(msgDef, opNameID, 0);
+						this.setField(buffer, fieldDef.fieldDef, fieldDef.bitOffset, args[opNameID]);
+					}
 				}
 			}
 		}
@@ -478,7 +490,7 @@ BinaryEncoder.prototype.sendCommand = function (cmd, args) {
 BinaryEncoder.prototype.getFieldObjFromPbMsg = function (pbMsgDef, fieldPathArray, bitOffset) {
 	var fieldName = fieldPathArray[0];  
 	
-	var fieldDef = pbMsgDef.fields[fieldName];  
+	var fieldDef = pbMsgDef.fields[fieldName]; 
 	
 	var pbType = fieldDef.pb_type;             
 	
@@ -488,7 +500,7 @@ BinaryEncoder.prototype.getFieldObjFromPbMsg = function (pbMsgDef, fieldPathArra
 		var childMsgDef = pbMsgDef.required_pb_msgs[fieldDef.pb_type];
 
 		fieldPathArray.shift();
-		
+
 		return this.getFieldObjFromPbMsg(childMsgDef, fieldPathArray, fieldDef.bit_offset + bitOffset);
 	}
 
