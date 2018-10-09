@@ -13,9 +13,6 @@ const ContentTypeEnum = Object.freeze(
 
 class CdrPlugin {
 	constructor(name, webRoot, urlBase) {
-		console.log('name: ' + name);
-		console.log('webRoot: ' + webRoot);
-		console.log('urlBase: ' + urlBase);
 		//if(new.target === CdrPlugin) {
 		//	throw new TypeError('Cannot construct CdrPlugin instances directly');
 		//}

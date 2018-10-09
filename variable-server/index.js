@@ -224,7 +224,7 @@ VariableServer.prototype.addSubscriber = function (opsPath, cb) {
 		var variable = this.vars[opsPath];
 		
 		/* Send however many values are currently persisted. */
-		cb(variable);
+		cb([variable]);
 	}
 	
 	if(variable.hasOwnProperty('subscribers') == false) {
