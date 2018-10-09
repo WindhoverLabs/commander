@@ -151,6 +151,19 @@ h2 {
   display: none;
 }
 
+#cdr-panel-menu-toggle,
+#cdr-layout-menu-toggle{
+  padding:10px;
+}
+
+#cdr-panel-menu-toggle.active{
+  background-color: var(--btn-primary-background-hover-color);
+}
+
+#cdr-layout-menu-toggle.active{
+  background-color: var(--btn-primary-background-hover-color);
+}
+
 .cdr-menu-container {
   background: #FFF0;
   border: unset !important;
@@ -266,18 +279,65 @@ path {
   Color Variables
 *******************************************/
 :root {
+
+    /******************************************
+      Primary Button
+    *******************************************/
+    /* yellow */
+    --btn-primary-background-color        :#ffae00;
+    /* gold */
+    --btn-primary-background-hover-color  :#b78509;
+    /* gold */
+    --btn-primary-border-color            :#b78509;
+
+    /******************************************
+      Important Button
+    *******************************************/
+    /* yellow */
+    --btn-important-background-color        :#dc3545;
+    /* gold */
+    --btn-important-background-hover-color  :#95111d;;
+    /* gold */
+    --btn-important-border-color            :#95111d;
+
+    /******************************************
+      General Button
+    *******************************************/
+    /* white */
+    --btn-text-color              :#fff;
+    /* Transperant */
+    --btn-trasperant-color        :#00008000;
+    /* yellow*/
     --btn-bg-color:     #ffae00;
-    --btn-font-color-d: #343a40;
-    --btn-font-color-l: #fff;
-    --btn-bg-hvr-color: #ffae00b3;
+    /* Dark grey */
+    --btn-font-color-drk: #343a40;
+    /* white */
+    --btn-font-color-lte: #fff;
+    /* gold */
+    --btn-bg-hvr-color: #b78509;
 
+    /******************************************
+      Layout
+    *******************************************/
+    /* Dark grey */
+    --layout-drk  : #343a40;
+    /* Light grey */
+    --layout-lte  : #25518080;
 
-    --header-bg-color:  #a06d00 ;
+    /******************************************
+      Panels
+    *******************************************/
+    /* Golden Yellow */
+    --header-bg-color:  #a06d02 ;
+    /* Deep Blue */
     --content-bg-color: #25518080;
-
+    /* Light Blue */
     --th-bg-color:      #25518080;
+    /* Dark Blue */
     --td-border-color:  #074486;
+    /* Blue */
     --td-bg-color:      #2551804d;
+
 }
 
 /******************************************
@@ -359,45 +419,98 @@ header > button {
   padding: 4px !important;
 }
 
+.cdr-primary{
+  padding: 0px 3px;
+  font-size: 14px;
+  color: var(--btn-text-color);
+  background-color: var(--btn-primary-background-color);
+  border: 1px solid var(--btn-primary-border-color);
+}
+
+.cdr-primary:hover{
+  background-color: var(--btn-primary-background-hover-color);
+  border: 1px solid var(--btn-primary-border-color);
+}
+
+.cdr-outline-primary{
+  padding: 0px 3px;
+  font-size: 14px;
+  color: var(--btn-text-color);
+  background-color: var(--btn-trasperant-color);
+  border: 1px solid var(--btn-primary-border-color);
+}
+
+.cdr-outline-primary:hover{
+  background-color: var(--btn-primary-background-color);
+  border: 1px solid var(--btn-primary-border-color);
+}
+
+.cdr-important{
+  padding: 0px 3px;
+  font-size: 14px;
+  color: var(--btn-text-color);
+  background-color: var(--btn-important-background-color);
+  border: 1px solid var(--btn-important-border-color);
+}
+
+.cdr-important:hover{
+  background-color: var(--btn-important-background-hover-color);
+  border: 1px solid var(--btn-important-border-color);
+}
+
+.cdr-outline-important{
+  padding: 0px 3px;
+  font-size: 14px;
+  color: var(--btn-text-color);
+  background-color: var(--btn-trasperant-color);
+  border: 1px solid var(--btn-important-border-color);
+}
+
+.cdr-outline-important:hover{
+  background-color: var(--btn-important-background-color);
+  border: 1px solid var(--btn-important-border-color);
+}
+
+/* All buttons will not have focus feature  */
 .btn:focus {
-  /* All buttons will not have focus feature  */
   box-shadow: none;
+
 }
 
-.btn-primary,
-.btn-primary:hover {
-  color: var(--btn-font-color-l);
-}
-
-.btn-outline-primary,
-.btn-outline-primary:hover {
-  color: var(--btn-font-color-d);
-}
-
-.btn-primary,
-.btn-outline-primary {
+.btn-primary{
+  color: var(--btn-font-color-drk);
   background-color: var(--btn-bg-color);
-  border-color: var(--btn-bg-color);
+  border: 1px solid var(--btn-bg-hvr-color);
 }
 
-.btn-primary:hover,
-.btn-outline-primary:hover  {
+.btn-primary:hover{
+  color: var(--btn-font-color-drk);
   background-color: var(--btn-bg-hvr-color);
-  border-color: var(--btn-bg-hvr-color);
+  border: 1px solid var(--btn-bg-hvr-color);
 }
 
+.btn-outline-primary{
+  color: var(--btn-bg-hvr-color);
+  background-color: var(--btn-trasperant-color);
+  border: 1px solid var(--btn-bg-hvr-color);
+}
+
+.btn-outline-primary:hover{
+  color: var(--btn-font-color-drk);
+  background-color: var(--btn-bg-color);
+  border: 1px solid var(--btn-bg-hvr-color);
+}
+/*  Below two blocks sets active state css for the button*/
 .btn-outline-primary:not(:disabled):not(.disabled).active,
 .btn-outline-primary:not(:disabled):not(.disabled):active,
 .show > .btn-outline-primary.dropdown-toggle {
-    color: var(--btn-bg-color);
-    background-color: color: var(--btn-font-color-d);
-    border-color: var(--btn-bg-color);
+  color: var(--btn-font-color-drk);
+  background-color: var(--btn-bg-color);
+  border: 1px solid var(--btn-bg-hvr-color);
 }
 
 .btn-outline-primary:not(:disabled):not(.disabled).active:focus,
 .btn-outline-primary:not(:disabled):not(.disabled):active:focus,
 .show > .btn-outline-primary.dropdown-toggle:focus {
     box-shadow: unset !important;
-
-
 }

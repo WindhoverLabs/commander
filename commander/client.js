@@ -9,6 +9,8 @@ function CommanderClient() {
 	this.socket;
 	this.subscriptions = {};
 
+	cu.logInfo('Clinet | CommanderClient');
+
 	this.connect();
 }
 
@@ -98,7 +100,7 @@ CommanderClient.prototype.getCmdDef = function (cmdObj,cb) {
     if(this.isSocketConnected) {
         this.socket.emit('getCmdDef', cmdObj, function(cmdDef) {
         	var outCmdDef = {name:cmdDef.opsPath, argument:cmdDef.args};
-        	
+
             cb(outCmdDef);
         });
     };
@@ -128,7 +130,7 @@ CommanderClient.prototype.updateTelemetry = function (items) {
               sample: items[itemID].sample,
               opsPath:opsPath
             };
-			
+
 			cb(param);
 		}
 	}
@@ -142,9 +144,10 @@ CommanderClient.prototype.unsubscribe = function (tlmObj){
     		var opsPath = tlmObj[i].name;
     		tlmOpsPaths.push(opsPath);
 
-            if(this.subscriptions.hasOwnProperty(opsPath)) {
-                delete this.subscriptions[opsPath];
-            }
+        if(this.subscriptions.hasOwnProperty(opsPath)) {
+          delete this.subscriptions[opsPath];
+        }
+        cu.logDebug('Clinet | unsubscribed')
     	}
 
     	this.socket.emit('unsubscribe', tlmOpsPaths);
