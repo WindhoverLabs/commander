@@ -16,14 +16,10 @@ class CdrPlugin {
 		//if(new.target === CdrPlugin) {
 		//	throw new TypeError('Cannot construct CdrPlugin instances directly');
 		//}
-		if (this.getPanels === undefined) {
+		if (this.getContent === undefined) {
 		    // or maybe test typeof this.method === "function"
-		    throw new TypeError('Must override getPanels');
+		    throw new TypeError('Must override getContent');
 		}
-        if (this.getLayouts === undefined) {
-            // or maybe test typeof this.method === "function"
-            throw new TypeError('Must override getLayouts');
-        }
 		if (typeof webRoot === 'undefined') {
 		    throw new TypeError('Must supply web root in constructor');
 		}
