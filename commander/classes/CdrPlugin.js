@@ -3,8 +3,16 @@
 var path = require('path');
 var fs = require('fs');
 
-module.exports = class CdrPlugin {
-	constructor(webRoot, urlBase) {
+/* Content Types */
+const ContentTypeEnum = Object.freeze(
+		{'PANEL':    1,
+		 'LAYOUT':   2});
+
+//module.exports = { ContentTypeEnum }
+
+
+class CdrPlugin {
+	constructor(name, webRoot, urlBase) {
 		//if(new.target === CdrPlugin) {
 		//	throw new TypeError('Cannot construct CdrPlugin instances directly');
 		//}
@@ -22,25 +30,68 @@ module.exports = class CdrPlugin {
 		
 		this.webRoot = webRoot;
 		
-		var panels = this.getPanels();
-		if(typeof panels !== 'undefined') {
-			global.PANELS_TREE.push(panels);
-			
+		var content = this.getContent();
+		if(typeof content !== 'undefined') {
+			global.CONTENT_TREE[name] = content;
+
 			var appViews = global.NODE_APP.get('views');
 			appViews.push(webRoot);
 
-			this.processPanelsTree(panels);
+			this.processContentTree(content, '/' + name);
 		}
-        
-        var layouts = this.getLayouts();
-        if(typeof layouts !== 'undefined') {
-            global.LAYOUTS_TREE.push(layouts);
-            
-            var appViews = global.NODE_APP.get('views');
-            appViews.push(webRoot);
+		
+//		var panels = this.getPanels();
+//		if(typeof panels !== 'undefined') {
+//			global.PANELS_TREE.push(panels);
+//			
+//			var appViews = global.NODE_APP.get('views');
+//			appViews.push(webRoot);
+//
+//			this.processPanelsTree(panels);
+//		}
+//        
+//        var layouts = this.getLayouts();
+//        if(typeof layouts !== 'undefined') {
+//            global.LAYOUTS_TREE.push(layouts);
+//            
+//            var appViews = global.NODE_APP.get('views');
+//            appViews.push(webRoot);
+//
+//            this.processLayoutsTree(layouts);
+//        }
+	}
+	
 
-            this.processLayoutsTree(layouts);
-        }
+	static get ContentType() {
+		return ContentTypeEnum;
+	}
+	
+	processContentTree(content, inPath) {
+		var self = this;
+		
+		var filePath = content.filePath;
+		if(typeof filePath !== 'undefined') {
+			global.NODE_APP.get(inPath, function (req, res) {
+				console.log(inPath);
+				console.log(req);
+				
+				var fullFilePath = path.join(self.webRoot, filePath);
+				if(path.extname(fullFilePath) === '.pug') {
+					res.render(fullFilePath);
+				} else {
+					readJSONFile(fullFilePath, function (err, json) {
+                        res.send(json);
+                    });
+				}
+			});
+		}
+			
+		var nodes = content.nodes;
+		if(typeof nodes !== 'undefined') {
+			for(var nodeID in nodes) {
+				self.processContentTree(nodes[nodeID], inPath + '/' + nodeID);	
+			}
+		}
 	}
 
 	processPanelsTree(panels) {
@@ -80,6 +131,7 @@ module.exports = class CdrPlugin {
 }
 
 
+
 function readJSONFile(filename, callback) {
     fs.readFile(filename, function (err, data) {
       if(err) {
@@ -93,3 +145,9 @@ function readJSONFile(filename, callback) {
       }
     });
   }
+
+
+module.exports = {
+		CdrPlugin : CdrPlugin,
+		ContentTypeEnum: ContentTypeEnum
+}

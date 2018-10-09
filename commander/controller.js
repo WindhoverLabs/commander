@@ -51,9 +51,12 @@ function NodeSelected(e, node) {
 
             if( response !== null ) {
 
-                myLayout.destroy()
-                myLayout = new window.llc( jsonObj, $('#cdr-layout-container') );
-                window.dispatchEvent(llc);
+                myLayout.destroy();
+                myLayout = new window.GoldenLayout( jsonObj, $('#cdr-layout-container') );
+                window.dispatchEvent(new CustomEvent('first-layout-load-complete'));
+                
+                //myLayout = new window.llc( jsonObj, $('#cdr-layout-container') );
+                //window.dispatchEvent(llc);
 
                 myLayout.on('stackCreated', (item) => {
                 	/* TODO:  This is where we need to add code to bind the telemetry
@@ -507,16 +510,16 @@ function IndicatorCloseClick() {
 
 function UpdateLayoutNode(node, display) {
     session.getLayouts(node.path, function (dirEntries) {
-        var entries = [];
+        var layoutEntries = [];
 
-        for(var i=0; i < dirEntries.length; ++i) {
-            var dirEntry = dirEntries[i];
+        for(var entryID in dirEntries) {
+            var dirEntry = dirEntries[entryID];
 
             var layoutEntry = {
-                name: dirEntry.name,
-                text: dirEntry.text,
-                path: node.path + '/' + dirEntry.name,
-                urlPath: dirEntry.urlPath,
+                name: '/' + entryID,
+                text: dirEntry.shortDescription,
+                path: node.path + '/' + entryID,
+                urlPath: node.path + '/' + entryID,
                 //type: dirEntry.type,
                 //ext: dirEntry.type,
                 //lazyLoad: true,
@@ -526,20 +529,21 @@ function UpdateLayoutNode(node, display) {
             };
 
             if(dirEntry.hasOwnProperty('nodes')) {
-                layoutEntry.lazyLoad = true;
-                layoutEntry.selectable = false;
+            	layoutEntry.lazyLoad = true;
+            	layoutEntry.selectable = false;
             } else {
-                layoutEntry.lazyLoad = false;
-                layoutEntry.selectable = true;
-                layoutEntry.type = 'config';
-                layoutEntry.url = dirEntry.urlPath;
+            	layoutEntry.icon = 'fa fa-file';
+            	layoutEntry.lazyLoad = false;
+            	layoutEntry.selectable = true;
+            	layoutEntry.type = 'config';
+            	layoutEntry.url = node.path + '/' + entryID
             }
 
-            entries.push(layoutEntry);
+            layoutEntries.push(layoutEntry);
         }
 
         var tree = $('#cdr-layout-menu-container').treeview(true)
-        tree.addNode(entries, node, node.index, { silent: true} );
+        tree.addNode(layoutEntries, node, node.index, { silent: true} );
         tree.expandNode(node, { silent: true, ignoreChildren: true } );
     });
 }
@@ -548,14 +552,14 @@ function UpdatePanelNode(node, display) {
     session.getPanels(node.path, function (dirEntries) {
         var panelEntries = [];
 
-        for(var i=0; i < dirEntries.length; ++i) {
-            var dirEntry = dirEntries[i];
+        for(var entryID in dirEntries) {
+            var dirEntry = dirEntries[entryID];
 
             var panelEntry = {
-                name: dirEntry.name,
-                text: dirEntry.text,
-                path: node.path + '/' + dirEntry.name,
-                urlPath: dirEntry.urlPath,
+                name: '/' + entryID,
+                text: dirEntry.shortDescription,
+                path: node.path + '/' + entryID,
+                urlPath: node.path + '/' + entryID,
                 //type: dirEntry.type,
                 //ext: dirEntry.type,
                 //lazyLoad: true,
@@ -572,7 +576,7 @@ function UpdatePanelNode(node, display) {
                 panelEntry.lazyLoad = false;
                 panelEntry.selectable = true;
                 panelEntry.type = 'file';
-                panelEntry.url = dirEntry.urlPath;
+                panelEntry.url = node.path + '/' + entryID
             }
 
             panelEntries.push(panelEntry);
@@ -648,20 +652,19 @@ $(()=>{
     }
 
     session.on('connect', function() {
-
-        console.log('session connected');
         if(_sescon_never){
-          session.getPanels('', function (dirEntries) {
+          session.getPanels('/', function (dirEntries) {
               var panelEntries = [];
 
-              for(var i=0; i < dirEntries.length; ++i) {
+              for(var entryID in dirEntries) {
                   var entry = {
-                      name: dirEntries[i].name,
-                      text: dirEntries[i].text,
-                      path: dirEntries[i].name,
-                      type: dirEntries[i].type,
+                      name: '/' + entryID,
+                      text: dirEntries[entryID].shortDescription,
+                      path: '/' + entryID,
+                      urlPath: '/' + entryID,
+                      type: dirEntries[entryID].type,
                       lazyLoad: true,
-                      ext: dirEntries[i].path,
+                      ext: entryID,
                       selectable: false,
                       checkable: false
                   };
@@ -685,17 +688,18 @@ $(()=>{
                   onNodeSelected: NodeSelected,
               });
           });
-          session.getLayouts('', function (dirEntries) {
+          session.getLayouts('/', function (dirEntries) {
               var entries = [];
 
-              for(var i=0; i < dirEntries.length; ++i) {
+              for(var entryID in dirEntries) {
                   var entry = {
-                      name: dirEntries[i].name,
-                      text: dirEntries[i].text,
-                      path: dirEntries[i].name,
-                      type: dirEntries[i].type,
+                      name: '/' + entryID,
+                      text: dirEntries[entryID].shortDescription,
+                      path: '/' + entryID,
+                      urlPath: '/' + entryID,
+                      type: dirEntries[entryID].type,
                       lazyLoad: true,
-                      ext: dirEntries[i].path,
+                      ext: entryID,
                       selectable: false,
                       checkable: false
                   };

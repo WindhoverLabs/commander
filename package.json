@@ -18,14 +18,17 @@
     "dot-object": "^1.7.0",
     "eventemitter": "^0.3.3",
     "express": "^4.16.3",
+    "file-saver": "^1.3.8",
     "flat": "^4.1.0",
     "font-awesome": "^4.7.0",
     "font-mfizz": "^2.4.1",
+    "golden-layout": "^1.5.9",
     "google-protobuf": "^3.6.1",
     "http-errors": "^1.7.0",
     "int64-buffer": "^0.1.10",
     "jquery": "^3.3.1",
     "jquery-ui-dist": "^1.12.1",
+    "jquery.flot": "^0.8.3",
     "json-merge": "^1.2.0",
     "merge-json": "0.1.0-b.3",
     "morgan": "^1.9.0",
@@ -40,8 +43,6 @@
     "sparkles": "^1.0.1",
     "svg.js": "^2.6.5",
     "websocket": "^1.0.26",
-    "wolfy87-eventemitter": "^5.2.5",
-    "jquery.flot":"^0.8.3",
-    "file-saver":"^1.3.8"
+    "wolfy87-eventemitter": "^5.2.5"
   }
 }

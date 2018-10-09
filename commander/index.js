@@ -45,6 +45,7 @@ var socket_io = require('socket.io');
 var CommanderInstance = require('./commander_instance.js');
 var CommanderApp = require('./commander_app.js');
 var path = require('path');
+const ContentTypeEnum = require('./classes/CdrPlugin.js').ContentTypeEnum;
 
 /* Event IDs */
 var EventEnum = Object.freeze(
@@ -184,7 +185,7 @@ Commander.prototype.setDefaultInstance = function (instance) {
 
 
 
-Commander.prototype.getPanelsByPath = function (paths, panelsObj) {    
+Commander.prototype.getPanelsByPath_old = function (paths, panelsObj) {    
     if(paths.length == 1) {
         if(paths[0] === '') {
             return panelsObj;
@@ -208,23 +209,74 @@ Commander.prototype.getPanelsByPath = function (paths, panelsObj) {
 
 
 
-Commander.prototype.getLayoutsByPath = function (paths, layoutsObj) {    
+Commander.prototype.getPanelsByPath = function (paths, panelsObj) {    
     if(paths.length == 1) {
-        if(paths[0] === '') {
-            return layoutsObj;
+    	var targetPath = paths[0];
+        if(targetPath === '') {
+            return panelsObj;
         } else {
-            for(var i = 0; i < layoutsObj.length; ++i) {
-                if(layoutsObj[i].name === paths[0]) {
-                    return layoutsObj[i].nodes;
-                }
+        	var targetObj = panelsObj[targetPath];
+        	if(typeof targetObj === 'object') {
+        		var nodes = targetObj.nodes;
+        		var outNodes = {};
+        		for(var nodeID in nodes) {
+        			if(typeof nodes[nodeID].type !== 'undefined') {
+        			    if(nodes[nodeID].type === ContentTypeEnum.PANEL) {
+        				    outNodes[nodeID] = nodes[nodeID];
+        			    }
+        			} else {
+    				    outNodes[nodeID] = nodes[nodeID];
+        			}
+        		}
+        		return outNodes;
             }
         }
     } else {
-        var thisObjPath = paths.shift();
-        for(var i = 0; i < layoutsObj.length; ++i) {
-            if(layoutsObj[i].name === thisObjPath) {
-                return this.getLayoutsByPath(paths, layoutsObj[i].nodes);
+    	var targetPath = paths[0];
+    	var targetObj = panelsObj[targetPath];
+    	if(typeof targetObj === 'object') {
+    		var nodes = targetObj.nodes;
+    		paths.shift();
+    		return this.getPanelsByPath(paths, nodes);
+        }
+    }
+}
+
+
+
+
+
+
+
+Commander.prototype.getLayoutsByPath = function (paths, layoutsObj) {    
+    if(paths.length == 1) {
+    	var targetPath = paths[0];
+        if(targetPath === '') {
+            return layoutsObj;
+        } else {
+        	var targetObj = layoutsObj[targetPath];
+        	if(typeof targetObj === 'object') {
+        		var nodes = targetObj.nodes;
+        		var outNodes = {};
+        		for(var nodeID in nodes) {
+        			if(typeof nodes[nodeID].type !== 'undefined') {
+        			    if(nodes[nodeID].type === ContentTypeEnum.LAYOUT) {
+        				    outNodes[nodeID] = nodes[nodeID];
+        			    }
+        			} else {
+    				    outNodes[nodeID] = nodes[nodeID];
+        			}
+        		}
+        		return outNodes;
             }
+        }
+    } else {
+    	var targetPath = paths[0];
+    	var targetObj = layoutsObj[targetPath];
+    	if(typeof targetObj === 'object') {
+    		var nodes = targetObj.nodes;
+    		paths.shift();
+    		return this.getLayoutsByPath(paths, nodes);
         }
     }
 }
@@ -232,6 +284,20 @@ Commander.prototype.getLayoutsByPath = function (paths, layoutsObj) {
 
 
 Commander.prototype.getPanels = function(inPath, cb) {
+    var outObj = {};
+    
+    var paths = inPath.split('/');
+    
+    paths.shift();
+    
+    var content = this.getPanelsByPath(paths, global.CONTENT_TREE);
+    
+    cb(content);
+}
+
+
+
+Commander.prototype.getPanels_old = function(inPath, cb) {
     var outObj = {};    
     var paths = inPath.split('/');
     
@@ -241,10 +307,15 @@ Commander.prototype.getPanels = function(inPath, cb) {
 
 
 Commander.prototype.getLayouts = function(inPath, cb) {
-    var outObj = {};    
+    var outObj = {};
+    
     var paths = inPath.split('/');
     
-    cb(this.getLayoutsByPath(paths, global.LAYOUTS_TREE));
+    paths.shift();
+    
+    var content = this.getLayoutsByPath(paths, global.CONTENT_TREE);
+    
+    cb(content);
 }
 
 
@@ -338,7 +409,6 @@ Commander.prototype.updateTelemetry = function (update) {
 
 Commander.prototype.sendCmd = function (cmdName, args) {
     //if(this.defaultInstance.hasOwnProperty('emit')) {
-        console.log(cmdName);
 	    this.defaultInstance.emit(config.get('cmdSendStreamID'), cmdName, args);
     //}
 }

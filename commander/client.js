@@ -9,8 +9,6 @@ function CommanderClient() {
 	this.socket;
 	this.subscriptions = {};
 
-	console.log('CommanderClient');
-
 	this.connect();
 }
 
@@ -32,7 +30,7 @@ CommanderClient.prototype.getLayouts = function (path, cb){
 
 
 CommanderClient.prototype.getPanels = function (path, cb) {
-    this.socket.emit('getPanels', path, function(result){
+    this.socket.emit('getPanels', path, function(result) {
         cb(result);
     });
 };
@@ -144,10 +142,9 @@ CommanderClient.prototype.unsubscribe = function (tlmObj){
     		var opsPath = tlmObj[i].name;
     		tlmOpsPaths.push(opsPath);
 
-        if(this.subscriptions.hasOwnProperty(opsPath)) {
-          delete this.subscriptions[opsPath];
-        }
-        console.log('unsubscribed')
+            if(this.subscriptions.hasOwnProperty(opsPath)) {
+                delete this.subscriptions[opsPath];
+            }
     	}
 
     	this.socket.emit('unsubscribe', tlmOpsPaths);
@@ -168,7 +165,6 @@ CommanderClient.prototype.subscribe = function (tlmObj, cb){
         	}
 
         	this.subscriptions[opsPath][cb] = {cb:cb,opsPath:opsPath};
-        	// console.log(this.subscriptions[opsPath][cb]);
     	}
 
     	this.socket.emit('subscribe', tlmOpsPaths);

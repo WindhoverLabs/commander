@@ -67,6 +67,7 @@ global.NODE_APP.use('/', indexRouter);
 
 global.PANELS_TREE = [];
 global.LAYOUTS_TREE = [];
+global.CONTENT_TREE = {};
 
 //global.NODE_APP.use('/ws', workspaceRouter);
 //global.NODE_APP.use('/flow*', test1);
