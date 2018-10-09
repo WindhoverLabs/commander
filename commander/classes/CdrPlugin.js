@@ -13,6 +13,9 @@ const ContentTypeEnum = Object.freeze(
 
 class CdrPlugin {
 	constructor(name, webRoot, urlBase) {
+		console.log('name: ' + name);
+		console.log('webRoot: ' + webRoot);
+		console.log('urlBase: ' + urlBase);
 		//if(new.target === CdrPlugin) {
 		//	throw new TypeError('Cannot construct CdrPlugin instances directly');
 		//}
@@ -67,10 +70,7 @@ class CdrPlugin {
 		
 		var filePath = content.filePath;
 		if(typeof filePath !== 'undefined') {
-			global.NODE_APP.get(inPath, function (req, res) {
-				console.log(inPath);
-				console.log(req);
-				
+			global.NODE_APP.get(inPath, function (req, res) {				
 				var fullFilePath = path.join(self.webRoot, filePath);
 				if(path.extname(fullFilePath) === '.pug') {
 					res.render(fullFilePath);
@@ -93,7 +93,6 @@ class CdrPlugin {
 	processPanelsTree(panels) {
 		if(panels.hasOwnProperty('urlPath')) {
 			var self = this;
-			console.log('Registering ' + panels.urlPath);
 			global.NODE_APP.get(panels.urlPath, function (req, res) {
 				res.render(path.join(self.webRoot, panels.filePath));
 			});
@@ -109,7 +108,6 @@ class CdrPlugin {
     processLayoutsTree(layouts) {
         if(layouts.hasOwnProperty('urlPath')) {
             var self = this;
-            console.log('Registering ' + layouts.urlPath);
             global.NODE_APP.get(layouts.urlPath, function (req, res) {
                 readJSONFile(path.join(self.webRoot, layouts.filePath), function (err, json) {
                     res.send(json);

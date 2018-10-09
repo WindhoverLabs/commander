@@ -375,7 +375,7 @@ class DataPlot {
     //
     // console.log(this);
     // console.log(this.parsedData);
-    console.log(this.paths)
+    //console.log(this.paths)
   }
 
   eatTail() {
