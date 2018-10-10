@@ -174,7 +174,7 @@ class Panel {
 
     this.panelElm = panelElm;
     this.title = 'Unknown'
-    this.loadTimeout = 500; /* ms */
+    this.loadTimeout = 1000; /* ms */
     this.tlm = [];
     this.panelElm['instantiated'] = true;
 

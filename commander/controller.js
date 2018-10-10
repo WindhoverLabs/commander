@@ -115,7 +115,7 @@ function InitLayout(mlyt) {
   /* Register Component in layout */
   mlyt.registerComponent('Blank', function(container, state) {
     if (state.link) {
-      container.getElement().load("/" + state.link);
+      container.getElement().load( state.link);
     } else {
       container.getElement().html('<h2>' + state.text + '</h2>');
     }
@@ -203,6 +203,7 @@ function LoadLayout() {
       }
     }
   })(files[0]);
+  reader.readAsText(files[0]);
 }
 
 /* Modal */
