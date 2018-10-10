@@ -43,6 +43,7 @@
     "sparkles": "^1.0.1",
     "svg.js": "^2.6.5",
     "websocket": "^1.0.26",
-    "wolfy87-eventemitter": "^5.2.5"
+    "wolfy87-eventemitter": "^5.2.5",
+    "sprintf-js": "^1.1.1"
   }
 }

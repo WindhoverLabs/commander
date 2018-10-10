@@ -18,6 +18,18 @@ function processTelemetryUpdate(param) {
       var nodeElm = subscriptions[opsPath].elms[i];
       var reqObj = cu.parseJSON(nodeElm.getAttribute('data-cdr'));
       var indicatorFormat = reqObj.indicator;
+      /* Set value format */
+      if(reqObj.hasOwnProperty('tlm')) {
+          for(var j = 0; j < reqObj.tlm.length; ++j) {
+            var tlmObj = reqObj.tlm[j]
+            var name = tlmObj.name;
+            if(name == opsPath) {
+              if (tlmObj.hasOwnProperty('format')) {
+                  value = sprintf(tlmObj.format, value);
+              }
+            }
+          }
+      }
       cu.assert(indicatorFormat != undefined, 'Process TLM | indicator format is not found');
       if (indicatorFormat == 'text') {
         if (opsPathDef != undefined) {
@@ -39,7 +51,7 @@ function processTelemetryUpdate(param) {
             case 'double':
             case 'float':
               {
-                nodeElm.textContent = value.toFixed(3);
+                nodeElm.textContent = value;
                 break;
               }
             case 'boolean':
