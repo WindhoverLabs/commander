@@ -174,7 +174,7 @@ BinaryDecoder.prototype.setInstanceEmitter = function (newInstanceEmitter)
             /* This must be an array. */
             var outTlmDefs = [];
             for(var i = 0; i < tlmReqs.length; ++i) {
-                var tlmDef = self.getTlmDefByName(tlmReqs[i].name);
+                var tlmDef = self.getTlmDefByName(self.stripArrayIdentifier(tlmReqs[i].name));
                 if(typeof tlmDef !== 'undefined') {
                     outTlmDefs.push(tlmDef);
                 }
@@ -182,7 +182,7 @@ BinaryDecoder.prototype.setInstanceEmitter = function (newInstanceEmitter)
             cb(outTlmDefs);
         } else {
             /* This is a single request. */
-            cb(self.getTlmDefByName(tlmReqs.name));
+            cb(self.getTlmDefByName(self.stripArrayIdentifier(tlmReqs.name)));
         }
 	});
 	
@@ -192,54 +192,58 @@ BinaryDecoder.prototype.setInstanceEmitter = function (newInstanceEmitter)
 	
 	
 BinaryDecoder.prototype.getTlmDefByName = function (name) {
-    var outTlmDef = {opsPath:name};
     var fieldDef = this.getTlmDefByPath(name);
-
-    switch(fieldDef.airliner_type) {
-        case 'char':
-        case 'uint8':
-        case 'int8':
-        case 'string':
-        case 'uint16':
-        case 'int16':
-        case 'uint32':
-        case 'int32':
-        case 'float':
-        case 'double':
-        case 'boolean':
-        case 'uint64':
-        case 'int64':
-            outTlmDef.dataType = fieldDef.airliner_type;
-            break;
-            
-        default:
-            switch(fieldDef.pb_type) {
-                case 'char':
-                case 'uint8':
-                case 'int8':
-                case 'string':
-                case 'uint16':
-                case 'int16':
-                case 'uint32':
-                case 'int32':
-                case 'float':
-                case 'double':
-                case 'boolean':
-                case 'uint64':
-                case 'int64':
-                    outTlmDef.dataType = fieldDef.pb_type;
-                    break;
-                    
-                default:
-                    console.log("Data type not found");
-            }
-    }
     
-    if(fieldDef.array_length != 0) {
-        outTlmDef.arrayLength = fieldDef.array_length;
+    if(typeof fieldDef === 'undefined') {
+    	return undefined;
+    } else {
+        var outTlmDef = {opsPath:name};
+	    switch(fieldDef.airliner_type) {
+	        case 'char':
+	        case 'uint8':
+	        case 'int8':
+	        case 'string':
+	        case 'uint16':
+	        case 'int16':
+	        case 'uint32':
+	        case 'int32':
+	        case 'float':
+	        case 'double':
+	        case 'boolean':
+	        case 'uint64':
+	        case 'int64':
+	            outTlmDef.dataType = fieldDef.airliner_type;
+	            break;
+	            
+	        default:
+	            switch(fieldDef.pb_type) {
+	                case 'char':
+	                case 'uint8':
+	                case 'int8':
+	                case 'string':
+	                case 'uint16':
+	                case 'int16':
+	                case 'uint32':
+	                case 'int32':
+	                case 'float':
+	                case 'double':
+	                case 'boolean':
+	                case 'uint64':
+	                case 'int64':
+	                    outTlmDef.dataType = fieldDef.pb_type;
+	                    break;
+	                    
+	                default:
+	                    console.log("Data type not found");
+	            }
+	    }
+	    
+	    if(fieldDef.array_length != 0) {
+	        outTlmDef.arrayLength = fieldDef.array_length;
+	    }
+	    
+	    return outTlmDef;
     }
-    
-    return outTlmDef;
 }
 
 
@@ -299,15 +303,63 @@ BinaryDecoder.prototype.getTlmDefByPath = function (path) {
 	    } else {
 	        var msgDef = this.getMsgDefByName(appDefinition.operations[operationName].airliner_msg);
 	        
-	        var splitName = path.split('/');
-	        var opNameID = splitName[3];
-	        var fieldPath = msgDef.operational_names[opNameID].field_path;
-	        
-	        var fieldDef = this.getFieldFromOperationalName(msgDef, fieldPath, 0);
-	        return fieldDef.fieldDef;
+	        if(typeof msgDef === 'undefined') {
+	        	return undefined;
+	        } else {
+		        var splitName = path.split('/');
+		        var opNameID = this.stripArrayIdentifier(splitName[3]);
+		        
+		        var fieldObj = msgDef.operational_names[opNameID];
+		        
+		        if(typeof fieldObj === 'undefined') {
+		        	return undefined;
+		        } else {
+		        	var fieldPath = fieldObj.field_path;
+		        	
+		        	if(typeof fieldPath === 'undefined') {
+		        		return undefined;
+		        	} else {
+		        		var fieldDef = this.getFieldFromOperationalName(msgDef, fieldPath, 0);
+		        	
+		        		return fieldDef.fieldDef;
+		        	}
+		        }
+	        }
 	    }
     }
 }
+
+
+
+BinaryDecoder.prototype.isOpNameAnArray = function(opName) {
+	var start = opName.indexOf('[');
+	
+	if(start > 0) {
+		var end = opName.indexOf(']');
+		
+		if(end > start) {
+			return true;
+		}
+	}
+	
+	return false;
+} 
+
+
+
+BinaryDecoder.prototype.stripArrayIdentifier = function(opName) {
+	if(this.isOpNameAnArray(opName) == true) {
+		var start = 0;
+		var end = opName.indexOf('[');
+		
+		if(end > 0) {
+			var outString = opName.substring(start, end);
+			
+			return outString;
+		}
+	}
+	return opName;
+} 
 
 
 

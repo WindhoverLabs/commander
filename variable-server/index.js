@@ -121,19 +121,64 @@ VariableServer.prototype.setInstanceEmitter = function (newInstanceEmitter) {
 	    				 * Create a new subscriber record in this temporary 
 	    				 * object.
 	    				 */
-	    				subscribersToUpdate[subscriber] = {cb: variable.subscribers[subscriber], variables: {}};
+	    				subscribersToUpdate[subscriber] = {cb:variable.subscribers[subscriber], variables: {}};
 	    			}
-
+	    			
 	    			subscribersToUpdate[subscriber].variables[itemID] = {};
     			
 	    			var updatedVariable = subscribersToUpdate[subscriber].variables[itemID];
     			
-	    			/* Only sent subscribers a single sample, but still send it as an array of 1, so 
-	    			 * subscribers can use the same callback for the initial persisted data and the
-	    			 * periodic updated data. */
-	    			updatedVariable['sample'] = [variable.sample[variable.sample.length - 1]];
+    				updatedVariable['sample'] = [variable.sample[variable.sample.length - 1]];
     			}
     		}
+    		
+    		/* Now check to see if this item is an array. */
+			if(Array.isArray(item.value) == true) {
+				/* This is an array.  See if we have a subscriber for the individual array indices by looping through 
+				 * the array indices that are subscribed to. */
+				for(var arrayIndexID in variable.arrayIndices) {
+					/* This array index has at least one subscriber.  Loop through the subscribers. */
+		    		for(var subscriber in variable.arrayIndices[arrayIndexID]) {
+		    			var subscription = variable.arrayIndices[arrayIndexID][subscriber];
+		    			
+		    			/* First make sure this subscriber callback still exists. */
+		    			if(typeof subscription !== 'function') {
+		    				/* It doesn't exist.  It must have been destroyed.  Delete
+		    				 * the reference to this callback.
+		    				 */
+		    				delete  variable.arrayIndices[arrayIndexID][subscriber];
+		    			} else {
+		    				/* It does still exist.  Start processing this subscription. */
+		    				if(subscribersToUpdate.hasOwnProperty(subscriber) == false) {
+		    					/* This is the first time in this function call that we've
+		    					 * processed a variable for this particular subscriber.
+		    					 * Create a new subscriber record in this temporary 
+		    					 * object.
+		    					 */
+		    					subscribersToUpdate[subscriber] = {cb:variable.subscribers[subscriber], variables: {}};
+		    				}
+					
+							/* Build an opsName that includes the array index */
+		    				var newOpsName = itemID + '[' + arrayIndexID + ']';
+		    				subscribersToUpdate[subscriber].variables[newOpsName] = {};
+					
+			    			var updatedVariable = subscribersToUpdate[subscriber].variables[newOpsName];
+			    			
+			    			var newValue = variable.sample[variable.sample.length - 1].value[arrayIndexID];
+			    			var outSample = {};
+			    			for(var sampleItemID in variable.sample[variable.sample.length - 1]) {
+			    				if(sampleItemID === 'value') {
+			    					outSample.value = variable.sample[variable.sample.length - 1].value[arrayIndexID];
+			    				} else {
+			    					outSample[sampleItemID] = variable.sample[variable.sample.length - 1][sampleItemID];
+			    				}
+			    			}
+			    			
+			    			updatedVariable['sample'] = [outSample];
+		    			}
+		    		}
+				}
+			}
     	}
     	
     	/* Lastly, loop through all the subscriptions to update, and send them
@@ -152,36 +197,18 @@ VariableServer.prototype.setInstanceEmitter = function (newInstanceEmitter) {
 	});
 	
     this.instanceEmitter.on(config.get('varDefReqStreamID'), function(req, cb) {
-        self.instanceEmit(config.get('tlmDefReqStreamID'), req, function(tlmDefs) {
-            if(typeof tlmDefs.length === 'number') {    
-                /* This must be an array. */
-                var outTlmDefs = [];
-                for(var i = 0; i < tlmDefs.length; ++i) {
-                    var outTlmDef = tlmDefs[i];
-                    outTlmDef.persistence = {};
-                    outTlmDef.persistence.count = self.getVariablePersistence(tlmDefs[i].opsPath);
-                    outTlmDef.timeout = self.getVariableTimeout(tlmDefs[i].opsPath);
-                    outTlmDefs.push(outTlmDef);
-                }
-                cb(outTlmDefs);
-            } else {
-                /* This is a single request. */
-                var outTlmDef = tlmDefs;
-                outTlmDef.persistence = {};
-                outTlmDef.persistence.count = self.getVariablePersistence(tlmDef.opsPath);
-                outTlmDef.timeout = self.getVariableTimeout(tlmDefs.opsPath);
-                cb(outTlmDef);
-            }
-        });
+        self.getTlmDefinitions(req, cb);
     });
 
 	this.instanceEmitter.on(config.get('reqSubscribeStreamID'), function(req, cb) {
 		if(req.cmd === 'subscribe') {
-			if(typeof req.opsPath === 'string' || req.opsPath instanceof String) {			
-				self.addSubscriber(req, cb);
+			if(typeof req.opsPath === 'string' || req.opsPath instanceof String) {	
+				self.SubscribeToVariable(req.opsPath, cb);
 			} else if(Array.isArray(req.opsPath)) {
-				for(var i=0; i < req.opsPath.length; ++i) {	
-					self.addSubscriber(req.opsPath[i], cb);
+				for(var i=0; i < req.opsPath.length; ++i) {		
+					self.getTlmDefinitions({name: req.opsPath[i]}, function(tlmDef) {
+						self.SubscribeToVariable(req.opsPath[i], cb);
+					});
 				}
 			} else {
 				this.logErrorEvent(EventEnum.INVALID_SUBSCRIPTION_REQUEST, 'Subscription request invalid. \'' + req + '\'');
@@ -213,28 +240,141 @@ VariableServer.prototype.setInstanceEmitter = function (newInstanceEmitter) {
 
 
 
-VariableServer.prototype.addSubscriber = function (opsPath, cb) {
+VariableServer.prototype.SubscribeToVariable = function (opsPath, cb) {
+	var subscription = {};
+    var self = this;
+	
+	if(self.isVarNameAnArray(opsPath) == true) {
+		self.getTlmDefinitions({name: opsPath}, function(tlmDef) {
+			if(typeof tlmDef !== 'undefined') {
+				if(tlmDef.hasOwnProperty('arrayLength')) {
+					var arrayIndex = self.getArrayIndex(opsPath);
+					if(arrayIndex < tlmDef.arrayLength) {
+						self.addSubscriber(tlmDef.opsPath, cb, arrayIndex);
+					}
+				}
+			}
+		});
+	} else {
+		self.addSubscriber(opsPath, cb, -1);
+	}
+}
+
+
+
+VariableServer.prototype.isVarNameAnArray = function(varName) {
+	var start = varName.indexOf('[');
+	
+	if(start > 0) {
+		var end = varName.indexOf(']');
+		
+		if(end > start) {
+			return true;
+		}
+	}
+	
+	return false;
+} 
+
+
+
+VariableServer.prototype.stripArrayIdentifier = function(varName) {
+	if(this.isVarNameAnArray(varName) == true) {
+		var start = 0;
+		var end = varName.indexOf('[');
+		
+		if(end > 0) {
+			var outString = varName.substring(start, end);
+			
+			return outString;
+		}
+	}
+	return varName;
+} 
+
+
+
+VariableServer.prototype.getArrayIndex = function(varName) {
+	if(this.isVarNameAnArray(varName) == true) {
+		var start = varName.indexOf('[') + 1;
+		var end = varName.indexOf(']');
+		
+		if(end > start) {
+			var value = parseInt(varName.substring(start, end));
+			
+			return value;
+		}
+	}
+	return -1;
+} 
+
+
+
+VariableServer.prototype.getTlmDefinitions = function (req, cb) {
+	var self = this;
+	
+	this.instanceEmit(config.get('tlmDefReqStreamID'), req, function(tlmDefs) {
+	    if(typeof tlmDefs.length === 'number') {    
+	        /* This must be an array. */
+	        var outTlmDefs = [];
+	        for(var i = 0; i < tlmDefs.length; ++i) {
+	            var outTlmDef = tlmDefs[i];
+	            outTlmDef.persistence = {};
+	            outTlmDef.persistence.count = self.getVariablePersistence(tlmDefs[i].opsPath);
+	            outTlmDef.timeout = self.getVariableTimeout(tlmDefs[i].opsPath);
+	            outTlmDefs.push(outTlmDef);
+	        }
+	        cb(outTlmDefs);
+	    } else {
+	        /* This is a single request. */
+	        var outTlmDef = tlmDefs;
+	        outTlmDef.persistence = {};
+	        outTlmDef.persistence.count = self.getVariablePersistence(tlmDefs.opsPath);
+	        outTlmDef.timeout = self.getVariableTimeout(tlmDefs.opsPath);
+	        cb(outTlmDef);
+	    }
+	});
+};
+
+
+
+VariableServer.prototype.addSubscriber = function (opsPath, cb, arrayIndex) {
 	if(this.vars.hasOwnProperty(opsPath) == false) {
 		/* We have not received this variable yet and it does
 		 * not already have a predefinition.  Create a new record. */
-		var variable = {opsPath: opsPath};
+		var variable = {opsPath: opsPath, arrayIndices: {}};
 		this.vars[opsPath] = variable;
 	} else {
 		/* We've already received this or have a predefinition. */
 		var variable = this.vars[opsPath];
 		
-		/* Send however many values are currently persisted. */
-		var outVar = {};
-		outVar[opsPath] = {};
-		outVar[opsPath].sample = variable.sample; 
-		cb(outVar);
+//		/* Send however many values are currently persisted. */
+//		var outVar = {};
+//		outVar[opsPath] = {};
+//		outVar[opsPath].sample = variable.sample; 
+//		cb(outVar);
 	}
 	
 	if(variable.hasOwnProperty('subscribers') == false) {
 		variable['subscribers'] = {};
 	} 
 	
-	variable.subscribers[cb] = cb;
+	/* Check to see if the subscriber specified an array index. */
+	if(arrayIndex == -1) {
+		/* No array index specified.  Put the subscription on the value, or entire array. */
+		variable.subscribers[cb] = cb;
+	} else {
+		/* An array index was specified.  Put the subscription on the specified array index. */
+		if(variable.hasOwnProperty('arrayIndices') == false) {
+			variable.arrayIndices = {};
+		}
+		
+		if(variable.arrayIndices.hasOwnProperty(arrayIndex) == false) {
+			/* Nobody has subscribed to this particular array index yet.  Create a new record. */
+			variable.arrayIndices[arrayIndex] = {};
+		}
+		variable.arrayIndices[arrayIndex][cb] = cb;
+	}
 }
 
 
