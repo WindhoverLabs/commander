@@ -6,121 +6,163 @@ var dataplot_subscriptions = {};
 /* Process Telemetry and commanding */
 
 function processTelemetryUpdate(param) {
-  var sample = param.sample[param.sample.length - 1];
-  var value = sample.value;
-  var opsPath = param.opsPath;
-  if (opsPath in subscriptions) {
-    var opsPathDef = undefined;
-    if (subscriptions[opsPath].hasOwnProperty('def')) {
-      opsPathDef = subscriptions[opsPath].def;
-    }
-    for (var i = 0; i < subscriptions[opsPath].elms.length; ++i) {
-      var nodeElm = subscriptions[opsPath].elms[i];
-      var reqObj = cu.parseJSON(nodeElm.getAttribute('data-cdr'));
-      var indicatorFormat = reqObj.indicator;
-      /* Set value format */
-      if(reqObj.hasOwnProperty('tlm')) {
-          for(var j = 0; j < reqObj.tlm.length; ++j) {
-            var tlmObj = reqObj.tlm[j]
-            var name = tlmObj.name;
-            if(name == opsPath) {
-              if (tlmObj.hasOwnProperty('format')) {
-                  value = sprintf(tlmObj.format, value);
-              }
-            }
+
+  try {
+    // console.log(param)
+    var staleness = false;
+    var sample = param.sample[param.sample.length - 1];
+    var value = sample.value;
+    var gTime = sample.gndTime;
+    var opsPath = param.opsPath;
+    if (opsPath in subscriptions) {
+      var opsPathDef = undefined;
+      if (subscriptions[opsPath].hasOwnProperty('def')) {
+        opsPathDef = subscriptions[opsPath].def;
+        if(subscriptions[opsPath].def.timeout > 0 ) {
+          if(subscriptions[opsPath].lastUpdatedTime == undefined){
+            subscriptions[opsPath].lastUpdatedTime = gTime;
           }
+          else {
+            var currentTime = new Date(gTime);
+            var prevTime = new Date(subscriptions[opsPath].lastUpdatedTime);
+
+            if((currentTime.getTime() - prevTime.getTime()) > subscriptions[opsPath].def.timeout) {
+              staleness = true;
+            }
+            subscriptions[opsPath].lastUpdatedTime = gTime;
+          }
+        }
       }
-      cu.assert(indicatorFormat != undefined, 'Process TLM | indicator format is not found');
-      if (indicatorFormat == 'text') {
-        if (opsPathDef != undefined) {
-          switch (opsPathDef.dataType) {
-            case 'char':
-            case 'string':
-            case 'int8':
-            case 'uint8':
-            case 'int16':
-            case 'uint16':
-            case 'int32':
-            case 'uint32':
-            case 'int64':
-            case 'uint64':
-              {
-                nodeElm.textContent = value;
-                break;
-              }
-            case 'double':
-            case 'float':
-              {
-                nodeElm.textContent = value;
-                break;
-              }
-            case 'boolean':
-              {
-                nodeElm.textContent = '';
-                if (value) {
-                  nodeElm.setAttribute('class', 'led-basic led-on')
-                } else {
-                  nodeElm.setAttribute('class', 'led-basic led-off')
+      for (var i = 0; i < subscriptions[opsPath].elms.length; ++i) {
+        var nodeElm = subscriptions[opsPath].elms[i];
+        var reqObj = cu.parseJSON(nodeElm.getAttribute('data-cdr'));
+        var indicatorFormat = reqObj.indicator;
+        /* Set value format */
+        if(reqObj.hasOwnProperty('tlm')) {
+            for(var j = 0; j < reqObj.tlm.length; ++j) {
+              var tlmObj = reqObj.tlm[j]
+              var name = tlmObj.name;
+              if(name == opsPath) {
+                if (tlmObj.hasOwnProperty('format')) {
+                    value = sprintf(tlmObj.format, value);
                 }
-                break;
               }
-          }
+            }
         }
-      } else if (indicatorFormat == 'dataplot') {
-        /* Handle dataplot subscriptions */
-        if (nodeElm.getAttribute('plot-initialized') === undefined ||
-          nodeElm.getAttribute('plot-initialized') === null ||
-          nodeElm.getAttribute('plot-initialized') === false) {
-          /* Upon seeing dataplot canvas we initialize canvas after
-          which will keep adding data to initialized canvas */
-          var tlmObj = cu.parseJSON(nodeElm.getAttribute('data-cdr'));
+        cu.assert(indicatorFormat != undefined, 'Process TLM | indicator format is not found');
+        if (indicatorFormat == 'text') {
 
-          var dataPlotDef = {};
-          dataPlotDef['data'] = [];
-          dataPlotDef['options'] = {};
+          if (opsPathDef != undefined) {
+            switch (opsPathDef.dataType) {
+              case 'char':
+              case 'string':
+              case 'int8':
+              case 'uint8':
+              case 'int16':
+              case 'uint16':
+              case 'int32':
+              case 'uint32':
+              case 'int64':
+              case 'uint64':
+                {
+                  if (staleness) {
+                    nodeElm.setAttribute('class','stale');
+                  }
+                  else {
+                    nodeElm.removeAttribute('class');
+                  }
+                  nodeElm.textContent = value;
+                  break;
+                }
+              case 'double':
+              case 'float':
+                {
+                  if (staleness) {
+                    nodeElm.setAttribute('class','stale');
+                  }
+                  else {
+                    nodeElm.removeAttribute('class');
+                  }
+                  nodeElm.textContent = value;
+                  break;
+                }
+              case 'boolean':
+                {
+                  if (staleness) {
+                    nodeElm.setAttribute('class','led-basic');
+                  }
+                  else {
+                    nodeElm.textContent = '';
+                    if (value) {
+                      nodeElm.setAttribute('class', 'led-basic led-on')
+                    } else {
+                      nodeElm.setAttribute('class', 'led-basic led-off')
+                    }
+                  }
+                  break;
+                }
+            }
+          }
+        } else if (indicatorFormat == 'dataplot') {
+          /* Handle dataplot subscriptions */
+          if (nodeElm.getAttribute('plot-initialized') === undefined ||
+            nodeElm.getAttribute('plot-initialized') === null ||
+            nodeElm.getAttribute('plot-initialized') === false) {
+            /* Upon seeing dataplot canvas we initialize canvas after
+            which will keep adding data to initialized canvas */
+            var tlmObj = cu.parseJSON(nodeElm.getAttribute('data-cdr'));
 
-          if (tlmObj.hasOwnProperty('tlm')) {
+            var dataPlotDef = {};
+            dataPlotDef['data'] = [];
+            dataPlotDef['options'] = {};
 
-            cu.assert(tlmObj.hasOwnProperty('label'), 'Process TLM | label array doesnot exist');
-            cu.assert(tlmObj.tlm.length === tlmObj.label.length, 'Process TLM | tlm and labels arrays have different lengths');
-            cu.assert(tlmObj.tlm.length > 0 && tlmObj.label.length > 0, 'Process TLM | tlm and label arrays are empty');
+            if (tlmObj.hasOwnProperty('tlm')) {
 
-            var colorArr = []
-            if (!(tlmObj.hasOwnProperty('color') &&
-                cu.isArray(tlmObj.color) &&
-                tlmObj.color.length == tlmObj.tlm.length)) {
-              for (var c = 0; c < tlmObj.tlm.length; ++c) {
-                var clr = cu.makeColor();
-                colorArr.push(clr);
+              cu.assert(tlmObj.hasOwnProperty('label'), 'Process TLM | label array doesnot exist');
+              cu.assert(tlmObj.tlm.length === tlmObj.label.length, 'Process TLM | tlm and labels arrays have different lengths');
+              cu.assert(tlmObj.tlm.length > 0 && tlmObj.label.length > 0, 'Process TLM | tlm and label arrays are empty');
+
+              var colorArr = []
+              if (!(tlmObj.hasOwnProperty('color') &&
+                  cu.isArray(tlmObj.color) &&
+                  tlmObj.color.length == tlmObj.tlm.length)) {
+                for (var c = 0; c < tlmObj.tlm.length; ++c) {
+                  var clr = cu.makeColor();
+                  colorArr.push(clr);
+                }
+              } else {
+                colorArr = tlmObj.color;
               }
-            } else {
-              colorArr = tlmObj.color;
+
+              for (var i = 0; i < tlmObj.tlm.length; i++) {
+
+                dataPlotDef['data'].push({
+                  'tlm': {
+                    name: tlmObj.tlm[i].name
+                  },
+                  'label': tlmObj.label[i],
+                  'color': colorArr[i]
+                });
+
+              }
+
+              var generatedKey = cu.makeKey();
+              nodeElm.setAttribute('plot-key', generatedKey);
+              dataplot_subscriptions[generatedKey] = new CmdrTimeSeriesDataplot(nodeElm, dataPlotDef, param)
             }
-
-            for (var i = 0; i < tlmObj.tlm.length; i++) {
-
-              dataPlotDef['data'].push({
-                'tlm': {
-                  name: tlmObj.tlm[i].name
-                },
-                'label': tlmObj.label[i],
-                'color': colorArr[i]
-              });
-
-            }
-
-            var generatedKey = cu.makeKey();
-            nodeElm.setAttribute('plot-key', generatedKey);
-            dataplot_subscriptions[generatedKey] = new CmdrTimeSeriesDataplot(nodeElm, dataPlotDef, param)
+            nodeElm.setAttribute('plot-initialized', true);
+          } else {
+            dataplot_subscriptions[nodeElm.getAttribute('plot-key')].addData(param);
           }
-          nodeElm.setAttribute('plot-initialized', true);
-        } else {
-          dataplot_subscriptions[nodeElm.getAttribute('plot-key')].addData(param);
-        }
 
+        }
       }
     }
   }
+  catch(e) {
+    cu.logError('ProcessTelemetryUpdate | ',e.message);
+  }
+
 }
 
 function processTelemetryDefinitionUpdate(opsPaths) {
@@ -174,7 +216,7 @@ class Panel {
 
     this.panelElm = panelElm;
     this.title = 'Unknown'
-    this.loadTimeout = 1000; /* ms */
+    this.loadTimeout = 500; /* ms */
     this.tlm = [];
     this.panelElm['instantiated'] = true;
 
@@ -274,7 +316,8 @@ class Panel {
               }
               btnObj[0].onclick = function(eventObject) {
                 session.sendCommand({
-                  ops_path: cmdInfo.name
+                  ops_path: cmdInfo.name,
+                  args: args
                 });
               };
             } else {
@@ -314,6 +357,7 @@ class Panel {
               for (var i in cmdInfo.argument) {
                 var label = cmdInfo.argument[i].name;
                 var type = cmdInfo.argument[i].type;
+                var value = cmdInfo.argument[i].value;
                 switch (type) {
                   case 'char':
                     {
@@ -321,7 +365,8 @@ class Panel {
                       argArray.push({
                         'label': label,
                         'type': 'field',
-                        'dtype': 'integer'
+                        'dtype': 'text',
+                        'value':value
                       });
                       break;
                     }
@@ -332,7 +377,8 @@ class Panel {
                       argArray.push({
                         'label': label,
                         'type': 'field',
-                        'dtype': 'integer'
+                        'dtype': 'integer',
+                        'value':value
                       });
                       break;
                     }
@@ -343,7 +389,8 @@ class Panel {
                       argArray.push({
                         'label': label,
                         'type': 'field',
-                        'dtype': 'integer'
+                        'dtype': 'integer',
+                        'value':value
                       });
                       break;
                     }
@@ -354,7 +401,8 @@ class Panel {
                       argArray.push({
                         'label': label,
                         'type': 'field',
-                        'dtype': 'string'
+                        'dtype': 'text',
+                        'value':value
                       });
                       break;
                     }
@@ -365,7 +413,8 @@ class Panel {
                       argArray.push({
                         'label': label,
                         'type': 'field',
-                        'dtype': 'integer'
+                        'dtype': 'text',
+                        'value':value
                       });
                       break;
                     }
@@ -376,7 +425,8 @@ class Panel {
                       argArray.push({
                         'label': label,
                         'type': 'field',
-                        'dtype': 'integer'
+                        'dtype': 'text',
+                        'value':value
                       });
                       break;
                     }
@@ -387,7 +437,8 @@ class Panel {
                       argArray.push({
                         'label': label,
                         'type': 'field',
-                        'dtype': 'integer'
+                        'dtype': 'text',
+                        'value':value
                       });
                       break;
                     }
@@ -398,7 +449,8 @@ class Panel {
                       argArray.push({
                         'label': label,
                         'type': 'field',
-                        'dtype': 'integer'
+                        'dtype': 'text',
+                        'value':value
                       });
                       break;
                     }
@@ -409,7 +461,8 @@ class Panel {
                       argArray.push({
                         'label': label,
                         'type': 'field',
-                        'dtype': 'float'
+                        'dtype': 'float',
+                        'value':value
                       });
                       break;
                     }
@@ -420,7 +473,8 @@ class Panel {
                       argArray.push({
                         'label': label,
                         'type': 'field',
-                        'dtype': 'float'
+                        'dtype': 'float',
+                        'value':value
                       });
                       break;
                     }
@@ -431,7 +485,8 @@ class Panel {
                       argArray.push({
                         'label': label,
                         'type': 'field',
-                        'dtype': 'integer'
+                        'dtype': 'integer',
+                        'value':value
                       });
                       break;
                     }
@@ -442,7 +497,8 @@ class Panel {
                       argArray.push({
                         'label': label,
                         'type': 'field',
-                        'dtype': 'integer'
+                        'dtype': 'text',
+                        'value':value
                       });
                       break;
                     }
@@ -453,7 +509,8 @@ class Panel {
                       argArray.push({
                         'label': label,
                         'type': 'field',
-                        'dtype': 'integer'
+                        'dtype': 'text',
+                        'value':value
                       });
                       break;
                     }
