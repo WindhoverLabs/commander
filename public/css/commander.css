@@ -514,3 +514,35 @@ header > button {
 .show > .btn-outline-primary.dropdown-toggle:focus {
     box-shadow: unset !important;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+.panel-header {
+   margin-bottom: 8px;
+   margin-top: 0px;
+}
+
+.panel-config-form {
+   margin-bottom: 20px;
+}
+
+.navbar-brand
+{
+  font-size: 15px;
+}
+
+
+.white-text {
+    color: #ffffff;
+}
