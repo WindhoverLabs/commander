@@ -8,7 +8,6 @@ var dataplot_subscriptions = {};
 function processTelemetryUpdate(param) {
 
   try {
-    // console.log(param)
     var staleness = false;
     var sample = param.sample[param.sample.length - 1];
     var value = sample.value;

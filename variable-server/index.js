@@ -164,15 +164,7 @@ VariableServer.prototype.setInstanceEmitter = function (newInstanceEmitter) {
 					
 			    			var updatedVariable = subscribersToUpdate[subscriber].variables[newOpsName];
 			    			
-			    			var newValue = variable.sample[variable.sample.length - 1].value[arrayIndexID];
-			    			var outSample = {};
-			    			for(var sampleItemID in variable.sample[variable.sample.length - 1]) {
-			    				if(sampleItemID === 'value') {
-			    					outSample.value = variable.sample[variable.sample.length - 1].value[arrayIndexID];
-			    				} else {
-			    					outSample[sampleItemID] = variable.sample[variable.sample.length - 1][sampleItemID];
-			    				}
-			    			}
+			    			var outSample = self.getSampleByArrayIndex(variable, variable.sample.length - 1, arrayIndexID);
 			    			
 			    			updatedVariable['sample'] = [outSample];
 		    			}
@@ -240,6 +232,23 @@ VariableServer.prototype.setInstanceEmitter = function (newInstanceEmitter) {
 
 
 
+VariableServer.prototype.getSampleByArrayIndex = function (variable, sampleID, arrayIndex) {
+	var newValue = variable.sample[variable.sample.length - 1].value[arrayIndex];
+	
+	var outSample = {};
+	for(var sampleItemID in variable.sample[sampleID]) {
+		if(sampleItemID === 'value') {
+			outSample.value = variable.sample[sampleID].value[arrayIndex];
+		} else {
+			outSample[sampleItemID] = variable.sample[sampleID][sampleItemID];
+		}
+	}
+	
+	return outSample;
+}
+
+
+
 VariableServer.prototype.SubscribeToVariable = function (opsPath, cb) {
 	var subscription = {};
     var self = this;
@@ -250,7 +259,8 @@ VariableServer.prototype.SubscribeToVariable = function (opsPath, cb) {
 				if(tlmDef.hasOwnProperty('arrayLength')) {
 					var arrayIndex = self.getArrayIndex(opsPath);
 					if(arrayIndex < tlmDef.arrayLength) {
-						self.addSubscriber(tlmDef.opsPath, cb, arrayIndex);
+						var strippedOpsPath = self.stripArrayIdentifier(opsPath);
+						self.addSubscriber(strippedOpsPath, cb, arrayIndex);
 					}
 				}
 			}
@@ -348,11 +358,31 @@ VariableServer.prototype.addSubscriber = function (opsPath, cb, arrayIndex) {
 		/* We've already received this or have a predefinition. */
 		var variable = this.vars[opsPath];
 		
-//		/* Send however many values are currently persisted. */
-//		var outVar = {};
-//		outVar[opsPath] = {};
-//		outVar[opsPath].sample = variable.sample; 
-//		cb(outVar);
+		/* Send however many values are currently persisted. */
+		var outVar = {};
+		outVar[opsPath] = {};
+		
+		/* Check to see if the requested item is for a specific array index. */
+		if(this.isVarNameAnArray(opsPath) == true) {
+			/* It is for a specific array index.  We need to build up an object containing
+			 * the persisted values of the specific index of the array.  First lets
+			 * get the requested array index.
+			 */
+			var arrayIndex = this.getArrayIndex(opsPath);
+			
+			/* Now lets loop through the samples */
+			outVar[opsPath].sample = [];
+			for(var i = 0; i < variable.sample.length; ++i) {
+				outVar[opsPath].sample.push(this.getSampleByArrayIndex(variable, i, arrayIndex));
+			}
+			
+		} else {
+			/* It is not for a specific array index.  Send all the persisted values
+			 * of the value or the entire array.
+			 */
+			outVar[opsPath].sample = variable.sample; 
+		}
+		cb(outVar);
 	}
 	
 	if(variable.hasOwnProperty('subscribers') == false) {
@@ -442,8 +472,8 @@ VariableServer.prototype.setVariableTimeout = function (opsPath, timeout) {
 VariableServer.prototype.getVariableTimeout = function (opsPath) {
     if(this.vars.hasOwnProperty(opsPath) == false) {
         /* We have not received this variable yet and it does
-         * not already have a predefinition.  Return the default of 1. */
-        return 1;
+         * not already have a predefinition.  Return the default of 0. */
+        return 0;
     } else {
         /* We've already received this or have a predefinition. */
         if(typeof this.vars[opsPath].timeout === 'undefined') {

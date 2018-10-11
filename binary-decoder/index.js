@@ -174,7 +174,7 @@ BinaryDecoder.prototype.setInstanceEmitter = function (newInstanceEmitter)
             /* This must be an array. */
             var outTlmDefs = [];
             for(var i = 0; i < tlmReqs.length; ++i) {
-                var tlmDef = self.getTlmDefByName(self.stripArrayIdentifier(tlmReqs[i].name));
+                var tlmDef = self.getTlmDefByName(tlmReqs[i].name);
                 if(typeof tlmDef !== 'undefined') {
                     outTlmDefs.push(tlmDef);
                 }
@@ -182,7 +182,7 @@ BinaryDecoder.prototype.setInstanceEmitter = function (newInstanceEmitter)
             cb(outTlmDefs);
         } else {
             /* This is a single request. */
-            cb(self.getTlmDefByName(self.stripArrayIdentifier(tlmReqs.name)));
+            cb(self.getTlmDefByName(tlmReqs.name));
         }
 	});
 	
