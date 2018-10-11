@@ -222,7 +222,7 @@ function InitModal() {
       let title = btn.data('title');
       let submit = btn.data('submit');
       let custom = btn.data('custom');
-      let info = btn.data('commander');
+      let info = btn.data('cdr');
       $("#genericInputModal").attr('data-info', JSON.stringify(info));
       let item = "";
 
@@ -245,7 +245,6 @@ function InitModal() {
             item += "</div>"
             $('#modalForm').append(item);
             break;
-
           case "select":
             item = "<div class='form-group'>" +
               "<label class='col-form-label' id=labelField" + e + " for=select" + e + ">" + custom[e].label + "</label>" +

@@ -184,6 +184,19 @@ h2 {
   color: #343a40;
 }
 
+.cdr-dropdown-list-item{
+  font-size: 12px;
+  text-align: center;
+  border: 1px solid #222;
+  margin: 3px;
+  pointer-events: auto;
+}
+
+.cdr-dropdown-list-item:hover{
+  color:#fff;
+  background-color: #222;
+}
+
 
 /******************************************
   Application Control Classes
@@ -197,6 +210,14 @@ h2 {
   display: block !important;
   right: 0 !important;
   left: auto !important;
+}
+
+.stale{
+  color: #e06277;
+  -webkit-transition: color 1s ease-out;
+  -moz-transition: color 1s ease-out;
+  -o-transition: color 1s ease-out;
+  transition: color 1s ease-out;
 }
 
 .led-basic{
@@ -381,6 +402,7 @@ header > .widget-icon {
   border: 1px solid var(--td-border-color) !important;
   font-size: 12px;
   background-color: var(--td-bg-color);
+  vertical-align: middle;
 }
 
 .table-condensed.table > tbody > tr > th,
@@ -388,6 +410,7 @@ header > .widget-icon {
 .table-condensed.table > thead > tr > th {
   background-color: var(--th-bg-color);
   width: 50%;
+  vertical-align: middle;
 }
 
 .widget-graph > div {
