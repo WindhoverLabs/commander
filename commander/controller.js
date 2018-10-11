@@ -231,50 +231,58 @@ function InitModal() {
 
       /* set custom data */
       for (let e in custom) {
-        switch (custom[e].type) {
-          case "field":
-            item = "<div class='form-group'>" +
-              "<label class='col-form-label' id=labelField" + e + " for=inputField" + e + ">" + custom[e].label + "</label>"
-            if (custom[e].dtype == 'integer') {
-              item += "<input class='form-control' type='number' value='0' id=inputField" + e + ">"
-            } else if (custom[e].dtype == 'float') {
-              item += "<input class='form-control' type='number' value='0.0' step='0.001' id=inputField" + e + ">"
-            } else if (custom[e].dtype == 'string') {
-              item += "<input class='form-control' type='text' value='enter value' id=inputField" + e + ">"
-            }
-            item += "</div>"
-            $('#modalForm').append(item);
-            break;
-          case "select":
-            item = "<div class='form-group'>" +
-              "<label class='col-form-label' id=labelField" + e + " for=select" + e + ">" + custom[e].label + "</label>" +
-              "<select class='custom-select mr-sm-2'id=select" + e + ">" +
-              "<option selected>Choose..</option>" +
-              "</select>" +
-              "</div>"
-            $('#modalForm').append(item)
-            // inputsIds.push("select"+e)
-            let options = null
-            if (typeof custom[e].getItem == 'string') {
-              options = window[custom[e].getItem].call()
-            } else if (typeof custom[e].getItem == 'object') {
-              options = custom[e].getItem
-            }
-            cu.logDebug("Modal | ", custom[e]);
-            options.forEach((sel) => {
-              let html = "<option value=" + sel.value + ">" + sel.label + "</option>"
-              $('#select' + e).append(html)
-            });
-            break;
-          case "browse":
-            item = "<div class='form-group'>" +
-              "<label class='col-form-label' id=labelField" + e + " for=browse" + e + ">" + custom[e].label + "</label>" +
-              "<input type='file' class='form-control-file' id='browse" + e + "'>" +
-              "</div>"
-            $('#modalForm').append(item)
-            break;
-          default:
-            cu.logDebug("Modal | Unknown data passed as attribute");
+        if(custom[e].value == undefined) {
+          switch (custom[e].type) {
+            case "field":
+              item = "<div class='form-group'>" +
+                "<label class='col-form-label' id=labelField" + e + " for=inputField" + e + ">" + custom[e].label + "</label>"
+              if (custom[e].dtype == 'integer') {
+                item += "<input class='form-control' type='number' value='0' id=inputField" + e + ">"
+              } else if (custom[e].dtype == 'float') {
+                item += "<input class='form-control' type='number' value='0.0' step='0.001' id=inputField" + e + ">"
+              } else if (custom[e].dtype == 'text') {
+                item += "<input class='form-control' type='text' value='enter value' id=inputField" + e + ">"
+              }
+              item += "</div>"
+              $('#modalForm').append(item);
+              break;
+            case "select":
+              item = "<div class='form-group'>" +
+                "<label class='col-form-label' id=labelField" + e + " for=select" + e + ">" + custom[e].label + "</label>" +
+                "<select class='custom-select mr-sm-2'id=select" + e + ">" +
+                "<option selected>Choose..</option>" +
+                "</select>" +
+                "</div>"
+              $('#modalForm').append(item)
+              // inputsIds.push("select"+e)
+              let options = null
+              if (typeof custom[e].getItem == 'string') {
+                options = window[custom[e].getItem].call()
+              } else if (typeof custom[e].getItem == 'object') {
+                options = custom[e].getItem
+              }
+              cu.logDebug("Modal | ", custom[e]);
+              options.forEach((sel) => {
+                let html = "<option value=" + sel.value + ">" + sel.label + "</option>"
+                $('#select' + e).append(html)
+              });
+              break;
+            case "browse":
+              item = "<div class='form-group'>" +
+                "<label class='col-form-label' id=labelField" + e + " for=browse" + e + ">" + custom[e].label + "</label>" +
+                "<input type='file' class='form-control-file' id='browse" + e + "'>" +
+                "</div>"
+              $('#modalForm').append(item)
+              break;
+            default:
+              cu.logDebug("Modal | Unknown data passed as attribute");
+          }
+        }
+        else {
+          item = "<div class='form-group disappear'><label class='col-form-label' id=labelField" + e + " for=inputField" + e + ">" + custom[e].label + "</label>"
+          item += "<input class='form-control' type='text' value="+custom[e].value+" id=inputField" + e + ">"
+          item += "</div>"
+          $('#modalForm').append(item);
         }
       }
 

@@ -206,6 +206,10 @@ h2 {
   box-shadow: none !important;
 }
 
+.disappear {
+  display: none;
+}
+
 .menuShow {
   display: block !important;
   right: 0 !important;

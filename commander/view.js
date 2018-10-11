@@ -357,6 +357,7 @@ class Panel {
               for (var i in cmdInfo.argument) {
                 var label = cmdInfo.argument[i].name;
                 var type = cmdInfo.argument[i].type;
+                var value = cmdInfo.argument[i].value;
                 switch (type) {
                   case 'char':
                     {
@@ -364,7 +365,8 @@ class Panel {
                       argArray.push({
                         'label': label,
                         'type': 'field',
-                        'dtype': 'integer'
+                        'dtype': 'text',
+                        'value':value
                       });
                       break;
                     }
@@ -375,7 +377,8 @@ class Panel {
                       argArray.push({
                         'label': label,
                         'type': 'field',
-                        'dtype': 'integer'
+                        'dtype': 'integer',
+                        'value':value
                       });
                       break;
                     }
@@ -386,7 +389,8 @@ class Panel {
                       argArray.push({
                         'label': label,
                         'type': 'field',
-                        'dtype': 'integer'
+                        'dtype': 'integer',
+                        'value':value
                       });
                       break;
                     }
@@ -397,7 +401,8 @@ class Panel {
                       argArray.push({
                         'label': label,
                         'type': 'field',
-                        'dtype': 'string'
+                        'dtype': 'text',
+                        'value':value
                       });
                       break;
                     }
@@ -408,7 +413,8 @@ class Panel {
                       argArray.push({
                         'label': label,
                         'type': 'field',
-                        'dtype': 'integer'
+                        'dtype': 'text',
+                        'value':value
                       });
                       break;
                     }
@@ -419,7 +425,8 @@ class Panel {
                       argArray.push({
                         'label': label,
                         'type': 'field',
-                        'dtype': 'integer'
+                        'dtype': 'text',
+                        'value':value
                       });
                       break;
                     }
@@ -430,7 +437,8 @@ class Panel {
                       argArray.push({
                         'label': label,
                         'type': 'field',
-                        'dtype': 'integer'
+                        'dtype': 'text',
+                        'value':value
                       });
                       break;
                     }
@@ -441,7 +449,8 @@ class Panel {
                       argArray.push({
                         'label': label,
                         'type': 'field',
-                        'dtype': 'integer'
+                        'dtype': 'text',
+                        'value':value
                       });
                       break;
                     }
@@ -452,7 +461,8 @@ class Panel {
                       argArray.push({
                         'label': label,
                         'type': 'field',
-                        'dtype': 'float'
+                        'dtype': 'float',
+                        'value':value
                       });
                       break;
                     }
@@ -463,7 +473,8 @@ class Panel {
                       argArray.push({
                         'label': label,
                         'type': 'field',
-                        'dtype': 'float'
+                        'dtype': 'float',
+                        'value':value
                       });
                       break;
                     }
@@ -474,7 +485,8 @@ class Panel {
                       argArray.push({
                         'label': label,
                         'type': 'field',
-                        'dtype': 'integer'
+                        'dtype': 'integer',
+                        'value':value
                       });
                       break;
                     }
@@ -485,7 +497,8 @@ class Panel {
                       argArray.push({
                         'label': label,
                         'type': 'field',
-                        'dtype': 'integer'
+                        'dtype': 'text',
+                        'value':value
                       });
                       break;
                     }
@@ -496,7 +509,8 @@ class Panel {
                       argArray.push({
                         'label': label,
                         'type': 'field',
-                        'dtype': 'integer'
+                        'dtype': 'text',
+                        'value':value
                       });
                       break;
                     }
