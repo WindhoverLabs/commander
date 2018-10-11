@@ -503,14 +503,13 @@ BinaryEncoder.prototype.getFieldObjFromPbMsg = function (pbMsgDef, fieldPathArra
 
 		return this.getFieldObjFromPbMsg(childMsgDef, fieldPathArray, fieldDef.bit_offset + bitOffset);
 	}
-
 }
 
 
 
 BinaryEncoder.prototype.getFieldFromOperationalName = function (msgDef, opName, bitOffset) {
-	var op = msgDef.operational_names[opName];
-	var fieldPathArray = opName.split('.');  
+	var opPath = msgDef.operational_names[opName].field_path;
+	var fieldPathArray = opPath.split('.');  
 
 	var pbMsg = this.getFieldObjFromPbMsg(msgDef, fieldPathArray, bitOffset);
 
