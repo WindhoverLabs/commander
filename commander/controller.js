@@ -241,7 +241,7 @@ function InitModal() {
               } else if (custom[e].dtype == 'float') {
                 item += "<input class='form-control' type='number' value='0.0' step='0.001' id=inputField" + e + ">"
               } else if (custom[e].dtype == 'text') {
-                item += "<input class='form-control' type='text' value='enter value' id=inputField" + e + ">"
+                item += "<input class='form-control' type='text' value='' id=inputField" + e + ">"
               }
               item += "</div>"
               $('#modalForm').append(item);
