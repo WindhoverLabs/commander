@@ -57,7 +57,8 @@ var EventEnum = Object.freeze({
 		'INVALID_REQUEST':     4,
 		'APP_NOT_FOUND':       5,
 		'UNKNOWN_DATA_TYPE':   6,
-		'UNHANDLED_EXCEPTION': 7
+		'UNHANDLED_EXCEPTION': 7,
+                'TELEMETRY_NOT_FOUND': 8
 	});
 
 var emit = Emitter.prototype.emit;
@@ -177,12 +178,18 @@ BinaryDecoder.prototype.setInstanceEmitter = function (newInstanceEmitter)
                 var tlmDef = self.getTlmDefByName(tlmReqs[i].name);
                 if(typeof tlmDef !== 'undefined') {
                     outTlmDefs.push(tlmDef);
+                } else {
+                    self.logErrorEvent(EventEnum.TELEMETRY_NOT_FOUND, 'TlmDefReq: Telemetry not found.  \'' + tlmReqs[i].name + '\'');
                 }
             }
             cb(outTlmDefs);
         } else {
             /* This is a single request. */
-            cb(self.getTlmDefByName(tlmReqs.name));
+            var tlmDef = self.getTlmDefByName(tlmReqs.name)
+            if(typeof tlmDef === 'undefined') {
+                self.logErrorEvent(EventEnum.TELEMETRY_NOT_FOUND, 'TlmDefReq: Telemetry not found.  \'' + tlmReqs.name + '\'');
+            }
+            cb(tlmDef);
         }
     });
 	

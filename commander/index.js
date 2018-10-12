@@ -483,16 +483,17 @@ Commander.prototype.logCriticalEvent = function (eventID, text) {
 
 
 Commander.prototype.logEvent = function (instance, plugin, component, eventID, criticality, text) {
-	/* TODO - Write something more formal, like file logging and filtering. */
+    /* TODO - Write something more formal, like file logging and filtering. */
 
-	var date = new Date(); 
-	var timestamp = date.getTime();
+    if(criticality !== 'DEBUG') {
+        var date = new Date(); 
+        var timestamp = date.getTime();
 	
-	const Bright = "\x1b[1m";
-	const Dim = "\x1b[2m";
-    const Underscore = "\x1b[4m";
-    const Blink = "\x1b[5m";
-    const Reverse = "\x1b[7m";
+        const Bright = "\x1b[1m";
+        const Dim = "\x1b[2m";
+        const Underscore = "\x1b[4m";
+        const Blink = "\x1b[5m";
+        const Reverse = "\x1b[7m";
 	const Hidden = "\x1b[8m";
 		 
 	const FgBlack = "\x1b[30m";
@@ -542,6 +543,7 @@ Commander.prototype.logEvent = function (instance, plugin, component, eventID, c
 	    	console.log(FgGreen + 'EVT' + FgWhite + ' | ' + FgCyan + dateString + FgWhite + ' | ' + FgWhite + instance + ' | ' + FgWhite + component + ' | ' + FgWhite + plugin + ' | ' + FgWhite + eventID + ' | ' + FgMagenta + criticality + FgWhite + ' | ' + FgMagenta + text + BgBlack + FgWhite);
 	        break;
 	}
+    }
 }
 
 

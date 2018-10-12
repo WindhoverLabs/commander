@@ -324,25 +324,29 @@ VariableServer.prototype.getTlmDefinitions = function (req, cb) {
 	var self = this;
 	
 	this.instanceEmit(config.get('tlmDefReqStreamID'), req, function(tlmDefs) {
-	    if(typeof tlmDefs.length === 'number') {    
-	        /* This must be an array. */
-	        var outTlmDefs = [];
-	        for(var i = 0; i < tlmDefs.length; ++i) {
+            if(typeof tlmDefs === 'undefined') {
+                cb(undefined);
+            } else {
+	        if(typeof tlmDefs.length === 'number') {    
+	            /* This must be an array. */
+	            var outTlmDefs = [];
+	            for(var i = 0; i < tlmDefs.length; ++i) {
 	            var outTlmDef = tlmDefs[i];
+	                outTlmDef.persistence = {};
+	                outTlmDef.persistence.count = self.getVariablePersistence(tlmDefs[i].opsPath);
+	                outTlmDef.timeout = self.getVariableTimeout(tlmDefs[i].opsPath);
+	                outTlmDefs.push(outTlmDef);
+	            }
+	            cb(outTlmDefs);
+	        } else {
+	            /* This is a single request. */
+	            var outTlmDef = tlmDefs;
 	            outTlmDef.persistence = {};
-	            outTlmDef.persistence.count = self.getVariablePersistence(tlmDefs[i].opsPath);
-	            outTlmDef.timeout = self.getVariableTimeout(tlmDefs[i].opsPath);
-	            outTlmDefs.push(outTlmDef);
+	            outTlmDef.persistence.count = self.getVariablePersistence(tlmDefs.opsPath);
+	            outTlmDef.timeout = self.getVariableTimeout(tlmDefs.opsPath);
+	            cb(outTlmDef);
 	        }
-	        cb(outTlmDefs);
-	    } else {
-	        /* This is a single request. */
-	        var outTlmDef = tlmDefs;
-	        outTlmDef.persistence = {};
-	        outTlmDef.persistence.count = self.getVariablePersistence(tlmDefs.opsPath);
-	        outTlmDef.timeout = self.getVariableTimeout(tlmDefs.opsPath);
-	        cb(outTlmDef);
-	    }
+            }
 	});
 };
 

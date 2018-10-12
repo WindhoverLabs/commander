@@ -167,14 +167,14 @@ BinaryEncoder.prototype.setInstanceEmitter = function (newInstanceEmitter)
                     if(typeof cmdDef !== 'undefined') {
                         outCmdDefs.push(cmdDef);
                     } else {
-                        self.logErrorEvent(EventEnum.COMMAND_NOT_FOUND, 'CmdDefReq: Command not found.  \'' + JSON.stringify(cmdReq, null, '\t') + '\'');
+                        self.logErrorEvent(EventEnum.COMMAND_NOT_FOUND, 'CmdDefReq: Command not found.  \'' + cmdReq.opsPath + '\'');
                     }
                 } else if (cmdReq.hasOwnProperty('msgID') && cmdReq.hasOwnProperty('cmdCode')) {
                     var cmdDef = self.getCmdDefByMsgIDandCC(cmdReq.msgID, cmdReq.cmdCode);
                     if(typeof cmdDef !== 'undefined') {
                         outCmdDefs.push(cmdDef);
                     } else {
-                        self.logErrorEvent(EventEnum.COMMAND_NOT_FOUND, 'CmdDefReq: Command not found.  \'' + JSON.stringify(cmdReq, null, '\t') + '\'');
+                        self.logErrorEvent(EventEnum.COMMAND_NOT_FOUND, 'CmdDefReq: Command not found.  \'' + cmdReq.opsPath + '\'');
                     }
                 } else {
                     self.logErrorEvent(EventEnum.INVALID_REQUEST, 'CmdDefReq: Invalid request.  \'' + JSON.stringify(cmdReq, null, '\t') + '\'');
@@ -191,12 +191,12 @@ BinaryEncoder.prototype.setInstanceEmitter = function (newInstanceEmitter)
             if(cmdReq.hasOwnProperty('opsPath')) {
                 var outCmdDef = self.getCmdDefByName(cmdReq.opsPath);
                 if(typeof outCmdDef !== 'undefined') {
-                    self.logErrorEvent(EventEnum.COMMAND_NOT_FOUND, 'CmdDefReq: Command not found.  \'' + JSON.stringify(cmdReq, null, '\t') + '\'');
+                    self.logErrorEvent(EventEnum.COMMAND_NOT_FOUND, 'CmdDefReq: Command not found.  \'' + cmdReq.opsPath + '\'');
                 }
             } else if (cmdReq.hasOwnProperty('msgID') && cmdReq.hasOwnProperty('cmdCode')) {
                 outCmdDef = self.getCmdDefByMsgIDandCC(cmdReq.msgID, cmdReq.cmdCode);
                 if(typeof outCmdDef !== 'undefined') {
-                    self.logErrorEvent(EventEnum.COMMAND_NOT_FOUND, 'CmdDefReq: Command not found.  \'' + JSON.stringify(cmdReq, null, '\t') + '\'');
+                    self.logErrorEvent(EventEnum.COMMAND_NOT_FOUND, 'CmdDefReq: Command not found.  \'' + cmdReq.opsPath + '\'');
                 }
             } else {
                 self.logErrorEvent(EventEnum.INVALID_REQUEST, 'CmdDefReq: Invalid request.  \'' + JSON.stringify(cmdReq, null, '\t') + '\'');
