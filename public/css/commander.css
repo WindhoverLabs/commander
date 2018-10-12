@@ -542,18 +542,9 @@ header > button {
     box-shadow: unset !important;
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
+.cdr-in-panel-header {
+  margin: 0px 15px;
+}
 
 .panel-header {
    margin-bottom: 8px;
