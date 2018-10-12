@@ -37,6 +37,7 @@ var CommanderUtilities = CommanderUtilities || {};
 var CommanderLogger = CommanderLogger || {};
 var CommanderGenerator = CommanderGenerator || {};
 var CommanderValidator = CommanderValidator || {};
+var CommanderDatabase = CommanderDatabase || {};
 
 /* Logger API,
    allows you to set verbosity */
@@ -211,6 +212,34 @@ CommanderValidator.prototype.assert = function(condition) {
   return success
 }
 
+/* Local Database API,
+   allows you to store key value pairs */
+function CommanderDatabase() {
+  this.database = {};
+}
+
+CommanderDatabase.prototype.getDatabase = function() {
+  return this.database;
+}
+
+CommanderDatabase.prototype.addRecord = function(key, value) {
+  this.database[key] = value;
+  return this.database;
+}
+
+CommanderDatabase.prototype.getValue = function(key) {
+  return this.database[key];
+}
+
+CommanderDatabase.prototype.deleteRecord = function(key) {
+  delete this.database[key];
+  return this.database;
+}
+
+CommanderDatabase.prototype.clearDatabase = function() {
+  this.database = {};
+  return this.database;
+}
 
 /* CommanderUtilities is a wrapper for above API's
    Increases the ease of use and code understandability */
@@ -218,6 +247,7 @@ function CommanderUtilities() {
   this.logger = new CommanderLogger();
   this.generator = new CommanderGenerator();
   this.validator = new CommanderValidator();
+  this.database = new CommanderDatabase();
 
 }
 
@@ -307,6 +337,47 @@ CommanderUtilities.prototype.assert = function(condition, message) {
   if (!this.validator.assert(condition)) {
     this.logError('Assertion Failed | ', message);
   }
+}
+
+CommanderUtilities.prototype.getDatabase = function() {
+  return this.database.getDatabase();
+}
+
+CommanderUtilities.prototype.addRecord = function(key, value, overwrite = true) {
+  this.assert(typeof key == 'string','Utilities | key is not in string format');
+  if (!overwrite && this.database.getDatabase().hasOwnProperty(key)) {
+    this.logError('Utilities | Cannot write to database, overwrite set to false.');
+  }
+  else {
+  this.database.addRecord(key,value);
+  }
+  return this.database.getDatabase();
+}
+
+CommanderUtilities.prototype.getValue = function(key) {
+  var val = undefined;
+  if (this.database.getDatabase().hasOwnProperty(key)) {
+    val = this.database.getValue();
+  }
+  else {
+    this.logDebug('Utilities | key not available in database, cannot retrieve value.');
+  }
+  return val;
+}
+
+CommanderUtilities.prototype.deleteRecord = function(key) {
+  if (this.database.getDatabase().hasOwnProperty(key)) {
+    this.database.deleteRecord(key);
+  }
+  else {
+    this.logDebug('Utilities | key not available in database, cannot delete key.');
+  }
+  return this.database.getDatabase();
+}
+
+CommanderUtilities.prototype.clearDatabase = function() {
+  this.database.clearDatabase();
+  return this.database.getDatabase();
 }
 
 /* Expose the CommanderUtilities to browser */

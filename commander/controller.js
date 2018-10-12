@@ -172,7 +172,10 @@ function SaveLayout() {
     name = name.replace(/ /g, '_');
   }
   /* stringify state config */
-  let state = JSON.stringify(myLayout.toConfig());
+  var cfg = myLayout.toConfig();
+  /* add database */
+  cfg.database = cu.getDatabase();
+  let state = JSON.stringify(cfg);
   var blob = new Blob([state], {
     type: "text/json;charset=utf-8"
   });
@@ -195,6 +198,15 @@ function LoadLayout() {
           window.dispatchEvent(llc);
           InitLayout(myLayout);
           cu.logInfo('Layout | loaded from local drive')
+          if(savedState.hasOwnProperty('database')) {
+            cu.clearDatabase();
+            for(var e in savedState.database ) {
+              cu.addRecord(e,savedState.database[e])
+            }
+          }
+          else {
+           cu.logError('Layout | loaded configuration has no database')
+          }
         } else {
           cu.logError('Layout | could not be loaded')
         }
