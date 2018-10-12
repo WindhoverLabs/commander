@@ -164,14 +164,14 @@ BinaryEncoder.prototype.setInstanceEmitter = function (newInstanceEmitter)
             for(var i = 0; i < cmdReqs.length; ++i) {
                 if(cmdReq.hasOwnProperty('opsPath')) {
                     var cmdDef = self.getCmdDefByName(cmdReqs[i].opsPath);
-                    if(typeof cmdDef !== 'undefined') {
+                    if(typeof cmdDef === 'undefined') {
                         outCmdDefs.push(cmdDef);
                     } else {
                         self.logErrorEvent(EventEnum.COMMAND_NOT_FOUND, 'CmdDefReq: Command not found.  \'' + cmdReq.opsPath + '\'');
                     }
                 } else if (cmdReq.hasOwnProperty('msgID') && cmdReq.hasOwnProperty('cmdCode')) {
                     var cmdDef = self.getCmdDefByMsgIDandCC(cmdReq.msgID, cmdReq.cmdCode);
-                    if(typeof cmdDef !== 'undefined') {
+                    if(typeof cmdDef === 'undefined') {
                         outCmdDefs.push(cmdDef);
                     } else {
                         self.logErrorEvent(EventEnum.COMMAND_NOT_FOUND, 'CmdDefReq: Command not found.  \'' + cmdReq.opsPath + '\'');
@@ -190,12 +190,12 @@ BinaryEncoder.prototype.setInstanceEmitter = function (newInstanceEmitter)
 
             if(cmdReq.hasOwnProperty('opsPath')) {
                 var outCmdDef = self.getCmdDefByName(cmdReq.opsPath);
-                if(typeof outCmdDef !== 'undefined') {
+                if(typeof outCmdDef === 'undefined') {
                     self.logErrorEvent(EventEnum.COMMAND_NOT_FOUND, 'CmdDefReq: Command not found.  \'' + cmdReq.opsPath + '\'');
                 }
             } else if (cmdReq.hasOwnProperty('msgID') && cmdReq.hasOwnProperty('cmdCode')) {
                 outCmdDef = self.getCmdDefByMsgIDandCC(cmdReq.msgID, cmdReq.cmdCode);
-                if(typeof outCmdDef !== 'undefined') {
+                if(typeof outCmdDef === 'undefined') {
                     self.logErrorEvent(EventEnum.COMMAND_NOT_FOUND, 'CmdDefReq: Command not found.  \'' + cmdReq.opsPath + '\'');
                 }
             } else {
@@ -229,16 +229,19 @@ BinaryEncoder.prototype.setInstanceEmitter = function (newInstanceEmitter)
 BinaryEncoder.prototype.getCmdDefByName = function (name) {
     var outCmdDef = {opsPath:name, args:[]};
     var opDef = this.getOperationByPath(name);
-    var msgDef = this.getMsgDefByName(opDef.operation.airliner_msg);
+    if(typeof opDef === 'undefined') {
+        return undefined;
+    } else {
+        var msgDef = this.getMsgDefByName(opDef.operation.airliner_msg);
 
-    if(typeof msgDef === 'object') {
-        var args = this.getCmdOpNamesStripHeader(msgDef);
-        for(var argID in args) {
-            outCmdDef.args.push({name:argID, type:args[argID].dataType, bitSize:args[argID].bitSize});
+        if(typeof msgDef === 'object') {
+            var args = this.getCmdOpNamesStripHeader(msgDef);
+            for(var argID in args) {
+                outCmdDef.args.push({name:argID, type:args[argID].dataType, bitSize:args[argID].bitSize});
+            }
         }
+        return outCmdDef;
     }
-    
-    return outCmdDef;
 }
 
 
