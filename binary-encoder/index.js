@@ -55,6 +55,7 @@ var EventEnum = Object.freeze({
 		'FUNCTION_NOT_IMPLEMENTED':   8,
 		'INVALID_COMMAND_ARGUMENTS': 10,
 		'COMMAND_DEFINITION':        11,
+                'COMMAND_NOT_FOUND':         12
 	});
 
 var emit = Emitter.prototype.emit;
@@ -153,77 +154,116 @@ function BinaryEncoder(workspace, configFile) {
 
 BinaryEncoder.prototype.setInstanceEmitter = function (newInstanceEmitter)
 {
-	var self = this;
-	this.instanceEmitter = newInstanceEmitter;
+    var self = this;
+    this.instanceEmitter = newInstanceEmitter;
 
-	this.instanceEmitter.on(config.get('cmdDefReqStreamID'), function(cmdReq, cb) {
-		if(cmdReq.hasOwnProperty('opsPath')) {
-			var outCmdDef = {opsPath:cmdReq.opsPath, args:[]};
-			var opDef = self.getOperationByPath(cmdReq.opsPath);
+    this.instanceEmitter.on(config.get('cmdDefReqStreamID'), function(cmdReqs, cb) {
+        if(typeof cmdReqs.length === 'number') {
+            /* This must be an array. */
+            var outCmdDefs = [];
+            for(var i = 0; i < cmdReqs.length; ++i) {
+                if(cmdReq.hasOwnProperty('opsPath')) {
+                    var cmdDef = self.getCmdDefByName(cmdReqs[i].opsPath);
+                    if(typeof cmdDef === 'undefined') {
+                        outCmdDefs.push(cmdDef);
+                    } else {
+                        self.logErrorEvent(EventEnum.COMMAND_NOT_FOUND, 'CmdDefReq: Command not found.  \'' + cmdReq.opsPath + '\'');
+                    }
+                } else if (cmdReq.hasOwnProperty('msgID') && cmdReq.hasOwnProperty('cmdCode')) {
+                    var cmdDef = self.getCmdDefByMsgIDandCC(cmdReq.msgID, cmdReq.cmdCode);
+                    if(typeof cmdDef === 'undefined') {
+                        outCmdDefs.push(cmdDef);
+                    } else {
+                        self.logErrorEvent(EventEnum.COMMAND_NOT_FOUND, 'CmdDefReq: Command not found.  \'' + cmdReq.opsPath + '\'');
+                    }
+                } else {
+                    self.logErrorEvent(EventEnum.INVALID_REQUEST, 'CmdDefReq: Invalid request.  \'' + JSON.stringify(cmdReq, null, '\t') + '\'');
+                }
+            }
 
-			var msgDef = self.getMsgDefByName(opDef.operation.airliner_msg);
+            self.logDebugEvent(EventEnum.COMMAND_DEFINITION, 'CmdDefReqs: \'' + JSON.stringify(cmdReqs, null, '\t') + '\'  Defs: \'' + JSON.stringify(outCmdDefs, null, '\t') + '\'');
+            cb(outCmdDefs);    
+        } else {
+            /* This is a single request. */
+            var cmdReq = cmdReqs;
+            var outCmdDef = {};
 
-			if(typeof msgDef === 'object') {
+            if(cmdReq.hasOwnProperty('opsPath')) {
+                var outCmdDef = self.getCmdDefByName(cmdReq.opsPath);
+                if(typeof outCmdDef === 'undefined') {
+                    self.logErrorEvent(EventEnum.COMMAND_NOT_FOUND, 'CmdDefReq: Command not found.  \'' + cmdReq.opsPath + '\'');
+                }
+            } else if (cmdReq.hasOwnProperty('msgID') && cmdReq.hasOwnProperty('cmdCode')) {
+                outCmdDef = self.getCmdDefByMsgIDandCC(cmdReq.msgID, cmdReq.cmdCode);
+                if(typeof outCmdDef === 'undefined') {
+                    self.logErrorEvent(EventEnum.COMMAND_NOT_FOUND, 'CmdDefReq: Command not found.  \'' + cmdReq.opsPath + '\'');
+                }
+            } else {
+                self.logErrorEvent(EventEnum.INVALID_REQUEST, 'CmdDefReq: Invalid request.  \'' + JSON.stringify(cmdReq, null, '\t') + '\'');
+            }
 
-				var args = self.getCmdOpNamesStripHeader(msgDef);
-				for(var argID in args) {
-					outCmdDef.args.push({name:argID, type:args[argID].dataType, bitSize:args[argID].bitSize});
-				}
-			}
+            self.logDebugEvent(EventEnum.COMMAND_DEFINITION, 'CmdDefReq: \'' + JSON.stringify(cmdReq, null, '\t') + '\'  Def: \'' + JSON.stringify(outCmdDef, null, '\t') + '\'');
+            cb(outCmdDef);  
+        }
+    });
 
-		    self.logDebugEvent(EventEnum.COMMAND_DEFINITION, 'CmdDefReq: \'' + cmdReq + '\'  Def: \'' + outCmdDef + '\'');
-		    
-			cb(outCmdDef);
-		} else if (cmdReq.hasOwnProperty('msgID') && cmdReq.hasOwnProperty('cmdCode')) {
-			var cmdDef = self.getCmdDefByMsgIDandCC(cmdReq.msgID, cmdReq.cmdCode);
-
-			self.logDebugEvent(EventEnum.COMMAND_DEFINITION, 'CmdDefReq: \'' + cmdReq + '\'  Def: \'' + cmdDef + '\'');
-			
-			cb(cmdDef);
-		} else {
-			self.logErrorEvent(EventEnum.INVALID_REQUEST, 'CmdDefReq: Invalid request.  \'' + cmdReq + '\'');
-			
-			cb(undefined);
-		}
-	});
-
-	this.instanceEmitter.on(config.get('cmdSendStreamID'), function(req) {
-		var cmdDef = self.getCmdDefByPath(req.ops_path);
+    this.instanceEmitter.on(config.get('cmdSendStreamID'), function(req) {
+        var cmdDef = self.getCmdDefByName(req.ops_path);
 		
-		if(typeof cmdDef === 'undefined') {
-		    this.logErrorEvent(EventEnum.INVALID_REQUEST, 'CmdSend: Ops path not found.  \'' + req + '\'');
-		} else {
-			self.sendCommand(cmdDef, req.args);
-		}
-	});
+        if(typeof cmdDef === 'undefined') {
+            self.logErrorEvent(EventEnum.INVALID_REQUEST, 'CmdSend: Ops path not found.  \'' + req + '\'');
+        } else {
+            self.sendCommand(cmdDef, req.args);
+        }
+    });
 
-	this.instanceEmitter.on(config.get('tlmSendStreamID'), function(tlmObj) {
-	    this.logErrorEvent(EventEnum.FUNCTION_NOT_IMPLEMENTED, 'TlmSend: Function not yet implemented.');
-	});
+    this.instanceEmitter.on(config.get('tlmSendStreamID'), function(tlmObj) {
+        this.logErrorEvent(EventEnum.FUNCTION_NOT_IMPLEMENTED, 'TlmSend: Function not yet implemented.');
+    });
 
     this.logInfoEvent(EventEnum.INITIALIZED, 'Initialized');
 }
 
 
 
-BinaryEncoder.prototype.getCmdOpNamesStripHeader = function (cmdDef) {
-	var opsPaths = {};
-	
-	if(cmdDef.hasOwnProperty('operational_names')) {
-		for(var opNameID in cmdDef.operational_names) {
-			var fieldNames = cmdDef.operational_names[opNameID].field_path.split('.');
-			var fieldName = fieldNames[0];
-			var field = cmdDef.fields[fieldName];
-	
-			var fieldDef = this.getFieldFromOperationalName(cmdDef, opNameID, 0);
+BinaryEncoder.prototype.getCmdDefByName = function (name) {
+    var outCmdDef = {opsPath:name, args:[]};
+    var opDef = this.getOperationByPath(name);
+    if(typeof opDef === 'undefined') {
+        return undefined;
+    } else {
+        var msgDef = this.getMsgDefByName(opDef.operation.airliner_msg);
 
-			if((fieldDef.bitOffset * 8) > this.cmdHeaderLength) {
-				opsPaths[opNameID] = {dataType: fieldDef.fieldDef.airliner_type, bitSize: fieldDef.fieldDef.bit_size};
-			}
-		}
-	}
+        if(typeof msgDef === 'object') {
+            var args = this.getCmdOpNamesStripHeader(msgDef);
+            for(var argID in args) {
+                outCmdDef.args.push({name:argID, type:args[argID].dataType, bitSize:args[argID].bitSize});
+            }
+        }
+        return outCmdDef;
+    }
+}
+
+
+
+BinaryEncoder.prototype.getCmdOpNamesStripHeader = function (cmdDef) {
+    var opsPaths = {};
 	
-	return opsPaths;
+    if(cmdDef.hasOwnProperty('operational_names')) {
+        for(var opNameID in cmdDef.operational_names) {
+            var fieldNames = cmdDef.operational_names[opNameID].field_path.split('.');
+            var fieldName = fieldNames[0];
+            var field = cmdDef.fields[fieldName];
+	
+            var fieldDef = this.getFieldFromOperationalName(cmdDef, opNameID, 0);
+
+            if((fieldDef.bitOffset * 8) > this.cmdHeaderLength) {
+                opsPaths[opNameID] = {dataType: fieldDef.fieldDef.airliner_type, bitSize: fieldDef.fieldDef.bit_size};
+            }
+        }
+    }
+	
+    return opsPaths;
 }
 
 
@@ -268,69 +308,44 @@ BinaryEncoder.prototype.getAppDefinition = function (appName) {
 
 
 BinaryEncoder.prototype.getOperationByPath = function (inOpsPath) {
-	for(var appID in this.defs.Airliner.apps) {
-		var app = this.defs.Airliner.apps[appID];
-		for(var opID in app.operations) {
-			var operation = app.operations[opID];
-			var opsPath = '/' + appID + '/' + opID
-			if(opsPath === inOpsPath) {
-				return {ops_path:opsPath, operation:operation};
-			}
-		}
-	}
+    for(var appID in this.defs.Airliner.apps) {
+        var app = this.defs.Airliner.apps[appID];
+        for(var opID in app.operations) {
+            var operation = app.operations[opID];
+            var opsPath = '/' + appID + '/' + opID;
+            if(opsPath === inOpsPath) {
+                return {ops_path:opsPath, operation:operation};
+            }
+        }
+    }
 }
 
 
 
 BinaryEncoder.prototype.getOperationByMsgIDandCC = function (msgID, cmdCode) {
-	for(var appID in this.defs.Airliner.apps) {
-		var app = this.defs.Airliner.apps[appID];
-		for(var opID in app.operations) {
-			var operation = app.operations[opID];
-			var opsPath = '/' + appID + '/' + opID
-			if((parseInt(operation.airliner_mid) == msgID) && (operation.airliner_cc == cmdCode)) {
-				var result = {ops_path:opsPath, operation: operation};
-				return result;
-			}
-		}
-	}
+    for(var appID in this.defs.Airliner.apps) {
+        var app = this.defs.Airliner.apps[appID];
+        for(var opID in app.operations) {
+            var operation = app.operations[opID];
+            var opsPath = '/' + appID + '/' + opID
+            if((parseInt(operation.airliner_mid) == msgID) && (operation.airliner_cc == cmdCode)) {
+                var result = {ops_path:opsPath, operation: operation};
+                return result;
+            }
+        }
+    }
 }
 
 
 
 BinaryEncoder.prototype.getCmdDefByMsgIDandCC = function (msgID, cmdCode) {
-	var cmdDef = this.getOperationByMsgIDandCC(msgID, cmdCode);
+    var cmdDef = this.getOperationByMsgIDandCC(msgID, cmdCode);
 	
-	if(cmdDef.operation.airliner_msg !== '') {
-		cmdDef.operational_names = this.getCmdOpNamesStripHeader(cmdDef.operation.airliner_msg)
-	}
-	
-	return cmdDef;
-}
-
-
-
-BinaryEncoder.prototype.getCmdDefByPath = function (opsPath) {
-	var cmdDef = this.getOperationByPath(opsPath);
-    var result = {opsPath: opsPath, args: []};
-    
-    if(typeof cmdDef === 'undefined') {
-	    this.logErrorEvent(EventEnum.OPS_PATH_NOT_FOUND, 'getCmdDefByPath: Ops path not found.  \'' + path + '\'');
-	    return undefined;
-    } else {
-    	if(typeof cmdDef.operation === 'undefined') {
-    	    this.logErrorEvent(EventEnum.OPS_PATH_NOT_FOUND, 'getCmdDefByPath: Ops path not found.  \'' + path + '\'');
-    	    return undefined;
-    	} else {
-    		if(cmdDef.operation.airliner_msg !== '') {
-    			var opNames = this.getCmdOpNamesStripHeader(cmdDef.operation.airliner_msg);
-    			var tmp = this.getCmdDefByMsgIDandCC(0x1806, 20);
-    			var opNames2 = this.getCmdOpNamesStripHeader(tmp.operation.airliner_msg);
-    		} 
-    	}
+    if(cmdDef.operation.airliner_msg !== '') {
+        cmdDef.operational_names = this.getCmdOpNamesStripHeader(cmdDef.operation.airliner_msg)
     }
 	
-	return result;
+    return cmdDef;
 }
 
 
@@ -447,73 +462,120 @@ BinaryEncoder.prototype.setField = function (buffer, fieldDef, bitOffset, value)
 
 
 BinaryEncoder.prototype.sendCommand = function (cmd, args) {	
-	var opDef = this.getOperationByPath(cmd.opsPath);
-	var byteLength = this.getCmdByteLength(opDef.operation);
-	var buffer = new Buffer(byteLength);
-	buffer.fill(0x00);
+    var opDef = this.getOperationByPath(cmd.opsPath);
+    var byteLength = this.getCmdByteLength(opDef.operation);
+    var buffer = new Buffer(byteLength);
+    buffer.fill(0x00);
 	
-	buffer.writeUInt16BE(opDef.operation.airliner_mid, 0);
-	buffer.writeUInt16BE(this.sequence, 2);
-	buffer.writeUInt16BE(byteLength - 7, 4);
-	buffer.writeUInt8(opDef.operation.airliner_cc, 7);
-	buffer.writeUInt8(0, 6);
+    buffer.writeUInt16BE(opDef.operation.airliner_mid, 0);
+    buffer.writeUInt16BE(this.sequence, 2);
+    buffer.writeUInt16BE(byteLength - 7, 4);
+    buffer.writeUInt8(opDef.operation.airliner_cc, 7);
+    buffer.writeUInt8(0, 6);
 	
-	this.sequence++;
+    this.sequence++;
 	
-	var msgDef = this.getMsgDefByName(opDef.operation.airliner_msg);
-	if(typeof msgDef === 'object') {
-		if(msgDef.hasOwnProperty('operational_names')) {
-			if(typeof args === 'undefined') {
-			    this.logErrorEvent(EventEnum.INVALID_ARGUMENTS, 'Unable to send command \'' + cmd.opsPath + '\'.  Required args missing.');
-			} else {
-				for(var opNameID in msgDef.operational_names) {
-					var fieldNames = msgDef.operational_names[opNameID].field_path.split('.');
-					var fieldName = fieldNames[0];
-					var field = msgDef.fields[fieldName];
-			
-					var arg_path = msgDef.operational_names[opNameID].field_path;
+    var msgDef = this.getMsgDefByName(opDef.operation.airliner_msg);
+
+    if(typeof msgDef === 'object') {
+        if(msgDef.hasOwnProperty('operational_names')) {
+            if(typeof args === 'undefined') {
+                this.logErrorEvent(EventEnum.INVALID_ARGUMENTS, 'Unable to send command \'' + cmd.opsPath + '\'.  Required args missing.');
+            } else {
+                for(var opNameID in msgDef.operational_names) {
+                    var fieldNames = msgDef.operational_names[opNameID].field_path.split('.');
+                    var fieldName = fieldNames[0];
 					
-					if(args.hasOwnProperty(opNameID)) {
-						var fieldDef = this.getFieldFromOperationalName(msgDef, opNameID, 0);
-						this.setField(buffer, fieldDef.fieldDef, fieldDef.bitOffset, args[opNameID]);
-					}
-				}
-			}
-		}
-	}
+                    var field = msgDef.fields[fieldName];
+			
+                    var arg_path = msgDef.operational_names[opNameID].field_path;
+					
+                    if(args.hasOwnProperty(opNameID)) {
+                         var fieldDef = this.getFieldFromOperationalName(msgDef, msgDef.operational_names[opNameID].field_path, 0);
+                         this.setField(buffer, fieldDef.fieldDef, fieldDef.bitOffset, args[opNameID]);
+                    }
+                }
+            }
+        }
+    }
 	
-	this.instanceEmit(config.get('binaryOutputStreamID'), buffer);
+    this.instanceEmit(config.get('binaryOutputStreamID'), buffer);
 }
 
 
 
 BinaryEncoder.prototype.getFieldObjFromPbMsg = function (pbMsgDef, fieldPathArray, bitOffset) {
-	var fieldName = fieldPathArray[0];  
-	
-	var fieldDef = pbMsgDef.fields[fieldName]; 
-	
-	var pbType = fieldDef.pb_type;             
-	
-	if(fieldPathArray.length == 1) {
-		return {fieldDef: fieldDef, bitOffset: fieldDef.bit_offset + bitOffset};
-	} else {
-		var childMsgDef = pbMsgDef.required_pb_msgs[fieldDef.pb_type];
+    var fieldName = fieldPathArray[0];  
+    var fieldDef = pbMsgDef.fields[fieldName];  
+    var pbType = fieldDef.pb_type;             
 
-		fieldPathArray.shift();
+    if(fieldPathArray.length == 1) {
+        return {fieldDef: fieldDef, bitOffset: fieldDef.bit_offset + bitOffset};
+    } else {
+        var childMsgDef = pbMsgDef.required_pb_msgs[fieldDef.pb_type];
 
-		return this.getFieldObjFromPbMsg(childMsgDef, fieldPathArray, fieldDef.bit_offset + bitOffset);
-	}
+        if(typeof childMsgDef === 'undefined') {
+            /* This is a little bit of a kludge.  The airliner.json file has a sort of short cut.  If the
+               operational name requires multiple drill downs to get the actual type, sometimes it 
+               collapses it into the first field.  So if we can't drill down any further, i.e. there is
+               no childMsgDef and the variable is now undefined, just use the current field definition. */
+	    switch(fieldDef.airliner_type) {
+	        case 'char':
+	        case 'uint8':
+	        case 'int8':
+	        case 'string':
+	        case 'uint16':
+	        case 'int16':
+	        case 'uint32':
+	        case 'int32':
+	        case 'float':
+	        case 'double':
+	        case 'boolean':
+	        case 'uint64':
+	        case 'int64':
+	            break;
+	            
+	        default:
+	            switch(fieldDef.pb_type) {
+	                case 'char':
+	                case 'uint8':
+	                case 'int8':
+	                case 'string':
+	                case 'uint16':
+	                case 'int16':
+	                case 'uint32':
+	                case 'int32':
+	                case 'float':
+	                case 'double':
+	                case 'boolean':
+	                case 'uint64':
+	                case 'int64':
+	                    fieldDef.airliner_type = fieldDef.pb_type;
+	                    break;
+	                    
+	                default:
+	                    console.log("Data type not found");
+	            }
+	    }
+
+            return {fieldDef: fieldDef, bitOffset: fieldDef.bit_offset + bitOffset};
+        } else {
+            fieldPathArray.shift();
+	
+            return this.getFieldObjFromPbMsg(childMsgDef, fieldPathArray, fieldDef.bit_offset + bitOffset);
+        }
+    }
 }
 
 
 
 BinaryEncoder.prototype.getFieldFromOperationalName = function (msgDef, opName, bitOffset) {
-	var opPath = msgDef.operational_names[opName].field_path;
-	var fieldPathArray = opPath.split('.');  
+    var op = msgDef.operational_names[opName];
+    var fieldPathArray = opName.split('.');  
 
-	var pbMsg = this.getFieldObjFromPbMsg(msgDef, fieldPathArray, bitOffset);
+    var pbMsg = this.getFieldObjFromPbMsg(msgDef, fieldPathArray, bitOffset);
 
-	return pbMsg; 
+    return pbMsg; 
 }
 
 
