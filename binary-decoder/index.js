@@ -162,14 +162,14 @@ function BinaryDecoder(workspace, configFile) {
 
 BinaryDecoder.prototype.setInstanceEmitter = function (newInstanceEmitter)
 {
-	var self = this;
-	this.instanceEmitter = newInstanceEmitter;
+    var self = this;
+    this.instanceEmitter = newInstanceEmitter;
 
-	this.instanceEmitter.on(config.get('binaryInputStreamID'), function(buffer) {
-    	self.processBinaryMessage(buffer);
-	});
+    this.instanceEmitter.on(config.get('binaryInputStreamID'), function(buffer) {
+        self.processBinaryMessage(buffer);
+    });
 
-	this.instanceEmitter.on(config.get('tlmDefReqStreamID'), function(tlmReqs, cb) {
+    this.instanceEmitter.on(config.get('tlmDefReqStreamID'), function(tlmReqs, cb) {
         if(typeof tlmReqs.length === 'number') {
             /* This must be an array. */
             var outTlmDefs = [];
@@ -184,11 +184,10 @@ BinaryDecoder.prototype.setInstanceEmitter = function (newInstanceEmitter)
             /* This is a single request. */
             cb(self.getTlmDefByName(tlmReqs.name));
         }
-	});
+    });
 	
     this.logInfoEvent(EventEnum.INITIALIZED, 'Initialized');
 }
-	
 	
 	
 BinaryDecoder.prototype.getTlmDefByName = function (name) {
@@ -292,40 +291,40 @@ BinaryDecoder.prototype.getTlmDefByPath = function (path) {
     var appName = this.getAppNameFromPath(path);
     var operationName = this.getOperationFromPath(path);
     if(typeof operationName === 'undefined') {
-	    this.logErrorEvent(EventEnum.OPS_PATH_NOT_FOUND, 'getTlmDefByPath: Ops path not found. \'' + path + '\'');
+        this.logErrorEvent(EventEnum.OPS_PATH_NOT_FOUND, 'getTlmDefByPath: Ops path not found. \'' + path + '\'');
     	return undefined;
     } else {
-	    var appDefinition = this.getAppDefinition(appName);
+        var appDefinition = this.getAppDefinition(appName);
 	    
-	    if(typeof appDefinition === 'undefined') {
-		    this.logErrorEvent(EventEnum.APP_NOT_FOUND, 'getTlmDefByPath: App not found. \'' + appName + '\'');
-	    	return undefined;
-	    } else {
-	        var msgDef = this.getMsgDefByName(appDefinition.operations[operationName].airliner_msg);
+        if(typeof appDefinition === 'undefined') {
+            this.logErrorEvent(EventEnum.APP_NOT_FOUND, 'getTlmDefByPath: App not found. \'' + appName + '\'');
+            return undefined;
+        } else {
+            var msgDef = this.getMsgDefByName(appDefinition.operations[operationName].airliner_msg);
 	        
-	        if(typeof msgDef === 'undefined') {
-	        	return undefined;
-	        } else {
-		        var splitName = path.split('/');
-		        var opNameID = this.stripArrayIdentifier(splitName[3]);
+            if(typeof msgDef === 'undefined') {
+                return undefined;
+            } else {
+                var splitName = path.split('/');
+                var opNameID = this.stripArrayIdentifier(splitName[3]);
 		        
-		        var fieldObj = msgDef.operational_names[opNameID];
+                var fieldObj = msgDef.operational_names[opNameID];
 		        
-		        if(typeof fieldObj === 'undefined') {
-		        	return undefined;
-		        } else {
-		        	var fieldPath = fieldObj.field_path;
+                if(typeof fieldObj === 'undefined') {
+                    return undefined;
+                } else {
+                    var fieldPath = fieldObj.field_path;
 		        	
-		        	if(typeof fieldPath === 'undefined') {
-		        		return undefined;
-		        	} else {
-		        		var fieldDef = this.getFieldFromOperationalName(msgDef, fieldPath, 0);
+                    if(typeof fieldPath === 'undefined') {
+                        return undefined;
+                    } else {
+                        var fieldDef = this.getFieldFromOperationalName(msgDef, fieldPath, 0);
 		        	
-		        		return fieldDef.fieldDef;
-		        	}
-		        }
-	        }
+                        return fieldDef.fieldDef;
+                    }
+                }
 	    }
+	}
     }
 }
 
@@ -431,74 +430,71 @@ BinaryDecoder.prototype.getMsgDefByMsgID = function (msgID) {
 
 
 BinaryDecoder.prototype.getFieldObjFromPbMsg = function (pbMsgDef, fieldPathArray, bitOffset) {
-	var fieldName = fieldPathArray[0];  
-	
-	var fieldDef = pbMsgDef.fields[fieldName];  
-	
-	var pbType = fieldDef.pb_type;             
-	
-	if(fieldPathArray.length == 1) {
-		return {fieldDef: fieldDef, bitOffset: fieldDef.bit_offset + bitOffset};
-	} else {
-		var childMsgDef = pbMsgDef.required_pb_msgs[fieldDef.pb_type];
+    var fieldName = fieldPathArray[0];  
+    var fieldDef = pbMsgDef.fields[fieldName];  
+    var pbType = fieldDef.pb_type;             
 
-		fieldPathArray.shift();
+    if(fieldPathArray.length == 1) {
+        return {fieldDef: fieldDef, bitOffset: fieldDef.bit_offset + bitOffset};
+    } else {
+        var childMsgDef = pbMsgDef.required_pb_msgs[fieldDef.pb_type];
+
+        fieldPathArray.shift();
 		
-		return this.getFieldObjFromPbMsg(childMsgDef, fieldPathArray, fieldDef.bit_offset + bitOffset);
-	}
-
+        return this.getFieldObjFromPbMsg(childMsgDef, fieldPathArray, fieldDef.bit_offset + bitOffset);
+    }
 }
 
 
 
 BinaryDecoder.prototype.getFieldFromOperationalName = function (msgDef, opName, bitOffset) {
-	var op = msgDef.operational_names[opName];
-	var fieldPathArray = opName.split('.');  
+    var op = msgDef.operational_names[opName];
+    var fieldPathArray = opName.split('.');  
 
-	var pbMsg = this.getFieldObjFromPbMsg(msgDef, fieldPathArray, bitOffset);
+    var pbMsg = this.getFieldObjFromPbMsg(msgDef, fieldPathArray, bitOffset);
 
-	return pbMsg; 
+    return pbMsg; 
 }
 
 
 
 BinaryDecoder.prototype.processBinaryMessage = function (buffer) {
     var msgID = buffer.readUInt16BE(0);
-    
-	var message = this.ccsds.parse(buffer);
-	
-	var msgTime = this.cfeTimeToJsTime(message.SecHdr.seconds, message.SecHdr.subSeconds);
-	
-	var def = this.getMsgDefByMsgID(msgID);
 
-	var parsedTlm = {};
+    var message = this.ccsds.parse(buffer);
+	
+    var msgTime = this.cfeTimeToJsTime(message.SecHdr.seconds, message.SecHdr.subSeconds);
+	
+    var def = this.getMsgDefByMsgID(msgID);
+
+    var parsedTlm = {};
 	
     if(typeof def !== 'undefined') {
-		if(def.msgDef.hasOwnProperty('operational_names')) {		    
-			for(var opNameID in def.msgDef.operational_names) {
-				var fieldNames = def.msgDef.operational_names[opNameID].field_path.split('.');
-				var fieldName = fieldNames[0];
+        if(def.msgDef.hasOwnProperty('operational_names')) {		    
+            for(var opNameID in def.msgDef.operational_names) {
+                var fieldNames = def.msgDef.operational_names[opNameID].field_path.split('.');
+                var fieldName = fieldNames[0];
 
-				var fieldDef = this.getFieldFromOperationalName(def.msgDef, def.msgDef.operational_names[opNameID].field_path, 0);
+                var fieldDef = this.getFieldFromOperationalName(def.msgDef, def.msgDef.operational_names[opNameID].field_path, 0);
 				
-				var opsPath = def.opsPath + '/' + opNameID;
+                var opsPath = def.opsPath + '/' + opNameID;
 				
-				parsedTlm[opsPath] = {};
+                parsedTlm[opsPath] = {};
 				
-				if(typeof fieldDef.fieldDef === 'undefined') {
-					//console.log(def.msgDef);
-					//console.log(opNameID);
-					//console.log(fieldDef);
-				} else {
-					parsedTlm[opsPath].value = this.getField(buffer, fieldDef.fieldDef, fieldDef.bitOffset);
-					parsedTlm[opsPath].msgTime = msgTime;
-				}
-			}
-		}
+                if(typeof fieldDef.fieldDef === 'undefined') {
+                    //console.log(def.msgDef);
+                    //console.log(opNameID);
+                    //console.log(fieldDef);
+                } else {
+                    parsedTlm[opsPath].value = this.getField(buffer, fieldDef.fieldDef, fieldDef.bitOffset);
+                    parsedTlm[opsPath].msgTime = msgTime;
+                }
+            }
+        }
 		
-		var pbMsg = def.msgDef.proto_msg;
-		var symbolName = pbMsg.substring(0, pbMsg.length - 3);
-    	this.instanceEmit(config.get('jsonOutputStreamID'), {fields:parsedTlm, opsPath: def.opsPath, symbol:symbolName, msgID:msgID});
+        var pbMsg = def.msgDef.proto_msg;
+        var symbolName = pbMsg.substring(0, pbMsg.length - 3);
+        this.instanceEmit(config.get('jsonOutputStreamID'), {fields:parsedTlm, opsPath: def.opsPath, symbol:symbolName, msgID:msgID});
     }
 };
 
