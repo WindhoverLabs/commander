@@ -206,7 +206,6 @@ CommanderValidator.prototype.isDescendant = function(parent, child) {
 CommanderValidator.prototype.assert = function(condition) {
   var success = true;
   if (!condition) {
-    throw "Assertion failed";
     success = false;
   }
   return success
