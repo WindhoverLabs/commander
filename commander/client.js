@@ -178,7 +178,7 @@ CommanderClient.prototype.subscribe = function (tlmObj, cb){
 
 
 CommanderClient.prototype.sendCommand = function (cmdObj) {
-    cu.logInfo('Client | sent command : ',cmdObj.ops_path);
+    cu.logInfo('Client | sent command : ', JSON.stringify(cmdObj, 2));
     if(this.isSocketConnected){
     	this.socket.emit('sendCmd', cmdObj);
     };

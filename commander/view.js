@@ -304,13 +304,10 @@ class Panel {
                * create a popup form. Just send the command when
                * the user clicks the button.
                */
-              var args = [];
+              var args = {};
               if (cmdInfo.hasOwnProperty('argument')) {
                 for (var i = 0; i < cmdInfo.argument.length; i++) {
-                  args.push({
-                    name: cmdInfo.argument[i].name,
-                    value: cmdInfo.argument[i].value.toString()
-                  });
+                  args[cmdInfo.argument[i].name] = cmdInfo.argument[i].value
                 }
               }
               btnObj[0].onclick = function(eventObject) {
