@@ -1,7 +1,7 @@
 * {
   margin: 0;
   padding: 0;
-  list-style-type:none;
+  list-style-type: none;
 }
 
 html {
@@ -9,7 +9,7 @@ html {
 }
 
 body {
-  background-color:  #353535;
+  background-color: #353535;
   color: #ffffff;
   max-height: calc(100% - 57px) !important;
   height: calc(100% - 57px) !important;
@@ -17,7 +17,7 @@ body {
 
 h2 {
   font: 14px Arial, sans-serif;
-  color:#fff;
+  color: #fff;
   padding: 10px;
   text-align: center;
 }
@@ -25,15 +25,14 @@ h2 {
 /******************************************
   Commander Layout Level CSS
 *******************************************/
-
-.cdr-nav-top{
+.cdr-nav-top {
   box-shadow: 0px 2px 25px #000;
   padding: 0.25em 0em;
   max-height: 38px;
   height: 38px;
 }
 
-.cdr-nav-btm{
+.cdr-nav-btm {
   box-shadow: 0px -4px 15px #000;
   padding: 0.25em 0em;
   max-height: 18px;
@@ -41,25 +40,23 @@ h2 {
 }
 
 /* max-width < 992px - top navbar buttons */
-.cdr-xs-nav-toggle{
-  font-size:10px;
+.cdr-xs-nav-toggle {
+  font-size: 10px;
   padding: 0.25rem 0.25rem;
   margin: 5px 5px;
 }
 
-.cdr-nav-btn{
-  margin-bottom:unset;
+.cdr-nav-btn {
+  margin-bottom: unset;
   margin-left: 5px;
   margin-right: 5px;
 }
 
-.cdr-nav-icons{
+.cdr-nav-icons {}
 
-}
-
-.cdr-nav-top-brand{
-  position:absolute;
-  width:100%;
+.cdr-nav-top-brand {
+  position: absolute;
+  width: 100%;
   text-align: center;
   pointer-events: none;
 }
@@ -67,25 +64,23 @@ h2 {
 @media only screen and (max-width: 991px) {
 
   #cdr-nav-top-left-content,
-  #cdr-nav-top-right-content{
+  #cdr-nav-top-right-content {
     background-color: #000000b3;
-    position:relative;
+    position: relative;
     width: 100%;
   }
 
   #cdr-nav-top-left-content>ul,
-  #cdr-nav-top-right-content>ul{
+  #cdr-nav-top-right-content>ul {
     display: block;
-    margin:5px auto;
+    margin: 5px auto;
     text-align: center;
   }
-
 }
 
 /******************************************
   Generic Modal
 *******************************************/
-
 .modal-content {
   background: #343a40;
 }
@@ -101,18 +96,17 @@ h2 {
 /******************************************
   Container Layout CSS
 *******************************************/
-
 .cdr-container {
   margin-top: 38px;
   margin-bottom: 18px;
   width: 100%;
-  background-color:  #353535;
+  background-color: #353535;
   padding-left: 0px !important;
   padding-right: 0px !important;
   max-width: 100% !important;
 }
 
-.cdr-content-wrapper{
+.cdr-content-wrapper {
   height: 100%;
   position: relative;
   width: 100%;
@@ -122,45 +116,47 @@ h2 {
 #cdr-layout-container {
   width: 100%;
   height: 100%;
-  position:absolute;
+  position: absolute;
   top: 0;
   left: 0;
-  box-shadow: -3px 0px 9px 0px rgba( 0, 0, 0, 0.4);
-  padding:7px;
+  box-shadow: -3px 0px 9px 0px rgba(0, 0, 0, 0.4);
+  padding: 7px;
 }
 
-#cdr-app-menu{
+#cdr-app-menu {
   background-color: #343a40;
   position: absolute;
   width: 250px;
   height: calc(100% - 5px);
   z-index: 1029;
-  transform:translateX(-100%);
+  transform: translateX(-100%);
   padding: 10px 0px;
   top: 3px;
   border-radius: 0px 5px 5px 0px;
   box-shadow: 0px 0px 15px #000;
+  overflow-x: hidden;
+  overflow-y: scroll;
   -webkit-transition: transform 0.1s ease-out;
   -moz-transition: transform 0.1s ease-out;
   -o-transition: transform 0.1s ease-out;
   transition: transform 0.1s ease-out;
 }
 
-.cdr-center-btn-group{
+.cdr-center-btn-group {
   justify-content: center;
   display: none;
 }
 
 #cdr-panel-menu-toggle,
-#cdr-layout-menu-toggle{
-  padding:10px;
+#cdr-layout-menu-toggle {
+  padding: 10px;
 }
 
-#cdr-panel-menu-toggle.active{
+#cdr-panel-menu-toggle.active {
   background-color: var(--btn-primary-background-hover-color);
 }
 
-#cdr-layout-menu-toggle.active{
+#cdr-layout-menu-toggle.active {
   background-color: var(--btn-primary-background-hover-color);
 }
 
@@ -184,7 +180,7 @@ h2 {
   color: #343a40;
 }
 
-.cdr-dropdown-list-item{
+.cdr-dropdown-list-item {
   font-size: 12px;
   text-align: center;
   border: 1px solid #222;
@@ -192,16 +188,68 @@ h2 {
   pointer-events: auto;
 }
 
-.cdr-dropdown-list-item:hover{
-  color:#fff;
+.cdr-dropdown-list-item:hover {
+  color: #fff;
   background-color: #222;
 }
 
+/******************************************
+  Primary Flight Display
+*******************************************/
+.cdr-display-container {
+  margin: 30px;
+  padding: 10px;
+  height: 85%;
+  position: relative;
+  min-height: 20px;
+  padding: 19px;
+  margin-bottom: 20px;
+  background-color: #6f6f6f;
+  border: 3px solid #6c6c6c;
+  border-radius: 4px;
+  -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, .05);
+  box-shadow: inset 0 1px 1px rgba(254, 250, 250, 0.1);
+}
+
+#cdr-video {
+  height: 100%;
+  background-color: #84f223;
+  z-index: 3;
+}
+
+#cdr-cesium {
+  height: 100%;
+  z-index: 2;
+}
+
+#cdr-image {
+  /* border: 1px solid #FFF; */
+  height: 100%;
+  background-image: url("/img/WindhoverLabs-Logo-Primary-White.png");
+  background-repeat: no-repeat, repeat;
+  background-position: center;
+  background-size: contain;
+  transform: scale(0.5);
+  z-index: 1;
+}
+
+#cdr-empty {
+  height: 100%;
+  background-color: #2d2d2d;
+  z-index: 0;
+}
+
+.cdr-display-container-item {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
 
 /******************************************
   Application Control Classes
 *******************************************/
-
 .active {
   box-shadow: none !important;
 }
@@ -216,7 +264,7 @@ h2 {
   left: auto !important;
 }
 
-.stale{
+.stale {
   color: #e06277;
   -webkit-transition: color 1s ease-out;
   -moz-transition: color 1s ease-out;
@@ -224,18 +272,18 @@ h2 {
   transition: color 1s ease-out;
 }
 
-.led-basic{
+.led-basic {
   width: 12.5px;
   height: 12.5px;
   border-radius: 50px;
   background-color: Black
 }
 
-.led-on{
+.led-on {
   background-color: Green !important;
 }
 
-.led-off{
+.led-off {
   background-color: Red !important;
 }
 
@@ -247,122 +295,117 @@ path {
 
 .axis path,
 .axis line {
-    fill: none;
-    stroke: #5f8e9e;
-    stroke-width: 1;
-    shape-rendering: crispEdges;
+  fill: none;
+  stroke: #5f8e9e;
+  stroke-width: 1;
+  shape-rendering: crispEdges;
 }
 
-.axis .tick{
-  color:#5f8e9e;
+.axis .tick {
+  color: #5f8e9e;
 }
 
 .rotate-right-left {
-    -moz-transform: rotate(180deg);
-    -o-transform: rotate(180deg);
-    -webkit-transform: rotate(180deg);
-    transform: rotate(180deg);
+  -moz-transform: rotate(180deg);
+  -o-transform: rotate(180deg);
+  -webkit-transform: rotate(180deg);
+  transform: rotate(180deg);
 }
 
 .rotate-left-right {
-    -moz-transform: rotate(0deg);
-    -o-transform: rotate(0deg);
-    -webkit-transform: rotate(0deg);
-    transform: rotate(0deg);
+  -moz-transform: rotate(0deg);
+  -o-transform: rotate(0deg);
+  -webkit-transform: rotate(0deg);
+  transform: rotate(0deg);
 }
 
 /******************************************
   ToolTips
 *******************************************/
-.cdr-tooltip{
-  width:500px;
+.cdr-tooltip {
+  width: 500px;
 }
 
-.cdr-tooltip-row{
+.cdr-tooltip-row {
   /* background-color: green; */
   padding: 15px;
 }
 
-.cdr-tooltip-left{
-  float:left;
+.cdr-tooltip-left {
+  float: left;
   font-size: 16px;
   font-weight: bold;
 }
 
-.cdr-tooltip-right{
+.cdr-tooltip-right {
   font-size: 16px;
 }
+
 /******************************************
   Golden Layout Fixes
 *******************************************/
-
 .lm_goldenlayout {
-    background: #353535 !important;
+  background: #353535 !important;
 }
 
 /******************************************
   Color Variables
 *******************************************/
 :root {
-
-    /******************************************
+  /******************************************
       Primary Button
     *******************************************/
-    /* yellow */
-    --btn-primary-background-color        :#ffae00;
-    /* gold */
-    --btn-primary-background-hover-color  :#b78509;
-    /* gold */
-    --btn-primary-border-color            :#b78509;
-
-    /******************************************
+  /* yellow */
+  --btn-primary-background-color: #ffae00;
+  /* gold */
+  --btn-primary-background-hover-color: #b78509;
+  /* gold */
+  --btn-primary-border-color: #b78509;
+  /******************************************
       Important Button
     *******************************************/
-    /* yellow */
-    --btn-important-background-color        :#dc3545;
-    /* gold */
-    --btn-important-background-hover-color  :#95111d;;
-    /* gold */
-    --btn-important-border-color            :#95111d;
-
-    /******************************************
+  /* yellow */
+  --btn-important-background-color: #dc3545;
+  /* gold */
+  --btn-important-background-hover-color: #95111d;
+  ;
+  /* gold */
+  --btn-important-border-color: #95111d;
+  /******************************************
       General Button
     *******************************************/
-    /* white */
-    --btn-text-color              :#fff;
-    /* Transperant */
-    --btn-trasperant-color        :#00008000;
-    /* yellow*/
-    --btn-bg-color:     #ffae00;
-    /* Dark grey */
-    --btn-font-color-drk: #343a40;
-    /* white */
-    --btn-font-color-lte: #fff;
-    /* gold */
-    --btn-bg-hvr-color: #b78509;
-
-    /******************************************
+  /* white */
+  --btn-text-color: #fff;
+  /* Transperant */
+  --btn-trasperant-color: #00008000;
+  /* yellow*/
+  --btn-bg-color: #ffae00;
+  /* Dark grey */
+  --btn-font-color-drk: #343a40;
+  /* white */
+  --btn-font-color-lte: #fff;
+  /* gold */
+  --btn-bg-hvr-color: #b78509;
+  /******************************************
       Layout
     *******************************************/
-    /* Dark grey */
-    --layout-drk  : #343a40;
-    /* Light grey */
-    --layout-lte  : #25518080;
-
-    /******************************************
+  /* Dark grey */
+  --layout-drk: #343a40;
+  /* Light grey */
+  --layout-lte: #25518080;
+  /******************************************
       Panels
     *******************************************/
-    /* Golden Yellow */
-    --header-bg-color:  #a06d02 ;
-    /* Deep Blue */
-    --content-bg-color: #25518080;
-    /* Light Blue */
-    --th-bg-color:      #25518080;
-    /* Dark Blue */
-    --td-border-color:  #074486;
-    /* Blue */
-    --td-bg-color:      #2551804d;
-
+  /* Golden Yellow */
+  --header-bg-color: #a06d02;
+  /* Deep Blue */
+  --content-bg-color: #25518080;
+  /* Light Blue */
+  --th-bg-color: #25518080;
+  /* Dark Blue */
+  --td-border-color: #074486;
+  /* Blue */
+  --td-bg-color: #2551804d;
 }
 
 /******************************************
@@ -374,34 +417,34 @@ header {
   border-radius: 5px;
 }
 
-header > .widget-icon {
-	display: block;
-	width: 30px;
-	height: 32px;
-	position: relative;
-	float: left;
-	font-size: 111%;
-	line-height: 32px;
-	text-align: center;
-	margin-right: -10px;
-  padding-top:10px;
+header>.widget-icon {
+  display: block;
+  width: 30px;
+  height: 32px;
+  position: relative;
+  float: left;
+  font-size: 111%;
+  line-height: 32px;
+  text-align: center;
+  margin-right: -10px;
+  padding-top: 10px;
   padding-left: 10px;
 }
 
 .row {
-  width:inherit;
+  width: inherit;
   height: inherit;
   padding: 3% 0% 0% 0% !important;
   overflow: auto;
   margin: unset !important;
 }
 
-.table-condensed.table > tbody > tr > td,
-.table-condensed.table > tbody > tr > th,
-.table-condensed.table > tfoot > tr > td,
-.table-condensed.table > tfoot > tr > th,
-.table-condensed.table > thead > tr > td,
-.table-condensed.table > thead > tr > th {
+.table-condensed.table>tbody>tr>td,
+.table-condensed.table>tbody>tr>th,
+.table-condensed.table>tfoot>tr>td,
+.table-condensed.table>tfoot>tr>th,
+.table-condensed.table>thead>tr>td,
+.table-condensed.table>thead>tr>th {
   padding: 2px 10px !important;
   border: 1px solid var(--td-border-color) !important;
   font-size: 12px;
@@ -409,28 +452,28 @@ header > .widget-icon {
   vertical-align: middle;
 }
 
-.table-condensed.table > tbody > tr > th,
-.table-condensed.table > tfoot > tr > th,
-.table-condensed.table > thead > tr > th {
+.table-condensed.table>tbody>tr>th,
+.table-condensed.table>tfoot>tr>th,
+.table-condensed.table>thead>tr>th {
   background-color: var(--th-bg-color);
   width: 50%;
   vertical-align: middle;
 }
 
-.widget-graph > div {
+.widget-graph>div {
   background-color: var(--content-bg-color);
-  width:100%;
-  height:300px;
+  width: 100%;
+  height: 300px;
 }
 
-footer > button {
+footer>button {
   padding: 2px 10px !important;
   margin: 5px;
   border-radius: 5px !important;
 }
 
-footer > .btn-primary {
-    background-color:  #fff0;
+footer>.btn-primary {
+  background-color: #fff0;
 }
 
 footer {
@@ -438,15 +481,15 @@ footer {
   padding: 10px;
 }
 
-header > button {
-  float:right;
+header>button {
+  float: right;
   font-size: small !important;
   position: relative;
   margin: 4px;
   padding: 4px !important;
 }
 
-.cdr-primary{
+.cdr-primary {
   padding: 0px 3px;
   font-size: 14px;
   color: var(--btn-text-color);
@@ -454,12 +497,12 @@ header > button {
   border: 1px solid var(--btn-primary-border-color);
 }
 
-.cdr-primary:hover{
+.cdr-primary:hover {
   background-color: var(--btn-primary-background-hover-color);
   border: 1px solid var(--btn-primary-border-color);
 }
 
-.cdr-outline-primary{
+.cdr-outline-primary {
   padding: 0px 3px;
   font-size: 14px;
   color: var(--btn-text-color);
@@ -467,12 +510,12 @@ header > button {
   border: 1px solid var(--btn-primary-border-color);
 }
 
-.cdr-outline-primary:hover{
+.cdr-outline-primary:hover {
   background-color: var(--btn-primary-background-color);
   border: 1px solid var(--btn-primary-border-color);
 }
 
-.cdr-important{
+.cdr-important {
   padding: 0px 3px;
   font-size: 14px;
   color: var(--btn-text-color);
@@ -480,12 +523,12 @@ header > button {
   border: 1px solid var(--btn-important-border-color);
 }
 
-.cdr-important:hover{
+.cdr-important:hover {
   background-color: var(--btn-important-background-hover-color);
   border: 1px solid var(--btn-important-border-color);
 }
 
-.cdr-outline-important{
+.cdr-outline-important {
   padding: 0px 3px;
   font-size: 14px;
   color: var(--btn-text-color);
@@ -493,7 +536,7 @@ header > button {
   border: 1px solid var(--btn-important-border-color);
 }
 
-.cdr-outline-important:hover{
+.cdr-outline-important:hover {
   background-color: var(--btn-important-background-color);
   border: 1px solid var(--btn-important-border-color);
 }
@@ -501,36 +544,36 @@ header > button {
 /* All buttons will not have focus feature  */
 .btn:focus {
   box-shadow: none;
-
 }
 
-.btn-primary{
+.btn-primary {
   color: var(--btn-font-color-drk);
   background-color: var(--btn-bg-color);
   border: 1px solid var(--btn-bg-hvr-color);
 }
 
-.btn-primary:hover{
+.btn-primary:hover {
   color: var(--btn-font-color-drk);
   background-color: var(--btn-bg-hvr-color);
   border: 1px solid var(--btn-bg-hvr-color);
 }
 
-.btn-outline-primary{
+.btn-outline-primary {
   color: var(--btn-bg-hvr-color);
   background-color: var(--btn-trasperant-color);
   border: 1px solid var(--btn-bg-hvr-color);
 }
 
-.btn-outline-primary:hover{
+.btn-outline-primary:hover {
   color: var(--btn-font-color-drk);
   background-color: var(--btn-bg-color);
   border: 1px solid var(--btn-bg-hvr-color);
 }
+
 /*  Below two blocks sets active state css for the button*/
 .btn-outline-primary:not(:disabled):not(.disabled).active,
 .btn-outline-primary:not(:disabled):not(.disabled):active,
-.show > .btn-outline-primary.dropdown-toggle {
+.show>.btn-outline-primary.dropdown-toggle {
   color: var(--btn-font-color-drk);
   background-color: var(--btn-bg-color);
   border: 1px solid var(--btn-bg-hvr-color);
@@ -538,8 +581,8 @@ header > button {
 
 .btn-outline-primary:not(:disabled):not(.disabled).active:focus,
 .btn-outline-primary:not(:disabled):not(.disabled):active:focus,
-.show > .btn-outline-primary.dropdown-toggle:focus {
-    box-shadow: unset !important;
+.show>.btn-outline-primary.dropdown-toggle:focus {
+  box-shadow: unset !important;
 }
 
 .cdr-in-panel-header {
@@ -547,20 +590,18 @@ header > button {
 }
 
 .panel-header {
-   margin-bottom: 8px;
-   margin-top: 0px;
+  margin-bottom: 8px;
+  margin-top: 0px;
 }
 
 .panel-config-form {
-   margin-bottom: 20px;
+  margin-bottom: 20px;
 }
 
-.navbar-brand
-{
+.navbar-brand {
   font-size: 15px;
 }
 
-
 .white-text {
-    color: #ffffff;
+  color: #ffffff;
 }

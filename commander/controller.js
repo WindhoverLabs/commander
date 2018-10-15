@@ -11,9 +11,22 @@
    Widget Generation */
 var llc = new CustomEvent('layout-load-complete');
 
+function isAlreadyRendered(n) {
+  var events = $._data(n,"events")
+  var result = false;
+  if(events != undefined) {
+    if (events.hasOwnProperty('mousedown') ||
+        events.hasOwnProperty('touchdown')) {
+      result = true;
+    }
+  }
+  return result;
+}
+
 /* This function is triggered when a new node is rendered */
 function NodeRendered(e, node) {
-  if (node.type === "file") {
+
+  if (node.type === "file" & !isAlreadyRendered(node.$el[0])) {
     let newItemConfig = {
       id: node.id,
       title: node.text,
@@ -24,8 +37,9 @@ function NodeRendered(e, node) {
         link: node.urlPath
       }
     };
-
+    var n = node;
     myLayout.createDragSource(node.$el[0], newItemConfig);
+
   }
 }
 
@@ -372,31 +386,37 @@ function InitToolTips() {
 
 /* Scrollbar */
 function InitScrollBar() {
+  var applyScrollTo = [
+    '.os-theme-dark',
+    '#cdr-app-menu'
+  ]
+
+
   /* os-theme-dark class should be added to every pug file in the top element */
   setTimeout(function() {
-    $('.os-theme-dark').overlayScrollbars({
+    $(applyScrollTo.join(',')).overlayScrollbars({
       "autoUpdate": true
     });
   }, 10);
 
   setTimeout(function() {
-    $('.os-theme-dark').overlayScrollbars({
+    $(applyScrollTo.join(',')).overlayScrollbars({
       "autoUpdate": true
     });
   }, 100);
   setTimeout(function() {
-    $('.os-theme-dark').overlayScrollbars({
+    $(applyScrollTo.join(',')).overlayScrollbars({
       "autoUpdate": true
     });
   }, 250);
   setTimeout(function() {
-    $('.os-theme-dark').overlayScrollbars({
+    $(applyScrollTo.join(',')).overlayScrollbars({
       "autoUpdate": true
     });
   }, 500);
 
   setTimeout(function() {
-    $('.os-theme-dark').overlayScrollbars({
+    $(applyScrollTo.join(',')).overlayScrollbars({
       "autoUpdate": true
     });
   }, 1000);
@@ -518,6 +538,7 @@ function UpdatePanelNode(node, display) {
             }
 
       panelEntries.push(panelEntry);
+
     }
 
     var tree = $('#cdr-panel-menu-container').treeview(true)
