@@ -197,43 +197,43 @@ h2 {
   Primary Flight Display
 *******************************************/
 .cdr-display-container {
-  margin: 30px;
-  padding: 10px;
   height: 85%;
   position: relative;
-  min-height: 20px;
-  padding: 19px;
-  margin-bottom: 20px;
+  min-height: 300px;
   background-color: #6f6f6f;
   border: 3px solid #6c6c6c;
   border-radius: 4px;
   -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, .05);
   box-shadow: inset 0 1px 1px rgba(254, 250, 250, 0.1);
 }
+.cdr-guages {
+  z-index: 4;
+  pointer-events: none;
 
-#cdr-video {
+}
+.cdr-video {
   height: 100%;
-  background-color: #84f223;
+  background-color: #074486;
   z-index: 3;
 }
 
-#cdr-cesium {
+.cdr-cesium {
   height: 100%;
   z-index: 2;
 }
 
-#cdr-image {
+.cdr-image {
   /* border: 1px solid #FFF; */
   height: 100%;
-  background-image: url("/img/WindhoverLabs-Logo-Primary-White.png");
+  background-image: url("/img/Windhover-Mark-White.png");
   background-repeat: no-repeat, repeat;
   background-position: center;
   background-size: contain;
-  transform: scale(0.5);
+  transform: scale(0.15);
   z-index: 1;
 }
 
-#cdr-empty {
+.cdr-empty {
   height: 100%;
   background-color: #2d2d2d;
   z-index: 0;
@@ -387,6 +387,19 @@ path {
   /* gold */
   --btn-bg-hvr-color: #b78509;
   /******************************************
+    Special Skeleton Button
+  *******************************************/
+  /* Light grey */
+  --btn-ssb-txt-inactive-color: #656566;
+  /* green */
+  --btn-ssb-border-inactive-color: #0d6c0d;
+  /* lime */
+  --btn-ssb-border-hover-active-color: lime;
+  /* green */
+  --btn-ssb-text-hover-color: #0d6c0d;
+  /* lime */
+  --btn-ssb-text-active-color: lime;
+  /******************************************
       Layout
     *******************************************/
   /* Dark grey */
@@ -513,6 +526,25 @@ header>button {
 .cdr-outline-primary:hover {
   background-color: var(--btn-primary-background-color);
   border: 1px solid var(--btn-primary-border-color);
+}
+
+.cdr-outline-green {
+  padding: 0px 3px;
+  font-size: 14px;
+  color: var(--btn-ssb-txt-inactive-color);
+  background-color: var(--btn-trasperant-color);
+  border: 1px solid var(--btn-ssb-border-inactive-color);
+}
+
+.cdr-outline-green:hover {
+  color: var(--btn-ssb-text-hover-color);
+  background-color: var(--btn-trasperant-color);
+  border: 1px solid var(--btn-ssb-border-hover-active-color);
+}
+.cdr-outline-green.active {
+  color: var(--btn-ssb-text-active-color);
+  background-color: var(--btn-trasperant-color);
+  border: 1px solid var(--btn-ssb-border-hover-active-color);
 }
 
 .cdr-important {
