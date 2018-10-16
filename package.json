@@ -30,6 +30,7 @@
     "jquery-ui-dist": "^1.12.1",
     "jquery.flot": "^0.8.3",
     "json-merge": "^1.2.0",
+    "jsonpath": "^1.0.0",
     "merge-json": "0.1.0-b.3",
     "morgan": "^1.9.0",
     "node-int64": "^0.4.0",
@@ -41,9 +42,9 @@
     "pug": "2.0.0-beta11",
     "socket.io": "^2.1.1",
     "sparkles": "^1.0.1",
+    "sprintf-js": "^1.1.1",
     "svg.js": "^2.6.5",
     "websocket": "^1.0.26",
-    "wolfy87-eventemitter": "^5.2.5",
-    "sprintf-js": "^1.1.1"
+    "wolfy87-eventemitter": "^5.2.5"
   }
 }

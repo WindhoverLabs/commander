@@ -120,6 +120,8 @@ CommanderClient.prototype.getTlmDefs = function (tlmObj, cb) {
 
 CommanderClient.prototype.updateTelemetry = function (items) {
 	var self = this;
+	
+	console.log(items);
 
 	for(var itemID in items) {
 		var subs = self.subscriptions[itemID];
@@ -167,7 +169,7 @@ CommanderClient.prototype.subscribe = function (tlmObj, cb){
         		this.subscriptions[opsPath] = {};
         	}
 
-        	this.subscriptions[opsPath][cb] = {cb:cb,opsPath:opsPath};
+        	this.subscriptions[opsPath][cb] = {cb:cb, opsPath:opsPath};
     	}
 
     	this.socket.emit('subscribe', tlmOpsPaths);

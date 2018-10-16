@@ -35,6 +35,7 @@
 const Emitter = require('events');
 const util = require('util');
 var convict = require('convict');
+var jp = require('jsonpath');
 var config = require('./config.js');
 const Sparkles = require('sparkles');
 
@@ -70,122 +71,265 @@ function VariableServer(configFile) {
 
 
 
+VariableServer.prototype.getAppNameFromPath = function (path) {
+	var splitName = path.split('/');
+	return splitName[1];
+}
+
+
+
+VariableServer.prototype.getOpNameFromPath = function (path) {
+	var splitName = path.split('/');
+	return splitName[2];
+}
+
+
+
+VariableServer.prototype.getMessageOpsPath = function (path) {
+	var appName = this.getAppNameFromPath(path);
+	var opName = this.getOpNameFromPath(path);
+	
+	var msgOpsPath = '/' + appName + '/' + opName;
+	
+	return msgOpsPath;
+}
+
+
+
+VariableServer.prototype.getVariableOpsName = function (path) {
+	var splitName = path.split('/');
+	return splitName[3];
+}
+
+
+
+VariableServer.prototype.getVariablesFromMsgOpsName = function (opsName) {
+    var self = this;
+	var outVars = {};
+	
+	for(var opsPath in self.vars) {
+		var msgOpsName = self.getMessageOpsPath(opsPath);
+		if(msgOpsName == opsName) {
+			outVars[opsPath] = self.vars[opsPath];
+		}
+	}
+	
+	return outVars;
+}
+
+
+
+function isEmpty(obj) {
+	if(typeof obj === 'object') {
+		for(var key in obj) {
+			if(obj.hasOwnProperty(key))
+				return false;
+		}
+		return true;
+	} else if(typeof obj === 'array') {
+		if(obj.length == 0) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+}
+
+
+
 VariableServer.prototype.setInstanceEmitter = function (newInstanceEmitter) {
 	var self = this;
 	this.instanceEmitter = newInstanceEmitter;
 
 	this.instanceEmitter.on(config.get('jsonInputStreamID'), function(message) {
-	    var currentDateAndTime = new Date();
-		var subscribersToUpdate = {};
+		var vars = self.getVariablesFromMsgOpsName(message.opsPath);
 		
-    	for(var itemID in message.fields) {
-    		var item = message.fields[itemID];
+		if(isEmpty(vars) == false) {
+			/* We have variables either persisted or subscribed to in this message.  Iterate through
+			 * each variable that we're looking for.
+			 */
+		    var currentDateAndTime = new Date();
+			var subscribersToUpdate = {};
+			
+			var msgRoot = message.content;
 
-    		if(self.vars.hasOwnProperty(itemID) == false) {
-    			/* This is the first time we've seen this variable and it does
-    			 * not already have a definition.  Create a new record. */
-        		var variable = {opsPath: itemID};
-                variable.sample = [];
-    			self.vars[itemID] = variable;
-
-    		} else {
-    			/* We've already received this or have a predefinition. */
-    			var variable = self.vars[itemID];
-    			if(typeof variable.sample === 'undefined') {
-    			    variable.sample = [];
-    			}
-    		}
-            
-            /* Update the current value. */
-            variable.sample.push({value: item.value, msgTime:item.msgTime, gndTime:currentDateAndTime});
-
-    		/* Get the persistence value and set the array of retained values accordingly. */
-    		var persistenceCount = self.getVariablePersistence(itemID);
-    		if(variable.sample.length > persistenceCount) {
-    		    /* The array is too big.  We need to take the oldest sample out. */
-    		    variable.sample.shift();
-    		}          
-    		
-    		/* Now loop through all the subscribers, if any. */
-    		for(var subscriber in variable.subscribers) {
-    			/* First make sure this subscriber callback still exists. */
-    			if(typeof variable.subscribers[subscriber] !== 'function') {
-    				/* It doesn't exist.  It must have been destroyed.  Delete
-    				 * the reference to this callback.
-    				 */
-    				delete variable.subscribers[subscriber];
-    			} else {
-	    			if(subscribersToUpdate.hasOwnProperty(subscriber) == false) {
-	    				/* This is the first time in this function call that we've
-	    				 * processed a variable for this particular subscriber.
-	    				 * Create a new subscriber record in this temporary 
-	    				 * object.
-	    				 */
-	    				subscribersToUpdate[subscriber] = {cb:variable.subscribers[subscriber], variables: {}};
-	    			}
-	    			
-	    			subscribersToUpdate[subscriber].variables[itemID] = {};
-    			
-	    			var updatedVariable = subscribersToUpdate[subscriber].variables[itemID];
-    			
-    				updatedVariable['sample'] = [variable.sample[variable.sample.length - 1]];
-    			}
-    		}
-    		
-    		/* Now check to see if this item is an array. */
-			if(Array.isArray(item.value) == true) {
-				/* This is an array.  See if we have a subscriber for the individual array indices by looping through 
-				 * the array indices that are subscribed to. */
-				for(var arrayIndexID in variable.arrayIndices) {
-					/* This array index has at least one subscriber.  Loop through the subscribers. */
-		    		for(var subscriber in variable.arrayIndices[arrayIndexID]) {
-		    			var subscription = variable.arrayIndices[arrayIndexID][subscriber];
-		    			
+			for(var itemID in vars) {
+				var variable = vars[itemID];
+				var varOpName = self.getVariableOpsName(itemID);
+				
+				var valueObj = jp.query(msgRoot, '$.' + varOpName);
+				
+				if(isEmpty(valueObj) == true) {
+					console.log('OpName ' + itemID + ' not found.');
+				} else {
+					var value = valueObj[0];
+					
+					/* Update the current value. */
+					if(variable.hasOwnProperty('sample') == false) {
+						variable.sample = [];
+					}
+		            variable.sample.push({value: value, msgTime:message.msgTime, gndTime:currentDateAndTime});
+		            
+		    		/* Get the persistence value and set the array of retained values accordingly. */
+		    		var persistenceCount = self.getVariablePersistence(itemID);
+		    		if(variable.sample.length > persistenceCount) {
+		    		    /* The array is too big.  We need to take the oldest sample out. */
+		    		    variable.sample.shift();
+		    		}              
+		    		
+		    		/* Now loop through all the subscribers, if any. */
+		    		for(var subscriber in variable.subscribers) {
 		    			/* First make sure this subscriber callback still exists. */
-		    			if(typeof subscription !== 'function') {
+		    			if(typeof variable.subscribers[subscriber] !== 'function') {
 		    				/* It doesn't exist.  It must have been destroyed.  Delete
 		    				 * the reference to this callback.
 		    				 */
-		    				delete  variable.arrayIndices[arrayIndexID][subscriber];
+		    				delete variable.subscribers[subscriber];
 		    			} else {
-		    				/* It does still exist.  Start processing this subscription. */
-		    				if(subscribersToUpdate.hasOwnProperty(subscriber) == false) {
-		    					/* This is the first time in this function call that we've
-		    					 * processed a variable for this particular subscriber.
-		    					 * Create a new subscriber record in this temporary 
-		    					 * object.
-		    					 */
-		    					subscribersToUpdate[subscriber] = {cb:variable.subscribers[subscriber], variables: {}};
-		    				}
-					
-							/* Build an opsName that includes the array index */
-		    				var newOpsName = itemID + '[' + arrayIndexID + ']';
-		    				subscribersToUpdate[subscriber].variables[newOpsName] = {};
-					
-			    			var updatedVariable = subscribersToUpdate[subscriber].variables[newOpsName];
+			    			if(subscribersToUpdate.hasOwnProperty(subscriber) == false) {
+			    				/* This is the first time in this function call that we've
+			    				 * processed a variable for this particular subscriber.
+			    				 * Create a new subscriber record in this temporary 
+			    				 * object.
+			    				 */
+			    				subscribersToUpdate[subscriber] = {cb:variable.subscribers[subscriber], variables: {}};
+			    			}
 			    			
-			    			var outSample = self.getSampleByArrayIndex(variable, variable.sample.length - 1, arrayIndexID);
-			    			
-			    			updatedVariable['sample'] = [outSample];
+			    			subscribersToUpdate[subscriber].variables[itemID] = {};
+		    			
+			    			var updatedVariable = subscribersToUpdate[subscriber].variables[itemID];
+		    			
+		    				updatedVariable['sample'] = [variable.sample[variable.sample.length - 1]];
 		    			}
-		    		}
+		    		}   
 				}
 			}
-    	}
-    	
-    	/* Lastly, loop through all the subscriptions to update, and send them
-    	 * an array of updates.
-    	 */
-		for(var subscriber in subscribersToUpdate) {
-			var callback = subscribersToUpdate[subscriber].cb;
 			
-			/* Make sure this callback still exists. */
-			if(typeof callback === 'function') {
-				callback(subscribersToUpdate[subscriber].variables);
+			/* Lastly, loop through all the subscriptions to update, and send them
+	    	 * an array of updates.
+	    	 */
+			for(var subscriber in subscribersToUpdate) {
+				var callback = subscribersToUpdate[subscriber].cb;
+				
+				/* Make sure this callback still exists. */
+				if(typeof callback === 'function') {
+					callback(subscribersToUpdate[subscriber].variables);
+				}
 			}
 		}
-    	
+
     	self.instanceEmit(config.get('outputEventsStreamID'), 'message-received');
+		
+		
+		
+//    	for(var itemID in message.fields) {
+//    		var item = message.fields[itemID];
+//
+//    		if(self.vars.hasOwnProperty(itemID) == false) {
+//    			/* This is the first time we've seen this variable and it does
+//    			 * not already have a definition.  Create a new record. */
+//        		var variable = {opsPath: itemID};
+//                variable.sample = [];
+//    			self.vars[itemID] = variable;
+//
+//    		} else {
+//    			/* We've already received this or have a predefinition. */
+//    			var variable = self.vars[itemID];
+//    			if(typeof variable.sample === 'undefined') {
+//    			    variable.sample = [];
+//    			}
+//    		}
+//            
+//            /* Update the current value. */
+//            variable.sample.push({value: item.value, msgTime:item.msgTime, gndTime:currentDateAndTime});
+//
+//    		/* Get the persistence value and set the array of retained values accordingly. */
+//    		var persistenceCount = self.getVariablePersistence(itemID);
+//    		if(variable.sample.length > persistenceCount) {
+//    		    /* The array is too big.  We need to take the oldest sample out. */
+//    		    variable.sample.shift();
+//    		}          
+//    		
+//    		/* Now loop through all the subscribers, if any. */
+//    		for(var subscriber in variable.subscribers) {
+//    			/* First make sure this subscriber callback still exists. */
+//    			if(typeof variable.subscribers[subscriber] !== 'function') {
+//    				/* It doesn't exist.  It must have been destroyed.  Delete
+//    				 * the reference to this callback.
+//    				 */
+//    				delete variable.subscribers[subscriber];
+//    			} else {
+//	    			if(subscribersToUpdate.hasOwnProperty(subscriber) == false) {
+//	    				/* This is the first time in this function call that we've
+//	    				 * processed a variable for this particular subscriber.
+//	    				 * Create a new subscriber record in this temporary 
+//	    				 * object.
+//	    				 */
+//	    				subscribersToUpdate[subscriber] = {cb:variable.subscribers[subscriber], variables: {}};
+//	    			}
+//	    			
+//	    			subscribersToUpdate[subscriber].variables[itemID] = {};
+//    			
+//	    			var updatedVariable = subscribersToUpdate[subscriber].variables[itemID];
+//    			
+//    				updatedVariable['sample'] = [variable.sample[variable.sample.length - 1]];
+//    			}
+//    		}
+//    		
+//    		/* Now check to see if this item is an array. */
+//			if(Array.isArray(item.value) == true) {
+//				/* This is an array.  See if we have a subscriber for the individual array indices by looping through 
+//				 * the array indices that are subscribed to. */
+//				for(var arrayIndexID in variable.arrayIndices) {
+//					/* This array index has at least one subscriber.  Loop through the subscribers. */
+//		    		for(var subscriber in variable.arrayIndices[arrayIndexID]) {
+//		    			var subscription = variable.arrayIndices[arrayIndexID][subscriber];
+//		    			
+//		    			/* First make sure this subscriber callback still exists. */
+//		    			if(typeof subscription !== 'function') {
+//		    				/* It doesn't exist.  It must have been destroyed.  Delete
+//		    				 * the reference to this callback.
+//		    				 */
+//		    				delete  variable.arrayIndices[arrayIndexID][subscriber];
+//		    			} else {
+//		    				/* It does still exist.  Start processing this subscription. */
+//		    				if(subscribersToUpdate.hasOwnProperty(subscriber) == false) {
+//		    					/* This is the first time in this function call that we've
+//		    					 * processed a variable for this particular subscriber.
+//		    					 * Create a new subscriber record in this temporary 
+//		    					 * object.
+//		    					 */
+//		    					subscribersToUpdate[subscriber] = {cb:variable.subscribers[subscriber], variables: {}};
+//		    				}
+//					
+//							/* Build an opsName that includes the array index */
+//		    				var newOpsName = itemID + '[' + arrayIndexID + ']';
+//		    				subscribersToUpdate[subscriber].variables[newOpsName] = {};
+//					
+//			    			var updatedVariable = subscribersToUpdate[subscriber].variables[newOpsName];
+//			    			
+//			    			var outSample = self.getSampleByArrayIndex(variable, variable.sample.length - 1, arrayIndexID);
+//			    			
+//			    			updatedVariable['sample'] = [outSample];
+//		    			}
+//		    		}
+//				}
+//			}
+//    	}
+    	
+//    	/* Lastly, loop through all the subscriptions to update, and send them
+//    	 * an array of updates.
+//    	 */
+//		for(var subscriber in subscribersToUpdate) {
+//			var callback = subscribersToUpdate[subscriber].cb;
+//			
+//			/* Make sure this callback still exists. */
+//			if(typeof callback === 'function') {
+//				callback(subscribersToUpdate[subscriber].variables);
+//			}
+//		}
+//    	
+//    	self.instanceEmit(config.get('outputEventsStreamID'), 'message-received');
 	});
 	
     this.instanceEmitter.on(config.get('varDefReqStreamID'), function(req, cb) {
@@ -252,22 +396,8 @@ VariableServer.prototype.getSampleByArrayIndex = function (variable, sampleID, a
 VariableServer.prototype.SubscribeToVariable = function (opsPath, cb) {
 	var subscription = {};
     var self = this;
-	
-	if(self.isVarNameAnArray(opsPath) == true) {
-		self.getTlmDefinitions({name: opsPath}, function(tlmDef) {
-			if(typeof tlmDef !== 'undefined') {
-				if(tlmDef.hasOwnProperty('arrayLength')) {
-					var arrayIndex = self.getArrayIndex(opsPath);
-					if(arrayIndex < tlmDef.arrayLength) {
-						var strippedOpsPath = self.stripArrayIdentifier(opsPath);
-						self.addSubscriber(strippedOpsPath, cb, arrayIndex);
-					}
-				}
-			}
-		});
-	} else {
-		self.addSubscriber(opsPath, cb, -1);
-	}
+
+    self.addSubscriber(opsPath, cb);
 }
 
 
@@ -352,7 +482,7 @@ VariableServer.prototype.getTlmDefinitions = function (req, cb) {
 
 
 
-VariableServer.prototype.addSubscriber = function (opsPath, cb, arrayIndex) {
+VariableServer.prototype.addSubscriber = function (opsPath, cb) {
 	if(this.vars.hasOwnProperty(opsPath) == false) {
 		/* We have not received this variable yet and it does
 		 * not already have a predefinition.  Create a new record. */
@@ -366,26 +496,9 @@ VariableServer.prototype.addSubscriber = function (opsPath, cb, arrayIndex) {
 		var outVar = {};
 		outVar[opsPath] = {};
 		
-		/* Check to see if the requested item is for a specific array index. */
-		if(this.isVarNameAnArray(opsPath) == true) {
-			/* It is for a specific array index.  We need to build up an object containing
-			 * the persisted values of the specific index of the array.  First lets
-			 * get the requested array index.
-			 */
-			var arrayIndex = this.getArrayIndex(opsPath);
-			
-			/* Now lets loop through the samples */
-			outVar[opsPath].sample = [];
-			for(var i = 0; i < variable.sample.length; ++i) {
-				outVar[opsPath].sample.push(this.getSampleByArrayIndex(variable, i, arrayIndex));
-			}
-			
-		} else {
-			/* It is not for a specific array index.  Send all the persisted values
-			 * of the value or the entire array.
-			 */
-			outVar[opsPath].sample = variable.sample; 
-		}
+		/* Send all the persisted values of the value */
+		outVar[opsPath].sample = variable.sample; 
+
 		cb(outVar);
 	}
 	
@@ -393,22 +506,7 @@ VariableServer.prototype.addSubscriber = function (opsPath, cb, arrayIndex) {
 		variable['subscribers'] = {};
 	} 
 	
-	/* Check to see if the subscriber specified an array index. */
-	if(arrayIndex == -1) {
-		/* No array index specified.  Put the subscription on the value, or entire array. */
-		variable.subscribers[cb] = cb;
-	} else {
-		/* An array index was specified.  Put the subscription on the specified array index. */
-		if(variable.hasOwnProperty('arrayIndices') == false) {
-			variable.arrayIndices = {};
-		}
-		
-		if(variable.arrayIndices.hasOwnProperty(arrayIndex) == false) {
-			/* Nobody has subscribed to this particular array index yet.  Create a new record. */
-			variable.arrayIndices[arrayIndex] = {};
-		}
-		variable.arrayIndices[arrayIndex][cb] = cb;
-	}
+	variable.subscribers[cb] = cb;
 }
 
 
