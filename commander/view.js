@@ -1,7 +1,26 @@
 /* Application Data*/
 var subscriptions = {};
+var rouge_subscriptions = {};
 var dataplot_subscriptions = {};
+var rougeCleanUpInterval = 20000;
 
+
+/* clean up rouge subscriptions */
+setInterval(()=>{
+  for(var e in rouge_subscriptions){
+    var rougeClasses = rouge_subscriptions[e];
+    if($(rougeClasses).length == 0) {
+      if(!(e in Object.keys(subscriptions))){
+        /* Unsubscribe */
+        session.unsubscribe([{
+          name: e
+        }]);
+        cu.logInfo('RougeUnsubscribe | ', e, ' tlm unsubscribed');
+      }
+      delete rouge_subscriptions[e];
+    }
+  }
+},rougeCleanUpInterval);
 
 /* Process Telemetry and commanding */
 
@@ -17,15 +36,14 @@ function processTelemetryUpdate(param) {
       var opsPathDef = undefined;
       if (subscriptions[opsPath].hasOwnProperty('def')) {
         opsPathDef = subscriptions[opsPath].def;
-        if(subscriptions[opsPath].def.timeout > 0 ) {
-          if(subscriptions[opsPath].lastUpdatedTime == undefined){
+        if (subscriptions[opsPath].def.timeout > 0) {
+          if (subscriptions[opsPath].lastUpdatedTime == undefined) {
             subscriptions[opsPath].lastUpdatedTime = gTime;
-          }
-          else {
+          } else {
             var currentTime = new Date(gTime);
             var prevTime = new Date(subscriptions[opsPath].lastUpdatedTime);
 
-            if((currentTime.getTime() - prevTime.getTime()) > subscriptions[opsPath].def.timeout) {
+            if ((currentTime.getTime() - prevTime.getTime()) > subscriptions[opsPath].def.timeout) {
               staleness = true;
             }
             subscriptions[opsPath].lastUpdatedTime = gTime;
@@ -37,16 +55,16 @@ function processTelemetryUpdate(param) {
         var reqObj = cu.parseJSON(nodeElm.getAttribute('data-cdr'));
         var indicatorFormat = reqObj.indicator;
         /* Set value format */
-        if(reqObj.hasOwnProperty('tlm')) {
-            for(var j = 0; j < reqObj.tlm.length; ++j) {
-              var tlmObj = reqObj.tlm[j]
-              var name = tlmObj.name;
-              if(name == opsPath) {
-                if (tlmObj.hasOwnProperty('format')) {
-                    value = sprintf(tlmObj.format, value);
-                }
+        if (reqObj.hasOwnProperty('tlm')) {
+          for (var j = 0; j < reqObj.tlm.length; ++j) {
+            var tlmObj = reqObj.tlm[j]
+            var name = tlmObj.name;
+            if (name == opsPath) {
+              if (tlmObj.hasOwnProperty('format')) {
+                value = sprintf(tlmObj.format, value);
               }
             }
+          }
         }
         cu.assert(indicatorFormat != undefined, 'Process TLM | indicator format is not found');
         if (indicatorFormat == 'text') {
@@ -65,9 +83,8 @@ function processTelemetryUpdate(param) {
               case 'uint64':
                 {
                   if (staleness) {
-                    nodeElm.setAttribute('class','stale');
-                  }
-                  else {
+                    nodeElm.setAttribute('class', 'stale');
+                  } else {
                     nodeElm.removeAttribute('class');
                   }
                   nodeElm.textContent = value;
@@ -77,9 +94,8 @@ function processTelemetryUpdate(param) {
               case 'float':
                 {
                   if (staleness) {
-                    nodeElm.setAttribute('class','stale');
-                  }
-                  else {
+                    nodeElm.setAttribute('class', 'stale');
+                  } else {
                     nodeElm.removeAttribute('class');
                   }
                   nodeElm.textContent = value;
@@ -88,9 +104,8 @@ function processTelemetryUpdate(param) {
               case 'boolean':
                 {
                   if (staleness) {
-                    nodeElm.setAttribute('class','led-basic');
-                  }
-                  else {
+                    nodeElm.setAttribute('class', 'led-basic');
+                  } else {
                     nodeElm.textContent = '';
                     if (value) {
                       nodeElm.setAttribute('class', 'led-basic led-on')
@@ -102,7 +117,8 @@ function processTelemetryUpdate(param) {
                 }
             }
           }
-        } else if (indicatorFormat == 'dataplot') {
+        }
+        else if (indicatorFormat == 'dataplot') {
           /* Handle dataplot subscriptions */
           if (nodeElm.getAttribute('plot-initialized') === undefined ||
             nodeElm.getAttribute('plot-initialized') === null ||
@@ -157,9 +173,8 @@ function processTelemetryUpdate(param) {
         }
       }
     }
-  }
-  catch(e) {
-    cu.logError('ProcessTelemetryUpdate | ',e.message);
+  } catch (e) {
+    cu.logError('ProcessTelemetryUpdate | ', e.message);
   }
 
 }
@@ -362,7 +377,7 @@ class Panel {
                         'label': label,
                         'type': 'field',
                         'dtype': 'text',
-                        'value':value
+                        'value': value
                       });
                       break;
                     }
@@ -374,7 +389,7 @@ class Panel {
                         'label': label,
                         'type': 'field',
                         'dtype': 'integer',
-                        'value':value
+                        'value': value
                       });
                       break;
                     }
@@ -386,7 +401,7 @@ class Panel {
                         'label': label,
                         'type': 'field',
                         'dtype': 'integer',
-                        'value':value
+                        'value': value
                       });
                       break;
                     }
@@ -398,7 +413,7 @@ class Panel {
                         'label': label,
                         'type': 'field',
                         'dtype': 'text',
-                        'value':value
+                        'value': value
                       });
                       break;
                     }
@@ -410,7 +425,7 @@ class Panel {
                         'label': label,
                         'type': 'field',
                         'dtype': 'text',
-                        'value':value
+                        'value': value
                       });
                       break;
                     }
@@ -422,7 +437,7 @@ class Panel {
                         'label': label,
                         'type': 'field',
                         'dtype': 'text',
-                        'value':value
+                        'value': value
                       });
                       break;
                     }
@@ -434,7 +449,7 @@ class Panel {
                         'label': label,
                         'type': 'field',
                         'dtype': 'text',
-                        'value':value
+                        'value': value
                       });
                       break;
                     }
@@ -446,7 +461,7 @@ class Panel {
                         'label': label,
                         'type': 'field',
                         'dtype': 'text',
-                        'value':value
+                        'value': value
                       });
                       break;
                     }
@@ -458,7 +473,7 @@ class Panel {
                         'label': label,
                         'type': 'field',
                         'dtype': 'float',
-                        'value':value
+                        'value': value
                       });
                       break;
                     }
@@ -470,7 +485,7 @@ class Panel {
                         'label': label,
                         'type': 'field',
                         'dtype': 'float',
-                        'value':value
+                        'value': value
                       });
                       break;
                     }
@@ -482,7 +497,7 @@ class Panel {
                         'label': label,
                         'type': 'field',
                         'dtype': 'integer',
-                        'value':value
+                        'value': value
                       });
                       break;
                     }
@@ -494,7 +509,7 @@ class Panel {
                         'label': label,
                         'type': 'field',
                         'dtype': 'text',
-                        'value':value
+                        'value': value
                       });
                       break;
                     }
@@ -506,7 +521,7 @@ class Panel {
                         'label': label,
                         'type': 'field',
                         'dtype': 'text',
-                        'value':value
+                        'value': value
                       });
                       break;
                     }
