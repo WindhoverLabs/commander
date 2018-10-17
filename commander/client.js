@@ -120,8 +120,6 @@ CommanderClient.prototype.getTlmDefs = function (tlmObj, cb) {
 
 CommanderClient.prototype.updateTelemetry = function (items) {
 	var self = this;
-	
-	console.log(items);
 
 	for(var itemID in items) {
 		var subs = self.subscriptions[itemID];

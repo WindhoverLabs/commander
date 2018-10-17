@@ -299,7 +299,6 @@ BinaryDecoder.prototype.getOperationByPath = function (inOpsPath) {
 
 
 BinaryDecoder.prototype.getTlmDefByPath = function (path) {
-	console.log(path);
     var appName = this.getAppNameFromPath(path);
     var operationName = this.getOperationFromPath(path);
     if(typeof operationName === 'undefined') {
@@ -335,8 +334,8 @@ BinaryDecoder.prototype.getTlmDefByPath = function (path) {
                         return fieldDef.fieldDef;
                     }
                 }
-	    }
-	}
+            }
+        }
     }
 }
 
@@ -522,6 +521,7 @@ BinaryDecoder.prototype.processBinaryMessage = function (buffer) {
     	
         var pbMsg = def.msgDef.proto_msg;
         var symbolName = pbMsg.substring(0, pbMsg.length - 3);
+
         this.instanceEmit(config.get('jsonOutputStreamID'), {content:tlmObj, opsPath: def.opsPath, symbol:symbolName, msgID:msgID, msgTime:msgTime});
     }
 };
@@ -1034,9 +1034,7 @@ BinaryDecoder.prototype.getFieldValue = function (buffer, fieldDef, bitOffset) {
 					var nextFieldDef = this.getMsgDefByName(fieldDef.airliner_type);
 				
 				    if(typeof nextFieldDef === 'undefined') {
-//				    	value = this.getFieldValueAsPbType(buffer, fieldDef, bitOffset);
-//				    	console.log(fieldDef);
-//				    	console.log(value);
+				    	value = this.getFieldValueAsPbType(buffer, fieldDef, bitOffset);
 				    } else {
 				    	var nextFields = nextFieldDef.fields;
 				    	var value = {};

@@ -485,7 +485,7 @@ Commander.prototype.logCriticalEvent = function (eventID, text) {
 Commander.prototype.logEvent = function (instance, plugin, component, eventID, criticality, text) {
     /* TODO - Write something more formal, like file logging and filtering. */
 
-    if(criticality !== 'DEBUG') {
+    if(criticality !== '---') {
         var date = new Date(); 
         var timestamp = date.getTime();
 	
