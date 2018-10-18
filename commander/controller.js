@@ -232,6 +232,83 @@ function LoadLayout() {
   reader.readAsText(files[0]);
 }
 
+/* Make Gadget*/
+function MakeGadget1() {
+  /* now get form opsPath */
+  var widthToAddGadgetThresh = 250;
+  var bufferSize = 10;
+  var opsPath = $("[id='inputField0']").val();
+  var gadgetName = $("[id='inputField1']").val();
+  var totalWidth = $('#cdr-nav-btm').width();
+  var occupiedWidth = 0;
+  $('.cdr-gadget').each(function(index) {
+      occupiedWidth += parseInt($(this).width(), 10);
+  });
+  var remainingWidth = totalWidth - occupiedWidth;
+  if (remainingWidth < widthToAddGadgetThresh) {
+    cu.logError('MakeGadget | new gadget cannot be added, no visual space available. Try removing existing gadgets.');
+  }
+  else {
+    var uniqueID = cu.makeKey();
+    var uniqueID = 'cdr-gadget-'+uniqueID
+    var gadgetHtml = '<div id='+uniqueID+' class="cdr-gadget" onmouseover=gadgetHoverHandle(this,"onmouseover") onmouseleave=gadgetHoverHandle(this,"onmouseleave")>'+
+      '<div data-key='+uniqueID+' class="cdr-gadget-close" onclick=gadgetCloseHandle(this)>x'+
+      '</div>'+
+      '<div data-key='+uniqueID+' class="cdr-gadget-text">'+ gadgetName +
+      '</div>'+
+      '<div id=spark-'+uniqueID+' data-key='+uniqueID+' class="cdr-gadget-value" data-value=[]>'+
+      '</div>'+
+    '</div>'
+
+    $('#cdr-gadget-container').append(gadgetHtml);
+    var sparkline1;
+    if(!(opsPath in Object.keys(rouge_subscriptions))) {
+      session.subscribe([{name:opsPath}], (param)=>{
+        try {
+          var sample = param.sample[param.sample.length - 1];
+          var value = sample.value;
+          var gdgtObj = $('.cdr-gadget-value[data-key='+uniqueID+']');
+          if(gdgtObj.data('value').length == 0){
+            gdgtObj.data('value').push(value);
+            sparkline1 = new Sparkline(document.getElementById('spark-'+uniqueID),{width: 50, height:20});
+          }
+          else if (gdgtObj.data('value').length == 10) {
+            gdgtObj.data('value').push(value);
+            gdgtObj.data('value').splice(0,1);
+          }
+          else {
+            gdgtObj.data('value').push(value);
+          }
+          sparkline1.draw(gdgtObj.data('value'));
+        }
+        catch(e){
+          cu.logError("MakeGadget | unable to process response. error= ",e.message)
+        }
+      });
+      rouge_subscriptions[opsPath] = '.cdr-gadget-value[data-key='+uniqueID+']';
+    }
+
+  }
+}
+
+function gadgetHoverHandle1(elm, evt) {
+  if(evt == 'onmouseover') {
+    $(elm).find('.cdr-gadget-close').css('display','block')
+  }
+  else if(evt == 'onmouseleave') {
+    /* Let close button be displayed for 2 more seconds */
+    setTimeout(()=>{
+      $(elm).find('.cdr-gadget-close').css('display','none')
+    },2000);
+
+  }
+}
+
+function gadgetCloseHandle1(elm) {
+  var uniqueID = $(elm).data('key');
+  $('#'+uniqueID).remove();
+}
+
 /* Modal */
 /* Initialize modal functionality*/
 function InitModal() {

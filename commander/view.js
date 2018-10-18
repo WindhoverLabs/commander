@@ -2,6 +2,7 @@
 var subscriptions = {};
 var rouge_subscriptions = {};
 var dataplot_subscriptions = {};
+var gadget_subscriptions = [];
 var rougeCleanUpInterval = 20000;
 
 
@@ -104,18 +105,36 @@ function processTelemetryUpdate(param) {
               case 'boolean':
                 {
                   if (staleness) {
-                    nodeElm.setAttribute('class', 'led-basic');
+                    nodeElm.setAttribute('class', 'stale');
                   } else {
                     nodeElm.textContent = '';
+                    nodeElm.removeAttribute('class');
                     if (value) {
-                      nodeElm.setAttribute('class', 'led-basic led-on')
+                      nodeElm.textContent = "True"
                     } else {
-                      nodeElm.setAttribute('class', 'led-basic led-off')
+                      nodeElm.textContent = "False"
                     }
                   }
                   break;
                 }
             }
+          }
+        }
+        else if (indicatorFormat == 'led') {
+          if (opsPathDef != undefined) {
+            if (staleness) {
+              nodeElm.setAttribute('class', 'led-basic');
+            } else {
+              nodeElm.textContent = '';
+              if (value) {
+                nodeElm.setAttribute('class', 'led-basic led-on')
+              } else {
+                nodeElm.setAttribute('class', 'led-basic led-off')
+              }
+            }
+          }
+          else {
+            nodeElm.setAttribute('class', 'led-basic');
           }
         }
         else if (indicatorFormat == 'dataplot') {
@@ -558,6 +577,7 @@ class Panel {
         cu.assert(format != undefined, 'indicator format is not found');
         switch (format) {
           case 'text':
+          case 'led':
           case 'dataplot':
             {
               cls.subscribeText(dataObj, self);

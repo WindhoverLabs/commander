@@ -178,6 +178,14 @@ CommanderGenerator.prototype.parseJSON = function(str) {
   return JSONObj;
 }
 
+CommanderGenerator.prototype.getSize = function(obj) {
+  var str = '';
+  if (typeof obj == 'object') {
+    str = JSON.stringify(obj);
+  }
+  return str.length;
+};
+
 /* Validator API,
    Collector of validation functions */
 function CommanderValidator() {}
@@ -322,6 +330,10 @@ CommanderUtilities.prototype.parseJSON = function(str) {
     this.logError('Parse JSON | ', 'Unable to parse string : ', strObj);
   }
   return strObj;
+}
+
+CommanderUtilities.prototype.getSize = function(obj) {
+  return this.generator.getSize(obj);
 }
 
 CommanderUtilities.prototype.isArray = function(obj) {

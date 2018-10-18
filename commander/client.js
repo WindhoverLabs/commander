@@ -2,18 +2,21 @@
 
 var CommanderClient = CommanderClient || {};
 
+
 CommanderClient.prototype.__proto__ = EventEmitter.prototype;
 
 function CommanderClient() {
-    this.isSocketConnected = false;
+  this.isSocketConnected = false;
 	this.socket;
 	this.subscriptions = {};
+  this.PerfData = {};
+  this.PerfData.up = 0;
+  this.PerfData.down = 0;
 
 	cu.logInfo('Clinet | CommanderClient');
 
 	this.connect();
 }
-
 
 
 CommanderClient.prototype.isSocketConnected = function() {
@@ -22,9 +25,11 @@ CommanderClient.prototype.isSocketConnected = function() {
 };
 
 
-
 CommanderClient.prototype.getLayouts = function (path, cb){
+    var self = this;
     this.socket.emit('getLayouts', path, function(result){
+        self.PerfData.up += 1;
+        self.PerfData.down += cu.getSize(result);
         cb(result);
     });
 };
@@ -32,7 +37,10 @@ CommanderClient.prototype.getLayouts = function (path, cb){
 
 
 CommanderClient.prototype.getPanels = function (path, cb) {
+    var self = this;
     this.socket.emit('getPanels', path, function(result) {
+        self.PerfData.up += 1;
+        self.PerfData.down += cu.getSize(result);
         cb(result);
     });
 };
@@ -44,6 +52,13 @@ CommanderClient.prototype.getRandom = function (cb){
         var random_boolean = Math.random() >= 0.5;
         cb(random_boolean);
     }, 500);
+};
+
+CommanderClient.prototype.getPerfData = function (cb){
+  var res = this.PerfData;
+  cb(res);
+  this.PerfData.up = 0;
+  this.PerfData.down = 0;
 };
 
 
@@ -87,8 +102,11 @@ CommanderClient.prototype.getDirectoryListing = function (path, extension, cb){
 
 
 CommanderClient.prototype.getViews = function (cb) {
+    var self = this;
     if(this.isSocketConnected){
     	this.socket.emit('getViews', function(views){
+            self.PerfData.up += 1;
+            self.PerfData.down += cu.getSize(views);
             cb(views);
         });
     };
@@ -97,10 +115,12 @@ CommanderClient.prototype.getViews = function (cb) {
 
 
 CommanderClient.prototype.getCmdDef = function (cmdObj,cb) {
+    var self = this;
     if(this.isSocketConnected) {
         this.socket.emit('getCmdDef', cmdObj, function(cmdDef) {
-        	var outCmdDef = {name:cmdDef.opsPath, argument:cmdDef.args};
-
+        	 var outCmdDef = {name:cmdDef.opsPath, argument:cmdDef.args};
+           self.PerfData.up += 1;
+           self.PerfData.down += cu.getSize(outCmdDef);
             cb(outCmdDef);
         });
     };
@@ -109,8 +129,11 @@ CommanderClient.prototype.getCmdDef = function (cmdObj,cb) {
 
 
 CommanderClient.prototype.getTlmDefs = function (tlmObj, cb) {
+    var self = this;
     if(this.isSocketConnected) {
     	this.socket.emit('getTlmDefs', tlmObj, function(tlmDef) {
+            self.PerfData.up += 1;
+            self.PerfData.down += cu.getSize(tlmDef);
             cb(tlmDef);
         });
     };
@@ -131,12 +154,15 @@ CommanderClient.prototype.updateTelemetry = function (items) {
               opsPath:opsPath
             };
 
+      self.PerfData.down += cu.getSize(param);
 			cb(param);
 		}
 	}
 }
 
 CommanderClient.prototype.unsubscribe = function (tlmObj){
+    var self = this;
+
     if(this.isSocketConnected){
     	var tlmOpsPaths = [];
 
@@ -151,11 +177,14 @@ CommanderClient.prototype.unsubscribe = function (tlmObj){
     	}
 
     	this.socket.emit('unsubscribe', tlmOpsPaths);
+      self.PerfData.up += 1;
 
     };
 };
 
 CommanderClient.prototype.subscribe = function (tlmObj, cb){
+    var self = this;
+
     if(this.isSocketConnected){
     	var tlmOpsPaths = [];
 
@@ -171,6 +200,7 @@ CommanderClient.prototype.subscribe = function (tlmObj, cb){
     	}
 
     	this.socket.emit('subscribe', tlmOpsPaths);
+      self.PerfData.up += 1;
 
     };
 };
@@ -178,9 +208,11 @@ CommanderClient.prototype.subscribe = function (tlmObj, cb){
 
 
 CommanderClient.prototype.sendCommand = function (cmdObj) {
+    var self = this;
     cu.logInfo('Client | sent command : ', JSON.stringify(cmdObj, 2));
     if(this.isSocketConnected){
     	this.socket.emit('sendCmd', cmdObj);
+      self.PerfData.up += 1;
     };
 };
 
