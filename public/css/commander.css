@@ -273,18 +273,27 @@ h2 {
 }
 
 .led-basic {
+  display: block;
+  vertical-align: middle;
   width: 12.5px;
   height: 12.5px;
   border-radius: 50px;
-  background-color: Black
+  background: #232526;  /* fallback for old browsers */
+  background: -webkit-linear-gradient(to right, #414345, #232526);  /* Chrome 10-25, Safari 5.1-6 */
+  background: linear-gradient(to right, #414345, #232526); /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
 }
 
 .led-on {
-  background-color: Green !important;
+  background: #56ab2f !important;  /* fallback for old browsers */
+  background: -webkit-linear-gradient(to right, #a8e063, #56ab2f) !important;  /* Chrome 10-25, Safari 5.1-6 */
+  background: linear-gradient(to right, #a8e063, #56ab2f) !important; /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
+
 }
 
 .led-off {
-  background-color: Red !important;
+  background: #ED213A !important;  /* fallback for old browsers */
+  background: -webkit-linear-gradient(to right, #93291E, #ED213A) !important;  /* Chrome 10-25, Safari 5.1-6 */
+  background: linear-gradient(to right, #93291E, #ED213A) !important; /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
 }
 
 path {
