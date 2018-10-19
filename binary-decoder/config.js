@@ -71,6 +71,11 @@ var config = convict({
         format: 'int',
         default: 0
     },
+    endian: {
+        doc: 'Endianness of the target.  Either \'little\' or \'big\'.',
+        format: String,
+        default: ''
+    },
     msgDefPath: {
         doc: 'Directory containing message definition JSON file, i.e. airliner.json.',
         format: String,
