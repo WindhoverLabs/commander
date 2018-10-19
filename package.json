@@ -46,6 +46,7 @@
     "svg.js": "^2.6.5",
     "websocket": "^1.0.26",
     "wolfy87-eventemitter": "^5.2.5",
-    "sparklines":"^1.2.0" 
+    "sparklines":"^1.2.0",
+    "jquery-contextmenu":"^2.7.1" 
   }
 }

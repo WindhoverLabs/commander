@@ -12,11 +12,11 @@
 var llc = new CustomEvent('layout-load-complete');
 
 function isAlreadyRendered(n) {
-  var events = $._data(n,"events")
+  var events = $._data(n, "events")
   var result = false;
-  if(events != undefined) {
+  if (events != undefined) {
     if (events.hasOwnProperty('mousedown') ||
-        events.hasOwnProperty('touchdown')) {
+      events.hasOwnProperty('touchdown')) {
       result = true;
     }
   }
@@ -41,6 +41,7 @@ function NodeRendered(e, node) {
     myLayout.createDragSource(node.$el[0], newItemConfig);
 
   }
+  navBarTooltips(node,node.$el);
 }
 
 /* This function is triggered when a selectable node is selected */
@@ -129,7 +130,7 @@ function InitLayout(mlyt) {
   /* Register Component in layout */
   mlyt.registerComponent('Blank', function(container, state) {
     if (state.link) {
-      container.getElement().load( state.link);
+      container.getElement().load(state.link);
     } else {
       container.getElement().html('<h2>' + state.text + '</h2>');
     }
@@ -212,14 +213,13 @@ function LoadLayout() {
           window.dispatchEvent(llc);
           InitLayout(myLayout);
           cu.logInfo('Layout | loaded from local drive')
-          if(savedState.hasOwnProperty('database')) {
+          if (savedState.hasOwnProperty('database')) {
             cu.clearDatabase();
-            for(var e in savedState.database ) {
-              cu.addRecord(e,savedState.database[e])
+            for (var e in savedState.database) {
+              cu.addRecord(e, savedState.database[e])
             }
-          }
-          else {
-           cu.logError('Layout | loaded configuration has no database')
+          } else {
+            cu.logError('Layout | loaded configuration has no database')
           }
         } else {
           cu.logError('Layout | could not be loaded')
@@ -232,82 +232,6 @@ function LoadLayout() {
   reader.readAsText(files[0]);
 }
 
-/* Make Gadget*/
-function MakeGadget1() {
-  /* now get form opsPath */
-  var widthToAddGadgetThresh = 250;
-  var bufferSize = 10;
-  var opsPath = $("[id='inputField0']").val();
-  var gadgetName = $("[id='inputField1']").val();
-  var totalWidth = $('#cdr-nav-btm').width();
-  var occupiedWidth = 0;
-  $('.cdr-gadget').each(function(index) {
-      occupiedWidth += parseInt($(this).width(), 10);
-  });
-  var remainingWidth = totalWidth - occupiedWidth;
-  if (remainingWidth < widthToAddGadgetThresh) {
-    cu.logError('MakeGadget | new gadget cannot be added, no visual space available. Try removing existing gadgets.');
-  }
-  else {
-    var uniqueID = cu.makeKey();
-    var uniqueID = 'cdr-gadget-'+uniqueID
-    var gadgetHtml = '<div id='+uniqueID+' class="cdr-gadget" onmouseover=gadgetHoverHandle(this,"onmouseover") onmouseleave=gadgetHoverHandle(this,"onmouseleave")>'+
-      '<div data-key='+uniqueID+' class="cdr-gadget-close" onclick=gadgetCloseHandle(this)>x'+
-      '</div>'+
-      '<div data-key='+uniqueID+' class="cdr-gadget-text">'+ gadgetName +
-      '</div>'+
-      '<div id=spark-'+uniqueID+' data-key='+uniqueID+' class="cdr-gadget-value" data-value=[]>'+
-      '</div>'+
-    '</div>'
-
-    $('#cdr-gadget-container').append(gadgetHtml);
-    var sparkline1;
-    if(!(opsPath in Object.keys(rouge_subscriptions))) {
-      session.subscribe([{name:opsPath}], (param)=>{
-        try {
-          var sample = param.sample[param.sample.length - 1];
-          var value = sample.value;
-          var gdgtObj = $('.cdr-gadget-value[data-key='+uniqueID+']');
-          if(gdgtObj.data('value').length == 0){
-            gdgtObj.data('value').push(value);
-            sparkline1 = new Sparkline(document.getElementById('spark-'+uniqueID),{width: 50, height:20});
-          }
-          else if (gdgtObj.data('value').length == 10) {
-            gdgtObj.data('value').push(value);
-            gdgtObj.data('value').splice(0,1);
-          }
-          else {
-            gdgtObj.data('value').push(value);
-          }
-          sparkline1.draw(gdgtObj.data('value'));
-        }
-        catch(e){
-          cu.logError("MakeGadget | unable to process response. error= ",e.message)
-        }
-      });
-      rouge_subscriptions[opsPath] = '.cdr-gadget-value[data-key='+uniqueID+']';
-    }
-
-  }
-}
-
-function gadgetHoverHandle1(elm, evt) {
-  if(evt == 'onmouseover') {
-    $(elm).find('.cdr-gadget-close').css('display','block')
-  }
-  else if(evt == 'onmouseleave') {
-    /* Let close button be displayed for 2 more seconds */
-    setTimeout(()=>{
-      $(elm).find('.cdr-gadget-close').css('display','none')
-    },2000);
-
-  }
-}
-
-function gadgetCloseHandle1(elm) {
-  var uniqueID = $(elm).data('key');
-  $('#'+uniqueID).remove();
-}
 
 /* Modal */
 /* Initialize modal functionality*/
@@ -334,7 +258,7 @@ function InitModal() {
 
       /* set custom data */
       for (let e in custom) {
-        if(custom[e].value == undefined) {
+        if (custom[e].value == undefined) {
           switch (custom[e].type) {
             case "field":
               item = "<div class='form-group'>" +
@@ -380,10 +304,9 @@ function InitModal() {
             default:
               cu.logDebug("Modal | Unknown data passed as attribute");
           }
-        }
-        else {
+        } else {
           item = "<div class='form-group disappear'><label class='col-form-label' id=labelField" + e + " for=inputField" + e + ">" + custom[e].label + "</label>"
-          item += "<input class='form-control' type='text' value="+custom[e].value+" id=inputField" + e + ">"
+          item += "<input class='form-control' type='text' value=" + custom[e].value + " id=inputField" + e + ">"
           item += "</div>"
           $('#modalForm').append(item);
         }
@@ -447,18 +370,140 @@ function InitMenuState() {
 }
 
 /* ToolTips */
+function navBarTooltips(node,JQObj) {
+  try{
+    if(node.type == 'file') {
+      node.$el.contextMenu({
+        selector: '*',
+        items:{
+          'open':{
+            name: 'Open',
+            callback: function(itemKey,opt,e) {
+              /* Do click */
+              opt.$trigger.click()
+            }
+          },
+          'showInfo':{
+            name:'Show Info',
+            items: {
+              'info': {
+                type:'html',
+                html:'<div class="cdr-tooltip-container">' +
+                  '<div class="cdr-tooltip-row"> Description : <span>' + node.longDescription +
+                  '</span></div>' +
+                  '<div class="cdr-tooltip-row"> Path : <span>' + node.urlPath +
+                  '</div>' +
+                  '</div>'
+              }
+            },
+          }
+        }
+      });
+    }
+    else if (node.type == 'config') {
+      node.$el.contextMenu({
+        selector: '*',
+        items:{
+          'open':{
+            name: 'Open',
+            callback: function(itemKey,opt,e) {
+              /* Do click */
+              opt.$trigger.click()
+            }
+          },
+          'openNewWindow':{
+            name:'Open in new window',
+            callback: function(itemKey,opt,e) {
+              if(node.type =='config') {
+                $.get(node.urlPath, (response) => {
+                  var jsonObj = JSON.parse(response);
+                  var newWindow = window.open(window.location.href);
+                  var theDoc = newWindow.document;
+                  var theScript = document.createElement('script');
+
+                  function injectThis(x) {
+                    setTimeout(()=>{
+                      window.myLayout.destroy();
+                      window.myLayout = new window.GoldenLayout(x, $('#cdr-layout-container'));
+                      window.dispatchEvent(llc);
+                      window.InitLayout(myLayout);
+                    },2000)
+
+                  }
+                  theScript.innerHTML = '(' + injectThis.toString() + '('+response+'));';
+                  newWindow.onload = function () {
+                      // Append the script to the new window's body.
+                      // Only seems to work with `this`
+                      this.document.body.appendChild(theScript);
+                  };
+
+                });
+              }
+            }
+          },
+          'showInfo':{
+            name:'Show Info',
+            items: {
+              'info': {
+                type:'html',
+                html:'<div class="cdr-tooltip-container">' +
+                  '<div class="cdr-tooltip-row"> Description : <span>' + node.longDescription +
+                  '</span></div>' +
+                  '<div class="cdr-tooltip-row"> Path : <span>' + node.urlPath +
+                  '</div>' +
+                  '</div>'
+              }
+            },
+          }
+        }
+      });
+    }
+    else {
+      node.$el.contextMenu({
+        selector: '*',
+        items:{
+          'open':{
+            name: 'Open',
+            callback: function(itemKey,opt,e) {
+              /* Do click */
+              opt.$trigger.click()
+            }
+          },
+          'showInfo':{
+            name:'Show Info',
+            items: {
+              'info': {
+                type:'html',
+                html:'<div class="cdr-tooltip-container">' +
+                  '<div class="cdr-tooltip-row"> Description : <span>' + node.longDescription +
+                  '</span></div>' +
+                  '<div class="cdr-tooltip-row"> Path : <span>' + node.urlPath +
+                  '</div>' +
+                  '</div>'
+              }
+            },
+          }
+        }
+      });
+    }
+  }
+  catch(e) {
+    cu.logError('navBarTooltips | unable to render tool tips for node : ',JSON.stringify(node))
+  }
+}
+
 function InitToolTips() {
-  $('[data-toggle="tooltip"]').tooltip({
-    "container": "false"
-  });
-
-  $('[data-toggle="tooltip"]').on('show.bs.tooltip', function(e) {
-    $("#tooltips").text(e.target.dataset.originalTitle);
-  });
-
-  $('[data-toggle="tooltip"]').on('hide.bs.tooltip', function(e) {
-    $("#tooltips").text("ToolTips");
-  });
+  var options = {
+    container: 'body',
+    delay: {
+      'show': 500,
+      'hide': 100
+    },
+    trigger: 'hover',
+    placement: 'auto',
+    boundary: 'window',
+  }
+  $('[data-tooltip="true"]').tooltip(options);
 }
 
 /* Scrollbar */
@@ -545,74 +590,80 @@ function IndicatorCloseClick() {
 
 
 function UpdateLayoutNode(node, display) {
-    session.getLayouts(node.path, function (dirEntries) {
-        var layoutEntries = [];
+  session.getLayouts(node.path, function(dirEntries) {
+    var layoutEntries = [];
 
-        for(var entryID in dirEntries) {
-            var dirEntry = dirEntries[entryID];
+    for (var entryID in dirEntries) {
+      var dirEntry = dirEntries[entryID];
+      var layoutEntry = {
+        name: '/' + entryID,
+        text: dirEntry.shortDescription,
+        longDescription: dirEntry.longDescription,
+        path: node.path + '/' + entryID,
+        urlPath: node.path + '/' + entryID,
+        //type: dirEntry.type,
+        //ext: dirEntry.type,
+        //lazyLoad: true,
+        //ext: dirEntries[i].path,
+        selectable: true,
+        checkable: false
+      };
 
-            var layoutEntry = {
-                name: '/' + entryID,
-                text: dirEntry.shortDescription,
-                path: node.path + '/' + entryID,
-                urlPath: node.path + '/' + entryID,
-                //type: dirEntry.type,
-                //ext: dirEntry.type,
-                //lazyLoad: true,
-                //ext: dirEntries[i].path,
-                selectable: true,
-                checkable: false
-            };
+      if (dirEntry.hasOwnProperty('nodes')) {
+        layoutEntry.lazyLoad = true;
+        layoutEntry.selectable = false;
+      } else {
+        layoutEntry.lazyLoad = false;
+        layoutEntry.selectable = true;
+        layoutEntry.type = 'config';
+        layoutEntry.url = dirEntry.urlPath;
+      }
 
-	      if (dirEntry.hasOwnProperty('nodes')) {
-		layoutEntry.lazyLoad = true;
-		layoutEntry.selectable = false;
-	      } else {
-		layoutEntry.lazyLoad = false;
-		layoutEntry.selectable = true;
-		layoutEntry.type = 'config';
-		layoutEntry.url = dirEntry.urlPath;
-	      }
+      layoutEntries.push(layoutEntry);
+    }
 
-            layoutEntries.push(layoutEntry);
-        }
-
-        var tree = $('#cdr-layout-menu-container').treeview(true)
-        tree.addNode(layoutEntries, node, node.index, { silent: true} );
-        tree.expandNode(node, { silent: true, ignoreChildren: true } );
+    var tree = $('#cdr-layout-menu-container').treeview(true)
+    tree.addNode(layoutEntries, node, node.index, {
+      silent: true
+    });
+    tree.expandNode(node, {
+      silent: true,
+      ignoreChildren: true
+    });
   });
 }
 
 function UpdatePanelNode(node, display) {
-    session.getPanels(node.path, function (dirEntries) {
-        var panelEntries = [];
+  session.getPanels(node.path, function(dirEntries) {
+    var panelEntries = [];
 
-        for(var entryID in dirEntries) {
-            var dirEntry = dirEntries[entryID];
+    for (var entryID in dirEntries) {
+      var dirEntry = dirEntries[entryID];
 
-            var panelEntry = {
-                name: '/' + entryID,
-                text: dirEntry.shortDescription,
-                path: node.path + '/' + entryID,
-                urlPath: node.path + '/' + entryID,
-                //type: dirEntry.type,
-                //ext: dirEntry.type,
-                //lazyLoad: true,
-                //ext: dirEntries[i].path,
-                selectable: true,
-                checkable: false
-            };
+      var panelEntry = {
+        name: '/' + entryID,
+        text: dirEntry.shortDescription,
+        longDescription: dirEntry.longDescription,
+        path: node.path + '/' + entryID,
+        urlPath: node.path + '/' + entryID,
+        //type: dirEntry.type,
+        //ext: dirEntry.type,
+        //lazyLoad: true,
+        //ext: dirEntries[i].path,
+        selectable: true,
+        checkable: false
+      };
 
-            if(dirEntry.hasOwnProperty('nodes')) {
-                panelEntry.lazyLoad = true;
-                panelEntry.selectable = false;
-            } else {
-                panelEntry.icon = 'fa fa-file';
-                panelEntry.lazyLoad = false;
-                panelEntry.selectable = true;
-                panelEntry.type = 'file';
-                panelEntry.url = node.path + '/' + entryID
-            }
+      if (dirEntry.hasOwnProperty('nodes')) {
+        panelEntry.lazyLoad = true;
+        panelEntry.selectable = false;
+      } else {
+        panelEntry.icon = 'fa fa-file';
+        panelEntry.lazyLoad = false;
+        panelEntry.selectable = true;
+        panelEntry.type = 'file';
+        panelEntry.url = node.path + '/' + entryID
+      }
 
       panelEntries.push(panelEntry);
 
@@ -687,25 +738,28 @@ $(() => {
       ]
     }]
   }
-
+  if (window.__backupConfig != undefined){
+    config = window.__backupConfig;
+  }
   session.on('connect', function() {
 
     cu.logInfo('Connection | session connected');
     if (_sescon_never) {
       session.getPanels('/', function(dirEntries) {
-      var panelEntries = [];
+        var panelEntries = [];
 
-      for(var entryID in dirEntries) {
+        for (var entryID in dirEntries) {
           var entry = {
-              name: '/' + entryID,
-              text: dirEntries[entryID].shortDescription,
-              path: '/' + entryID,
-              urlPath: '/' + entryID,
-              type: dirEntries[entryID].type,
-              lazyLoad: true,
-              ext: entryID,
-              selectable: false,
-              checkable: false
+            name: '/' + entryID,
+            text: dirEntries[entryID].shortDescription,
+            longDescription: dirEntries[entryID].longDescription,
+            path: '/' + entryID,
+            urlPath: '/' + entryID,
+            type: dirEntries[entryID].type,
+            lazyLoad: true,
+            ext: entryID,
+            selectable: false,
+            checkable: false
           };
 
           panelEntries.push(entry);
@@ -728,22 +782,23 @@ $(() => {
         });
       });
       session.getLayouts('/', function(dirEntries) {
-	      var entries = [];
+        var entries = [];
 
-	      for(var entryID in dirEntries) {
-		  var entry = {
-		      name: '/' + entryID,
-		      text: dirEntries[entryID].shortDescription,
-		      path: '/' + entryID,
-		      urlPath: '/' + entryID,
-		      type: dirEntries[entryID].type,
-		      lazyLoad: true,
-		      ext: entryID,
-		      selectable: false,
-		      checkable: false
-		  };
+        for (var entryID in dirEntries) {
+          var entry = {
+            name: '/' + entryID,
+            text: dirEntries[entryID].shortDescription,
+            longDescription: dirEntries[entryID].longDescription,
+            path: '/' + entryID,
+            urlPath: '/' + entryID,
+            type: dirEntries[entryID].type,
+            lazyLoad: true,
+            ext: entryID,
+            selectable: false,
+            checkable: false
+          };
 
-		  entries.push(entry);
+          entries.push(entry);
         }
 
         $('#cdr-layout-menu-container').treeview({
@@ -771,7 +826,7 @@ $(() => {
 
       InitModal();
       InitMenuState();
-      //InitToolTips();
+      InitToolTips();
       //InitPopover();
       InitScrollBar();
       InitResizeCtl();

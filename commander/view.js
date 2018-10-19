@@ -205,7 +205,25 @@ function processTelemetryDefinitionUpdate(opsPaths) {
     /* Check elms if it has atlest 1 elm to apply update */
     if (elms != undefined && def != undefined) {
       elms.forEach((e) => {
-        /* TODO: Add tool tip functionality here */
+        var template = '<div class="cdr-tooltip-container">'+
+          // '<div class="cdr-tooltip-short-description">'+ def.shortDescription +
+          // '</div>'+
+          // '<div class="cdr-tooltip-long-description">'+ def.longDescription +
+          // '</div>'+
+          '<div class="cdr-tooltip-row"> Ops-path : <span>'+ def.opsPath +
+          '</span></div>'+
+          '<div class="cdr-tooltip-row">Datatype : <span>'+ def.dataType +
+          '</span></div>'+
+        '</div>'
+        var options = {
+          container:'body',
+          delay: {'show':1000,'hide':100},
+          html:true,
+          placement:'auto',
+          boundary:'window',
+          title: template
+        }
+        $(e).tooltip(options);
       });
     }
   });

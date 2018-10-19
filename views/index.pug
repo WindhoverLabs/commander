@@ -23,6 +23,7 @@ cdr-nav-iconshtml(lang='en-us')
     script(type="text/javascript" src="/scripts/file-saver/FileSaver.min.js")
     script(type="text/javascript" src="/scripts/sprintf-js/dist/sprintf.min.js")
     script(type="text/javascript" src="/scripts/sparklines/source/sparkline.js")
+    script(type="text/javascript" src="/scripts/jquery-contextmenu/dist/jquery.contextMenu.min.js")
     <!-- CSS Libraries -->
     link(rel="stylesheet" type="text/css" href="/scripts/jquery-ui-dist/jquery-ui.min.css")
     link(rel="stylesheet" type="text/css" href="/scripts/overlayscrollbars/css/OverlayScrollbars.min.css")
@@ -32,7 +33,8 @@ cdr-nav-iconshtml(lang='en-us')
     link(rel="stylesheet" type="text/css" href="/scripts/font-awesome/css/font-awesome.min.css")
     link(type="text/css" rel="stylesheet" href="/css/goldenlayout-base.css")
     link(type="text/css" rel="stylesheet" href="/css/goldenlayout-dark-theme.css")  
-    link(type="text/css" rel="stylesheet" href="/scripts/cesium/Source/Widgets/widgets.css")  
+    link(type="text/css" rel="stylesheet" href="/scripts/cesium/Source/Widgets/widgets.css")
+    link(type="text/css" rel="stylesheet" href="/scripts/jquery-contextmenu/dist/jquery.contextMenu.min.css")  
   body
     <!-- Generic Modal Template -->
     div#genericInputModal.modal.fade(tabindex="-1" role="dialog" aria-labelledby="genericInputModal" aria-hidden="true")
@@ -55,7 +57,7 @@ cdr-nav-iconshtml(lang='en-us')
         span.navbar-toggler-icon
       #cdr-nav-top-left-content.collapse.navbar-collapse
         ul.navbar-nav.cdr-nav-btn
-            button#cdr-app-menu-toggle.btn.btn-outline-primary
+            button#cdr-app-menu-toggle.btn.btn-outline-primary(data-tooltip='true' title='Open/Close Menus')
               i.cdr-nav-icons.fa.fa-bars
         ul.navbar-nav.ml-auto
       a.cdr-nav-top-brand.navbar-brand(href="#")
@@ -63,12 +65,12 @@ cdr-nav-iconshtml(lang='en-us')
       #cdr-nav-top-right-content.collapse.navbar-collapse
         ul.navbar-nav.ml-auto
         ul.navbar-nav.cdr-nav-btn
-            button.btn.btn-outline-primary#cdr-widget(data-toggle="modal" data-target="#genericInputModal" data-title="Generate a Widget" data-submit="MakeWidget" data-custom="") 
+            button.btn.btn-outline-primary#cdr-widget( data-tooltip='true' title='Widget Selector' data-toggle="modal" data-target="#genericInputModal" data-title="Generate a Widget" data-submit="MakeWidget" data-custom="") 
               i.cdr-nav-icons.fa.fa-plus 
-        ul.navbar-nav.cdr-nav-btn
+        ul.navbar-nav.cdr-nav-btn(data-tooltip='true' title='Load Layout')
             button.btn.btn-outline-primary( data-toggle="modal" data-target="#genericInputModal" data-title="Load Layout" data-submit="LoadLayout" data-custom='[{"label":"Select Layout", "type":"browse", "dtype":"none", "getItem":"GetStoredLayoutList"}]') 
               i.cdr-nav-icons.fa.fa-download
-        ul.navbar-nav.cdr-nav-btn
+        ul.navbar-nav.cdr-nav-btn(data-tooltip='true' title='Save Layout')
             button.btn.btn-outline-primary(data-toggle="modal" data-target="#genericInputModal" data-title="Save Layout" data-submit="SaveLayout" data-custom='[{"label":"Enter Layout Name ", "type":"field", "dtype":"text"}]') 
               i.cdr-nav-icons.fa.fa-save 
     <!-- Central Content Area -->
@@ -77,8 +79,8 @@ cdr-nav-iconshtml(lang='en-us')
         div#cdr-layout-container
         div#cdr-app-menu 
           div#cdr-panel-layout-switch.cdr-center-btn-group.btn-group(role="group" aria-label="Toggle Menus")
-            button#cdr-layout-menu-toggle.btn.cdr-outline-primary.active Layout
-            button#cdr-panel-menu-toggle.btn.cdr-outline-primary Panels
+            button#cdr-layout-menu-toggle.btn.cdr-outline-primary.active(data-tooltip='true' title='A layout(collection of webpages) directory') Layout
+            button#cdr-panel-menu-toggle.btn.cdr-outline-primary(data-tooltip='true' title='A webpage directory') Panels
           div#cdr-panel-menu-container.cdr-menu-container(data-open="false")
           div#cdr-layout-menu-container.cdr-menu-container.menuShow(data-open="true")
     <!-- Bottom Navigation Bar -->

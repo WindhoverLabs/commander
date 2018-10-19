@@ -373,25 +373,24 @@ path {
 /******************************************
   ToolTips
 *******************************************/
-.cdr-tooltip {
-  width: 500px;
+.cdr-tooltip-container{
+  font-size: 12px;
+  display: grid;
+  text-align: left;
+}
+.tooltip-inner{
+  max-width: 400px;
+  color: var(--header-bg-color);
+  background-color: #000000e6;
 }
 
 .cdr-tooltip-row {
-  /* background-color: green; */
-  padding: 15px;
+  padding: 2px;
 }
 
-.cdr-tooltip-left {
-  float: left;
-  font-size: 16px;
-  font-weight: bold;
+.cdr-tooltip-row > span {
+  color: var(--td-border-color);
 }
-
-.cdr-tooltip-right {
-  font-size: 16px;
-}
-
 /******************************************
   Golden Layout Fixes
 *******************************************/
