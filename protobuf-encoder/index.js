@@ -213,11 +213,11 @@ ProtobufEncoder.prototype.setInstanceEmitter = function (newInstanceEmitter)
             		var msgID = tlmDef.airliner_mid;
             		
             	    if(typeof symbolName !== 'undefined') {
-            	    	var tlmJson = self.convertJsonToProtoJson(message.fields);  
+//            	    	var tlmJson = self.convertJsonToProtoJson(message.fields);  
                 		
             	    	var pbMsgDef = msgDef.proto_root.lookupType(symbolName + '_pb');
-            	    	var pbMsg = pbMsgDef.create(tlmJson);
-
+            	    	var pbMsg = pbMsgDef.create(message.content);
+            	    	
             	    	var pbBuffer = pbMsgDef.encode(pbMsg).finish();
 
 				    	//var msg2 = pbMsgDef.decode(pbBuffer);
@@ -290,7 +290,6 @@ ProtobufEncoder.prototype.getSymbolNameFromOpsPath = function (opsPath) {
 			return msgDef.airliner_msg;
 		}
 	}
-	
 }
 
 
