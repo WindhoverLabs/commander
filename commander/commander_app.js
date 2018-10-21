@@ -13,7 +13,7 @@ function CommanderApp(instance, name, options) {
 	this.instance = instance;
 	this.name = name;
 	this.options = options;
-	
+
 	return this;
 }
 

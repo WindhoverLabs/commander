@@ -1,33 +1,67 @@
-/* Application Data*/
+/**
+ * Stores (k,v) pair of opsPath and a array of dependant DOM elements.
+ * @type {Object}
+ */
 var subscriptions = {};
+/**
+ * Similar to subscription stores (k,v) pair of opsPath and a array of
+ * dependant DOM elements for freestyle(rogue) subscriptions.
+ * @type {Object}
+ */
 var rouge_subscriptions = {};
+/**
+ * Similar to subscription stores (k,v) pairs of opsPath and a array of
+ * dependant flot.js plot element from DOM.
+ * @type {Object}
+ */
 var dataplot_subscriptions = {};
-var gadget_subscriptions = [];
+/**
+ * Time interval to check and unsubsscribe to rogue subscriptions
+ * is set to a default value of 20 seconds
+ * @type {Number}
+ */
 var rougeCleanUpInterval = 20000;
 
 
-/* clean up rouge subscriptions */
+/**
+ * Regularly checks the DOM for rouge subscriptions or
+ * the subscriptions made inside javascript rather than
+ * invoking by markup, and unsubscribes the inactive ones.
+ */
 setInterval(()=>{
   for(var e in rouge_subscriptions){
     var rougeClasses = rouge_subscriptions[e];
     if($(rougeClasses).length == 0) {
+      /*
+       * has no DOM listeners or users
+       */
       if(!(e in Object.keys(subscriptions))){
-        /* Unsubscribe */
+        /*
+         * the subscription has no active DOM users therefore
+         * will unsubscribe to it
+         */
         session.unsubscribe([{
           name: e
         }]);
         cu.logInfo('RougeUnsubscribe | ', e, ' tlm unsubscribed');
       }
+      /*
+       * Delete the record of that rogue subscribe
+       */
       delete rouge_subscriptions[e];
     }
   }
 },rougeCleanUpInterval);
 
-/* Process Telemetry and commanding */
-
+/**
+ * processTelemetryUpdate is a call back function, on new data from subscribe
+ * this function will execute processing and rendering it on the DOM
+ * @param  {object} param telemetry object
+ * @return {undefined}
+ */
 function processTelemetryUpdate(param) {
-
   try {
+    /* staleness indicator */
     var staleness = false;
     var sample = param.sample[param.sample.length - 1];
     var value = sample.value;
@@ -36,8 +70,10 @@ function processTelemetryUpdate(param) {
     if (opsPath in subscriptions) {
       var opsPathDef = undefined;
       if (subscriptions[opsPath].hasOwnProperty('def')) {
+        /* get tlm obj definition */
         opsPathDef = subscriptions[opsPath].def;
         if (subscriptions[opsPath].def.timeout > 0) {
+          /* evaluate staleness */
           if (subscriptions[opsPath].lastUpdatedTime == undefined) {
             subscriptions[opsPath].lastUpdatedTime = gTime;
           } else {
@@ -68,8 +104,8 @@ function processTelemetryUpdate(param) {
           }
         }
         cu.assert(indicatorFormat != undefined, 'Process TLM | indicator format is not found');
+        /* tlm with different indicator format are  delt differently */
         if (indicatorFormat == 'text') {
-
           if (opsPathDef != undefined) {
             switch (opsPathDef.dataType) {
               case 'char':
@@ -143,7 +179,7 @@ function processTelemetryUpdate(param) {
             nodeElm.getAttribute('plot-initialized') === null ||
             nodeElm.getAttribute('plot-initialized') === false) {
             /* Upon seeing dataplot canvas we initialize canvas after
-            which will keep adding data to initialized canvas */
+             * which will keep adding data to initialized canvas */
             var tlmObj = cu.parseJSON(nodeElm.getAttribute('data-cdr'));
 
             var dataPlotDef = {};
@@ -167,9 +203,7 @@ function processTelemetryUpdate(param) {
               } else {
                 colorArr = tlmObj.color;
               }
-
               for (var i = 0; i < tlmObj.tlm.length; i++) {
-
                 dataPlotDef['data'].push({
                   'tlm': {
                     name: tlmObj.tlm[i].name
@@ -177,9 +211,7 @@ function processTelemetryUpdate(param) {
                   'label': tlmObj.label[i],
                   'color': colorArr[i]
                 });
-
               }
-
               var generatedKey = cu.makeKey();
               nodeElm.setAttribute('plot-key', generatedKey);
               dataplot_subscriptions[generatedKey] = new CmdrTimeSeriesDataplot(nodeElm, dataPlotDef, param)
@@ -188,16 +220,19 @@ function processTelemetryUpdate(param) {
           } else {
             dataplot_subscriptions[nodeElm.getAttribute('plot-key')].addData(param);
           }
-
         }
       }
     }
   } catch (e) {
     cu.logError('ProcessTelemetryUpdate | ', e.message);
   }
-
 }
-
+/**
+ * processTelemetryDefinitionUpdate is a callback function on request to
+ * tlm definition data. processing param object and applies tooltips.
+ * @param  {object} opsPaths a list of opsPaths
+ * @return {undefined}
+ */
 function processTelemetryDefinitionUpdate(opsPaths) {
   opsPaths.forEach((path) => {
     var def = subscriptions[path].def;
@@ -229,6 +264,14 @@ function processTelemetryDefinitionUpdate(opsPaths) {
   });
 }
 
+/**
+ * Checks if the passed in command information is complete with Arguments
+ * and values, if true it is incomplete and requires tha application to generate
+ * a form for user to complete this object before sending. if false the commad
+ *  processing code will send the message out.
+ * @param  {object}  commandInfo a command definition message
+ * @return {undefined}
+ */
 function isTemplateCommand(commandInfo) {
   var found = false;
   if (commandInfo.hasOwnProperty('argument')) {
@@ -244,6 +287,13 @@ function isTemplateCommand(commandInfo) {
   return found;
 }
 
+/**
+ * Some command invoke a modal or a form to be filled out by the user. The
+ * submit action of that form will invoke this function. THis function scrapes
+ * the modal for form information and generates a complete command object and
+ * sends it out.
+ * @return {undefined}
+ */
 function sendCmd() {
   var args = {};
   var labels = $("#genericInputModal").find('label');
@@ -261,18 +311,47 @@ function sendCmd() {
 
 
 
+/**
+ * Manages data inside a panel which tipically is a window of a layout.
+ */
 class Panel {
-
+  /**
+   * Panel constructor
+   * @param {object} panelElm DOM element pointing to instantiated panel
+   */
   constructor(panelElm) {
-
+    /**
+     * DOM element
+     * @type {[type]}
+     */
     this.panelElm = panelElm;
+    /**
+     * Panel title
+     * @type {String}
+     */
     this.title = 'Unknown'
-    this.loadTimeout = 500; /* ms */
+    /**
+     * Timeount on panel load
+     * @type {Number}
+     */
+    this.loadTimeout = 500;
+    /**
+     * Tlm information of this instance
+     * @type {Array}
+     */
     this.tlm = [];
+    /**
+     * Panel instantiation indicator
+     * @type {Number}
+     */
     this.panelElm['instantiated'] = true;
-
   }
-
+  /**
+   * Subscribe to telemetry and definitions
+   * @param  {object} d DOM object
+   * @param  {object} s self or current instance
+   * @return {undefined}
+   */
   subscribeText(d, s) {
     /* check d has telemetry request info */
     if (d.hasOwnProperty('tlm')) {
@@ -320,7 +399,12 @@ class Panel {
       });
     }
   }
-
+  /**
+   * Get command definition and generate click functionality for buttons
+   * @param  {object} d DOM object
+   * @param  {object} s self or current instance
+   * @return {undefined}
+   */
   loadCommanding(d, s) {
 
     if (d.hasOwnProperty('cmd')) {
@@ -573,7 +657,11 @@ class Panel {
       });
     }
   }
-
+  /**
+   * Scrapes DOM looking for command and telemetry subscription singatures.
+   * and processess them.
+   * @return {undefined}
+   */
   loadPanel() {
 
     var cls = this;
@@ -616,7 +704,10 @@ class Panel {
     }, this.loadTimeout);
 
   }
-
+  /**
+   * Handles cleaning unused subscription information and unsubscribes to them
+   * @return {undefined}
+   */
   loadDestroyPanelProceadure() {
 
     this.panelElm.on('itemDestroyed', (it) => {
@@ -669,15 +760,12 @@ class Panel {
 
 }
 
-
-
-/* Event handlers
-   layout-load-complete event is fired when a new layout is being created
-   which happens in the following cases:
-   First time a layout is loaded on reload.
-   A layout file is selected from layouts menu.
-   A .lyt file is loaded from local storage.
-*/
+/**
+ * layout-load-complete event is fired when a new layout is being created which
+ * happens in the following cases: First time a layout is loaded on reload. A
+ * layout file is selected from layouts menu. A .lyt file is loaded from local
+ * storage.
+ */
 window.addEventListener('layout-load-complete', () => {
 
   myLayout.on('tabCreated', (t) => {

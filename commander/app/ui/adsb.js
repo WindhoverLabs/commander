@@ -1,14 +1,50 @@
+/**
+ * My vehicle tail size
+ * @type {number}
+ */
 MYVEH_tailSize = 60
-MYVEH_dataPoints = []; //[lon0, lat0, alt0,lon1, lat1, alt1, key1]
+/**
+ * Regular vehicle tail size
+ * @type {Number}
+ */
+var tailSize = 30;
+/**
+ * Aircraft timeout in seconds
+ * @type {Number}
+ */
+var outdated_seconds = 30;
+/**
+ * Minimun distance to maintain from any aircraft in meters
+ * @type {Number}
+ */
+var minimum_aircraft_safety_distance =50000;
+/**
+ * if true the adsb code starts executing
+ * @type {Boolean}
+ */
+var adsbState = false;
+MYVEH_dataPoints = [];
 MYVEH_line = null;
 MYVEH_prevLine = null;
 MYVEH_currentPoint = null;
 MYVEH_zoom_once = false;
+var AIRCRAFTS = {};
+var HISTORY = {} ;
+var ALLMYLINES = [];
 
-var adsbState = false;
+/**
+ * Calculate distance
+ * @param  {object} p1
+ * @param  {object} p2
+ * @return {object}
+ */
+function distance(p1, p2) {
+        return Math.sqrt(Math.pow((p1.x - p2.x), 2) + Math.pow((p1.y - p2.y),2) + Math.pow((p1.z - p2.z), 2));
+}
 
-
-// draw path
+/**
+ * Draw path
+ */
 setInterval(function(){
   if(adsbState == "Active"){
     //remove old line
@@ -49,7 +85,10 @@ setInterval(function(){
 
 
 },2000)
-//draw vehicle
+
+/**
+ * Draw vehicle
+ */
 setInterval(function(){
 
   if(adsbState == "Active" && display[0].id==$('#gv')[0].id && terrain[0].id==$('#2d')[0].id){
@@ -101,21 +140,9 @@ setInterval(function(){
 
 },1000);
 
-
-var AIRCRAFTS = {};
-var HISTORY = {} ;
-var ALLMYLINES = [];
-var tailSize = 30;
-var outdated_seconds = 30;//seconds
-var minimum_aircraft_safety_distance =50000;//meters
-//cal dist function
-function distance(p1, p2) {
-        return Math.sqrt(Math.pow((p1.x - p2.x), 2) + Math.pow((p1.y - p2.y),2) + Math.pow((p1.z - p2.z), 2));
-}
-
-
-
-//start a independent adsb loop for the vehicle
+/**
+ * Draw my vehicle
+ */
 setInterval(function(){
   if(adsbState == 'Active'){
     session.getADSBJson(function(adsb){

@@ -1,8 +1,17 @@
+/**
+ * Display controller sotre
+ * @type {Object}
+ */
 var display_controllers = {};
-
-var CommanderDisplay = CommanderDisplay || {};
+/**
+ * Display controller clean up interval
+ * @type {Number}
+ */
 var displayControllerCleanupInterval = 100000;
 
+/**
+ * Cleans up inactve display_controllers
+ */
 setInterval(function(){
   var keys = Object.keys(display_controllers);
   keys.forEach((e)=>{
@@ -13,7 +22,14 @@ setInterval(function(){
   });
 }, displayControllerCleanupInterval);
 
+/* CommanderDisplay */
+var CommanderDisplay = CommanderDisplay || {};
 
+/**
+ * Constructor for PFD display
+ * @param       {object} elm HTMLelement
+ * @constructor
+ */
 function CommanderDisplay(elm) {
   Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI3YjJkYmYwOS02NGU2LTQyZGEtOGRiZC01Yjg3ZTllODBiYTAiLCJpZCI6MTU1NSwiaWF0IjoxNTI4OTE4MTQzfQ.E3pqNt_MGy9rAjE4T4dnPY3vOKjdctpXOjmh0ZPPloE';
   this.CesiumViewer = undefined;
@@ -56,6 +72,9 @@ function CommanderDisplay(elm) {
 
 }
 
+/**
+ * Updates indicators
+ */
 CommanderDisplay.prototype.updateIndicators = function() {
 
   var btnGroup = this.DisplayContainer.find('button[data-info]');
@@ -72,6 +91,9 @@ CommanderDisplay.prototype.updateIndicators = function() {
 
 }
 
+/**
+ * Inititalizes viewer
+ */
 CommanderDisplay.prototype.InitViewer = function() {
   this.DisplayContainer.find('#cdr-cesium-'+this.splIdentifier).css('display','block');
   var viewer = new Cesium.Viewer('cdr-cesium-'+this.splIdentifier,{
@@ -102,10 +124,17 @@ CommanderDisplay.prototype.InitViewer = function() {
   }
 };
 
+/**
+ * Returns Viewer
+ * @return {object} viewer
+ */
 CommanderDisplay.prototype.getViewer = function() {
   return this.CesiumViewer;
 };
 
+/**
+ * Destroy Viewer
+ */
 CommanderDisplay.prototype.DestroyViewer = function() {
   if (this.CesiumViewer != undefined) {
       try{
@@ -123,14 +152,23 @@ CommanderDisplay.prototype.DestroyViewer = function() {
   cu.logDebug('Commander Display | DestroyViewer | viewer css property, display set to none');
 };
 
+/**
+ * Destroy Video Stream
+ */
 CommanderDisplay.prototype.DestroyVideoStream = function() {
   $('#cdr-video-'+this.splIdentifier).css('display','none');
 };
 
+/**
+ * Inititalizes Video Stream
+ */
 CommanderDisplay.prototype.InitVideoStream = function() {
   $('#cdr-video-'+this.splIdentifier).css('display','block');
 };
 
+/**
+ * Updates Display
+ */
 CommanderDisplay.prototype.updateDisplay = function() {
   var SUCCESS = true;
 
@@ -203,6 +241,11 @@ CommanderDisplay.prototype.updateDisplay = function() {
   return SUCCESS;
 }
 
+/**
+ * Update display state
+ * @param  {string} key   key
+ * @param  {object} value value
+ */
 CommanderDisplay.prototype.updateDisplayState = function(key,value) {
 
   cu.assert(key in this.DISP_META, 'Commander Display | updateDisplayState | unknown key received');

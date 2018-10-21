@@ -1,10 +1,20 @@
-
+/**
+ * Initial position
+ * @type {Object}
+ */
 var Position = {Lat: 0, Lon: 0, Alt: 0};
+/**
+ * Initial Altitude
+ * @type {Object}
+ */
 var Attitude = {Yaw: 0, Pitch: 0, Roll: 0};
 var HUDCount = 0;
 var HUDStarted = false;
-/* Heads Up Display */
 var draw;
+/**
+ * HUD opacity
+ * @type {Number}
+ */
 var bgOpacity = 0.5;
 var curHeading = 0;
 var curPitch = 0;
@@ -18,6 +28,10 @@ var hudHeight;
 var hudWidth;
 var pxPer15Degrees;
 var pxPerDegree;
+/**
+ * Degrees per pitch line
+ * @type {Number}
+ */
 var degPerPitchLine = 15;
 var posPitchLineOnScreen = 3.5;
 var pxPerPitchLine;
@@ -33,6 +47,10 @@ var rotation = 0;
 var hrzWidth;
 var cameraImage;
 var imageBuffer;
+/**
+ * Quaternions 
+ * @type {Array}
+ */
 var Q = [];
 var AltOffset = 0;
 var prevTS = 0;
@@ -43,18 +61,31 @@ var currentAltimeterCenter = 0.0;
 var altitudeOffsetSwitch = false;
 var altimeter;
 var altTicksArea;
+/**
+ * Pitch initial direction
+ * @type {Number}
+ */
 var pitchDirection = 0.2;
 var altitudeDirection = 0.01;
 var toggle = 0;
-var text_color = '#0f0'//'#EF402F'
-
-//ADI
+/**
+ * HUD text color
+ * @type {String}
+ */
+var text_color = '#0f0';
+/**
+ * Get Time
+ * @return {Number}
+ */
 var GetTime = function(){
     var d = new Date();
     var seconds = d.getTime()/1000;
     return seconds;
 }
-
+/**
+ * Subscribe to telemetry
+ * @return {undefined}
+ */
 function getSubscriptions() {
   session.subscribe({
       homogeneity: {tolerance: 0}, tlm: [
@@ -116,7 +147,11 @@ function getSubscriptions() {
     }
   );
 }
-
+/**
+ * Update HUD heading
+ * @param  {Number} newHeading
+ * @return {undefined}
+ */
 function updateHUDHeading(newHeading) {
   if(newHeading<0){
     newHeading = newHeading+360;
@@ -125,21 +160,33 @@ function updateHUDHeading(newHeading) {
   textHeading.text(newHeading.toFixed(0).toString());
   hdTicks.x(-newHeading * pxPerDegree);
 }
-
+/**
+ * Update HUD pitch
+ * @param  {Number} newPitch
+ * @return {undefined}
+ */
 function updateHUDPitch(newPitch) {
   OffsetY = newPitch * pxPerDegreePitch;
   //pitchIndicator.rotate(0);
   //pitchIndicator.y(0);
   //pitchIndicator.animate(10, '-', 0).y(OffsetY).rotate(rotation);
 }
-
+/**
+ * Update HUD roll
+ * @param  {Number} newRoll
+ * @return {undefined}
+ */
 function updateHUDRoll(newRoll) {
   rotation = newRoll;
   pitchIndicator.rotate(0);
   pitchIndicator.y(0);
   pitchIndicator.y(OffsetY).rotate(rotation);
 }
-
+/**
+ * Draws HUD
+ * @param  {Number} id
+ * @return {undefined}
+ */
 function drawHUD(id) {
 
   var aspectRatio = 320.0 / 180.0;

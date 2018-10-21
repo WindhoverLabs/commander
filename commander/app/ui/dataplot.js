@@ -34,8 +34,13 @@ function mergeDeep(target, ...sources) {
   return mergeDeep(target, ...sources);
 }
 
-
-
+/**
+ * Makes a time series dataplot
+ * @param       {object} domObject
+ * @param       {object} objData
+ * @param       {object} params
+ * @constructor
+ */
 function CmdrTimeSeriesDataplot(domObject, objData, params) {
   this.objData = objData;
   this.objMergedData = {};
@@ -176,20 +181,33 @@ function CmdrTimeSeriesDataplot(domObject, objData, params) {
     };
   }
 };
-
+/**
+ * Unsubscribe to all telementry
+ * @return {undefined}
+ */
 CmdrTimeSeriesDataplot.prototype.unsubscribeAll = function() {
   /* Unsubscribe */
   session.unsubscribe(this.objTlm);
 }
-
+/**
+ * Get telemety
+ * @return {object}
+ */
 CmdrTimeSeriesDataplot.prototype.getTlmObj = function() {
   return this.objTlm;
 }
-
+/**
+ * Get instance of plot
+ * @return {object}
+ */
 CmdrTimeSeriesDataplot.prototype.getUtilGraph = function() {
   return this.UtilGraph;
 }
-
+/**
+ * Add data to plot
+ * @param  {object} params
+ * @return {undefined}
+ */
 CmdrTimeSeriesDataplot.prototype.addData = function(params) {
 
   var self = this;

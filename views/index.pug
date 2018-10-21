@@ -57,22 +57,22 @@ cdr-nav-iconshtml(lang='en-us')
         span.navbar-toggler-icon
       #cdr-nav-top-left-content.collapse.navbar-collapse
         ul.navbar-nav.cdr-nav-btn
-            button#cdr-app-menu-toggle.btn.btn-outline-primary(data-tooltip='true' title='Open/Close Menus')
-              i.cdr-nav-icons.fa.fa-bars
+          button#cdr-app-menu-toggle.btn.btn-outline-primary(data-tooltip='true' title='Open/Close Menus')
+            i.cdr-nav-icons.fa.fa-bars
         ul.navbar-nav.ml-auto
       a.cdr-nav-top-brand.navbar-brand(href="#")
         img(src="/img/Windhover-Mark-White.png" width="50" class="d-inline-block align-top" alt="")
       #cdr-nav-top-right-content.collapse.navbar-collapse
         ul.navbar-nav.ml-auto
         ul.navbar-nav.cdr-nav-btn
-            button.btn.btn-outline-primary#cdr-widget( data-tooltip='true' title='Widget Selector' data-toggle="modal" data-target="#genericInputModal" data-title="Generate a Widget" data-submit="MakeWidget" data-custom="") 
-              i.cdr-nav-icons.fa.fa-plus 
+          button.btn.btn-outline-primary#cdr-widget( data-tooltip='true' title='Widget Selector' data-toggle="modal" data-target="#genericInputModal" data-title="Generate a Widget" data-submit="MakeWidget" data-custom="") 
+            i.cdr-nav-icons.fa.fa-plus 
         ul.navbar-nav.cdr-nav-btn(data-tooltip='true' title='Load Layout')
-            button.btn.btn-outline-primary( data-toggle="modal" data-target="#genericInputModal" data-title="Load Layout" data-submit="LoadLayout" data-custom='[{"label":"Select Layout", "type":"browse", "dtype":"none", "getItem":"GetStoredLayoutList"}]') 
-              i.cdr-nav-icons.fa.fa-download
+          button.btn.btn-outline-primary( data-toggle="modal" data-target="#genericInputModal" data-title="Load Layout" data-submit="LoadLayout" data-custom='[{"label":"Select Layout", "type":"browse", "dtype":"none", "getItem":"GetStoredLayoutList"}]') 
+            i.cdr-nav-icons.fa.fa-download
         ul.navbar-nav.cdr-nav-btn(data-tooltip='true' title='Save Layout')
-            button.btn.btn-outline-primary(data-toggle="modal" data-target="#genericInputModal" data-title="Save Layout" data-submit="SaveLayout" data-custom='[{"label":"Enter Layout Name ", "type":"field", "dtype":"text"}]') 
-              i.cdr-nav-icons.fa.fa-save 
+          button.btn.btn-outline-primary(data-toggle="modal" data-target="#genericInputModal" data-title="Save Layout" data-submit="SaveLayout" data-custom='[{"label":"Enter Layout Name ", "type":"field", "dtype":"text"}]') 
+            i.cdr-nav-icons.fa.fa-save 
     <!-- Central Content Area -->
     div.cdr-container.ui.main.text
       div.cdr-content-wrapper
@@ -88,13 +88,16 @@ cdr-nav-iconshtml(lang='en-us')
       ul.navbar-nav.mr-auto
       ul.navbar-nav#cdr-gadget-container
     <!-- Custom Scripts -->
-    script(type="text/javascript" src='/commander/util.js') 
-    script(type="text/javascript" src='/commander/adi.js')
-    <!-- script(type="text/javascript" src='/commander/adsb.js') -->
-    script(type="text/javascript" src='/commander/display.js') 
+    script(type="text/javascript" src='/commander/app/util.js') 
     script(type="text/javascript" src='/commander/client.js') 
-    script(type="text/javascript" src='/commander/controller.js') 
-    script(type="text/javascript" src='/commander/dataplot.js')   
-    script(type="text/javascript" src='/commander/view.js') 
-    script(type="text/javascript" src='/commander/elements.js') 
-    script(type="text/javascript" src='/commander/widget.js')
+    script(type="text/javascript" src='/commander/app/controller.js') 
+    script(type="text/javascript" src='/commander/app/tcmanager.js') 
+    script(type="text/javascript" src='/commander/app/ui/adi.js')
+    <!-- script(type="text/javascript" src='/commander/adsb.js') -->
+    script(type="text/javascript" src='/commander/app/ui/display.js') 
+    script(type="text/javascript" src='/commander/app/ui/navtree.js') 
+    script(type="text/javascript" src='/commander/app/ui/layout.js') 
+    script(type="text/javascript" src='/commander/app/ui/modal.js') 
+    script(type="text/javascript" src='/commander/app/ui/misc.js')
+    script(type="text/javascript" src='/commander/app/ui/dataplot.js')   
+    script(type="text/javascript" src='/commander/app/ui/widget.js')
