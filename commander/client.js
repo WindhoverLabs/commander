@@ -232,6 +232,7 @@ CommanderClient.prototype.connect = function (){
         /* Connection established. */
         self.isSocketConnected = true;
         self.emit('connect');
+        
     });
 
     this.socket.on('connect_error', function(error){

@@ -484,7 +484,7 @@ BinaryDecoder.prototype.processBinaryMessage = function (buffer) {
 BinaryDecoder.prototype.getFieldValueAsPbType = function (buffer, fieldDef, bitOffset, rootDef) {
     var self = this;
     
-	//try{			
+	try{			
 		var value;
 
 		if(fieldDef.array_length > 1) {
@@ -705,9 +705,9 @@ BinaryDecoder.prototype.getFieldValueAsPbType = function (buffer, fieldDef, bitO
                     }
 			}
 		}
-	//} catch(err) {
-	//	this.logErrorEvent(EventEnum.UNHANDLED_EXCEPTION, 'getFieldValueAsPbType: Unhandled exception. \'' + err + ' - ' + err.stack + '\'');
-	//}
+	} catch(err) {
+		this.logErrorEvent(EventEnum.UNHANDLED_EXCEPTION, 'getFieldValueAsPbType: Unhandled exception. \'' + err + ' - ' + err.stack + '\'');
+	}
 
     return value;
 }
@@ -715,7 +715,7 @@ BinaryDecoder.prototype.getFieldValueAsPbType = function (buffer, fieldDef, bitO
 
 
 BinaryDecoder.prototype.getFieldValue = function (buffer, fieldDef, bitOffset, rootDef) {	
-	//try{			
+	try{			
 		var value;
 		
 		if(fieldDef.array_length > 1) {
@@ -951,9 +951,9 @@ BinaryDecoder.prototype.getFieldValue = function (buffer, fieldDef, bitOffset, r
 				    }
 			}
 	    }
-	//} catch(err) {
-	//    this.logErrorEvent(EventEnum.UNHANDLED_EXCEPTION, 'getField: Unhandled exception. \'' + err + ' - ' + err.stack + '\'');
-	//}
+	} catch(err) {
+	    this.logErrorEvent(EventEnum.UNHANDLED_EXCEPTION, 'getField: Unhandled exception. \'' + err + ' - ' + err.stack + '\'');
+	}
 	
 	return value;
 }
