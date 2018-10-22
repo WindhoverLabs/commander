@@ -213,7 +213,7 @@ h2 {
 }
 .cdr-video {
   height: 100%;
-  background-color: #074486;
+  /* background-color: #074486; */
   z-index: 3;
 }
 

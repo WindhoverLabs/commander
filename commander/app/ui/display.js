@@ -22,12 +22,24 @@ setInterval(function(){
   });
 }, displayControllerCleanupInterval);
 
+/**
+ * Set Display state for pfd display
+ * @param {Object} e HTMLelement
+ */
+function setDisplayState(e) {
+  var controlInfo = $(e).data('info');
+  var cdKey = $(e).data('key');
+  var key = controlInfo[0];
+  var value = controlInfo[1];
+  display_controllers[cdKey].updateDisplayState(key,value);
+}
+
 /* CommanderDisplay */
 var CommanderDisplay = CommanderDisplay || {};
 
 /**
  * Constructor for PFD display
- * @param       {object} elm HTMLelement
+ * @param       {Object} elm HTMLelement
  * @constructor
  */
 function CommanderDisplay(elm) {
@@ -37,7 +49,9 @@ function CommanderDisplay(elm) {
   this.DisplayContainer = elm;
   this.splIdentifier = elm.attr('id')
   this.home = Cesium.Cartesian3.fromDegrees( -95.3698,29.7604, 130000.0);  /* Houston */
-
+  this.video = {};
+  this.video.frameCounter = 0;
+  this.video.lastTimestamp = 0;
   /* Default Display metadata */
   this.DISP_META = {
     'DISPLAY_CHANNELS' : {
@@ -47,7 +61,8 @@ function CommanderDisplay(elm) {
     },
     'LAYERS' : {
       0 : 'NO_LAYER',           /* Apply no layer */
-      1 : 'ADI'                 /* apply Attitude Director Indicator */
+      1 : 'ADI',                /* apply Attitude Director Indicator */
+      2 : 'ADSB'                /* ADSB layer adds multiple aircrafts and thier trajectory to cesium maps */
     },
     'MAP_TYPES' : {
       0 : 'DEFAULT_MAP',              /* Basic cesium street map */
@@ -126,7 +141,7 @@ CommanderDisplay.prototype.InitViewer = function() {
 
 /**
  * Returns Viewer
- * @return {object} viewer
+ * @return {Object} viewer
  */
 CommanderDisplay.prototype.getViewer = function() {
   return this.CesiumViewer;
@@ -156,7 +171,9 @@ CommanderDisplay.prototype.DestroyViewer = function() {
  * Destroy Video Stream
  */
 CommanderDisplay.prototype.DestroyVideoStream = function() {
+  $('#cdr-video-'+this.splIdentifier).empty()
   $('#cdr-video-'+this.splIdentifier).css('display','none');
+  session.diableVideoSteam();
 };
 
 /**
@@ -164,21 +181,38 @@ CommanderDisplay.prototype.DestroyVideoStream = function() {
  */
 CommanderDisplay.prototype.InitVideoStream = function() {
   $('#cdr-video-'+this.splIdentifier).css('display','block');
+  session.getVideoSteam((image)=>{
+    /* Calculate FPS */
+    if(this.video.frameCounter == 0) {
+      /* in seconds */
+      this.video.lastTimestamp = new Date().getTime()/1000;
+    }
+
+    if (this.video.frameCounter > 0 && this.video.frameCounter%1000 == 0) {
+      var currentTimestamp = new Date().getTime()/1000;
+      var delta = currentTimestamp - this.video.lastTimestamp;
+      var fps = Math.round(1000/delta);
+      this.video.currentFPS = fps;
+    }
+    /* render image */
+    $('#cdr-video-'+this.splIdentifier).attr('src','data:image/jpeg;base64,'+image);
+  });
 };
 
 /**
  * Updates Display
  */
 CommanderDisplay.prototype.updateDisplay = function() {
-  var SUCCESS = true;
+  var SUCCESS   = true;
 
-  var channel = this.DISP_META.DISPLAY_CHANNELS[this.DISP_STATE.DISPLAY_CHANNELS];
-  var map     = this.DISP_META.MAP_TYPES[this.DISP_STATE.MAP_TYPES];
-  var terrain     = this.DISP_META.TERRAIN_TYPES[this.DISP_STATE.TERRAIN_TYPES];
-  var layer   = this.DISP_META.LAYERS[this.DISP_STATE.LAYERS];
+  var channel   = this.DISP_META.DISPLAY_CHANNELS[this.DISP_STATE.DISPLAY_CHANNELS];
+  var map       = this.DISP_META.MAP_TYPES[this.DISP_STATE.MAP_TYPES];
+  var terrain   = this.DISP_META.TERRAIN_TYPES[this.DISP_STATE.TERRAIN_TYPES];
+  var layer     = this.DISP_META.LAYERS[this.DISP_STATE.LAYERS];
+  var key       = $(this.DisplayContainer).attr('id');
 
 
-
+  /* displays */
   if (channel == 'NO_DISPLAY') {
     this.DestroyViewer();
     this.DestroyVideoStream();
@@ -223,19 +257,27 @@ CommanderDisplay.prototype.updateDisplay = function() {
 
 
   }
-  else {
 
-  }
-
+  /* Layers */
   if (layer == 'NO_LAYER') {
     $('#cdr-guages-'+this.splIdentifier).empty();
+    adsb.destroy(key);
   }
   else if (layer == 'ADI') {
     $('#cdr-guages-'+this.splIdentifier).empty();
     drawHUD('cdr-guages-'+this.splIdentifier);
+    adsb.destroy(key);
+  }
+  else if (layer == 'ADSB') {
+    if(channel == 'CESIUM_MAPS'){
+      adsb.init(key);
+    }
+    else {
+      adsb.destroy(key);
+    }
   }
   else {
-
+    adsb.destroy(key);
   }
 
   return SUCCESS;
@@ -243,8 +285,8 @@ CommanderDisplay.prototype.updateDisplay = function() {
 
 /**
  * Update display state
- * @param  {string} key   key
- * @param  {object} value value
+ * @param  {String} key   key
+ * @param  {Object} value value
  */
 CommanderDisplay.prototype.updateDisplayState = function(key,value) {
 

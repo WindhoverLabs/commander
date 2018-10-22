@@ -36,9 +36,9 @@ function mergeDeep(target, ...sources) {
 
 /**
  * Makes a time series dataplot
- * @param       {object} domObject
- * @param       {object} objData
- * @param       {object} params
+ * @param       {Object} domObject
+ * @param       {Object} objData
+ * @param       {Object} params
  * @constructor
  */
 function CmdrTimeSeriesDataplot(domObject, objData, params) {
@@ -191,21 +191,21 @@ CmdrTimeSeriesDataplot.prototype.unsubscribeAll = function() {
 }
 /**
  * Get telemety
- * @return {object}
+ * @return {Object}
  */
 CmdrTimeSeriesDataplot.prototype.getTlmObj = function() {
   return this.objTlm;
 }
 /**
  * Get instance of plot
- * @return {object}
+ * @return {Object}
  */
 CmdrTimeSeriesDataplot.prototype.getUtilGraph = function() {
   return this.UtilGraph;
 }
 /**
  * Add data to plot
- * @param  {object} params
+ * @param  {Object} params
  * @return {undefined}
  */
 CmdrTimeSeriesDataplot.prototype.addData = function(params) {

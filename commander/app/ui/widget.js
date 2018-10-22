@@ -137,7 +137,7 @@ Widget.prototype.cleanUp = function() {
 }
 /**
  * Clears and intervals functions
- * @param  {string} id unique id
+ * @param  {String} id unique id
  * @return {undefined}
  */
 Widget.prototype.clearIntervals = function(id) {
@@ -321,8 +321,8 @@ function generateBoilerPlate() {
 }
 /**
  * On Hover event is handled there
- * @param  {object} elm HTMLObject
- * @param  {object} evt Evnet Object
+ * @param  {Object} elm HTMLObject
+ * @param  {Object} evt Evnet Object
  */
 function gadgetHoverHandle(elm, evt) {
   if (evt == 'onmouseover') {
@@ -336,7 +336,7 @@ function gadgetHoverHandle(elm, evt) {
 }
 /**
  * Handles close event on the Widget
- * @param  {object} elm HTMLObject
+ * @param  {Object} elm HTMLObject
  */
 function gadgetCloseHandle(elm) {
   var uniqueID = $(elm).data('key');

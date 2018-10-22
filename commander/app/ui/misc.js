@@ -33,7 +33,7 @@ function InitSidebar() {
 /**
  * There are two menus one for layouts and one for panels this function with
  * correct parameter will enables the menu
- * @param       {string} item [description]
+ * @param       {String} item [description]
  * @constructor
  */
 function ShowMenu(item) {
@@ -44,7 +44,7 @@ function ShowMenu(item) {
  /**
   * There are two menus one for layouts and one for panels this function with
   * correct parameter will disable or hide menu
-  * @param       {string} item item
+  * @param       {String} item item
   * @constructor
   */
 function HideMenu(item) {
@@ -81,8 +81,8 @@ function InitMenuState() {
 }
 /**
  * Builds context menus and tooltips embedded in context menus
- * @param  {object} node  node
- * @param  {object} JQObj JQuery object
+ * @param  {Object} node  node
+ * @param  {Object} JQObj JQuery object
  */
 function navBarTooltips(node, JQObj) {
   try {

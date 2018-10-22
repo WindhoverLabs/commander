@@ -109,8 +109,8 @@ function LoadLayout() {
 
 /**
  * Update callback for layout in navtree
- * @param       {object} node    node
- * @param       {object} display display
+ * @param       {Object} node    node
+ * @param       {Object} display display
  * @constructor
  */
 function UpdateLayoutNode(node, display) {
@@ -154,8 +154,8 @@ function UpdateLayoutNode(node, display) {
 
 /**
  * Update callback for panel in navtree
- * @param       {object} node    node
- * @param       {object} display display
+ * @param       {Object} node    node
+ * @param       {Object} display display
  * @constructor
  */
 function UpdatePanelNode(node, display) {

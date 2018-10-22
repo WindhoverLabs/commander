@@ -279,7 +279,7 @@ CommanderGenerator.prototype = {
   /**
    * Returns size of the object or length of a string
    * @param  {Object} obj object
-   * @return {number}     size of the object
+   * @return {Number}     size of the object
    */
   getSize  : function(obj) {
     var str = '';
@@ -561,7 +561,7 @@ CommanderUtilities.prototype = {
   /**
    * Returns size of the object or length of a string
    * @param  {Object} obj object
-   * @return {number}     size of the object
+   * @return {Number}     size of the object
    */
   getSize : function(obj) {
     return this.generator.getSize(obj);

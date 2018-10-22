@@ -56,7 +56,7 @@ setInterval(()=>{
 /**
  * processTelemetryUpdate is a call back function, on new data from subscribe
  * this function will execute processing and rendering it on the DOM
- * @param  {object} param telemetry object
+ * @param  {Object} param telemetry object
  * @return {undefined}
  */
 function processTelemetryUpdate(param) {
@@ -230,7 +230,7 @@ function processTelemetryUpdate(param) {
 /**
  * processTelemetryDefinitionUpdate is a callback function on request to
  * tlm definition data. processing param object and applies tooltips.
- * @param  {object} opsPaths a list of opsPaths
+ * @param  {Object} opsPaths a list of opsPaths
  * @return {undefined}
  */
 function processTelemetryDefinitionUpdate(opsPaths) {
@@ -269,7 +269,7 @@ function processTelemetryDefinitionUpdate(opsPaths) {
  * and values, if true it is incomplete and requires tha application to generate
  * a form for user to complete this object before sending. if false the commad
  *  processing code will send the message out.
- * @param  {object}  commandInfo a command definition message
+ * @param  {Object}  commandInfo a command definition message
  * @return {undefined}
  */
 function isTemplateCommand(commandInfo) {
@@ -317,12 +317,12 @@ function sendCmd() {
 class Panel {
   /**
    * Panel constructor
-   * @param {object} panelElm DOM element pointing to instantiated panel
+   * @param {Object} panelElm DOM element pointing to instantiated panel
    */
   constructor(panelElm) {
     /**
      * DOM element
-     * @type {[type]}
+     * @type {Object}
      */
     this.panelElm = panelElm;
     /**
@@ -348,8 +348,8 @@ class Panel {
   }
   /**
    * Subscribe to telemetry and definitions
-   * @param  {object} d DOM object
-   * @param  {object} s self or current instance
+   * @param  {Object} d DOM object
+   * @param  {Object} s self or current instance
    * @return {undefined}
    */
   subscribeText(d, s) {
@@ -401,8 +401,8 @@ class Panel {
   }
   /**
    * Get command definition and generate click functionality for buttons
-   * @param  {object} d DOM object
-   * @param  {object} s self or current instance
+   * @param  {Object} d DOM object
+   * @param  {Object} s self or current instance
    * @return {undefined}
    */
   loadCommanding(d, s) {

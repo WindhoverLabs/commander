@@ -1,30 +1,68 @@
 'use strict';
-
+/*
+ * Commander clinet object
+ */
 var CommanderClient = CommanderClient || {};
-
-
 CommanderClient.prototype.__proto__ = EventEmitter.prototype;
 
+/**
+ * Commander client connects with node server to send commands and receive
+ * telemetry via socketIO
+ * @constructor
+ */
 function CommanderClient() {
+  /**
+   * Socket connection check
+   * @type {Boolean}
+   */
   this.isSocketConnected = false;
-	this.socket;
+  /**
+   * Declares socket
+   * @type {Object}
+   */
+  this.socket;
+  /**
+   * Declares and initializes subscriptions to store already
+   * subscribe to opsPaths
+   * @type {Object}
+   */
 	this.subscriptions = {};
+  /**
+   * Declare and initialize performance structure
+   * @type {Object}
+   */
   this.PerfData = {};
+  /**
+   * Initial counter counts the number of uplink requests
+   * @type {Number}
+   */
   this.PerfData.up = 0;
+  /**
+   * Initial data size; calculates total data size sent to server in one
+   * cycle
+   * @type {Number}
+   */
   this.PerfData.down = 0;
 
 	cu.logInfo('Clinet | CommanderClient');
-
+  /* Connect */
 	this.connect();
 }
 
-
+/**
+ * Check if socket is connected
+ * @return {boolean} if true socket is connected, otherwise returns false
+ */
 CommanderClient.prototype.isSocketConnected = function() {
   /* TODO */
   return isSocketConnected;
 };
 
-
+/**
+ * Get a directory listing of layout or .lyt files
+ * @param  {String}   path Starting path of directory
+ * @param  {Function} cb   Callback
+ */
 CommanderClient.prototype.getLayouts = function (path, cb){
     var self = this;
     this.socket.emit('getLayouts', path, function(result){
@@ -34,8 +72,11 @@ CommanderClient.prototype.getLayouts = function (path, cb){
     });
 };
 
-
-
+/**
+ * Get a directory listing of panels of .pug files
+ * @param  {String}   path Starting path of directory
+ * @param  {Function} cb   Callback
+ */
 CommanderClient.prototype.getPanels = function (path, cb) {
     var self = this;
     this.socket.emit('getPanels', path, function(result) {
@@ -45,8 +86,10 @@ CommanderClient.prototype.getPanels = function (path, cb) {
     });
 };
 
-
-
+/**
+ * Get random number
+ * @param  {Function} cb Callback
+ */
 CommanderClient.prototype.getRandom = function (cb){
     setInterval(function() {
         var random_boolean = Math.random() >= 0.5;
@@ -54,6 +97,10 @@ CommanderClient.prototype.getRandom = function (cb){
     }, 500);
 };
 
+/**
+ * Get socketIO performance data
+ * @param  {Function} cb Callback
+ */
 CommanderClient.prototype.getPerfData = function (cb){
   var res = this.PerfData;
   cb(res);
@@ -61,8 +108,43 @@ CommanderClient.prototype.getPerfData = function (cb){
   this.PerfData.down = 0;
 };
 
+/**
+ * Disable video stream
+ */
+CommanderClient.prototype.diableVideoSteam = function() {
+  console.log('video stream disabled.')
+}
+
+/**
+ * Subscribe to video stream
+ * @param  {Function} cb Callback
+ */
+CommanderClient.prototype.getVideoSteam = function(cb) {
+  console.log('video stream subscribed.')
+  /* stub */
+  var width   = 600;
+  var height  = 400;
+  var i;
+  var end = width * height;
+  setInterval(()=>{
+    var image = [];
+    for(i = 0; i < end; ++i) {
+      image.push('0123456789abcdef'.split('').map(function(v,i,a){
+        return i>1 ? null : a[Math.floor(Math.random()*16)] }).join(''));
+    }
+    image = image.join('');
+    image = btoa(image)
+    cb(image);
+  },5000);
+}
 
 
+/**
+ * Get directory listing
+ * @param  {String}   path      Directory root path
+ * @param  {String}   extension File extension
+ * @param  {Function} cb        Callback
+ */
 CommanderClient.prototype.getDirectoryListing = function (path, extension, cb){
 	var re = /(?:\.([^.]+))?$/;
 
@@ -100,7 +182,10 @@ CommanderClient.prototype.getDirectoryListing = function (path, extension, cb){
 };
 
 
-
+/**
+ * Get views
+ * @param  {Function} cb Callback
+ */
 CommanderClient.prototype.getViews = function (cb) {
     var self = this;
     if(this.isSocketConnected){
@@ -113,7 +198,11 @@ CommanderClient.prototype.getViews = function (cb) {
 };
 
 
-
+/**
+ * Get command definition
+ * @param  {Object}   cmdObj Command information
+ * @param  {Function} cb     Callback
+ */
 CommanderClient.prototype.getCmdDef = function (cmdObj,cb) {
     var self = this;
     if(this.isSocketConnected) {
@@ -127,7 +216,11 @@ CommanderClient.prototype.getCmdDef = function (cmdObj,cb) {
 };
 
 
-
+/**
+ * Get telemetry definition
+ * @param  {Object}   tlmObj Telemetry information
+ * @param  {Function} cb     Callback
+ */
 CommanderClient.prototype.getTlmDefs = function (tlmObj, cb) {
     var self = this;
     if(this.isSocketConnected) {
@@ -140,7 +233,11 @@ CommanderClient.prototype.getTlmDefs = function (tlmObj, cb) {
 };
 
 
-
+/**
+ * Updates Telemetry by calling the given callback on newly received tlm
+ * database
+ * @param  {Object} items Telemetry uptate items
+ */
 CommanderClient.prototype.updateTelemetry = function (items) {
 	var self = this;
 
@@ -160,6 +257,10 @@ CommanderClient.prototype.updateTelemetry = function (items) {
 	}
 }
 
+/**
+ * Unsubscribe unused telemetry
+ * @param  {Object} tlmObj Telemetry object
+ */
 CommanderClient.prototype.unsubscribe = function (tlmObj){
     var self = this;
 
@@ -182,6 +283,11 @@ CommanderClient.prototype.unsubscribe = function (tlmObj){
     };
 };
 
+/**
+ * Subscribe to telemetry
+ * @param  {Object}   tlmObj Telemetry Object
+ * @param  {Function} cb     Callback
+ */
 CommanderClient.prototype.subscribe = function (tlmObj, cb){
     var self = this;
 
@@ -206,7 +312,10 @@ CommanderClient.prototype.subscribe = function (tlmObj, cb){
 };
 
 
-
+/**
+ * Send commands
+ * @param  {Object} cmdObj Command object
+ */
 CommanderClient.prototype.sendCommand = function (cmdObj) {
     var self = this;
     cu.logInfo('Client | sent command : ', JSON.stringify(cmdObj, 2));
@@ -217,7 +326,9 @@ CommanderClient.prototype.sendCommand = function (cmdObj) {
 };
 
 
-
+/**
+ * Connect to socket
+ */
 CommanderClient.prototype.connect = function (){
     var self = this;
 
@@ -232,7 +343,7 @@ CommanderClient.prototype.connect = function (){
         /* Connection established. */
         self.isSocketConnected = true;
         self.emit('connect');
-        
+
     });
 
     this.socket.on('connect_error', function(error){

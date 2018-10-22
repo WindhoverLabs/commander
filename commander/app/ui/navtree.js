@@ -2,7 +2,7 @@
 
 /**
  * Check if node in a tree is already rendered
- * @param  {object}  n node to be rendered
+ * @param  {Object}  n node to be rendered
  * @return {Boolean}   true if aready rendered otherwise false
  */
 function isAlreadyRendered(n) {
@@ -20,8 +20,8 @@ function isAlreadyRendered(n) {
 
 /**
  * This function is triggered when a new node is rendered
- * @param       {object} e    event object
- * @param       {object} node node object
+ * @param       {Object} e    event object
+ * @param       {Object} node node object
  */
 function NodeRendered(e, node) {
   /* if node to be rendered is a file, a .pug file */
@@ -48,8 +48,8 @@ function NodeRendered(e, node) {
 
 /**
  * This function is triggered when a node is selected
- * @param       {object} e    event object
- * @param       {object} node node object
+ * @param       {Object} e    event object
+ * @param       {Object} node node object
  * @constructor
  */
 function NodeSelected(e, node) {
@@ -99,7 +99,7 @@ function NodeSelected(e, node) {
 
 /**
  * Collapse all items in menu
- * @param       {object} item item
+ * @param       {Object} item item
  */
 function NodesCollapse(item) {
   $("#cdr-" + item + "-menu-container").treeview('collapseAll', {
