@@ -89,8 +89,24 @@ function BinaryDecoder(workspace, configFile) {
 
     /* Perform validation */
     config.validate({allowed: 'strict'});
+
+    var inMsgDefs = config.get('msgDefs')
     
-    this.endian = config.get('endian');
+    for(var i = 0; i < inMsgDefs.length; ++i) {
+    	if(typeof process.env.AIRLINER_MSG_DEF_PATH === 'undefined') {
+    		var fullPath = path.join(this.workspace, config.get('msgDefPath'), inMsgDefs[i].file);
+    	} else {
+    		var fullPath = path.join(process.env.AIRLINER_MSG_DEF_PATH, inMsgDefs[i].file);
+    	}
+    	var msgDefInput = JSON.parse(fs.readFileSync(fullPath, 'utf8'));
+    	this.defs = mergeJSON.merge(this.defs, msgDefInput);
+    }
+    
+    if(this.defs.Airliner.little_endian) {
+        this.endian = 'little';
+    } else {
+        this.endian = 'big';
+    }
     
     this.ccsdsPriHdr = new Parser()
       .endianess('big')
@@ -102,11 +118,19 @@ function BinaryDecoder(workspace, configFile) {
       .bit14('sequence')
       .uint16('length');
     
-	this.ccsdsCmdSecHdr = new Parser()
-	  .endianess(this.endian)
-	  .bit1('reserved')
-	  .bit7('code')
-	  .uint8('checksum');
+    if(this.endian == 'little') {
+    	this.ccsdsCmdSecHdr = new Parser()
+    		.endianess('little')
+    		.bit1('reserved')
+    		.bit7('code')
+    		.uint8('checksum');
+    } else {
+    	this.ccsdsCmdSecHdr = new Parser()
+			.endianess('big')
+			.uint8('checksum')
+			.bit1('reserved')
+			.bit7('code')
+    }
 	
     switch(config.get('CFE_SB_PACKET_TIME_FORMAT')) {
       case 'CFE_SB_TIME_32_16_SUBS':
@@ -148,18 +172,6 @@ function BinaryDecoder(workspace, configFile) {
     	    }
     	})
         .buffer('payload', {readUntil: 'eof'});
-    
-    var inMsgDefs = config.get('msgDefs')
-    
-    for(var i = 0; i < inMsgDefs.length; ++i) {
-    	if(typeof process.env.AIRLINER_MSG_DEF_PATH === 'undefined') {
-    		var fullPath = path.join(this.workspace, config.get('msgDefPath'), inMsgDefs[i].file);
-    	} else {
-    		var fullPath = path.join(process.env.AIRLINER_MSG_DEF_PATH, inMsgDefs[i].file);
-    	}
-    	var msgDefInput = JSON.parse(fs.readFileSync(fullPath, 'utf8'));
-    	this.defs = mergeJSON.merge(this.defs, msgDefInput);
-    }
 };
 
 
@@ -299,27 +311,32 @@ BinaryDecoder.prototype.getTlmDefByPath = function (path) {
             this.logErrorEvent(EventEnum.APP_NOT_FOUND, 'getTlmDefByPath: App not found. \'' + appName + '\'');
             return undefined;
         } else {
-            var msgDef = this.getMsgDefByName(appDefinition.operations[operationName].airliner_msg);
+            var operation = appDefinition.operations[operationName];
+            if(typeof operation !== 'undefined') {
+                if(operation.hasOwnProperty('airliner_msg')) {
+	            var msgDef = this.getMsgDefByName(operation.airliner_msg);
 	        
-            if(typeof msgDef === 'undefined') {
-                return undefined;
-            } else {
-                var splitName = path.split('/');
-                var opNameID = stripArrayIdentifier(splitName[3]);
-		        
-                var fieldObj = msgDef.operational_names[opNameID];
-		        
-                if(typeof fieldObj === 'undefined') {
-                    return undefined;
-                } else {
-                    var fieldPath = fieldObj.field_path;
-		        	
-                    if(typeof fieldPath === 'undefined') {
+                    if(typeof msgDef === 'undefined') {
                         return undefined;
                     } else {
-                        var fieldDef = getFieldFromOperationalName(msgDef, fieldPath, 0);
+                        var splitName = path.split('/');
+                        var opNameID = stripArrayIdentifier(splitName[3]);
+		        
+                        var fieldObj = msgDef.operational_names[opNameID];
+		        
+                        if(typeof fieldObj === 'undefined') {
+                            return undefined;
+                        } else {
+                            var fieldPath = fieldObj.field_path;
 		        	
-                        return fieldDef.fieldDef;
+                            if(typeof fieldPath === 'undefined') {
+                                return undefined;
+                            } else {
+                                var fieldDef = getFieldFromOperationalName(msgDef, fieldPath, 0);
+		        	
+                                return fieldDef.fieldDef;
+                            }
+                        }
                     }
                 }
             }
@@ -603,7 +620,6 @@ BinaryDecoder.prototype.getFieldValueAsPbType = function (buffer, fieldDef, bitO
 					break;
 					
 				default:
-                    console.log(3);
 //				    if(typeof nextFieldDef === 'undefined') {
 //						this.logErrorEvent(EventEnum.UNKNOWN_DATA_TYPE, 'getFieldAsPbType: Unknown data type. \'' + fieldDef.pb_type + '\'');
 //				    } else {
@@ -951,11 +967,13 @@ BinaryDecoder.prototype.getFieldValue = function (buffer, fieldDef, bitOffset, r
 				    }
 			}
 	    }
+		
+		return value;
 	} catch(err) {
 	    this.logErrorEvent(EventEnum.UNHANDLED_EXCEPTION, 'getField: Unhandled exception. \'' + err + ' - ' + err.stack + '\'');
+	    
+		return undefined;
 	}
-	
-	return value;
 }
 
 

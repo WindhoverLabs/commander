@@ -36,10 +36,7 @@ var router = express.Router();
 var path = require('path');
 var url = require('url');
 
-var workspace = path.join(process.env.CMDR_WORKSPACE + '/web');
-console.log("###########",workspace)
-
-// var workspace = path.join(__dirname + '/..', '/workspace/web');
+var workspace = path.join(process.env.CDR_WORKSPACE + '/web');
 
 /* GET home page. */
 router.get('/*', function(req, res, next) {

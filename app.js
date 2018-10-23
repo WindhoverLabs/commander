@@ -40,7 +40,6 @@ var socket_io = require('socket.io');
 var fs = require('fs');
 
 var indexRouter = require('./routes/index');
-//var workspaceRouter = require('./routes/workspace');
 
 
 const util = require('util');
@@ -69,50 +68,6 @@ global.PANELS_TREE = [];
 global.LAYOUTS_TREE = [];
 global.CONTENT_TREE = {};
 
-//global.NODE_APP.use('/ws', workspaceRouter);
-//global.NODE_APP.use('/flow*', test1);
-
 var commander = require(CDR_WORKSPACE);
-
-//var commander = new Commander(CDR_WORKSPACE, './config/development.json');
-//var binaryEncoder = new BinaryEncoder(CDR_WORKSPACE, `${CDR_WORKSPACE}/etc/binary-encoder-config.json`);
-//var binaryDecoder = new BinaryDecoder(CDR_WORKSPACE, `${CDR_WORKSPACE}/etc/binary-decoder-config.json`);
-//var variableServer = new VariableServer(`${CDR_WORKSPACE}/etc/variable-server-config.json`);
-//var fswConnector = new UdpStdProvider(`${CDR_WORKSPACE}/etc/udpstdprovider-config.json`);
-//var pylinerConnector = new UdpStdProvider(`${CDR_WORKSPACE}/etc/pyliner-connector-config.json`);
-//var clientConnector = new ClientConnector(CDR_WORKSPACE, `${CDR_WORKSPACE}/etc/client-connector-config.json`, global.NODE_APP);
-//var protobufEncoder = new ProtobufEncoder(CDR_WORKSPACE, `${CDR_WORKSPACE}/etc/protobuf-encoder-config.json`);
-//var protobufDecoder = new ProtobufDecoder(CDR_WORKSPACE, `${CDR_WORKSPACE}/etc/protobuf-decoder-config.json`);
-//
-//var airliner = commander.addInstance('airliner', function(instance) {
-//	instance.addApp('binary-encoder',    binaryEncoder);
-//	instance.addApp('binary-decoder',    binaryDecoder);
-//	instance.addApp('fsw-connector',     fswConnector);
-//	instance.addApp('pyliner-connector', pylinerConnector);
-//	instance.addApp('variable-server',   variableServer);
-//	instance.addApp('client-connector',  clientConnector);
-//	instance.addApp('protobuf-encoder',  protobufEncoder);
-//	instance.addApp('protobuf-decoder',  protobufDecoder);
-//});
-
-
-
-////catch 404 and forward to error handler
-//global.NODE_APP.use(function(req, res, next) {
-// next(createError(404));
-//});
-//
-////error handler
-//global.NODE_APP.use(function(err, req, res, next) {
-// // set locals, only providing error in development
-// res.locals.message = err.message;
-// //res.locals.error = req.global.NODE_APP.get('env') === 'development' ? err : {};
-// res.locals.error = err;
-//
-// // render the error page
-// res.status(err.status || 500);
-// res.render('error');
-//});
-
 
 module.exports = global.NODE_APP;

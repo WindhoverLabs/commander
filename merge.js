@@ -26,12 +26,14 @@ if(argv.hasOwnProperty('o') == false) {
     process.exit(-1);
 }
 
+console.log('Merging ' + argv.b + ' into ' + argv.a + '.');
 var inputA = JSON.parse(fs.readFileSync(argv.a, 'utf8'));
 var inputB = JSON.parse(fs.readFileSync(argv.b, 'utf8'));
 
 var output = mergeJSON.merge(inputA, inputB);
 
-fs.writeFile(argv.o, JSON.stringify(output, null, 2), 'utf8', function(err) {
+fs.writeFile(argv.o, JSON.stringify(output, null, 4), 'utf8', function(err) {
     if (err) throw err;
     console.log('complete');
 });
+console.log('Saving output as ' + argv.o + '.');

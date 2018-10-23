@@ -73,69 +73,13 @@ function BinaryEncoder(workspace, configFile) {
     this.cdd = {};
     var self = this;
     this.instanceEmitter;
+    this.endian;
     
     /* Load environment dependent configuration */
     config.loadFile(configFile);
 
     /* Perform validation */
     config.validate({allowed: 'strict'});
-    
-    this.ccsdsPriHdr = new Parser()
-      .endianess('big')
-      .bit3('version')
-      .bit1('pktType')
-      .bit1('secHdr')
-      .bit11('apid')
-      .bit2('segment')
-      .bit14('sequence')
-      .uint16('length');
-    
-	this.ccsdsCmdSecHdr = new Parser()
-	  .endianess('little')
-	  .bit1('reserved')
-	  .bit7('code')
-	  .uint8('checksum');
-	
-    switch(config.get('CFE_SB_PACKET_TIME_FORMAT')) {
-      case 'CFE_SB_TIME_32_16_SUBS':
-        this.ccsdsTlmSecHdr = new Parser()
-    	  .endianess('little')
-          .uint32('seconds')
-          .uint16('subseconds');
-        this.tlmHeaderLength = 96;
-    	break;
-    	  
-      case 'CFE_SB_TIME_32_32_SUBS':
-        this.ccsdsTlmSecHdr = new Parser()
-    	  .endianess('little')
-          .uint32('seconds')
-          .uint32('subseconds');
-        this.tlmHeaderLength = 98;
-    	break;
-    	  
-      case 'CFE_SB_TIME_32_32_M_20':
-        this.ccsdsTlmSecHdr = new Parser()
-    	  .endianess('little')
-          .uint32('seconds')
-          .uint32('subseconds');
-        this.tlmHeaderLength = 98;
-    	break;
-    	  
-      default:
-	    break;
-    }
-
-    this.ccsds = new Parser()
-        .endianess('little')
-        .nest('PriHdr', {type: this.ccsdsPriHdr})
-        .choice('SecHdr', {
-    	    tag: 'PriHdr.pktType',
-    	    choices: {
-    	        0: this.ccsdsTlmSecHdr,
-    	        1: this.ccsdsCmdSecHdr
-    	    }
-    	})
-        .buffer('payload', {readUntil: 'eof'});
     
     var inMsgDefs = config.get('msgDefs');
     
@@ -148,6 +92,77 @@ function BinaryEncoder(workspace, configFile) {
     	var msgDefInput = JSON.parse(fs.readFileSync(fullPath, 'utf8'));
     	this.defs = mergeJSON.merge(this.defs, msgDefInput);
     }
+    
+    if(this.defs.Airliner.little_endian) {
+        this.endian = 'little';
+    } else {
+        this.endian = 'big';
+    }
+    
+    this.ccsdsPriHdr = new Parser()
+      .endianess('big')
+      .bit3('version')
+      .bit1('pktType')
+      .bit1('secHdr')
+      .bit11('apid')
+      .bit2('segment')
+      .bit14('sequence')
+      .uint16('length');
+    
+    if(this.endian == 'little') {
+    	this.ccsdsCmdSecHdr = new Parser()
+    		.endianess('little')
+    		.bit1('reserved')
+    		.bit7('code')
+    		.uint8('checksum');
+    } else {
+    	this.ccsdsCmdSecHdr = new Parser()
+			.endianess('big')
+			.uint8('checksum')
+			.bit1('reserved')
+			.bit7('code')
+    }
+	
+    switch(config.get('CFE_SB_PACKET_TIME_FORMAT')) {
+      case 'CFE_SB_TIME_32_16_SUBS':
+        this.ccsdsTlmSecHdr = new Parser()
+    	  .endianess('big')
+          .uint32('seconds')
+          .uint16('subseconds');
+        this.tlmHeaderLength = 96;
+    	break;
+    	  
+      case 'CFE_SB_TIME_32_32_SUBS':
+        this.ccsdsTlmSecHdr = new Parser()
+    	  .endianess('big')
+          .uint32('seconds')
+          .uint32('subseconds');
+        this.tlmHeaderLength = 98;
+    	break;
+    	  
+      case 'CFE_SB_TIME_32_32_M_20':
+        this.ccsdsTlmSecHdr = new Parser()
+    	  .endianess('big')
+          .uint32('seconds')
+          .uint32('subseconds');
+        this.tlmHeaderLength = 98;
+    	break;
+    	  
+      default:
+	    break;
+    }
+
+    this.ccsds = new Parser()
+        .endianess('big')
+        .nest('PriHdr', {type: this.ccsdsPriHdr})
+        .choice('SecHdr', {
+    	    tag: 'PriHdr.pktType',
+    	    choices: {
+    	        0: this.ccsdsTlmSecHdr,
+    	        1: this.ccsdsCmdSecHdr
+    	    }
+    	})
+        .buffer('payload', {readUntil: 'eof'});
 };
 
 
@@ -248,6 +263,7 @@ BinaryEncoder.prototype.getCmdDefByName = function (name) {
 
 BinaryEncoder.prototype.getCmdOpNamesStripHeader = function (cmdDef) {
     var opsPaths = {};
+    var self = this;
 	
     if(cmdDef.hasOwnProperty('operational_names')) {
         for(var opNameID in cmdDef.operational_names) {
@@ -257,7 +273,7 @@ BinaryEncoder.prototype.getCmdOpNamesStripHeader = function (cmdDef) {
 	
             var fieldDef = this.getFieldFromOperationalName(cmdDef, opNameID, 0);
 
-            if((fieldDef.bitOffset * 8) > this.cmdHeaderLength) {
+            if(fieldDef.bitOffset >= self.cmdHeaderLength) {
                 opsPaths[opNameID] = {dataType: fieldDef.fieldDef.airliner_type, bitSize: fieldDef.fieldDef.bit_size};
             }
         }
@@ -395,25 +411,41 @@ BinaryEncoder.prototype.setField = function (buffer, fieldDef, bitOffset, value)
 					
 				case 'uint16':
 					for(var i = 0; i < fieldDef.array_length; ++i) {
-						buffer.writeUInt16LE(value, (bitOffset / 8) + i);
+						if(this.endian == 'little') {
+							buffer.writeUInt16LE(value, (bitOffset / 8) + i);
+						} else {
+							buffer.writeUInt16BE(value, (bitOffset / 8) + i);
+						}
 					}
 					break;
 					
 				case 'int16':
 					for(var i = 0; i < fieldDef.array_length; ++i) {
-						buffer.writeInt16LE(value, (bitOffset / 8) + i);
+						if(this.endian == 'little') {
+							buffer.writeInt16LE(value, (bitOffset / 8) + i);
+						} else {
+							buffer.writeInt16BE(value, (bitOffset / 8) + i);
+						}
 					}
 					break;
 					
 				case 'uint32':
 					for(var i = 0; i < fieldDef.array_length; ++i) {
-						buffer.writeUInt32LE(value, (bitOffset / 8) + i);
+						if(this.endian == 'little') {
+							buffer.writeUInt32LE(value, (bitOffset / 8) + i);
+						} else {
+							buffer.writeUInt32BE(value, (bitOffset / 8) + i);
+						}
 					}
 					break;
 					
 				case 'int32':
 					for(var i = 0; i < fieldDef.array_length; ++i) {
-						buffer.writeInt32LE(value, (bitOffset / 8) + i);
+						if(this.endian == 'little') {
+							buffer.writeInt32LE(value, (bitOffset / 8) + i);
+						} else {
+							buffer.writeInt32BE(value, (bitOffset / 8) + i);
+						}
 					}
 					break;
 					
@@ -435,19 +467,35 @@ BinaryEncoder.prototype.setField = function (buffer, fieldDef, bitOffset, value)
 					break;
 					
 				case 'uint16':
-					buffer.writeUInt16LE(value, bitOffset / 8);
+					if(this.endian == 'little') {
+						buffer.writeUInt16LE(value, bitOffset / 8);
+					} else {
+						buffer.writeUInt16BE(value, bitOffset / 8);
+					}
 					break;
 					
 				case 'int16':
-					buffer.writeInt16LE(value, bitOffset / 8);
+					if(this.endian == 'little') {
+						buffer.writeInt16LE(value, bitOffset / 8);
+					} else {
+						buffer.writeInt16BE(value, bitOffset / 8);
+					}
 					break;
 					
 				case 'uint32':
-					buffer.writeUInt32LE(value, bitOffset / 8);
+					if(this.endian == 'little') {
+						buffer.writeUInt32LE(value, bitOffset / 8);
+					} else {
+						buffer.writeUInt32BE(value, bitOffset / 8);
+					}
 					break;
 					
 				case 'int32':
-					buffer.writeInt32LE(value, bitOffset / 8);
+					if(this.endian == 'little') {
+						buffer.writeInt32LE(value, bitOffset / 8);
+					} else {
+						buffer.writeInt32BE(value, bitOffset / 8);
+					}
 					break;
 					
 				default:
@@ -470,8 +518,13 @@ BinaryEncoder.prototype.sendCommand = function (cmd, args) {
     buffer.writeUInt16BE(opDef.operation.airliner_mid, 0);
     buffer.writeUInt16BE(this.sequence, 2);
     buffer.writeUInt16BE(byteLength - 7, 4);
-    buffer.writeUInt8(opDef.operation.airliner_cc, 7);
-    buffer.writeUInt8(0, 6);
+    if(this.endian == 'big') {
+    	buffer.writeUInt8(opDef.operation.airliner_cc, 6);
+    	buffer.writeUInt8(0, 7);
+    } else {
+    	buffer.writeUInt8(0, 6);
+    	buffer.writeUInt8(opDef.operation.airliner_cc, 7);
+    }
 	
     this.sequence++;
 	
@@ -498,7 +551,7 @@ BinaryEncoder.prototype.sendCommand = function (cmd, args) {
             }
         }
     }
-	
+
     this.instanceEmit(config.get('binaryOutputStreamID'), buffer);
 }
 
