@@ -37,6 +37,11 @@
  * @type {JQuery Object}
  */
 var builder = $('#cdr-widget');
+/**
+ * Change the probe to pring performance values
+ * @type {Boolean}
+ */
+var perfProbe = false;
 
 /**
  * Modal generation configuration
@@ -195,46 +200,90 @@ Widget.prototype.plotIndicator = function() {
  * @return {undefined}
  */
 Widget.prototype.cdrThroughput = function() {
-  var bp_up = generateBoilerPlate()
-  var bp_down = generateBoilerPlate()
-  $('#cdr-gadget-container').append(bp_up.html)
-  $('#cdr-gadget-' + bp_up.id).append('<div data-key=' + bp_up.id + ' class="cdr-gadget-text">UP' +
-    '</div>' +
-    '<div id=spark-cdr-gadget' + bp_up.id + ' data-key=' + bp_up.id + ' class="cdr-gadget-value" data-value=[]>' +
-    '</div>')
-  $('#cdr-gadget-container').append(bp_down.html)
-  $('#cdr-gadget-' + bp_down.id).append('<div data-key=' + bp_down.id + ' class="cdr-gadget-text">DOWN' +
-    '</div>' +
-    '<div id=spark-cdr-gadget' + bp_down.id + ' data-key=' + bp_down.id + ' class="cdr-gadget-value" data-value=[]>' +
-    '</div>')
-  wid.sparklines[bp_up.id] = new Sparkline(document.getElementById('spark-cdr-gadget' + bp_up.id), {
+  var durationWG = generateBoilerPlate()
+  var transferSizeWG = generateBoilerPlate()
+  var sockStatusWG = generateBoilerPlate()
+  var sparkLineOptions = {
     width: 50,
     height: 20,
-  });
-  wid.sparklines[bp_down.id] = new Sparkline(document.getElementById('spark-cdr-gadget' + bp_down.id), {
-    width: 50,
-    height: 20,
-  });
-  wid.sparklines[bp_up.id].draw(up);
-  wid.sparklines[bp_down.id].draw(down);
+    startColor:'transperant',
+    maxColor: 'red',
+    minColor: 'green',
+    toooltip: function(v,i,a){
+      console.log(v)
+    }
+  }
+  $('#cdr-gadget-container').append(durationWG.html)
+  $('#cdr-gadget-' + durationWG.id).append('<div data-key=' + durationWG.id + ' class="cdr-gadget-text">Duration' +
+    '</div>' +
+    '<div id=spark-cdr-gadget' + durationWG.id + ' data-key=' + durationWG.id + ' class="cdr-gadget-value" data-value=[]>' +
+    '</div>')
+
+  $('#cdr-gadget-container').append(transferSizeWG.html)
+  $('#cdr-gadget-' + transferSizeWG.id).append('<div data-key=' + transferSizeWG.id + ' class="cdr-gadget-text">Transfer Size' +
+    '</div>' +
+    '<div id=spark-cdr-gadget' + transferSizeWG.id + ' data-key=' + transferSizeWG.id + ' class="cdr-gadget-value" data-value=[]>' +
+    '</div>')
+
+  $('#cdr-gadget-container').append(sockStatusWG.html)
+  $('#cdr-gadget-' + sockStatusWG.id).append('<div data-key=' + sockStatusWG.id + ' class="cdr-gadget-text">Commander Status' +
+    '</div>' +
+    '<div id=spark-cdr-gadget' + sockStatusWG.id + ' data-key=' + sockStatusWG.id + ' class="cdr-gadget-value" data-value=[]>' +
+    '</div>')
+
+  wid.sparklines[durationWG.id] = new Sparkline(document.getElementById('spark-cdr-gadget' + durationWG.id), sparkLineOptions);
+
+  wid.sparklines[transferSizeWG.id] = new Sparkline(document.getElementById('spark-cdr-gadget' + transferSizeWG.id), sparkLineOptions);
+  wid.sparklines[durationWG.id].draw(up);
+  wid.sparklines[transferSizeWG.id].draw(down);
   var up = []
   var down = []
+  var perfBufferSize = 20;
+
   var interval = setInterval(() => {
-    session.getPerfData((param) => {
-      up.push(param.up)
-      down.push(param.down)
-      if (up.length == 10) {
-        up.splice(0, 1);
+    /* Socket status */
+    if(window.session.socket.connected){
+      $('#spark-cdr-gadget' + sockStatusWG.id).text("ACTIVE");
+      $('#spark-cdr-gadget' + sockStatusWG.id).attr('class','cdr-gadget-value cdr-gadget-on-status');
+
+    }
+    else {
+      $('#spark-cdr-gadget' + sockStatusWG.id).text("INACTIVE");
+      $('#spark-cdr-gadget' + sockStatusWG.id).attr('class','cdr-gadget-value cdr-gadget-off-status');
+    }
+
+
+    /* Duration and Size transfered */
+    var duration_Accumulated = 0;
+    var sizeTransfered_Accumulated = 0;
+    var entries = performance.getEntries({"initiatorType":"xmlhttprequest"});
+    for(var i in entries) {
+      try{
+        duration_Accumulated += entries[i].duration;
+        sizeTransfered_Accumulated += entries[i].transferSize;
       }
-      if (down.length == 10) {
-        down.splice(0, 1);
+      catch(e){
+        cu.logError('cdrThroughput | error calculating performance')
       }
-      wid.sparklines[bp_up.id].draw(up);
-      wid.sparklines[bp_down.id].draw(down);
-    });
+    }
+    if(perfProbe){
+      cu.logInfo('cdrThroughput [probe] | Accumulated duration: ',duration_Accumulated);
+      cu.logInfo('cdrThroughput [probe] | Accumulated size: ',sizeTransfered_Accumulated);
+    }
+    up.push(duration_Accumulated)
+    down.push(sizeTransfered_Accumulated)
+    if (up.length == 10) {
+      up.splice(0, 1);
+    }
+    if (down.length == 10) {
+      down.splice(0, 1);
+    }
+    wid.sparklines[durationWG.id].draw(up);
+    wid.sparklines[transferSizeWG.id].draw(down);
+    performance.clearResourceTimings();
   }, 1000);
-  wid.intervals[bp_up.id] = interval
-  wid.intervals[bp_down.id] = interval
+  wid.intervals[durationWG.id] = interval
+  wid.intervals[transferSizeWG.id] = interval
 }
 /**
  * Takes a opsPath and generates a indicator showing value in plain text

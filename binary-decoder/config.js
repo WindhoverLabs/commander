@@ -33,7 +33,10 @@
 
 var convict = require('convict');
 
-// Define a schema
+/**
+ * Define a schema for binary-decoder
+ * @type {Object}
+ */
 var config = convict({
     env: {
         doc: 'The application environment.',

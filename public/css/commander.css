@@ -323,6 +323,7 @@ h2 {
   background: white;
   border-radius: 5px;
   padding: 0px 10px;
+  font-weight: bold;
 }
 .cdr-gadget-close {
   font-size: 12px;
@@ -337,6 +338,17 @@ h2 {
   cursor: pointer;
 }
 
+.cdr-gadget-on-status{
+  background: #56ab2f !important;  /* fallback for old browsers */
+  background: -webkit-linear-gradient(to right, #a8e063, #56ab2f) !important;  /* Chrome 10-25, Safari 5.1-6 */
+  background: linear-gradient(to right, #a8e063, #56ab2f) !important; /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
+
+}
+.cdr-gadget-off-status{
+  background: #ED213A !important;  /* fallback for old browsers */
+  background: -webkit-linear-gradient(to right, #93291E, #ED213A) !important;  /* Chrome 10-25, Safari 5.1-6 */
+  background: linear-gradient(to right, #93291E, #ED213A) !important; /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
+}
 
 path {
   stroke: #5f8e9e;

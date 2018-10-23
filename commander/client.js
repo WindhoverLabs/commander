@@ -12,8 +12,8 @@
 *    notice, this list of conditions and the following disclaimer in
 *    the documentation and/or other materials provided with the
 *    distribution.
-* 3. Neither the name Windhover Labs nor the names of its 
-*    contributors may be used to endorse or promote products derived 
+* 3. Neither the name Windhover Labs nor the names of its
+*    contributors may be used to endorse or promote products derived
 *    from this software without specific prior written permission.
 *
 * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
@@ -60,22 +60,6 @@ function CommanderClient() {
    * @type {Object}
    */
 	this.subscriptions = {};
-  /**
-   * Declare and initialize performance structure
-   * @type {Object}
-   */
-  this.PerfData = {};
-  /**
-   * Initial counter counts the number of uplink requests
-   * @type {Number}
-   */
-  this.PerfData.up = 0;
-  /**
-   * Initial data size; calculates total data size sent to server in one
-   * cycle
-   * @type {Number}
-   */
-  this.PerfData.down = 0;
 
 	cu.logInfo('Clinet | CommanderClient');
   /* Connect */
@@ -97,10 +81,7 @@ CommanderClient.prototype.isSocketConnected = function() {
  * @param  {Function} cb   Callback
  */
 CommanderClient.prototype.getLayouts = function (path, cb){
-    var self = this;
     this.socket.emit('getLayouts', path, function(result){
-        self.PerfData.up += 1;
-        self.PerfData.down += cu.getSize(result);
         cb(result);
     });
 };
@@ -111,10 +92,7 @@ CommanderClient.prototype.getLayouts = function (path, cb){
  * @param  {Function} cb   Callback
  */
 CommanderClient.prototype.getPanels = function (path, cb) {
-    var self = this;
     this.socket.emit('getPanels', path, function(result) {
-        self.PerfData.up += 1;
-        self.PerfData.down += cu.getSize(result);
         cb(result);
     });
 };
@@ -130,16 +108,6 @@ CommanderClient.prototype.getRandom = function (cb){
     }, 500);
 };
 
-/**
- * Get socketIO performance data
- * @param  {Function} cb Callback
- */
-CommanderClient.prototype.getPerfData = function (cb){
-  var res = this.PerfData;
-  cb(res);
-  this.PerfData.up = 0;
-  this.PerfData.down = 0;
-};
 
 /**
  * Disable video stream
@@ -220,11 +188,8 @@ CommanderClient.prototype.getDirectoryListing = function (path, extension, cb){
  * @param  {Function} cb Callback
  */
 CommanderClient.prototype.getViews = function (cb) {
-    var self = this;
     if(this.isSocketConnected){
     	this.socket.emit('getViews', function(views){
-            self.PerfData.up += 1;
-            self.PerfData.down += cu.getSize(views);
             cb(views);
         });
     };
@@ -237,12 +202,9 @@ CommanderClient.prototype.getViews = function (cb) {
  * @param  {Function} cb     Callback
  */
 CommanderClient.prototype.getCmdDef = function (cmdObj,cb) {
-    var self = this;
     if(this.isSocketConnected) {
         this.socket.emit('getCmdDef', cmdObj, function(cmdDef) {
         	 var outCmdDef = {name:cmdDef.opsPath, argument:cmdDef.args};
-           self.PerfData.up += 1;
-           self.PerfData.down += cu.getSize(outCmdDef);
             cb(outCmdDef);
         });
     };
@@ -255,11 +217,8 @@ CommanderClient.prototype.getCmdDef = function (cmdObj,cb) {
  * @param  {Function} cb     Callback
  */
 CommanderClient.prototype.getTlmDefs = function (tlmObj, cb) {
-    var self = this;
     if(this.isSocketConnected) {
     	this.socket.emit('getTlmDefs', tlmObj, function(tlmDef) {
-            self.PerfData.up += 1;
-            self.PerfData.down += cu.getSize(tlmDef);
             cb(tlmDef);
         });
     };
@@ -283,8 +242,6 @@ CommanderClient.prototype.updateTelemetry = function (items) {
               sample: items[itemID].sample,
               opsPath:opsPath
             };
-
-      self.PerfData.down += cu.getSize(param);
 			cb(param);
 		}
 	}
@@ -295,7 +252,6 @@ CommanderClient.prototype.updateTelemetry = function (items) {
  * @param  {Object} tlmObj Telemetry object
  */
 CommanderClient.prototype.unsubscribe = function (tlmObj){
-    var self = this;
 
     if(this.isSocketConnected){
     	var tlmOpsPaths = [];
@@ -311,7 +267,7 @@ CommanderClient.prototype.unsubscribe = function (tlmObj){
     	}
 
     	this.socket.emit('unsubscribe', tlmOpsPaths);
-      self.PerfData.up += 1;
+
 
     };
 };
@@ -322,7 +278,6 @@ CommanderClient.prototype.unsubscribe = function (tlmObj){
  * @param  {Function} cb     Callback
  */
 CommanderClient.prototype.subscribe = function (tlmObj, cb){
-    var self = this;
 
     if(this.isSocketConnected){
     	var tlmOpsPaths = [];
@@ -339,7 +294,7 @@ CommanderClient.prototype.subscribe = function (tlmObj, cb){
     	}
 
     	this.socket.emit('subscribe', tlmOpsPaths);
-      self.PerfData.up += 1;
+
 
     };
 };
@@ -350,11 +305,10 @@ CommanderClient.prototype.subscribe = function (tlmObj, cb){
  * @param  {Object} cmdObj Command object
  */
 CommanderClient.prototype.sendCommand = function (cmdObj) {
-    var self = this;
     cu.logInfo('Client | sent command : ', JSON.stringify(cmdObj, 2));
     if(this.isSocketConnected){
     	this.socket.emit('sendCmd', cmdObj);
-      self.PerfData.up += 1;
+
     };
 };
 
