@@ -77,7 +77,8 @@ var publicFunctions = [
 	'getTlmDefs',
 	'sendCommand',
 	'getPanels',
-    'getLayouts'
+    'getLayouts',
+    'getConfigData'
 ];
 
 var config = require('./config.js');
@@ -297,15 +298,6 @@ Commander.prototype.getPanels = function(inPath, cb) {
 
 
 
-Commander.prototype.getPanels_old = function(inPath, cb) {
-    var outObj = {};    
-    var paths = inPath.split('/');
-    
-    cb(this.getPanelsByPath(paths, global.PANELS_TREE));
-}
-
-
-
 Commander.prototype.getLayouts = function(inPath, cb) {
     var outObj = {};
     
@@ -316,6 +308,16 @@ Commander.prototype.getLayouts = function(inPath, cb) {
     var content = this.getLayoutsByPath(paths, global.CONTENT_TREE);
     
     cb(content);
+}
+
+
+
+Commander.prototype.getConfigData = function(inPath, cb) {
+    if(typeof this.defaultInstance.emit === 'function') {
+        this.defaultInstance.emit(config.get('configReqStreamID'), inPath, function(resp) {
+            cb(resp);
+        });
+    };
 }
 
 

@@ -66,6 +66,11 @@ var config = convict({
         format: String,
         default: ''
     },
+    configReqStreamID: {
+        doc: 'Stream ID for configuration requests.',
+        format: String,
+        default: ''
+    },
     instances: [
     	{
 	    	name: {

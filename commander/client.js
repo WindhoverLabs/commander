@@ -314,6 +314,19 @@ CommanderClient.prototype.sendCommand = function (cmdObj) {
 
 
 /**
+ * Get config data
+ * @param  {Object} cmdObj Command object
+ */
+CommanderClient.prototype.getConfigData = function (path) {
+    cu.logInfo('Client | get config data : ', JSON.stringify(path, 2));
+    if(this.isSocketConnected){
+    	this.socket.emit('getConfigData', path);
+
+    };
+};
+
+
+/**
  * Connect to socket
  */
 CommanderClient.prototype.connect = function (){
