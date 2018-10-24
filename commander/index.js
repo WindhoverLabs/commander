@@ -78,7 +78,7 @@ var publicFunctions = [
 	'sendCommand',
 	'getPanels',
     'getLayouts',
-    'getConfigData'
+    'queryConfigDB'
 ];
 
 var config = require('./config.js');
@@ -169,7 +169,12 @@ function Commander(workspace, configFile) {
 	  	        socket.on(funcName, function() {
 	  	        	var cb = arguments[arguments.length-1];
 	  	        	self.logDebugEvent(EventEnum.SOCKET_PUBLIC_FUNCTION_CALL, 'SocketIO: ' + funcName);
-	    	        self[funcName].apply(self, arguments);
+	  	        	if(typeof self[funcName] !== 'function') {
+	  	        		/* TODO */
+	  	        		console.log('Invalid function');
+	  	        	} else {
+	  	        		self[funcName].apply(self, arguments);
+	  	        	}
 	  		    });
 	  	    })(publicFunctions[i]);
 	  	}
@@ -182,30 +187,6 @@ function Commander(workspace, configFile) {
 
 Commander.prototype.setDefaultInstance = function (instance) {
     this.defaultInstance = instance;
-}
-
-
-
-Commander.prototype.getPanelsByPath_old = function (paths, panelsObj) {
-    if(paths.length == 1) {
-        if(paths[0] === '') {
-            return panelsObj;
-        } else {
-            for(var i = 0; i < panelsObj.length; ++i) {
-                if(panelsObj[i].name === paths[0]) {
-                    return panelsObj[i].nodes;
-                }
-            }
-        }
-    } else {
-        var thisObjPath = paths.shift();
-        for(var i = 0; i < panelsObj.length; ++i) {
-            if(panelsObj[i].name === thisObjPath) {
-                return this.getPanelsByPath(paths, panelsObj[i].nodes);
-            }
-        }
-
-    }
 }
 
 
@@ -312,9 +293,9 @@ Commander.prototype.getLayouts = function(inPath, cb) {
 
 
 
-Commander.prototype.getConfigData = function(inPath, cb) {
+Commander.prototype.queryConfigDB = function(inPath, cb) {
     if(typeof this.defaultInstance.emit === 'function') {
-        this.defaultInstance.emit(config.get('configReqStreamID'), inPath, function(resp) {
+        this.defaultInstance.emit(config.get('queryConfigStreamID'), inPath, function(resp) {
             cb(resp);
         });
     };
