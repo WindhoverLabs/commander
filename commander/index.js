@@ -12,8 +12,8 @@
 *    notice, this list of conditions and the following disclaimer in
 *    the documentation and/or other materials provided with the
 *    distribution.
-* 3. Neither the name Windhover Labs nor the names of its 
-*    contributors may be used to endorse or promote products derived 
+* 3. Neither the name Windhover Labs nor the names of its
+*    contributors may be used to endorse or promote products derived
 *    from this software without specific prior written permission.
 *
 * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
@@ -88,7 +88,7 @@ function Commander(workspace, configFile) {
     this.workspace = workspace;
     this.instances = {};
     var self = this;
-    
+
     /* Load environment dependent configuration */
     config.loadFile(configFile);
 
@@ -97,9 +97,9 @@ function Commander(workspace, configFile) {
 
     /* Add the root instance. */
     this.addInstance(ROOT_INSTANCE_NAME);
-    
+
     var cfgInstances = config.get('instances');
-    
+
     for(var i = 0; i < cfgInstances.length; ++i) {
 		this.instances[cfgInstances[i].name] = new CommanderInstance(this, cfgInstances[i]);
     }
@@ -110,59 +110,59 @@ function Commander(workspace, configFile) {
 
     io.on('connection', function(socket) {
 	  	var address = socket.handshake.address;
-	
+
 	  	socket.on('connect_error', function(err) {
 	  		self.logErrorEvent(EventEnum.SOCKET_CONNECT_ERROR, 'SocketIO: Socket connect error.  \'' + err + '\'');
 	  	});
-	
+
 	  	socket.on('connect_timeout', function() {
 	  		self.logErrorEvent(EventEnum.SOCKET_CONNECT_TIMEOUT, 'SocketIO: Socket timeout.');
 	  	});
-	
+
 	  	socket.on('reconnect', function(num) {
 	  		self.logInfoEvent(EventEnum.SOCKET_RECONNECT, 'SocketIO: Socket successfully reconnected on attempt # \'' + num + '\'.');
 	  	});
-	
+
 	  	socket.on('reconnect_attempt', function() {
 	  		self.logInfoEvent(EventEnum.SOCKET_RECONNECT_ATTEMPT, 'SocketIO: Socket reconnect attempt.');
 	  	});
-	
+
 	  	socket.on('reconnecting', function(num) {
 	  		self.logInfoEvent(EventEnum.SOCKET_RECONNECTING, 'SocketIO: Socket reconnecting attempt # \'' + num + '\'.');
 	  	});
-	
+
 	  	socket.on('reconnect_error', function(err) {
 	  		self.logErrorEvent(EventEnum.SOCKET_RECONNECT_ERROR, 'SocketIO: Socket reconnect error.  \'' + err + '\'.');
 	  	});
-	
+
 	  	socket.on('reconnect_failed', function() {
 	  		self.logErrorEvent(EventEnum.SOCKET_RECONNECT_FAILED, 'SocketIO: Socket reconnect failed.');
 	  	});
-	
+
 	  	socket.on('disconnect', function() {
 	  		self.logInfoEvent(EventEnum.SOCKET_DISCONNECT, 'SocketIO: Socket disconnected.');
 	  	});
-	
+
 	  	socket.on('ping', function() {
 	  		self.logDebugEvent(EventEnum.SOCKET_PING, 'SocketIO: Socket ping.');
 	  	});
-	
+
 	  	socket.on('pong', function(latency) {
 	  		self.logDebugEvent(EventEnum.SOCKET_PONG, 'SocketIO: Socket pong (' + latency + ' ms).');
 	  	});
-	
+
 	  	socket.on('subscribe', function(opsPaths) {
 	  		self.subscribe(opsPaths, updateTelemetry);
 	  	});
-	
+
 	    socket.on('sendCmd', function(cmdObj) {
 	  		self.sendCmd(cmdObj);
 	  	});
-	
+
 	    function updateTelemetry(update) {
 	      	socket.emit('telemetry-update', update);
 	    }
-	
+
 	  	for(var i in publicFunctions) {
 	  		(function(funcName) {
 	  	        socket.on(funcName, function() {
@@ -173,7 +173,7 @@ function Commander(workspace, configFile) {
 	  	    })(publicFunctions[i]);
 	  	}
 	});
-    
+
     return this;
 }
 
@@ -185,7 +185,7 @@ Commander.prototype.setDefaultInstance = function (instance) {
 
 
 
-Commander.prototype.getPanelsByPath_old = function (paths, panelsObj) {    
+Commander.prototype.getPanelsByPath_old = function (paths, panelsObj) {
     if(paths.length == 1) {
         if(paths[0] === '') {
             return panelsObj;
@@ -203,13 +203,13 @@ Commander.prototype.getPanelsByPath_old = function (paths, panelsObj) {
                 return this.getPanelsByPath(paths, panelsObj[i].nodes);
             }
         }
-        
+
     }
 }
 
 
 
-Commander.prototype.getPanelsByPath = function (paths, panelsObj) {    
+Commander.prototype.getPanelsByPath = function (paths, panelsObj) {
     if(paths.length == 1) {
     	var targetPath = paths[0];
         if(targetPath === '') {
@@ -248,7 +248,7 @@ Commander.prototype.getPanelsByPath = function (paths, panelsObj) {
 
 
 
-Commander.prototype.getLayoutsByPath = function (paths, layoutsObj) {    
+Commander.prototype.getLayoutsByPath = function (paths, layoutsObj) {
     if(paths.length == 1) {
     	var targetPath = paths[0];
         if(targetPath === '') {
@@ -285,22 +285,22 @@ Commander.prototype.getLayoutsByPath = function (paths, layoutsObj) {
 
 Commander.prototype.getPanels = function(inPath, cb) {
     var outObj = {};
-    
+
     var paths = inPath.split('/');
-    
+
     paths.shift();
-    
+
     var content = this.getPanelsByPath(paths, global.CONTENT_TREE);
-    
+
     cb(content);
 }
 
 
 
 Commander.prototype.getPanels_old = function(inPath, cb) {
-    var outObj = {};    
+    var outObj = {};
     var paths = inPath.split('/');
-    
+
     cb(this.getPanelsByPath(paths, global.PANELS_TREE));
 }
 
@@ -308,13 +308,13 @@ Commander.prototype.getPanels_old = function(inPath, cb) {
 
 Commander.prototype.getLayouts = function(inPath, cb) {
     var outObj = {};
-    
+
     var paths = inPath.split('/');
-    
+
     paths.shift();
-    
+
     var content = this.getLayoutsByPath(paths, global.CONTENT_TREE);
-    
+
     cb(content);
 }
 
@@ -417,7 +417,7 @@ Commander.prototype.sendCmd = function (cmdName, args) {
 
 Commander.prototype.subscribe = function (varName, cb) {
 	var self = this;
-	
+
 	//if(this.defaultInstance.hasOwnProperty('emit')) {
 	    this.defaultInstance.emit(config.get('reqSubscribeStreamID'), {cmd: 'subscribe', opsPath: varName}, cb);
 	//}
@@ -450,7 +450,7 @@ Commander.prototype.addApp = function (name, appObj) {
 
 Commander.prototype.addInstance = function (name, cb) {
 	this.instances[name] = new CommanderInstance(name, this);
-	
+
 	if(typeof cb === 'function') {
 		cb(this.instances[name]);
 	};
@@ -486,16 +486,16 @@ Commander.prototype.logEvent = function (instance, plugin, component, eventID, c
     /* TODO - Write something more formal, like file logging and filtering. */
 
     if(criticality !== '---') {
-        var date = new Date(); 
+        var date = new Date();
         var timestamp = date.getTime();
-	
+
         const Bright = "\x1b[1m";
         const Dim = "\x1b[2m";
         const Underscore = "\x1b[4m";
         const Blink = "\x1b[5m";
         const Reverse = "\x1b[7m";
 	const Hidden = "\x1b[8m";
-		 
+
 	const FgBlack = "\x1b[30m";
 	const FgRed = "\x1b[31m";
 	const FgGreen = "\x1b[32m";
@@ -504,7 +504,7 @@ Commander.prototype.logEvent = function (instance, plugin, component, eventID, c
 	const FgMagenta = "\x1b[35m";
 	const FgCyan = "\x1b[36m";
 	const FgWhite = "\x1b[37m";
-		 
+
 	const BgBlack = "\x1b[40m";
 	const BgRed = "\x1b[41m";
 	const BgGreen = "\x1b[42m";
@@ -513,7 +513,7 @@ Commander.prototype.logEvent = function (instance, plugin, component, eventID, c
 	const BgMagenta = "\x1b[45m";
 	const BgCyan = "\x1b[46m";
 	const BgWhite = "\x1b[47m";
-	
+
 	var dateString =
 	    date.getUTCFullYear() + "/" +
 	    ("0" + (date.getUTCMonth()+1)).slice(-2) + "/" +
@@ -526,59 +526,22 @@ Commander.prototype.logEvent = function (instance, plugin, component, eventID, c
 	    case 'DEBUG':
 	    	console.log(FgGreen + 'EVT' + FgWhite + ' | ' + FgCyan + dateString + FgWhite + ' | ' + FgWhite + instance + ' | ' + FgWhite + component + ' | ' + FgWhite + plugin + ' | ' + FgWhite + eventID + ' | ' + FgWhite + criticality + FgWhite + ' | ' + FgWhite + text);
 	        break;
-	        
+
 	    case 'INFO':
 	    	console.log(FgGreen + 'EVT' + FgWhite + ' | ' + FgCyan + dateString + FgWhite + ' | ' + FgWhite + instance + ' | ' + FgWhite + component + ' | ' + FgWhite + plugin + ' | ' + FgWhite + eventID + ' | ' + FgWhite + criticality + FgWhite + ' | ' + FgWhite + text);
 	        break;
-	        
+
 	    case 'ERROR':
 	    	console.log(FgGreen + 'EVT' + FgWhite + ' | ' + FgCyan + dateString + FgWhite + ' | ' + FgWhite + instance + ' | ' + FgWhite + component + ' | ' + FgWhite + plugin + ' | ' + FgWhite + eventID + ' | ' + FgRed + criticality + FgWhite + ' | ' + FgWhite + text);
 	        break;
-	        
+
 	    case 'CRIT':
 	    	console.log(FgGreen + 'EVT' + FgWhite + ' | ' + FgCyan + dateString + FgWhite + ' | ' + FgWhite + instance + ' | ' + FgWhite + component + ' | ' + FgWhite + plugin + ' | ' + FgWhite + eventID + ' | ' + BgRed + FgBlack + Blink + criticality + BgBlack + FgWhite + ' | ' + BgRed + FgBlack + Blink + text + BgBlack + FgWhite);
 	        break;
-	    
+
 	    default:
 	    	console.log(FgGreen + 'EVT' + FgWhite + ' | ' + FgCyan + dateString + FgWhite + ' | ' + FgWhite + instance + ' | ' + FgWhite + component + ' | ' + FgWhite + plugin + ' | ' + FgWhite + eventID + ' | ' + FgMagenta + criticality + FgWhite + ' | ' + FgMagenta + text + BgBlack + FgWhite);
 	        break;
 	}
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
