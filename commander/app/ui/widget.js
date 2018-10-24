@@ -214,13 +214,13 @@ Widget.prototype.cdrThroughput = function() {
     }
   }
   $('#cdr-gadget-container').append(durationWG.html)
-  $('#cdr-gadget-' + durationWG.id).append('<div data-key=' + durationWG.id + ' class="cdr-gadget-text">Duration' +
+  $('#cdr-gadget-' + durationWG.id).append('<div data-key=' + durationWG.id + ' class="cdr-gadget-text">Latency' +
     '</div>' +
     '<div id=spark-cdr-gadget' + durationWG.id + ' data-key=' + durationWG.id + ' class="cdr-gadget-value" data-value=[]>' +
     '</div>')
 
   $('#cdr-gadget-container').append(transferSizeWG.html)
-  $('#cdr-gadget-' + transferSizeWG.id).append('<div data-key=' + transferSizeWG.id + ' class="cdr-gadget-text">Transfer Size' +
+  $('#cdr-gadget-' + transferSizeWG.id).append('<div data-key=' + transferSizeWG.id + ' class="cdr-gadget-text">Transfer Rate' +
     '</div>' +
     '<div id=spark-cdr-gadget' + transferSizeWG.id + ' data-key=' + transferSizeWG.id + ' class="cdr-gadget-value" data-value=[]>' +
     '</div>')
@@ -267,11 +267,11 @@ Widget.prototype.cdrThroughput = function() {
       }
     }
     if(perfProbe){
-      cu.logInfo('cdrThroughput [probe] | Accumulated duration: ',duration_Accumulated);
-      cu.logInfo('cdrThroughput [probe] | Accumulated size: ',sizeTransfered_Accumulated);
+      cu.logInfo('cdrThroughput [probe] | Average Latency : ',duration_Accumulated);
+      cu.logInfo('cdrThroughput [probe] | Average Transfer Rate : ',sizeTransfered_Accumulated);
     }
-    up.push(duration_Accumulated)
-    down.push(sizeTransfered_Accumulated)
+    up.push(duration_Accumulated/entries.length)
+    down.push(sizeTransfered_Accumulated/entries.length)
     if (up.length == 10) {
       up.splice(0, 1);
     }
