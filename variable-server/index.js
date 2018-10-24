@@ -93,12 +93,12 @@ function isEmpty(obj) {
  * @constructor
  */
 function VariableServer(configFile) {
-	var self = this;
+  var self = this;
   this.vars = {};
   this.instanceEmitter;
   this.subscribers = {};
 
-	/* Load environment dependent configuration */
+  /* Load environment dependent configuration */
   config.loadFile(configFile);
 
   /* Perform validation */
@@ -162,7 +162,7 @@ VariableServer.prototype.getVariableOpsName = function(path) {
 VariableServer.prototype.getVariablesFromMsgOpsName = function(opsName) {
   var self = this;
   var outVars = {};
-	// DEBUG:  opsPath is undefined in this scope.
+  // DEBUG:  opsPath is undefined in this scope.
   for (var opsPath in self.vars) {
     var msgOpsName = self.getMessageOpsPath(opsPath);
     if (msgOpsName == opsName) {
@@ -477,10 +477,9 @@ VariableServer.prototype.isVarNameAnArray = function(varName) {
 // DEBUG: this function might not be used anywhere
 VariableServer.prototype.stripArrayIdentifier = function(varName) {
   if (this.isVarNameAnArray(varName) == true) {
-    console.log('// DEBUG: ',varName)
     var start = 0;
     var end = varName.indexOf('[');
-    console.log('// DEBUG: ',end)
+
     if (end > 0) {
       var outString = varName.substring(start, end);
 
@@ -768,5 +767,6 @@ VariableServer.prototype.logCriticalEvent = function(eventID, text) {
 
 /**
  * Inherits from EventEmitter.
+ * @type {Object}
  */
 VariableServer.prototype.__proto__ = Emitter.prototype;
