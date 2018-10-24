@@ -248,7 +248,7 @@ BinaryEncoder.prototype.getCmdDefByName = function (name) {
         return undefined;
     } else {
         var msgDef = this.getMsgDefByName(opDef.operation.airliner_msg);
-
+        
         if(typeof msgDef === 'object') {
             var args = this.getCmdOpNamesStripHeader(msgDef);
             for(var argID in args) {
@@ -272,14 +272,58 @@ BinaryEncoder.prototype.getCmdOpNamesStripHeader = function (cmdDef) {
             var field = cmdDef.fields[fieldName];
 	
             var fieldDef = this.getFieldFromOperationalName(cmdDef, opNameID, 0);
-
+            
             if(fieldDef.bitOffset >= self.cmdHeaderLength) {
-                opsPaths[opNameID] = {dataType: fieldDef.fieldDef.airliner_type, bitSize: fieldDef.fieldDef.bit_size};
+                opsPaths[opNameID] = {dataType: self.getIntrinsicType(fieldDef.fieldDef), bitSize: fieldDef.fieldDef.bit_size};
             }
         }
     }
 	
     return opsPaths;
+}
+
+
+
+BinaryEncoder.prototype.getIntrinsicType = function (fieldDef) {
+    switch(fieldDef.airliner_type) {
+	    case 'char':
+	    case 'uint8':
+	    case 'int8':
+	    case 'string':
+	    case 'uint16':
+	    case 'int16':
+	    case 'uint32':
+	    case 'int32':
+	    case 'float':
+	    case 'double':
+	    case 'boolean':
+	    case 'uint64':
+	    case 'int64':
+	    	return fieldDef.airliner_type;
+	        break;
+	        
+	    default:
+	        switch(fieldDef.pb_type) {
+	            case 'char':
+	            case 'uint8':
+	            case 'int8':
+	            case 'string':
+	            case 'uint16':
+	            case 'int16':
+	            case 'uint32':
+	            case 'int32':
+	            case 'float':
+	            case 'double':
+	            case 'boolean':
+	            case 'uint64':
+	            case 'int64':
+	            	return fieldDef.pb_type;
+	                break;
+	                
+	            default:
+	                console.log("Intrinsic data type not found");
+	        }
+    }
 }
 
 
@@ -393,8 +437,10 @@ BinaryEncoder.prototype.getCmdByteLength = function (cmd) {
 
 BinaryEncoder.prototype.setField = function (buffer, fieldDef, bitOffset, value) {	
 	try{			
+		var fieldType = this.getIntrinsicType(fieldDef);
+		
 		if(fieldDef.array_length > 1) {
-			switch(fieldDef.airliner_type) {
+			switch(fieldType) {
 				case 'char':
 					buffer.write(value, bitOffset / 8, fieldDef.array_length);
 					break;
@@ -450,10 +496,10 @@ BinaryEncoder.prototype.setField = function (buffer, fieldDef, bitOffset, value)
 					break;
 					
 				default:
-				    this.logErrorEvent(EventEnum.UNKNOWN_DATA_TYPE, 'setField: Unknown data type.  \'' + fieldDef.airliner_type + '\'');
+				    this.logErrorEvent(EventEnum.UNKNOWN_DATA_TYPE, 'setField: Unknown data type.  \'' + fieldType + '\'');
 			}
 		} else {
-			switch(fieldDef.airliner_type) {
+			switch(fieldType) {
 				case 'char':
 					buffer.writeUInt8(value, bitOffset / 8);
 					break;
@@ -499,7 +545,7 @@ BinaryEncoder.prototype.setField = function (buffer, fieldDef, bitOffset, value)
 					break;
 					
 				default:
-				    this.logErrorEvent(EventEnum.UNKNOWN_DATA_TYPE, 'setField: Unknown data type.  \'' + fieldDef.airliner_type + '\'');
+				    this.logErrorEvent(EventEnum.UNKNOWN_DATA_TYPE, 'setField: Unknown data type.  \'' + fieldType + '\'');
 			}
 	    }
 	} catch(err) {
@@ -572,44 +618,44 @@ BinaryEncoder.prototype.getFieldObjFromPbMsg = function (pbMsgDef, fieldPathArra
                operational name requires multiple drill downs to get the actual type, sometimes it 
                collapses it into the first field.  So if we can't drill down any further, i.e. there is
                no childMsgDef and the variable is now undefined, just use the current field definition. */
-	    switch(fieldDef.airliner_type) {
-	        case 'char':
-	        case 'uint8':
-	        case 'int8':
-	        case 'string':
-	        case 'uint16':
-	        case 'int16':
-	        case 'uint32':
-	        case 'int32':
-	        case 'float':
-	        case 'double':
-	        case 'boolean':
-	        case 'uint64':
-	        case 'int64':
-	            break;
-	            
-	        default:
-	            switch(fieldDef.pb_type) {
-	                case 'char':
-	                case 'uint8':
-	                case 'int8':
-	                case 'string':
-	                case 'uint16':
-	                case 'int16':
-	                case 'uint32':
-	                case 'int32':
-	                case 'float':
-	                case 'double':
-	                case 'boolean':
-	                case 'uint64':
-	                case 'int64':
-	                    fieldDef.airliner_type = fieldDef.pb_type;
-	                    break;
-	                    
-	                default:
-	                    console.log("Data type not found");
-	            }
-	    }
+		    switch(fieldDef.airliner_type) {
+		        case 'char':
+		        case 'uint8':
+		        case 'int8':
+		        case 'string':
+		        case 'uint16':
+		        case 'int16':
+		        case 'uint32':
+		        case 'int32':
+		        case 'float':
+		        case 'double':
+		        case 'boolean':
+		        case 'uint64':
+		        case 'int64':
+		            break;
+		            
+		        default:
+		            switch(fieldDef.pb_type) {
+		                case 'char':
+		                case 'uint8':
+		                case 'int8':
+		                case 'string':
+		                case 'uint16':
+		                case 'int16':
+		                case 'uint32':
+		                case 'int32':
+		                case 'float':
+		                case 'double':
+		                case 'boolean':
+		                case 'uint64':
+		                case 'int64':
+		                    fieldDef.airliner_type = fieldDef.pb_type;
+		                    break;
+		                    
+		                default:
+		                    console.log("Data type not found");
+		            }
+		    }
 
             return {fieldDef: fieldDef, bitOffset: fieldDef.bit_offset + bitOffset};
         } else {

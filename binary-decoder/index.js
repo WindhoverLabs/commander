@@ -503,6 +503,14 @@ BinaryDecoder.prototype.getFieldValueAsPbType = function (buffer, fieldDef, bitO
     
 	try{			
 		var value;
+		
+		if(fieldDef.airliner_type === 'CFE_SB_PipeId_t') {
+			fieldDef.pb_type = 'uint8';
+		}
+		
+		if(fieldDef.airliner_type === 'CFE_ES_MemHandle_t') {
+			//console.log(fieldDef);
+		}
 
 		if(fieldDef.array_length > 1) {
 			var value = [];
@@ -514,7 +522,7 @@ BinaryDecoder.prototype.getFieldValueAsPbType = function (buffer, fieldDef, bitO
 				case 'uint8':
 					for(var i = 0; i < fieldDef.array_length; ++i) {
 						value.push(buffer.readUInt8((bitOffset / 8) + i));
-					}
+					} 
 					break;
 					
 				case 'int8':
@@ -620,6 +628,7 @@ BinaryDecoder.prototype.getFieldValueAsPbType = function (buffer, fieldDef, bitO
 					break;
 					
 				default:
+					console.log('1 **********************');
 //				    if(typeof nextFieldDef === 'undefined') {
 //						this.logErrorEvent(EventEnum.UNKNOWN_DATA_TYPE, 'getFieldAsPbType: Unknown data type. \'' + fieldDef.pb_type + '\'');
 //				    } else {
@@ -849,6 +858,7 @@ BinaryDecoder.prototype.getFieldValue = function (buffer, fieldDef, bitOffset, r
 					var nextFieldDef = this.getMsgDefByName(fieldDef.airliner_type);
 				
 				    if(typeof nextFieldDef === 'undefined') {
+						console.log('2 **********************');
 					    for(var i = 0; i < fieldDef.array_length; ++i) {
 //				    	    value.push(this.getFieldAsPbType(buffer, fieldDef, bitOffset));
 					    }
