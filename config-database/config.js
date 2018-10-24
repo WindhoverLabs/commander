@@ -12,8 +12,8 @@
 *    notice, this list of conditions and the following disclaimer in
 *    the documentation and/or other materials provided with the
 *    distribution.
-* 3. Neither the name Windhover Labs nor the names of its 
-*    contributors may be used to endorse or promote products derived 
+* 3. Neither the name Windhover Labs nor the names of its
+*    contributors may be used to endorse or promote products derived
 *    from this software without specific prior written permission.
 *
 * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
@@ -33,7 +33,10 @@
 
 var convict = require('convict');
 
-// Define a schema
+/**
+ * Define binary-encoder schema
+ * @type {Object}
+ */
 var config = convict({
     env: {
         doc: 'The application environment.',
@@ -41,73 +44,48 @@ var config = convict({
         default: 'development',
         env: 'NODE_ENV'
     },
-    varServerEventsStreamID: {
-        doc: 'Variable Server events stream.',
-        format: String,
-        default: ''
+    CFE_SB_PACKET_TIME_FORMAT: {
+        doc: 'CFE SB time format.',
+        format: ['CFE_SB_TIME_32_16_SUBS','CFE_SB_TIME_32_32_SUBS','CFE_SB_TIME_32_32_M_20'],
+        default: 'CFE_SB_TIME_32_16_SUBS'
     },
-    varDefReqStreamID: {
-        doc: 'Variable definition request',
-        format: String,
-        default: ''
+    CFE_TIME_EPOCH_YEAR: {
+        doc: 'CFE Time epoch year.',
+        format: 'int',
+        default: 1980
     },
-    cmdDefReqStreamID: {
-        doc: 'Command definition request',
-        format: String,
-        default: ''
+    CFE_TIME_EPOCH_DAY: {
+        doc: 'CFE Time epoch year.',
+        format: 'int',
+        default: 1
     },
-    cmdSendStreamID: {
-        doc: 'Command send',
-        format: String,
-        default: ''
+    CFE_TIME_EPOCH_HOUR: {
+        doc: 'CFE Time epoch year.',
+        format: 'int',
+        default: 0
     },
-    reqSubscribeStreamID: {
-        doc: 'Stream ID for subscription requests.',
-        format: String,
-        default: ''
+    CFE_TIME_EPOCH_MINUTE: {
+        doc: 'CFE Time epoch year.',
+        format: 'int',
+        default: 0
     },
-    queryConfigStreamID: {
-        doc: 'Stream ID for configuration database queries.',
-        format: String,
-        default: ''
+    CFE_TIME_EPOCH_SECOND: {
+        doc: 'CFE Time epoch year.',
+        format: 'int',
+        default: 0
     },
-    instances: [
-    	{
-	    	name: {
-	            doc: 'Commander instance name.',
-	            format: 'String',
-	            default: ''
-	        },
-	        plugins: [
-	            {
-	            	name: {
-	            		doc: 'The name of the application.',
-	            		format: 'String',
-	            		default: ''
-	            	},
-	        		require: {
-	        	        doc: "The directory to 'require'.",
-	        	        format: "String",
-	        	        default: ''
-	        	    },
-	        		config: {
-	        	        doc: "The directory to 'require'.",
-	        	        format: "Object",
-	        	        default: {}
-	        	    },
-	            }
-	        ]
-    	}
-    ],
-    apps: [
-        {
-        	name: {
-        		doc: 'The name of the application.',
-        		format: 'String',
-        		default: ''
-        	}
+    msgDefs: [{
+        file: {
+            doc: 'Input file.',
+            format: String,
+            default: ''
         }
-    ]
+    }],
+    queryConfigStreamID: {
+        doc: 'Stream ID for configuration queries',
+        format: String,
+        default: ''
+    }
 });
 
 module.exports = config;

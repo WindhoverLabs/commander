@@ -319,6 +319,19 @@ CommanderClient.prototype.sendCommand = function (cmdObj) {
 
 
 /**
+ * Query configuration database
+ * @param  {Object} path XPath style query string
+ */
+CommanderClient.prototype.queryConfigDB = function (path, cb) {
+    cu.logInfo('Client | query config DB : ', JSON.stringify(path, 2));
+    if(this.isSocketConnected){
+    	this.socket.emit('queryConfigDB', path, cb);
+
+    };
+};
+
+
+/**
  * Connect to socket
  */
 CommanderClient.prototype.connect = function (){
@@ -335,7 +348,6 @@ CommanderClient.prototype.connect = function (){
         /* Connection established. */
         self.isSocketConnected = true;
         self.emit('connect');
-
     });
 
     this.socket.on('connect_error', function(error){
