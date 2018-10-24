@@ -204,8 +204,13 @@ CommanderClient.prototype.getViews = function (cb) {
 CommanderClient.prototype.getCmdDef = function (cmdObj,cb) {
     if(this.isSocketConnected) {
         this.socket.emit('getCmdDef', cmdObj, function(cmdDef) {
-        	 var outCmdDef = {name:cmdDef.opsPath, argument:cmdDef.args};
-            cb(outCmdDef);
+          try {
+            var outCmdDef = {name:cmdDef.opsPath, argument:cmdDef.args};
+             cb(outCmdDef);
+          }
+          catch(e){
+            cu.logError('loadCommanding | command definition cannot be loaded');
+          }
         });
     };
 };

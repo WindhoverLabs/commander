@@ -12,8 +12,8 @@
 *    notice, this list of conditions and the following disclaimer in
 *    the documentation and/or other materials provided with the
 *    distribution.
-* 3. Neither the name Windhover Labs nor the names of its 
-*    contributors may be used to endorse or promote products derived 
+* 3. Neither the name Windhover Labs nor the names of its
+*    contributors may be used to endorse or promote products derived
 *    from this software without specific prior written permission.
 *
 * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
@@ -33,7 +33,10 @@
 
 var convict = require('convict');
 
-// Define a schema
+/**
+ * Define binary-encoder schema
+ * @type {Object}
+ */
 var config = convict({
     env: {
         doc: 'The application environment.',
@@ -56,22 +59,22 @@ var config = convict({
         doc: 'CFE Time epoch year.',
         format: 'int',
         default: 1980
-    },     
+    },
     CFE_TIME_EPOCH_DAY: {
         doc: 'CFE Time epoch year.',
         format: 'int',
         default: 1
-    },    
+    },
     CFE_TIME_EPOCH_HOUR: {
         doc: 'CFE Time epoch year.',
         format: 'int',
         default: 0
-    },    
+    },
     CFE_TIME_EPOCH_MINUTE: {
         doc: 'CFE Time epoch year.',
         format: 'int',
         default: 0
-    },    
+    },
     CFE_TIME_EPOCH_SECOND: {
         doc: 'CFE Time epoch year.',
         format: 'int',
