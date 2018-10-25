@@ -3,8 +3,8 @@
  * @param item
  * @returns {boolean}
  */
-function isObject(item) {
-  return (item && typeof item === 'object' && !Array.isArray(item));
+function isObject( item ) {
+  return ( item && typeof item === 'object' && !Array.isArray( item ) );
 }
 
 /**
@@ -12,26 +12,26 @@ function isObject(item) {
  * @param target
  * @param ...sources
  */
-function mergeDeep(target, ...sources) {
-  if (!sources.length) return target;
+function mergeDeep( target, ...sources ) {
+  if ( !sources.length ) return target;
   const source = sources.shift();
 
-  if (isObject(target) && isObject(source)) {
-    for (const key in source) {
-      if (isObject(source[key])) {
-        if (!target[key]) Object.assign(target, {
-          [key]: {}
-        });
-        mergeDeep(target[key], source[key]);
+  if ( isObject( target ) && isObject( source ) ) {
+    for ( const key in source ) {
+      if ( isObject( source[ key ] ) ) {
+        if ( !target[ key ] ) Object.assign( target, {
+          [ key ]: {}
+        } );
+        mergeDeep( target[ key ], source[ key ] );
       } else {
-        Object.assign(target, {
-          [key]: source[key]
-        });
+        Object.assign( target, {
+          [ key ]: source[ key ]
+        } );
       }
     }
   }
 
-  return mergeDeep(target, ...sources);
+  return mergeDeep( target, ...sources );
 }
 
 /**
@@ -41,12 +41,12 @@ function mergeDeep(target, ...sources) {
  * @param       {Object} params
  * @constructor
  */
-function CmdrTimeSeriesDataplot(domObject, objData, params) {
+function CmdrTimeSeriesDataplot( domObject, objData, params ) {
   this.objData = objData;
   this.objMergedData = {};
   this.objTlm = [];
 
-  function legendFormatter(label, series) {
+  function legendFormatter( label, series ) {
     return '<div ' +
       'style="color:white;font-size:8pt;text-align:left;padding:4px;padding-left:10px">' +
       label + '</div>';
@@ -85,7 +85,7 @@ function CmdrTimeSeriesDataplot(domObject, objData, params) {
         labelBoxBorderColor: 'rgba(255, 255, 255, 0.0)',
         noColumns: 1,
         position: 'ne',
-        margin: [20, 20],
+        margin: [ 20, 20 ],
         backgroundColor: null,
         backgroundOpacity: 0,
         container: null,
@@ -112,44 +112,44 @@ function CmdrTimeSeriesDataplot(domObject, objData, params) {
     }
   };
 
-  mergeDeep(this.objMergedData, objData);
+  mergeDeep( this.objMergedData, objData );
 
-  this.UtilGraph = $.plot(domObject, [], this.objMergedData.options);
+  this.UtilGraph = $.plot( domObject, [], this.objMergedData.options );
 
   // var objTlm = [];
-  for (var i = 0; i < this.objMergedData.data.length; ++i) {
-    if (this.objMergedData.data[i].tlm !== undefined) {
-      this.objTlm.push(this.objMergedData.data[i].tlm);
+  for ( var i = 0; i < this.objMergedData.data.length; ++i ) {
+    if ( this.objMergedData.data[ i ].tlm !== undefined ) {
+      this.objTlm.push( this.objMergedData.data[ i ].tlm );
     }
   }
 
   var count = 0;
 
-  this.values = new Array(this.objMergedData.data.length);
-  for (var i = 0; i < this.objMergedData.data.length; ++i) {
-    this.values[i] = [];
+  this.values = new Array( this.objMergedData.data.length );
+  for ( var i = 0; i < this.objMergedData.data.length; ++i ) {
+    this.values[ i ] = [];
   }
 
   var self = this;
 
-  if (this.objTlm.length > 0) {
+  if ( this.objTlm.length > 0 ) {
     count = count + 1;
-    if (self.objMergedData.ignore_count > 0) {
+    if ( self.objMergedData.ignore_count > 0 ) {
       self.objMergedData.ignore_count = self.objMergedData.ignore_count - 1;
     } else {
-      var sample = params.sample[params.sample.length - 1];
+      var sample = params.sample[ params.sample.length - 1 ];
       var value = sample.value;
-      for (var i = 0; i < self.objTlm.length; ++i) {
-        if (self.values[i].length >= self.objMergedData.maxcount) {
-          self.values[i] = self.values[i].slice(1);
+      for ( var i = 0; i < self.objTlm.length; ++i ) {
+        if ( self.values[ i ].length >= self.objMergedData.maxcount ) {
+          self.values[ i ] = self.values[ i ].slice( 1 );
         }
-        if (self.objTlm[i].name == params.opsPath) {
-          self.values[i].push([new Date(sample.gndTime), value]);
+        if ( self.objTlm[ i ].name == params.opsPath ) {
+          self.values[ i ].push( [ new Date( sample.gndTime ), value ] );
         }
       }
 
-      if (self.objMergedData.update_interval <= 0) {
-        update(self);
+      if ( self.objMergedData.update_interval <= 0 ) {
+        update( self );
       };
     }
 
@@ -160,24 +160,24 @@ function CmdrTimeSeriesDataplot(domObject, objData, params) {
   function update() {
     var dataArray = [];
 
-    for (var i = 0; i < self.objTlm.length; ++i) {
+    for ( var i = 0; i < self.objTlm.length; ++i ) {
       var entry = {
-        data: self.values[i],
-        label: self.objMergedData.data[i].label,
-        color: self.objMergedData.data[i].color,
+        data: self.values[ i ],
+        label: self.objMergedData.data[ i ].label,
+        color: self.objMergedData.data[ i ].color,
       };
 
-      dataArray.push(entry);
+      dataArray.push( entry );
     }
 
-    self.UtilGraph.setData(dataArray);
+    self.UtilGraph.setData( dataArray );
 
     // since the axes don't change, we don't need to call plot.setupGrid()
     self.UtilGraph.setupGrid();
     self.UtilGraph.draw();
 
-    if (self.objMergedData.update_interval > 0) {
-      setTimeout(update, self.objMergedData.update_interval);
+    if ( self.objMergedData.update_interval > 0 ) {
+      setTimeout( update, self.objMergedData.update_interval );
     };
   }
 };
@@ -187,7 +187,7 @@ function CmdrTimeSeriesDataplot(domObject, objData, params) {
  */
 CmdrTimeSeriesDataplot.prototype.unsubscribeAll = function() {
   /* Unsubscribe */
-  session.unsubscribe(this.objTlm);
+  session.unsubscribe( this.objTlm );
 }
 /**
  * Get telemety
@@ -208,24 +208,24 @@ CmdrTimeSeriesDataplot.prototype.getUtilGraph = function() {
  * @param  {Object} params
  * @return {undefined}
  */
-CmdrTimeSeriesDataplot.prototype.addData = function(params) {
+CmdrTimeSeriesDataplot.prototype.addData = function( params ) {
 
   var self = this;
-  var sample = params.sample[params.sample.length - 1];
+  var sample = params.sample[ params.sample.length - 1 ];
   var value = sample.value;
   self.count = self.count + 1;
-  if (this.objMergedData.ignore_count > 0) {
+  if ( this.objMergedData.ignore_count > 0 ) {
     self.objMergedData.ignore_count = self.objMergedData.ignore_count - 1;
   } else {
     // var timeStamp = new Date(params[0].acquisitionTime);
-    for (var i = 0; i < self.objMergedData.data.length; ++i) {
-      if (self.values[i].length >= self.objMergedData.maxcount) {
-        self.values[i] = self.values[i].slice(1);
+    for ( var i = 0; i < self.objMergedData.data.length; ++i ) {
+      if ( self.values[ i ].length >= self.objMergedData.maxcount ) {
+        self.values[ i ] = self.values[ i ].slice( 1 );
       }
 
       // var value = params[i].engValue.floatValue;
-      if (self.objTlm[i].name == params.opsPath) {
-        self.values[i].push([new Date(sample.gndTime), value]);
+      if ( self.objTlm[ i ].name == params.opsPath ) {
+        self.values[ i ].push( [ new Date( sample.gndTime ), value ] );
       }
     }
   }
@@ -235,24 +235,24 @@ CmdrTimeSeriesDataplot.prototype.addData = function(params) {
   function update() {
     var dataArray = [];
 
-    for (var i = 0; i < self.objMergedData.data.length; ++i) {
+    for ( var i = 0; i < self.objMergedData.data.length; ++i ) {
       var entry = {
-        data: self.values[i],
-        label: self.objMergedData.data[i].label,
-        color: self.objMergedData.data[i].color,
+        data: self.values[ i ],
+        label: self.objMergedData.data[ i ].label,
+        color: self.objMergedData.data[ i ].color,
       };
 
-      dataArray.push(entry);
+      dataArray.push( entry );
     }
 
-    self.UtilGraph.setData(dataArray);
+    self.UtilGraph.setData( dataArray );
 
     // since the axes don't change, we don't need to call plot.setupGrid()
     self.UtilGraph.setupGrid();
     self.UtilGraph.draw();
 
-    if (self.objMergedData.update_interval > 0) {
-      setTimeout(update, self.objMergedData.update_interval);
+    if ( self.objMergedData.update_interval > 0 ) {
+      setTimeout( update, self.objMergedData.update_interval );
     };
   }
 };

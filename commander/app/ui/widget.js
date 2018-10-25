@@ -34,7 +34,7 @@
 'use strict';
 /**
  * Modal Object
- * @type {JQuery Object}
+ * @type {Object}
  */
 var builder = $('#cdr-widget');
 /**

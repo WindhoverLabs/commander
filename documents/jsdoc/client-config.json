@@ -1,0 +1,37 @@
+{
+  "tags": {
+    "allowUnknownTags": true
+  },
+  "source": {
+    "include": [
+      "../../commander/client.js",
+      "../../commander/index.js",
+      "../../commander/config.js",
+      "../../commander/commander_instance.js",
+      "../../commander/classes/CdrPlugin.js",
+      "../../commander/app/controller.js",
+      "../../commander/app/tcmanager.js",
+      "../../commander/app/util.js",
+      "../../commander/app/ui/adi.js",
+      "../../commander/app/ui/adsb.js",
+      "../../commander/app/ui/dataplot.js",
+      "../../commander/app/ui/display.js",
+      "../../commander/app/ui/layout.js",
+      "../../commander/app/ui/misc.js",
+      "../../commander/app/ui/modal.js",
+      "../../commander/app/ui/navtree.js",
+      "../../commander/app/ui/widget.js"
+    ]
+  },
+  "plugins": [],
+  "opts": {
+    "destination": "./client-docs/"
+  },
+  "templates": {
+    "cleverLinks": false,
+    "monospaceLinks": false,
+    "default": {
+      "outputSourceFiles": true
+    }
+  }
+}

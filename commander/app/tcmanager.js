@@ -28,30 +28,30 @@ var rougeCleanUpInterval = 20000;
  * the subscriptions made inside javascript rather than
  * invoking by markup, and unsubscribes the inactive ones.
  */
-setInterval(()=>{
-  for(var e in rouge_subscriptions){
-    var rougeClasses = rouge_subscriptions[e];
-    if($(rougeClasses).length == 0) {
+setInterval( () => {
+  for ( var e in rouge_subscriptions ) {
+    var rougeClasses = rouge_subscriptions[ e ];
+    if ( $( rougeClasses ).length == 0 ) {
       /*
        * has no DOM listeners or users
        */
-      if(!(e in Object.keys(subscriptions))){
+      if ( !( e in Object.keys( subscriptions ) ) ) {
         /*
          * the subscription has no active DOM users therefore
          * will unsubscribe to it
          */
-        session.unsubscribe([{
+        session.unsubscribe( [ {
           name: e
-        }]);
-        cu.logInfo('RougeUnsubscribe | ', e, ' tlm unsubscribed');
+        } ] );
+        cu.logInfo( 'RougeUnsubscribe | ', e, ' tlm unsubscribed' );
       }
       /*
        * Delete the record of that rogue subscribe
        */
-      delete rouge_subscriptions[e];
+      delete rouge_subscriptions[ e ];
     }
   }
-},rougeCleanUpInterval);
+}, rougeCleanUpInterval );
 
 /**
  * processTelemetryUpdate is a call back function, on new data from subscribe
@@ -59,55 +59,55 @@ setInterval(()=>{
  * @param  {Object} param telemetry object
  * @return {undefined}
  */
-function processTelemetryUpdate(param) {
+function processTelemetryUpdate( param ) {
   try {
     /* staleness indicator */
     var staleness = false;
-    var sample = param.sample[param.sample.length - 1];
+    var sample = param.sample[ param.sample.length - 1 ];
     var value = sample.value;
     var gTime = sample.gndTime;
     var opsPath = param.opsPath;
-    if (opsPath in subscriptions) {
+    if ( opsPath in subscriptions ) {
       var opsPathDef = undefined;
-      if (subscriptions[opsPath].hasOwnProperty('def')) {
+      if ( subscriptions[ opsPath ].hasOwnProperty( 'def' ) ) {
         /* get tlm obj definition */
-        opsPathDef = subscriptions[opsPath].def;
-        if (subscriptions[opsPath].def.timeout > 0) {
+        opsPathDef = subscriptions[ opsPath ].def;
+        if ( subscriptions[ opsPath ].def.timeout > 0 ) {
           /* evaluate staleness */
-          if (subscriptions[opsPath].lastUpdatedTime == undefined) {
-            subscriptions[opsPath].lastUpdatedTime = gTime;
+          if ( subscriptions[ opsPath ].lastUpdatedTime == undefined ) {
+            subscriptions[ opsPath ].lastUpdatedTime = gTime;
           } else {
-            var currentTime = new Date(gTime);
-            var prevTime = new Date(subscriptions[opsPath].lastUpdatedTime);
+            var currentTime = new Date( gTime );
+            var prevTime = new Date( subscriptions[ opsPath ].lastUpdatedTime );
 
-            if ((currentTime.getTime() - prevTime.getTime()) > subscriptions[opsPath].def.timeout) {
+            if ( ( currentTime.getTime() - prevTime.getTime() ) > subscriptions[ opsPath ].def.timeout ) {
               staleness = true;
             }
-            subscriptions[opsPath].lastUpdatedTime = gTime;
+            subscriptions[ opsPath ].lastUpdatedTime = gTime;
           }
         }
       }
-      for (var i = 0; i < subscriptions[opsPath].elms.length; ++i) {
-        var nodeElm = subscriptions[opsPath].elms[i];
-        var reqObj = cu.parseJSON(nodeElm.getAttribute('data-cdr'));
+      for ( var i = 0; i < subscriptions[ opsPath ].elms.length; ++i ) {
+        var nodeElm = subscriptions[ opsPath ].elms[ i ];
+        var reqObj = cu.parseJSON( nodeElm.getAttribute( 'data-cdr' ) );
         var indicatorFormat = reqObj.indicator;
         /* Set value format */
-        if (reqObj.hasOwnProperty('tlm')) {
-          for (var j = 0; j < reqObj.tlm.length; ++j) {
-            var tlmObj = reqObj.tlm[j]
+        if ( reqObj.hasOwnProperty( 'tlm' ) ) {
+          for ( var j = 0; j < reqObj.tlm.length; ++j ) {
+            var tlmObj = reqObj.tlm[ j ]
             var name = tlmObj.name;
-            if (name == opsPath) {
-              if (tlmObj.hasOwnProperty('format')) {
-                value = sprintf(tlmObj.format, value);
+            if ( name == opsPath ) {
+              if ( tlmObj.hasOwnProperty( 'format' ) ) {
+                value = sprintf( tlmObj.format, value );
               }
             }
           }
         }
-        cu.assert(indicatorFormat != undefined, 'Process TLM | indicator format is not found');
+        cu.assert( indicatorFormat != undefined, 'Process TLM | indicator format is not found' );
         /* tlm with different indicator format are  delt differently */
-        if (indicatorFormat == 'text') {
-          if (opsPathDef != undefined) {
-            switch (opsPathDef.dataType) {
+        if ( indicatorFormat == 'text' ) {
+          if ( opsPathDef != undefined ) {
+            switch ( opsPathDef.dataType ) {
               case 'char':
               case 'string':
               case 'int8':
@@ -119,10 +119,10 @@ function processTelemetryUpdate(param) {
               case 'int64':
               case 'uint64':
                 {
-                  if (staleness) {
-                    nodeElm.setAttribute('class', 'stale');
+                  if ( staleness ) {
+                    nodeElm.setAttribute( 'class', 'stale' );
                   } else {
-                    nodeElm.removeAttribute('class');
+                    nodeElm.removeAttribute( 'class' );
                   }
                   nodeElm.textContent = value;
                   break;
@@ -130,22 +130,22 @@ function processTelemetryUpdate(param) {
               case 'double':
               case 'float':
                 {
-                  if (staleness) {
-                    nodeElm.setAttribute('class', 'stale');
+                  if ( staleness ) {
+                    nodeElm.setAttribute( 'class', 'stale' );
                   } else {
-                    nodeElm.removeAttribute('class');
+                    nodeElm.removeAttribute( 'class' );
                   }
                   nodeElm.textContent = value;
                   break;
                 }
               case 'boolean':
                 {
-                  if (staleness) {
-                    nodeElm.setAttribute('class', 'stale');
+                  if ( staleness ) {
+                    nodeElm.setAttribute( 'class', 'stale' );
                   } else {
                     nodeElm.textContent = '';
-                    nodeElm.removeAttribute('class');
-                    if (value) {
+                    nodeElm.removeAttribute( 'class' );
+                    if ( value ) {
                       nodeElm.textContent = "True"
                     } else {
                       nodeElm.textContent = "False"
@@ -155,76 +155,73 @@ function processTelemetryUpdate(param) {
                 }
             }
           }
-        }
-        else if (indicatorFormat == 'led') {
-          if (opsPathDef != undefined) {
-            if (staleness) {
-              nodeElm.setAttribute('class', 'led-basic');
+        } else if ( indicatorFormat == 'led' ) {
+          if ( opsPathDef != undefined ) {
+            if ( staleness ) {
+              nodeElm.setAttribute( 'class', 'led-basic' );
             } else {
               nodeElm.textContent = '';
-              if (value) {
-                nodeElm.setAttribute('class', 'led-basic led-on')
+              if ( value ) {
+                nodeElm.setAttribute( 'class', 'led-basic led-on' )
               } else {
-                nodeElm.setAttribute('class', 'led-basic led-off')
+                nodeElm.setAttribute( 'class', 'led-basic led-off' )
               }
             }
+          } else {
+            nodeElm.setAttribute( 'class', 'led-basic' );
           }
-          else {
-            nodeElm.setAttribute('class', 'led-basic');
-          }
-        }
-        else if (indicatorFormat == 'dataplot') {
+        } else if ( indicatorFormat == 'dataplot' ) {
           /* Handle dataplot subscriptions */
-          if (nodeElm.getAttribute('plot-initialized') === undefined ||
-            nodeElm.getAttribute('plot-initialized') === null ||
-            nodeElm.getAttribute('plot-initialized') === false) {
+          if ( nodeElm.getAttribute( 'plot-initialized' ) === undefined ||
+            nodeElm.getAttribute( 'plot-initialized' ) === null ||
+            nodeElm.getAttribute( 'plot-initialized' ) === false ) {
             /* Upon seeing dataplot canvas we initialize canvas after
              * which will keep adding data to initialized canvas */
-            var tlmObj = cu.parseJSON(nodeElm.getAttribute('data-cdr'));
+            var tlmObj = cu.parseJSON( nodeElm.getAttribute( 'data-cdr' ) );
 
             var dataPlotDef = {};
-            dataPlotDef['data'] = [];
-            dataPlotDef['options'] = {};
+            dataPlotDef[ 'data' ] = [];
+            dataPlotDef[ 'options' ] = {};
 
-            if (tlmObj.hasOwnProperty('tlm')) {
+            if ( tlmObj.hasOwnProperty( 'tlm' ) ) {
 
-              cu.assert(tlmObj.hasOwnProperty('label'), 'Process TLM | label array doesnot exist');
-              cu.assert(tlmObj.tlm.length === tlmObj.label.length, 'Process TLM | tlm and labels arrays have different lengths');
-              cu.assert(tlmObj.tlm.length > 0 && tlmObj.label.length > 0, 'Process TLM | tlm and label arrays are empty');
+              cu.assert( tlmObj.hasOwnProperty( 'label' ), 'Process TLM | label array doesnot exist' );
+              cu.assert( tlmObj.tlm.length === tlmObj.label.length, 'Process TLM | tlm and labels arrays have different lengths' );
+              cu.assert( tlmObj.tlm.length > 0 && tlmObj.label.length > 0, 'Process TLM | tlm and label arrays are empty' );
 
               var colorArr = []
-              if (!(tlmObj.hasOwnProperty('color') &&
-                  cu.isArray(tlmObj.color) &&
-                  tlmObj.color.length == tlmObj.tlm.length)) {
-                for (var c = 0; c < tlmObj.tlm.length; ++c) {
+              if ( !( tlmObj.hasOwnProperty( 'color' ) &&
+                  cu.isArray( tlmObj.color ) &&
+                  tlmObj.color.length == tlmObj.tlm.length ) ) {
+                for ( var c = 0; c < tlmObj.tlm.length; ++c ) {
                   var clr = cu.makeColor();
-                  colorArr.push(clr);
+                  colorArr.push( clr );
                 }
               } else {
                 colorArr = tlmObj.color;
               }
-              for (var i = 0; i < tlmObj.tlm.length; i++) {
-                dataPlotDef['data'].push({
+              for ( var i = 0; i < tlmObj.tlm.length; i++ ) {
+                dataPlotDef[ 'data' ].push( {
                   'tlm': {
-                    name: tlmObj.tlm[i].name
+                    name: tlmObj.tlm[ i ].name
                   },
-                  'label': tlmObj.label[i],
-                  'color': colorArr[i]
-                });
+                  'label': tlmObj.label[ i ],
+                  'color': colorArr[ i ]
+                } );
               }
               var generatedKey = cu.makeKey();
-              nodeElm.setAttribute('plot-key', generatedKey);
-              dataplot_subscriptions[generatedKey] = new CmdrTimeSeriesDataplot(nodeElm, dataPlotDef, param)
+              nodeElm.setAttribute( 'plot-key', generatedKey );
+              dataplot_subscriptions[ generatedKey ] = new CmdrTimeSeriesDataplot( nodeElm, dataPlotDef, param )
             }
-            nodeElm.setAttribute('plot-initialized', true);
+            nodeElm.setAttribute( 'plot-initialized', true );
           } else {
-            dataplot_subscriptions[nodeElm.getAttribute('plot-key')].addData(param);
+            dataplot_subscriptions[ nodeElm.getAttribute( 'plot-key' ) ].addData( param );
           }
         }
       }
     }
-  } catch (e) {
-    cu.logError('ProcessTelemetryUpdate | ', e.message);
+  } catch ( e ) {
+    cu.logError( 'ProcessTelemetryUpdate | ', e.message );
   }
 }
 /**
@@ -233,35 +230,38 @@ function processTelemetryUpdate(param) {
  * @param  {Object} opsPaths a list of opsPaths
  * @return {undefined}
  */
-function processTelemetryDefinitionUpdate(opsPaths) {
-  opsPaths.forEach((path) => {
-    var def = subscriptions[path].def;
-    var elms = subscriptions[path].elms
+function processTelemetryDefinitionUpdate( opsPaths ) {
+  opsPaths.forEach( ( path ) => {
+    var def = subscriptions[ path ].def;
+    var elms = subscriptions[ path ].elms
     /* Check elms if it has atlest 1 elm to apply update */
-    if (elms != undefined && def != undefined) {
-      elms.forEach((e) => {
-        var template = '<div class="cdr-tooltip-container">'+
+    if ( elms != undefined && def != undefined ) {
+      elms.forEach( ( e ) => {
+        var template = '<div class="cdr-tooltip-container">' +
           // '<div class="cdr-tooltip-short-description">'+ def.shortDescription +
           // '</div>'+
           // '<div class="cdr-tooltip-long-description">'+ def.longDescription +
           // '</div>'+
-          '<div class="cdr-tooltip-row"> Ops-path : <span>'+ def.opsPath +
-          '</span></div>'+
-          '<div class="cdr-tooltip-row">Datatype : <span>'+ def.dataType +
-          '</span></div>'+
-        '</div>'
+          '<div class="cdr-tooltip-row"> Ops-path : <span>' + def.opsPath +
+          '</span></div>' +
+          '<div class="cdr-tooltip-row">Datatype : <span>' + def.dataType +
+          '</span></div>' +
+          '</div>'
         var options = {
-          container:'body',
-          delay: {'show':1000,'hide':100},
-          html:true,
-          placement:'auto',
-          boundary:'window',
+          container: 'body',
+          delay: {
+            'show': 1000,
+            'hide': 100
+          },
+          html: true,
+          placement: 'auto',
+          boundary: 'window',
           title: template
         }
-        $(e).tooltip(options);
-      });
+        $( e ).tooltip( options );
+      } );
     }
-  });
+  } );
 }
 
 /**
@@ -272,13 +272,13 @@ function processTelemetryDefinitionUpdate(opsPaths) {
  * @param  {Object}  commandInfo a command definition message
  * @return {undefined}
  */
-function isTemplateCommand(commandInfo) {
+function isTemplateCommand( commandInfo ) {
   var found = false;
-  if (commandInfo.hasOwnProperty('argument')) {
-    if (commandInfo.argument.length > 0) {
+  if ( commandInfo.hasOwnProperty( 'argument' ) ) {
+    if ( commandInfo.argument.length > 0 ) {
       /* Look for at least 1 unspecified value. */
-      for (i = 0; i < commandInfo.argument.length; i++) {
-        if (!commandInfo.argument[i].hasOwnProperty('value')) {
+      for ( i = 0; i < commandInfo.argument.length; i++ ) {
+        if ( !commandInfo.argument[ i ].hasOwnProperty( 'value' ) ) {
           found = true;
         }
       }
@@ -296,17 +296,17 @@ function isTemplateCommand(commandInfo) {
  */
 function sendCmd() {
   var args = {};
-  var labels = $("#genericInputModal").find('label');
-  for (var i = 0; i < labels.length; ++i) {
-    var label = labels[i].textContent;
-    var value = labels[i].control.value;
-    args[label] = value;
+  var labels = $( "#genericInputModal" ).find( 'label' );
+  for ( var i = 0; i < labels.length; ++i ) {
+    var label = labels[ i ].textContent;
+    var value = labels[ i ].control.value;
+    args[ label ] = value;
   }
-  var cmdObj = JSON.parse($("#genericInputModal").attr('data-info'));
-  session.sendCommand({
+  var cmdObj = JSON.parse( $( "#genericInputModal" ).attr( 'data-info' ) );
+  session.sendCommand( {
     ops_path: cmdObj.cmd.name,
     args: args
-  })
+  } )
 }
 
 
@@ -319,7 +319,7 @@ class Panel {
    * Panel constructor
    * @param {Object} panelElm DOM element pointing to instantiated panel
    */
-  constructor(panelElm) {
+  constructor( panelElm ) {
     /**
      * DOM element
      * @type {Object}
@@ -344,7 +344,7 @@ class Panel {
      * Panel instantiation indicator
      * @type {Number}
      */
-    this.panelElm['instantiated'] = true;
+    this.panelElm[ 'instantiated' ] = true;
   }
   /**
    * Subscribe to telemetry and definitions
@@ -352,51 +352,51 @@ class Panel {
    * @param  {Object} s self or current instance
    * @return {undefined}
    */
-  subscribeText(d, s) {
+  subscribeText( d, s ) {
     /* check d has telemetry request info */
-    if (d.hasOwnProperty('tlm')) {
+    if ( d.hasOwnProperty( 'tlm' ) ) {
       /* Map each tlm item to respective DOM objects, it manipulates */
-      for (var i = 0; i < d.tlm.length; ++i) {
-        var obj = d.tlm[i];
+      for ( var i = 0; i < d.tlm.length; ++i ) {
+        var obj = d.tlm[ i ];
         /* Check if record exists */
-        if (obj.name in subscriptions) {
+        if ( obj.name in subscriptions ) {
           var isBound = false;
           /* Check if bound to atlest 1 element */
-          if (subscriptions[obj.name].hasOwnProperty('elms')) {
-            if (cu.isArray(subscriptions[obj.name].elms) &&
-              subscriptions[obj.name].elms.length > 0) {
-              subscriptions[obj.name].elms.push(s);
+          if ( subscriptions[ obj.name ].hasOwnProperty( 'elms' ) ) {
+            if ( cu.isArray( subscriptions[ obj.name ].elms ) &&
+              subscriptions[ obj.name ].elms.length > 0 ) {
+              subscriptions[ obj.name ].elms.push( s );
               isBound = true;
             }
           } else {
-            subscriptions[obj.name].elms = [s];
+            subscriptions[ obj.name ].elms = [ s ];
           }
         } else {
-          subscriptions[obj.name] = {};
-          subscriptions[obj.name].elms = [s];
+          subscriptions[ obj.name ] = {};
+          subscriptions[ obj.name ].elms = [ s ];
         }
         /* Store in panel instance's context */
-        this.tlm.push({
+        this.tlm.push( {
           name: obj.name,
           nodeElm: s
-        });
+        } );
       }
       /* Subscribe to tlm */
-      session.subscribe(d.tlm, processTelemetryUpdate);
+      session.subscribe( d.tlm, processTelemetryUpdate );
       /* Get tlm definitions and add this additinal info to subscriptions */
-      session.getTlmDefs(d.tlm, function(tlmDef) {
+      session.getTlmDefs( d.tlm, function( tlmDef ) {
         var opsPaths = [];
         /* Store in document's context */
-        for (var i = 0; i < tlmDef.length; ++i) {
-          if (!(tlmDef[i].opsPath in subscriptions)) {
-            subscriptions[tlmDef[i].opsPath] = {};
+        for ( var i = 0; i < tlmDef.length; ++i ) {
+          if ( !( tlmDef[ i ].opsPath in subscriptions ) ) {
+            subscriptions[ tlmDef[ i ].opsPath ] = {};
           }
-          subscriptions[tlmDef[i].opsPath].def = tlmDef[i];
-          opsPaths.push(tlmDef[i].opsPath);
+          subscriptions[ tlmDef[ i ].opsPath ].def = tlmDef[ i ];
+          opsPaths.push( tlmDef[ i ].opsPath );
         }
         /* Apply definition update */
-        processTelemetryDefinitionUpdate(opsPaths);
-      });
+        processTelemetryDefinitionUpdate( opsPaths );
+      } );
     }
   }
   /**
@@ -405,18 +405,18 @@ class Panel {
    * @param  {Object} s self or current instance
    * @return {undefined}
    */
-  loadCommanding(d, s) {
+  loadCommanding( d, s ) {
 
-    if (d.hasOwnProperty('cmd')) {
+    if ( d.hasOwnProperty( 'cmd' ) ) {
       var cmdObj = d.cmd;
-      var btnObj = $(s);
-      session.getCmdDef({
+      var btnObj = $( s );
+      session.getCmdDef( {
         name: cmdObj.name
-      }, function(cmdInfo) {
-        if (cmdObj.hasOwnProperty('uuid')) {
+      }, function( cmdInfo ) {
+        if ( cmdObj.hasOwnProperty( 'uuid' ) ) {
           /* We already bound this element. */
         } else {
-          if (cmdObj.name == cmdInfo.name) {
+          if ( cmdObj.name == cmdInfo.name ) {
             var uuid = cu.makeUUID();
             cmdInfo.uuid = uuid;
             cmdObj.uuid = uuid;
@@ -424,33 +424,33 @@ class Panel {
              * Copy any arguments we have from the command button
              * into the cmdInfo struct.
              */
-            if (cmdObj.hasOwnProperty('argument')) {
-              for (var i = 0; i < cmdObj.argument.length; i++) {
-                for (var j = 0; j < cmdInfo.argument.length; j++) {
-                  if (cmdInfo.argument[j].name == cmdObj.argument[i].name) {
-                    cmdInfo.argument[j].value = cmdObj.argument[i].value;
+            if ( cmdObj.hasOwnProperty( 'argument' ) ) {
+              for ( var i = 0; i < cmdObj.argument.length; i++ ) {
+                for ( var j = 0; j < cmdInfo.argument.length; j++ ) {
+                  if ( cmdInfo.argument[ j ].name == cmdObj.argument[ i ].name ) {
+                    cmdInfo.argument[ j ].value = cmdObj.argument[ i ].value;
                   }
                 }
               }
             }
 
-            if (isTemplateCommand(cmdInfo) == false) {
+            if ( isTemplateCommand( cmdInfo ) == false ) {
               /*
                * This is a fully instantiated command. No need to
                * create a popup form. Just send the command when
                * the user clicks the button.
                */
               var args = {};
-              if (cmdInfo.hasOwnProperty('argument')) {
-                for (var i = 0; i < cmdInfo.argument.length; i++) {
-                  args[cmdInfo.argument[i].name] = cmdInfo.argument[i].value
+              if ( cmdInfo.hasOwnProperty( 'argument' ) ) {
+                for ( var i = 0; i < cmdInfo.argument.length; i++ ) {
+                  args[ cmdInfo.argument[ i ].name ] = cmdInfo.argument[ i ].value
                 }
               }
-              btnObj[0].onclick = function(eventObject) {
-                session.sendCommand({
+              btnObj[ 0 ].onclick = function( eventObject ) {
+                session.sendCommand( {
                   ops_path: cmdInfo.name,
                   args: args
-                });
+                } );
               };
             } else {
               /*
@@ -462,199 +462,199 @@ class Panel {
                * First, generate UUIDs to be used later as element
                * IDs.
                */
-              for (i = 0; i < cmdInfo.argument.length; i++) {
-                cmdInfo.argument[i].uuid = uuid + "_" + cmdInfo.argument[i].name;
+              for ( i = 0; i < cmdInfo.argument.length; i++ ) {
+                cmdInfo.argument[ i ].uuid = uuid + "_" + cmdInfo.argument[ i ].name;
               }
               /*
                * Next set stringLength for string parameters to be
                * used for form validation later.
                */
-              for (i = 0; i < cmdInfo.argument.length; i++) {
-                if (cmdInfo.argument[i].type === 'string') {
+              for ( i = 0; i < cmdInfo.argument.length; i++ ) {
+                if ( cmdInfo.argument[ i ].type === 'string' ) {
                   /*
                    * Add a new stringLength (in bytes)
                    * attribute for parameter validation later.
                    */
-                  cmdInfo.argument[i].stringLength = cmdOut.argument[i].bitSize / 8;
+                  cmdInfo.argument[ i ].stringLength = cmdOut.argument[ i ].bitSize / 8;
                 }
               }
 
               /* Make button fire modal */
-              btnObj.attr('data-toggle', 'modal');
-              btnObj.attr('data-target', '#genericInputModal');
-              btnObj.attr('data-title', 'Submit ' + cmdInfo.name + ' Arguments');
-              btnObj.attr('data-submit', 'sendCmd');
+              btnObj.attr( 'data-toggle', 'modal' );
+              btnObj.attr( 'data-target', '#genericInputModal' );
+              btnObj.attr( 'data-title', 'Submit ' + cmdInfo.name + ' Arguments' );
+              btnObj.attr( 'data-submit', 'sendCmd' );
               var argArray = [];
 
-              for (var i in cmdInfo.argument) {
-                var label = cmdInfo.argument[i].name;
-                var type = cmdInfo.argument[i].type;
-                var value = cmdInfo.argument[i].value;
-                switch (type) {
+              for ( var i in cmdInfo.argument ) {
+                var label = cmdInfo.argument[ i ].name;
+                var type = cmdInfo.argument[ i ].type;
+                var value = cmdInfo.argument[ i ].value;
+                switch ( type ) {
                   case 'char':
                     {
                       /* integer action */
-                      argArray.push({
+                      argArray.push( {
                         'label': label,
                         'type': 'field',
                         'dtype': 'text',
                         'value': value
-                      });
+                      } );
                       break;
                     }
 
                   case 'uint8':
                     {
                       /* integer action */
-                      argArray.push({
+                      argArray.push( {
                         'label': label,
                         'type': 'field',
                         'dtype': 'integer',
                         'value': value
-                      });
+                      } );
                       break;
                     }
 
                   case 'int8':
                     {
                       /* integer action */
-                      argArray.push({
+                      argArray.push( {
                         'label': label,
                         'type': 'field',
                         'dtype': 'integer',
                         'value': value
-                      });
+                      } );
                       break;
                     }
 
                   case 'string':
                     {
                       /* integer action */
-                      argArray.push({
+                      argArray.push( {
                         'label': label,
                         'type': 'field',
                         'dtype': 'text',
                         'value': value
-                      });
+                      } );
                       break;
                     }
 
                   case 'uint16':
                     {
                       /* integer action */
-                      argArray.push({
+                      argArray.push( {
                         'label': label,
                         'type': 'field',
                         'dtype': 'text',
                         'value': value
-                      });
+                      } );
                       break;
                     }
 
                   case 'int16':
                     {
                       /* integer action */
-                      argArray.push({
+                      argArray.push( {
                         'label': label,
                         'type': 'field',
                         'dtype': 'text',
                         'value': value
-                      });
+                      } );
                       break;
                     }
 
                   case 'uint32':
                     {
                       /* integer action */
-                      argArray.push({
+                      argArray.push( {
                         'label': label,
                         'type': 'field',
                         'dtype': 'text',
                         'value': value
-                      });
+                      } );
                       break;
                     }
 
                   case 'int32':
                     {
                       /* integer action */
-                      argArray.push({
+                      argArray.push( {
                         'label': label,
                         'type': 'field',
                         'dtype': 'text',
                         'value': value
-                      });
+                      } );
                       break;
                     }
 
                   case 'float':
                     {
                       /* integer action */
-                      argArray.push({
+                      argArray.push( {
                         'label': label,
                         'type': 'field',
                         'dtype': 'float',
                         'value': value
-                      });
+                      } );
                       break;
                     }
 
                   case 'double':
                     {
                       /* integer action */
-                      argArray.push({
+                      argArray.push( {
                         'label': label,
                         'type': 'field',
                         'dtype': 'float',
                         'value': value
-                      });
+                      } );
                       break;
                     }
 
                   case 'boolean':
                     {
                       /* integer action */
-                      argArray.push({
+                      argArray.push( {
                         'label': label,
                         'type': 'field',
                         'dtype': 'integer',
                         'value': value
-                      });
+                      } );
                       break;
                     }
 
                   case 'uint64':
                     {
                       /* integer action */
-                      argArray.push({
+                      argArray.push( {
                         'label': label,
                         'type': 'field',
                         'dtype': 'text',
                         'value': value
-                      });
+                      } );
                       break;
                     }
 
                   case 'int64':
                     {
                       /* integer action */
-                      argArray.push({
+                      argArray.push( {
                         'label': label,
                         'type': 'field',
                         'dtype': 'text',
                         'value': value
-                      });
+                      } );
                       break;
                     }
 
 
                 }
-                btnObj.attr('data-custom', JSON.stringify(argArray));
+                btnObj.attr( 'data-custom', JSON.stringify( argArray ) );
               }
             }
           }
         }
-      });
+      } );
     }
   }
   /**
@@ -665,33 +665,33 @@ class Panel {
   loadPanel() {
 
     var cls = this;
-    cu.assert(this.panelElm.hasOwnProperty('element'), 'Panel | this.panelElm has no property element');
-    cu.assert(typeof this.panelElm.element === 'object', 'Panel | this.panelElm.element is not of type object');
+    cu.assert( this.panelElm.hasOwnProperty( 'element' ), 'Panel | this.panelElm has no property element' );
+    cu.assert( typeof this.panelElm.element === 'object', 'Panel | this.panelElm.element is not of type object' );
 
-    setTimeout(() => {
-      cu.assert(this.panelElm.hasOwnProperty('config'), 'Panel | this.panelElm has no property config');
-      cu.assert(typeof this.panelElm.config === 'object', 'Panel | this.panelElm.config is not of type object');
-      cu.assert(this.panelElm.config.hasOwnProperty('title'), 'Panel | this.panelElm.config has no property title');
-      cu.assert(typeof this.panelElm.config.title === 'string', 'Panel | this.panelElm.config.title is not of type title');
-      cu.logInfo('Panel | created ', this.panelElm.config.title);
+    setTimeout( () => {
+      cu.assert( this.panelElm.hasOwnProperty( 'config' ), 'Panel | this.panelElm has no property config' );
+      cu.assert( typeof this.panelElm.config === 'object', 'Panel | this.panelElm.config is not of type object' );
+      cu.assert( this.panelElm.config.hasOwnProperty( 'title' ), 'Panel | this.panelElm.config has no property title' );
+      cu.assert( typeof this.panelElm.config.title === 'string', 'Panel | this.panelElm.config.title is not of type title' );
+      cu.logInfo( 'Panel | created ', this.panelElm.config.title );
       this.title = this.panelElm.config.title;
 
-      $(this.panelElm.element).find('[data-cdr]').each(function() {
-        var dataObj = cu.parseJSON($(this).attr('data-cdr'));
+      $( this.panelElm.element ).find( '[data-cdr]' ).each( function() {
+        var dataObj = cu.parseJSON( $( this ).attr( 'data-cdr' ) );
         var self = this;
         var format = dataObj.indicator;
-        cu.assert(format != undefined, 'indicator format is not found');
-        switch (format) {
+        cu.assert( format != undefined, 'indicator format is not found' );
+        switch ( format ) {
           case 'text':
           case 'led':
           case 'dataplot':
             {
-              cls.subscribeText(dataObj, self);
+              cls.subscribeText( dataObj, self );
               break;
             }
           case 'cmd':
             {
-              cls.loadCommanding(dataObj, self);
+              cls.loadCommanding( dataObj, self );
               break;
             }
           case 'splcmd':
@@ -699,9 +699,9 @@ class Panel {
               break;
             }
         }
-      });
+      } );
 
-    }, this.loadTimeout);
+    }, this.loadTimeout );
 
   }
   /**
@@ -710,52 +710,52 @@ class Panel {
    */
   loadDestroyPanelProceadure() {
 
-    this.panelElm.on('itemDestroyed', (it) => {
-      cu.assert(it.hasOwnProperty('origin'), 'Panel | has no property origin');
-      cu.assert(typeof it.origin === 'object', 'Panel | origin is not of type object');
-      cu.assert(it.origin.hasOwnProperty('config'), 'Panel | has no property config');
-      cu.assert(typeof it.origin.config === 'object', 'Panel | config is not of type object');
-      cu.assert(it.origin.config.hasOwnProperty('type'), 'Panel | has no property type');
-      cu.assert(typeof it.origin.config.type === 'string', 'Panel | type is not of type string');
-      if (it.origin.config.type == 'component') {
+    this.panelElm.on( 'itemDestroyed', ( it ) => {
+      cu.assert( it.hasOwnProperty( 'origin' ), 'Panel | has no property origin' );
+      cu.assert( typeof it.origin === 'object', 'Panel | origin is not of type object' );
+      cu.assert( it.origin.hasOwnProperty( 'config' ), 'Panel | has no property config' );
+      cu.assert( typeof it.origin.config === 'object', 'Panel | config is not of type object' );
+      cu.assert( it.origin.config.hasOwnProperty( 'type' ), 'Panel | has no property type' );
+      cu.assert( typeof it.origin.config.type === 'string', 'Panel | type is not of type string' );
+      if ( it.origin.config.type == 'component' ) {
         /* iterate over localy stored tlm opsPaths and dataplot keys */
-        for (var i = 0; i < this.tlm.length; ++i) {
-          cu.assert(Object.keys(subscriptions).length > 0, 'Panel | subscriptions is empty');
-          var opsPath = this.tlm[i].name;
-          var nodeElm = this.tlm[i].nodeElm;
-          if (opsPath in subscriptions) {
-            if (subscriptions[opsPath].elms.length > 0) {
+        for ( var i = 0; i < this.tlm.length; ++i ) {
+          cu.assert( Object.keys( subscriptions ).length > 0, 'Panel | subscriptions is empty' );
+          var opsPath = this.tlm[ i ].name;
+          var nodeElm = this.tlm[ i ].nodeElm;
+          if ( opsPath in subscriptions ) {
+            if ( subscriptions[ opsPath ].elms.length > 0 ) {
               /* delete tlm and dataplot entry*/
-              var index = subscriptions[opsPath].elms.indexOf(nodeElm)
-              if (index != -1) {
-                delete dataplot_subscriptions[nodeElm.getAttribute('plot-key')]
-                subscriptions[opsPath].elms.splice(index, 1);
-                cu.logDebug('Panel | ', opsPath, ' removed');
+              var index = subscriptions[ opsPath ].elms.indexOf( nodeElm )
+              if ( index != -1 ) {
+                delete dataplot_subscriptions[ nodeElm.getAttribute( 'plot-key' ) ]
+                subscriptions[ opsPath ].elms.splice( index, 1 );
+                cu.logDebug( 'Panel | ', opsPath, ' removed' );
               } else {
-                cu.logError('Panel | element key not fount in subscriptions array')
+                cu.logError( 'Panel | element key not fount in subscriptions array' )
               }
-              if (subscriptions[opsPath].elms.length < 1) {
+              if ( subscriptions[ opsPath ].elms.length < 1 ) {
 
-                delete subscriptions[opsPath];
+                delete subscriptions[ opsPath ];
                 /* Unsubscribe */
-                session.unsubscribe([{
+                session.unsubscribe( [ {
                   name: opsPath
-                }]);
-                cu.logDebug('Panel | ', opsPath, ' tlm unsubscribed');
+                } ] );
+                cu.logDebug( 'Panel | ', opsPath, ' tlm unsubscribed' );
               }
             } else {
-              cu.logError('Panel | subscription is not associated with any element')
+              cu.logError( 'Panel | subscription is not associated with any element' )
             }
           }
         }
         /* clear local data */
         this.tlm = [];
-        this.panelElm['instantiated'] = false;
+        this.panelElm[ 'instantiated' ] = false;
         // this.panelElm = undefined;
         this.title = 'Unknown'
-        cu.logInfo('Panel | panel destroyed [stacks, columns, tabs, panels etc.]');
+        cu.logInfo( 'Panel | panel destroyed [stacks, columns, tabs, panels etc.]' );
       }
-    });
+    } );
   }
 
 }
@@ -766,36 +766,36 @@ class Panel {
  * layout file is selected from layouts menu. A .lyt file is loaded from local
  * storage.
  */
-window.addEventListener('layout-load-complete', () => {
+window.addEventListener( 'layout-load-complete', () => {
 
-  myLayout.on('tabCreated', (t) => {
+  myLayout.on( 'tabCreated', ( t ) => {
     /* A new window or movable tab has been created */
-    cu.assert(t.hasOwnProperty('contentItem'), 'Tab | has no property contentItem');
-    cu.assert(typeof t.contentItem === 'object', 'Tab | contentItem is not of type object');
-    cu.assert(t.contentItem.hasOwnProperty('type'), 'Tab | has no property type');
-    cu.assert(typeof t.contentItem.type === 'string', 'Tab | type is not of type string');
+    cu.assert( t.hasOwnProperty( 'contentItem' ), 'Tab | has no property contentItem' );
+    cu.assert( typeof t.contentItem === 'object', 'Tab | contentItem is not of type object' );
+    cu.assert( t.contentItem.hasOwnProperty( 'type' ), 'Tab | has no property type' );
+    cu.assert( typeof t.contentItem.type === 'string', 'Tab | type is not of type string' );
     // console.log(t)
-    if (t.contentItem.type == 'component') {
-      if (!t.contentItem.instantiated) {
-        var panel = new Panel(t.contentItem);
+    if ( t.contentItem.type == 'component' ) {
+      if ( !t.contentItem.instantiated ) {
+        var panel = new Panel( t.contentItem );
         panel.loadPanel();
         panel.loadDestroyPanelProceadure();
       }
     } else {
-      cu.logError('Tab | panel cannot be created');
+      cu.logError( 'Tab | panel cannot be created' );
     }
-  });
+  } );
 
-  myLayout.on("stateChanged", (i) => {
+  myLayout.on( "stateChanged", ( i ) => {
     /* Handle dataplot overflow when layout resize happens */
-    for (var key in dataplot_subscriptions) {
-      if (dataplot_subscriptions.hasOwnProperty(key)) {
-        var ug = dataplot_subscriptions[key].getUtilGraph();
+    for ( var key in dataplot_subscriptions ) {
+      if ( dataplot_subscriptions.hasOwnProperty( key ) ) {
+        var ug = dataplot_subscriptions[ key ].getUtilGraph();
         ug.resize();
         ug.setupGrid();
         ug.draw();
       }
     }
-  });
+  } );
 
-});
+} );

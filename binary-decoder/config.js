@@ -31,22 +31,22 @@
  *
  *****************************************************************************/
 
-var convict = require('convict');
+var convict = require( 'convict' );
 
 /**
  * Define a schema for binary-decoder
  * @type {Object}
  */
-var config = convict({
+var config = convict( {
   env: {
     doc: 'The application environment.',
-    format: ['production', 'development', 'test'],
+    format: [ 'production', 'development', 'test' ],
     default: 'development',
     env: 'NODE_ENV'
   },
   CFE_SB_PACKET_TIME_FORMAT: {
     doc: 'CFE SB time format.',
-    format: ['CFE_SB_TIME_32_16_SUBS', 'CFE_SB_TIME_32_32_SUBS', 'CFE_SB_TIME_32_32_M_20'],
+    format: [ 'CFE_SB_TIME_32_16_SUBS', 'CFE_SB_TIME_32_32_SUBS', 'CFE_SB_TIME_32_32_M_20' ],
     default: 'CFE_SB_TIME_32_16_SUBS'
   },
   CFE_TIME_EPOCH_YEAR: {
@@ -80,13 +80,13 @@ var config = convict({
     default: '',
     env: 'AIRLINER_MSG_DEF_PATH'
   },
-  msgDefs: [{
+  msgDefs: [ {
     file: {
       doc: 'Input file.',
       format: String,
       default: ''
     }
-  }],
+  } ],
   binaryInputStreamID: {
     doc: 'Input binary stream from binary data provider to the decoder.',
     format: String,
@@ -102,6 +102,6 @@ var config = convict({
     format: String,
     default: ''
   },
-});
+} );
 
 module.exports = config;

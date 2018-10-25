@@ -12,39 +12,39 @@ var myLayout;
  * @param       {GoldenLayout} mlyt GoldenLayout object
  * @constructor
  */
-function InitLayout(mlyt) {
+function InitLayout( mlyt ) {
   /* Register Component in layout */
-  mlyt.registerComponent('Blank', function(container, state) {
-    if (state.link) {
-      container.getElement().load(state.link);
+  mlyt.registerComponent( 'Blank', function( container, state ) {
+    if ( state.link ) {
+      container.getElement().load( state.link );
     } else {
-      container.getElement().html('<h2>' + state.text + '</h2>');
+      container.getElement().html( '<h2>' + state.text + '</h2>' );
     }
-    $(window).on("LayoutSaved", () => {
-      container.extendState({
+    $( window ).on( "LayoutSaved", () => {
+      container.extendState( {
         link: container._config.componentState.link
-      });
-    });
-  });
+      } );
+    } );
+  } );
   mlyt.init();
 
   /*  handles for when itemCreated, tabsCreated, stackCreadted
    * stateChanged events are triggered by myLayout */
-  mlyt.on("itemCreated", (item) => {
-    if (item.type == "component") {
+  mlyt.on( "itemCreated", ( item ) => {
+    if ( item.type == "component" ) {
       try {
         link = item.config.componentState.link;
-        item.container._contentElement.load(link);
-        item.container._contentElement.css("overflow", "auto");
-      } catch (e) {
-        cu.logError('itemCreated | cannot load link onto component')
+        item.container._contentElement.load( link );
+        item.container._contentElement.css( "overflow", "auto" );
+      } catch ( e ) {
+        cu.logError( 'itemCreated | cannot load link onto component' )
       }
     }
-  });
+  } );
   /* occurs very frequetly */
-  mlyt.on("stateChanged", function() {
+  mlyt.on( "stateChanged", function() {
     InitScrollBar();
-  });
+  } );
 }
 
 /**
@@ -53,22 +53,22 @@ function InitLayout(mlyt) {
  */
 function SaveLayout() {
   /* now save the state */
-  let form = $("[id='inputField0']");
+  let form = $( "[id='inputField0']" );
   let name = "";
-  if (form.val() != "") {
+  if ( form.val() != "" ) {
     name = form.val();
-    name = name.replace(/ /g, '_');
+    name = name.replace( / /g, '_' );
   }
   /* stringify state config */
   var cfg = myLayout.toConfig();
   /* add database */
   cfg.database = cu.getDatabase();
-  let state = JSON.stringify(cfg);
-  var blob = new Blob([state], {
+  let state = JSON.stringify( cfg );
+  var blob = new Blob( [ state ], {
     type: "text/json;charset=utf-8"
-  });
-  saveAs(blob, name + '.lyt');
-  cu.logInfo('Layout | saved layout as', name);
+  } );
+  saveAs( blob, name + '.lyt' );
+  cu.logInfo( 'Layout | saved layout as', name );
 }
 
 /**
@@ -76,35 +76,35 @@ function SaveLayout() {
  * @constructor
  */
 function LoadLayout() {
-  var files = document.getElementById('browse0').files;
+  var files = document.getElementById( 'browse0' ).files;
   var reader = new FileReader();
-  reader.onload = (function(theFile) {
-    return function(e) {
+  reader.onload = ( function( theFile ) {
+    return function( e ) {
       try {
-        var savedState = JSON.parse(e.target.result);
-        if (savedState !== null) {
+        var savedState = JSON.parse( e.target.result );
+        if ( savedState !== null ) {
           myLayout.destroy()
-          myLayout = new window.GoldenLayout(savedState, $('#cdr-layout-container'));
-          window.dispatchEvent(llc);
-          InitLayout(myLayout);
-          cu.logInfo('Layout | loaded from local drive')
-          if (savedState.hasOwnProperty('database')) {
+          myLayout = new window.GoldenLayout( savedState, $( '#cdr-layout-container' ) );
+          window.dispatchEvent( llc );
+          InitLayout( myLayout );
+          cu.logInfo( 'Layout | loaded from local drive' )
+          if ( savedState.hasOwnProperty( 'database' ) ) {
             cu.clearDatabase();
-            for (var e in savedState.database) {
-              cu.addRecord(e, savedState.database[e])
+            for ( var e in savedState.database ) {
+              cu.addRecord( e, savedState.database[ e ] )
             }
           } else {
-            cu.logError('Layout | loaded configuration has no database')
+            cu.logError( 'Layout | loaded configuration has no database' )
           }
         } else {
-          cu.logError('Layout | could not be loaded')
+          cu.logError( 'Layout | could not be loaded' )
         }
-      } catch (ex) {
-        cu.logError('Layout | exception in reading file ' + ex);
+      } catch ( ex ) {
+        cu.logError( 'Layout | exception in reading file ' + ex );
       }
     }
-  })(files[0]);
-  reader.readAsText(files[0]);
+  } )( files[ 0 ] );
+  reader.readAsText( files[ 0 ] );
 }
 
 /**
@@ -113,12 +113,12 @@ function LoadLayout() {
  * @param       {Object} display display
  * @constructor
  */
-function UpdateLayoutNode(node, display) {
-  session.getLayouts(node.path, function(dirEntries) {
+function UpdateLayoutNode( node, display ) {
+  session.getLayouts( node.path, function( dirEntries ) {
     var layoutEntries = [];
     /* modify dirEntries */
-    for (var entryID in dirEntries) {
-      var dirEntry = dirEntries[entryID];
+    for ( var entryID in dirEntries ) {
+      var dirEntry = dirEntries[ entryID ];
       var layoutEntry = {
         name: '/' + entryID,
         text: dirEntry.shortDescription,
@@ -128,7 +128,7 @@ function UpdateLayoutNode(node, display) {
         selectable: true,
         checkable: false
       };
-      if (dirEntry.hasOwnProperty('nodes')) {
+      if ( dirEntry.hasOwnProperty( 'nodes' ) ) {
         layoutEntry.lazyLoad = true;
         layoutEntry.selectable = false;
       } else {
@@ -139,17 +139,17 @@ function UpdateLayoutNode(node, display) {
         layoutEntry.url = dirEntry.urlPath;
       }
 
-      layoutEntries.push(layoutEntry);
+      layoutEntries.push( layoutEntry );
     }
-    var tree = $('#cdr-layout-menu-container').treeview(true)
-    tree.addNode(layoutEntries, node, node.index, {
+    var tree = $( '#cdr-layout-menu-container' ).treeview( true )
+    tree.addNode( layoutEntries, node, node.index, {
       silent: true
-    });
-    tree.expandNode(node, {
+    } );
+    tree.expandNode( node, {
       silent: true,
       ignoreChildren: true
-    });
-  });
+    } );
+  } );
 }
 
 /**
@@ -158,12 +158,12 @@ function UpdateLayoutNode(node, display) {
  * @param       {Object} display display
  * @constructor
  */
-function UpdatePanelNode(node, display) {
-  session.getPanels(node.path, function(dirEntries) {
+function UpdatePanelNode( node, display ) {
+  session.getPanels( node.path, function( dirEntries ) {
     var panelEntries = [];
     /* modify dirEntries */
-    for (var entryID in dirEntries) {
-      var dirEntry = dirEntries[entryID];
+    for ( var entryID in dirEntries ) {
+      var dirEntry = dirEntries[ entryID ];
       var panelEntry = {
         name: '/' + entryID,
         text: dirEntry.shortDescription,
@@ -173,7 +173,7 @@ function UpdatePanelNode(node, display) {
         selectable: true,
         checkable: false
       };
-      if (dirEntry.hasOwnProperty('nodes')) {
+      if ( dirEntry.hasOwnProperty( 'nodes' ) ) {
         panelEntry.lazyLoad = true;
         panelEntry.selectable = false;
       } else {
@@ -183,15 +183,15 @@ function UpdatePanelNode(node, display) {
         panelEntry.type = 'file';
         panelEntry.url = node.path + '/' + entryID
       }
-      panelEntries.push(panelEntry);
+      panelEntries.push( panelEntry );
     }
-    var tree = $('#cdr-panel-menu-container').treeview(true)
-    tree.addNode(panelEntries, node, node.index, {
+    var tree = $( '#cdr-panel-menu-container' ).treeview( true )
+    tree.addNode( panelEntries, node, node.index, {
       silent: true
-    });
-    tree.expandNode(node, {
+    } );
+    tree.expandNode( node, {
       silent: true,
       ignoreChildren: true
-    });
-  });
+    } );
+  } );
 }
