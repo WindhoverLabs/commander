@@ -63,7 +63,7 @@ function SaveLayout() {
   var cfg = myLayout.toConfig();
   /* add database */
   cfg.database = cu.getDatabase();
-  let state = JSON.stringify( cfg );
+  let state = JSON.stringify( cfg, null, ' ' );
   var blob = new Blob( [ state ], {
     type: "text/json;charset=utf-8"
   } );
