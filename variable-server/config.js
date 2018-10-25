@@ -31,16 +31,16 @@
  *
  *****************************************************************************/
 
-var convict = require('convict');
+var convict = require( 'convict' );
 
 /**
  * Define varibale server schema
  * @type {Object}
  */
-var config = convict({
+var config = convict( {
   env: {
     doc: 'The application environment.',
-    format: ['production', 'development', 'test'],
+    format: [ 'production', 'development', 'test' ],
     default: 'development',
     env: 'NODE_ENV'
   },
@@ -69,7 +69,7 @@ var config = convict({
     format: String,
     default: ''
   },
-  variables: [{
+  variables: [ {
     name: {
       doc: 'Variable name.',
       format: 'String'
@@ -81,7 +81,7 @@ var config = convict({
         default: 1
       }
     }
-  }]
-});
+  } ]
+} );
 
 module.exports = config;

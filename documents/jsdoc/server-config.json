@@ -1,0 +1,34 @@
+{
+  "tags": {
+    "allowUnknownTags": true
+  },
+  "source": {
+    "include": [
+      "../../binary-decoder/config.js",
+      "../../binary-decoder/index.js",
+      "../../binary-encoder/config.js",
+      "../../binary-encoder/index.js",
+      "../../udp-std-provider/index.js",
+      "../../udp-std-provider/config.js",
+      "../../variable-server/index.js",
+      "../../variable-server/config.js",
+      "../../protobuf-decoder/config.js",
+      "../../protobuf-decoder/index.js",
+      "../../protobuf-encoder/config.js",
+      "../../protobuf-encoder/index.js",
+      "../../config-database/config.js",
+      "../../config-database/index.js"
+    ]
+  },
+  "plugins": [],
+  "opts": {
+    "destination": "./server-docs/"
+  },
+  "templates": {
+    "cleverLinks": false,
+    "monospaceLinks": false,
+    "default": {
+      "outputSourceFiles": true
+    }
+  }
+}

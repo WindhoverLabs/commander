@@ -31,16 +31,16 @@
  *
  *****************************************************************************/
 
-var convict = require('convict');
+var convict = require( 'convict' );
 
 /**
  * Define binary-encoder schema
  * @type {Object}
  */
-var config = convict({
+var config = convict( {
   env: {
     doc: 'The application environment.',
-    format: ['production', 'development', 'test'],
+    format: [ 'production', 'development', 'test' ],
     default: 'development',
     env: 'NODE_ENV'
   },
@@ -52,7 +52,7 @@ var config = convict({
   },
   CFE_SB_PACKET_TIME_FORMAT: {
     doc: 'CFE SB time format.',
-    format: ['CFE_SB_TIME_32_16_SUBS', 'CFE_SB_TIME_32_32_SUBS', 'CFE_SB_TIME_32_32_M_20'],
+    format: [ 'CFE_SB_TIME_32_16_SUBS', 'CFE_SB_TIME_32_32_SUBS', 'CFE_SB_TIME_32_32_M_20' ],
     default: 'CFE_SB_TIME_32_16_SUBS'
   },
   CFE_TIME_EPOCH_YEAR: {
@@ -80,13 +80,13 @@ var config = convict({
     format: 'int',
     default: 0
   },
-  msgDefs: [{
+  msgDefs: [ {
     file: {
       doc: 'Input file.',
       format: String,
       default: ''
     }
-  }],
+  } ],
   jsonInputStreamID: {
     doc: 'Input JSON stream from a command source to the encoder.',
     format: String,
@@ -112,6 +112,6 @@ var config = convict({
     format: String,
     default: ''
   },
-});
+} );
 
 module.exports = config;

@@ -95,71 +95,71 @@ CommanderLogger.prototype = {
   /**
    * Get INFO filter status
    */
-  getInfo : function() {
+  getInfo: function() {
     return this.INFO;
   },
   /**
    * Get DEBUG filter status
    */
-  getDebug  : function() {
+  getDebug: function() {
     return this.DEBUG;
   },
   /**
    * Get ERROR filter status
    */
-  getError  : function() {
+  getError: function() {
     return this.ERROR;
   },
   /**
    * Set INFO filter status
    */
-  setInfo  : function(value) {
+  setInfo: function( value ) {
     this.INFO = value;
   },
   /**
    * Set DEBUG filter status
    */
-  setDebug  : function(value) {
+  setDebug: function( value ) {
     this.DEBUG = value;
   },
   /**
    * Set ERROR filter status
    */
-  setError  : function(value) {
+  setError: function( value ) {
     this.ERROR = value;
   },
   /**
    * Log INFO
    */
-  Info  : function(message) {
-    if(this.INFO) {
-      this.log('INFO', this.BGCOLOR_INFO, this.COLOR_INFO, message);
+  Info: function( message ) {
+    if ( this.INFO ) {
+      this.log( 'INFO', this.BGCOLOR_INFO, this.COLOR_INFO, message );
     }
   },
   /**
    * Log DEBUG
    */
-  Debug  : function(message) {
-    if(this.DEBUG) {
-      this.log('DEBUG', this.BGCOLOR_DEBUG, this.COLOR_DEBUG, message);
+  Debug: function( message ) {
+    if ( this.DEBUG ) {
+      this.log( 'DEBUG', this.BGCOLOR_DEBUG, this.COLOR_DEBUG, message );
     }
   },
   /**
    * Log ERROR
    */
-  Error  : function(message) {
-    if(this.ERROR) {
-      this.log('ERROR', this.BGCOLOR_ERROR, this.COLOR_ERROR, message);
+  Error: function( message ) {
+    if ( this.ERROR ) {
+      this.log( 'ERROR', this.BGCOLOR_ERROR, this.COLOR_ERROR, message );
     }
   },
   /**
    * Log wrapper
    */
-  log  : function(type, bg, fg, message) {
+  log: function( type, bg, fg, message ) {
     var d = new Date().toString();
     var c = 'background: ' + bg + '; color: ' + fg;
     var t = '%c CDRLOG | ' + d + ' | ' + type + ' | ' + message;
-    console.log(t, c);
+    console.log( t, c );
   }
 }
 
@@ -193,12 +193,12 @@ CommanderGenerator.prototype = {
    * Makes unique keys
    * @return {strings} unique key
    */
-  makeKey  : function() {
-    var k = Math.random().toString(36).slice(2);
-    while (k in this.unavailableKeys) {
-      k = Math.random().toString(36).slice(2);
+  makeKey: function() {
+    var k = Math.random().toString( 36 ).slice( 2 );
+    while ( k in this.unavailableKeys ) {
+      k = Math.random().toString( 36 ).slice( 2 );
     }
-    this.unavailableKeys.push(k);
+    this.unavailableKeys.push( k );
     return k;
   },
   /**
@@ -206,11 +206,11 @@ CommanderGenerator.prototype = {
    * @param  {strings} k unique keys
    * @return {Boolean}   success if true, fail if false
    */
-  disposeKey  : function(k) {
+  disposeKey: function( k ) {
     var success = false;
-    var index = this.unavailableKeys.indexOf(k);
-    if (index != -1) {
-      this.unavailableKeys.splice(index, 1);
+    var index = this.unavailableKeys.indexOf( k );
+    if ( index != -1 ) {
+      this.unavailableKeys.splice( index, 1 );
       success = true;
     }
     return success;
@@ -219,15 +219,15 @@ CommanderGenerator.prototype = {
    * Generates a unique color
    * @return {String} unique color
    */
-  makeColor  : function() {
+  makeColor: function() {
     var letters = '0123456789abcdef';
     do {
       var color = '#';
-      for (var i = 0; i < 6; i++) {
-        color += letters[Math.floor(Math.random() * 16)];
+      for ( var i = 0; i < 6; i++ ) {
+        color += letters[ Math.floor( Math.random() * 16 ) ];
       }
-    } while (color in this.unavailableColors);
-    this.unavailableColors.push(color);
+    } while ( color in this.unavailableColors );
+    this.unavailableColors.push( color );
     return color;
   },
   /**
@@ -235,11 +235,11 @@ CommanderGenerator.prototype = {
    * @param  {String} c unique color
    * @return {Boolean}   success if true, fail if false
    */
-  disposeColor  : function(c) {
+  disposeColor: function( c ) {
     var success = false;
-    var index = this.unavailableColors.indexOf(c);
-    if (index != -1) {
-      this.unavailableColors.splice(index, 1);
+    var index = this.unavailableColors.indexOf( c );
+    if ( index != -1 ) {
+      this.unavailableColors.splice( index, 1 );
       success = true;
     }
     return success;
@@ -248,16 +248,16 @@ CommanderGenerator.prototype = {
    * make unique UUID
    * @return {String} unique UUID
    */
-  makeUUID  : function() {
+  makeUUID: function() {
     var d = new Date().getTime();
-    if (window.performance && typeof window.performance.now === "function") {
+    if ( window.performance && typeof window.performance.now === "function" ) {
       d += performance.now(); // use high-precision timer if available
     }
-    var uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-      var r = (d + Math.random() * 16) % 16 | 0;
-      d = Math.floor(d / 16);
-      return (c == 'x' ? r : (r & 0x3 | 0x8)).toString(16);
-    });
+    var uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace( /[xy]/g, function( c ) {
+      var r = ( d + Math.random() * 16 ) % 16 | 0;
+      d = Math.floor( d / 16 );
+      return ( c == 'x' ? r : ( r & 0x3 | 0x8 ) ).toString( 16 );
+    } );
     return uuid;
   },
   /**
@@ -265,12 +265,12 @@ CommanderGenerator.prototype = {
    * @param  {String} str string input
    * @return {Object}     JSON output
    */
-  parseJSON  : function(str) {
+  parseJSON: function( str ) {
     var JSONObj = undefined;
-    if (typeof str === 'string' || str instanceof String) {
+    if ( typeof str === 'string' || str instanceof String ) {
       // it's a string
-      JSONObj = JSON.parse(str);
-    } else if (typeof str === 'object' || str instanceof Object) {
+      JSONObj = JSON.parse( str );
+    } else if ( typeof str === 'object' || str instanceof Object ) {
       // it's an object
       JSONObj = str;
     }
@@ -281,10 +281,10 @@ CommanderGenerator.prototype = {
    * @param  {Object} obj object
    * @return {Number}     size of the object
    */
-  getSize  : function(obj) {
+  getSize: function( obj ) {
     var str = '';
-    if (typeof obj == 'object') {
-      str = JSON.stringify(obj);
+    if ( typeof obj == 'object' ) {
+      str = JSON.stringify( obj );
     }
     return str.length;
   }
@@ -297,28 +297,28 @@ CommanderGenerator.prototype = {
  */
 var CommanderValidator = CommanderValidator || {};
 /**
-* CommanderValidator API Collector of validation functions.
-* @constructor
-*/
+ * CommanderValidator API Collector of validation functions.
+ * @constructor
+ */
 function CommanderValidator() {}
 /**
  * CommanderValidator protoype definition
  * @type {Object}
  */
-CommanderValidator.prototype= {
+CommanderValidator.prototype = {
   /**
    * Validates if passes in object is a Array
    * @param  {Object} obj
    * @return {Boolean}     true if the object is array otherwise false
    */
-  isArray : function(obj) {
+  isArray: function( obj ) {
     /* Backwards compatability */
-    if (typeof Array.isArray === 'undefined') {
-      Array.isArray = function(obj) {
-        return (Object.prototype.toString.call(obj) === '[object Array]');
+    if ( typeof Array.isArray === 'undefined' ) {
+      Array.isArray = function( obj ) {
+        return ( Object.prototype.toString.call( obj ) === '[object Array]' );
       }
     }
-    return Array.isArray(obj);
+    return Array.isArray( obj );
   },
   /**
    * Validates id the passed in child is descendant of parentNode
@@ -326,10 +326,10 @@ CommanderValidator.prototype= {
    * @param  {Object} child  childNode
    * @return {Boolean}       true id the childNode is descendant otherwise false
    */
-  isDescendant : function(parent, child) {
+  isDescendant: function( parent, child ) {
     var node = child.parentNode;
-    while (node != null) {
-      if (node == parent) {
+    while ( node != null ) {
+      if ( node == parent ) {
         return true;
       }
       node = node.parentNode;
@@ -341,9 +341,9 @@ CommanderValidator.prototype= {
    * @param  {Boolean} condition a boolean yielding expression
    * @return {Boolean}           true if successful, false if assertion fails
    */
-  assert : function(condition) {
+  assert: function( condition ) {
     var success = true;
-    if (!condition) {
+    if ( !condition ) {
       success = false;
     }
     return success
@@ -354,7 +354,7 @@ CommanderValidator.prototype= {
  * CommanderDatabase
  */
 var CommanderDatabase = CommanderDatabase || {};
- /**
+/**
  * CommanderDatabase API allows you to store key value pairs.
  * @constructor
  */
@@ -369,12 +369,12 @@ function CommanderDatabase() {
  * CommanderDatabase protoype definition
  * @type {Object}
  */
-CommanderDatabase.prototype= {
+CommanderDatabase.prototype = {
   /**
    * Return database
    * @return {Object} database
    */
-  getDatabase : function() {
+  getDatabase: function() {
     return this.database;
   },
   /**
@@ -383,8 +383,8 @@ CommanderDatabase.prototype= {
    * @param  {any} value    value
    * @return {Object}
    */
-  addRecord : function(key, value) {
-    this.database[key] = value;
+  addRecord: function( key, value ) {
+    this.database[ key ] = value;
     return this.database;
   },
   /**
@@ -392,23 +392,23 @@ CommanderDatabase.prototype= {
    * @param  {String} key   indetifier
    * @return {Object}
    */
-  getValue : function(key) {
-    return this.database[key];
+  getValue: function( key ) {
+    return this.database[ key ];
   },
   /**
    * Delete record
    * @param  {String} key   indetifier
    * @return {Object}
    */
-  deleteRecord : function(key) {
-    delete this.database[key];
+  deleteRecord: function( key ) {
+    delete this.database[ key ];
     return this.database;
   },
   /**
    * Empty database
    * @return {Object}
    */
-  clearDatabase : function() {
+  clearDatabase: function() {
     this.database = {};
     return this.database;
   }
@@ -419,7 +419,7 @@ CommanderDatabase.prototype= {
  * CommanderUtilities
  */
 var CommanderUtilities = CommanderUtilities || {};
- /**
+/**
  * CommanderUtilities API Increases the ease of use and code understandability
  * @constructor
  */
@@ -453,20 +453,20 @@ CommanderUtilities.prototype = {
   /**
    * Log INFO
    */
-  logInfo : function(...message) {
-    this.logger.Info(message.join(''));
+  logInfo: function( ...message ) {
+    this.logger.Info( message.join( '' ) );
   },
   /**
    * Log DEBUG
    */
-  logDebug : function(...message) {
-    this.logger.Debug(message.join(''));
+  logDebug: function( ...message ) {
+    this.logger.Debug( message.join( '' ) );
   },
   /**
    * Log ERROR
    */
-  logError : function(...message) {
-    this.logger.Error(message.join(''));
+  logError: function( ...message ) {
+    this.logger.Error( message.join( '' ) );
   },
   /**
    * Sets log filter
@@ -474,42 +474,42 @@ CommanderUtilities.prototype = {
    * @param  {Number} [debug=0] debug filter
    * @param  {Number} [error=1] error filter
    */
-  setLogFilter : function(info = 1, debug = 0, error = 1) {
+  setLogFilter: function( info = 1, debug = 0, error = 1 ) {
     /* Set Info */
-    if (info == 1) {
-      this.logger.setInfo(true);
+    if ( info == 1 ) {
+      this.logger.setInfo( true );
     } else {
-      this.logger.setInfo(false);
+      this.logger.setInfo( false );
     }
     /* Set Debug */
-    if (debug == 1) {
-      this.logger.setDebug(true);
+    if ( debug == 1 ) {
+      this.logger.setDebug( true );
     } else {
-      this.logger.setDebug(false);
+      this.logger.setDebug( false );
     }
     /* Set Error */
-    if (error == 1) {
-      this.logger.setError(true);
+    if ( error == 1 ) {
+      this.logger.setError( true );
     } else {
-      this.logger.setError(false);
+      this.logger.setError( false );
     }
   },
   /**
    * Prints log filter status
    */
-  getLogFilter : function() {
+  getLogFilter: function() {
     var status = {
       INFO: this.logger.getInfo(),
       DEBUG: this.logger.getDebug(),
       ERROR: this.logger.getError()
     };
-    this.logInfo('Logger Status | ', JSON.stringify(status));
+    this.logInfo( 'Logger Status | ', JSON.stringify( status ) );
   },
   /**
    * Makes unique keys
    * @return {strings} unique key
    */
-  makeKey : function() {
+  makeKey: function() {
     return this.generator.makeKey();
   },
   /**
@@ -517,16 +517,16 @@ CommanderUtilities.prototype = {
    * @param  {strings} k unique keys
    * @return {Boolean}   success if true, fail if false
    */
-  disposeKey : function(k) {
-    if (!this.generator.disposeColor(k)) {
-      this.logError(' Unable to dispose key ', k);
+  disposeKey: function( k ) {
+    if ( !this.generator.disposeColor( k ) ) {
+      this.logError( ' Unable to dispose key ', k );
     }
   },
   /**
    * Generates a unique color
    * @return {String} unique color
    */
-  makeColor : function() {
+  makeColor: function() {
     return this.generator.makeColor();
   },
   /**
@@ -534,16 +534,16 @@ CommanderUtilities.prototype = {
    * @param  {String} c unique color
    * @return {Boolean}   success if true, fail if false
    */
-  disposeColor : function(c) {
-    if (!this.generator.disposeColor(c)) {
-      this.logError(' Unable to dispose color ', c);
+  disposeColor: function( c ) {
+    if ( !this.generator.disposeColor( c ) ) {
+      this.logError( ' Unable to dispose color ', c );
     }
   },
   /**
    * make unique UUID
    * @return {String} unique UUID
    */
-  makeUUID : function() {
+  makeUUID: function() {
     return this.generator.makeUUID();
   },
   /**
@@ -551,10 +551,10 @@ CommanderUtilities.prototype = {
    * @param  {String} str string input
    * @return {Object}     JSON output
    */
-  parseJSON : function(str) {
-    var strObj = this.generator.parseJSON(str);
-    if (strObj == undefined | strObj == null) {
-      this.logError('Parse JSON | ', 'Unable to parse string : ', strObj);
+  parseJSON: function( str ) {
+    var strObj = this.generator.parseJSON( str );
+    if ( strObj == undefined | strObj == null ) {
+      this.logError( 'Parse JSON | ', 'Unable to parse string : ', strObj );
     }
     return strObj;
   },
@@ -563,16 +563,16 @@ CommanderUtilities.prototype = {
    * @param  {Object} obj object
    * @return {Number}     size of the object
    */
-  getSize : function(obj) {
-    return this.generator.getSize(obj);
+  getSize: function( obj ) {
+    return this.generator.getSize( obj );
   },
   /**
    * Validates if passes in object is a Array
    * @param  {Object} obj
    * @return {Boolean}     true if the object is array otherwise false
    */
-  isArray : function(obj) {
-    return this.validator.isArray(obj)
+  isArray: function( obj ) {
+    return this.validator.isArray( obj )
   },
   /**
    * Validates id the passed in child is descendant of parentNode
@@ -580,24 +580,24 @@ CommanderUtilities.prototype = {
    * @param  {Object} child  childNode
    * @return {Boolean}       true id the childNode is descendant otherwise false
    */
-  isDescendant : function(parent, child) {
-    return this.validator.isDescendant(parent, child)
+  isDescendant: function( parent, child ) {
+    return this.validator.isDescendant( parent, child )
   },
   /**
    * Custom assertions
    * @param  {Boolean} condition a boolean yielding expression
    * @return {Boolean}           true if successful, false if assertion fails
    */
-  assert : function(condition, message) {
-    if (!this.validator.assert(condition)) {
-      this.logError('Assertion Failed | ', message);
+  assert: function( condition, message ) {
+    if ( !this.validator.assert( condition ) ) {
+      this.logError( 'Assertion Failed | ', message );
     }
   },
   /**
    * Return database
    * @return {Object} database
    */
-  getDatabase : function() {
+  getDatabase: function() {
     return this.database.getDatabase();
   },
   /**
@@ -606,13 +606,12 @@ CommanderUtilities.prototype = {
    * @param  {any} value    value
    * @return {Object}
    */
-  addRecord : function(key, value, overwrite = true) {
-    this.assert(typeof key == 'string','Utilities | key is not in string format');
-    if (!overwrite && this.database.getDatabase().hasOwnProperty(key)) {
-      this.logError('Utilities | Cannot write to database, overwrite set to false.');
-    }
-    else {
-    this.database.addRecord(key,value);
+  addRecord: function( key, value, overwrite = true ) {
+    this.assert( typeof key == 'string', 'Utilities | key is not in string format' );
+    if ( !overwrite && this.database.getDatabase().hasOwnProperty( key ) ) {
+      this.logError( 'Utilities | Cannot write to database, overwrite set to false.' );
+    } else {
+      this.database.addRecord( key, value );
     }
     return this.database.getDatabase();
   },
@@ -621,13 +620,12 @@ CommanderUtilities.prototype = {
    * @param  {String} key   indetifier
    * @return {Object}
    */
-  getValue : function(key) {
+  getValue: function( key ) {
     var val = undefined;
-    if (this.database.getDatabase().hasOwnProperty(key)) {
+    if ( this.database.getDatabase().hasOwnProperty( key ) ) {
       val = this.database.getValue();
-    }
-    else {
-      this.logDebug('Utilities | key not available in database, cannot retrieve value.');
+    } else {
+      this.logDebug( 'Utilities | key not available in database, cannot retrieve value.' );
     }
     return val;
   },
@@ -636,12 +634,11 @@ CommanderUtilities.prototype = {
    * @param  {String} key   indetifier
    * @return {Object}
    */
-  deleteRecord : function(key) {
-    if (this.database.getDatabase().hasOwnProperty(key)) {
-      this.database.deleteRecord(key);
-    }
-    else {
-      this.logDebug('Utilities | key not available in database, cannot delete key.');
+  deleteRecord: function( key ) {
+    if ( this.database.getDatabase().hasOwnProperty( key ) ) {
+      this.database.deleteRecord( key );
+    } else {
+      this.logDebug( 'Utilities | key not available in database, cannot delete key.' );
     }
     return this.database.getDatabase();
   },
@@ -649,7 +646,7 @@ CommanderUtilities.prototype = {
    * Empty database
    * @return {Object}
    */
-  clearDatabase : function() {
+  clearDatabase: function() {
     this.database.clearDatabase();
     return this.database.getDatabase();
   }

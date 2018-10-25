@@ -5,13 +5,13 @@
  * @param  {Object}  n node to be rendered
  * @return {Boolean}   true if aready rendered otherwise false
  */
-function isAlreadyRendered(n) {
+function isAlreadyRendered( n ) {
   /* introspect for events which are attaced to the node */
-  var events = $._data(n, "events")
+  var events = $._data( n, "events" )
   var result = false;
-  if (events != undefined) {
-    if (events.hasOwnProperty('mousedown') ||
-      events.hasOwnProperty('touchdown')) {
+  if ( events != undefined ) {
+    if ( events.hasOwnProperty( 'mousedown' ) ||
+      events.hasOwnProperty( 'touchdown' ) ) {
       result = true;
     }
   }
@@ -23,9 +23,9 @@ function isAlreadyRendered(n) {
  * @param       {Object} e    event object
  * @param       {Object} node node object
  */
-function NodeRendered(e, node) {
+function NodeRendered( e, node ) {
   /* if node to be rendered is a file, a .pug file */
-  if (node.type === "file" & !isAlreadyRendered(node.$el[0])) {
+  if ( node.type === "file" & !isAlreadyRendered( node.$el[ 0 ] ) ) {
     /* add url to be node's state, which will be loaded when node is rendered
      * on the layout, by drag or select proceadures */
     var newItemConfig = {
@@ -40,10 +40,10 @@ function NodeRendered(e, node) {
     };
     /* make this node dragable on to the layout
      * which will initialize a panel with tables and data. */
-    myLayout.createDragSource(node.$el[0], newItemConfig);
+    myLayout.createDragSource( node.$el[ 0 ], newItemConfig );
   }
   /* adds tooltips and context menu feature to navbar */
-  navBarTooltips(node, node.$el);
+  navBarTooltips( node, node.$el );
 }
 
 /**
@@ -52,9 +52,9 @@ function NodeRendered(e, node) {
  * @param       {Object} node node object
  * @constructor
  */
-function NodeSelected(e, node) {
+function NodeSelected( e, node ) {
   /* if node to be rendered is a file, a .pug file */
-  if (node.type === 'file') {
+  if ( node.type === 'file' ) {
     /* add url to be node's state, which will be loaded when node is rendered
      * on the layout, by drag or select proceadures */
     var newItemConfig = {
@@ -69,31 +69,29 @@ function NodeSelected(e, node) {
     };
     /* a colum or stack has to be seleted before selecting the node.
      * check if a selection is done.*/
-    if (myLayout.selectedItem === null) {
+    if ( myLayout.selectedItem === null ) {
       /* notify on developer console */
-      cu.logError('NodeSelected | Container not selected. Choose any container to load component.');
-    }
-    else {
+      cu.logError( 'NodeSelected | Container not selected. Choose any container to load component.' );
+    } else {
       /* add new item or panel or tab to layout */
-      myLayout.selectedItem.addChild(newItemConfig);
+      myLayout.selectedItem.addChild( newItemConfig );
     }
-  }
-  else if (node.type === 'config') {
+  } else if ( node.type === 'config' ) {
     /* if node to be rendered is a layout file, a .lyt file */
     /* read the file into json object */
-    $.get(node.urlPath, (response) => {
-      var jsonObj = JSON.parse(response);
-      if (response !== null) {
+    $.get( node.urlPath, ( response ) => {
+      var jsonObj = JSON.parse( response );
+      if ( response !== null ) {
         /* destrory previous layout, make new layout with the configuration
          * .lyt file and emit layout loaded event for dependencies to react */
         myLayout.destroy();
-        myLayout = new window.GoldenLayout(jsonObj, $('#cdr-layout-container'));
-        window.dispatchEvent(llc);
-        InitLayout(myLayout);
+        myLayout = new window.GoldenLayout( jsonObj, $( '#cdr-layout-container' ) );
+        window.dispatchEvent( llc );
+        InitLayout( myLayout );
       } else {
-        cu.logError('Layout | cannot be loaded from config file')
+        cu.logError( 'Layout | cannot be loaded from config file' )
       }
-    });
+    } );
   }
 }
 
@@ -101,8 +99,8 @@ function NodeSelected(e, node) {
  * Collapse all items in menu
  * @param       {Object} item item
  */
-function NodesCollapse(item) {
-  $("#cdr-" + item + "-menu-container").treeview('collapseAll', {
+function NodesCollapse( item ) {
+  $( "#cdr-" + item + "-menu-container" ).treeview( 'collapseAll', {
     silent: true
-  });
+  } );
 }

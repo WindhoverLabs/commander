@@ -36,6 +36,10 @@ build/Release
 node_modules/
 jspm_packages/
 
+# Generated documentation directories
+documents/jsdoc/server-docs/
+documents/jsdoc/client-docs/
+
 # Typescript v1 declaration files
 typings/
 
@@ -60,7 +64,7 @@ typings/
 # next.js build output
 .next
 
-# Semantic stuff 
+# Semantic stuff
 semantic/dist/*
 semantic/gulpfile.js
 semantic/src/definitions
