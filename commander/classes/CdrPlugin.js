@@ -70,7 +70,7 @@ class CdrPlugin {
 			global.NODE_APP.get(inPath, function (req, res) {				
 				var fullFilePath = path.join(self.webRoot, filePath);
 				if(path.extname(fullFilePath) === '.pug') {
-					res.render(fullFilePath);
+					res.render(fullFilePath, {query: req.query});
 				} else {
 					readJSONFile(fullFilePath, function (err, json) {
                         res.send(json);
