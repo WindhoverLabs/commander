@@ -610,10 +610,6 @@ BinaryDecoder.prototype.getFieldValueAsPbType = function( buffer, fieldDef, bitO
       fieldDef.pb_type = 'uint8';
     }
 
-    if ( fieldDef.airliner_type === 'CFE_ES_MemHandle_t' ) {
-      //console.log(fieldDef);
-    }
-
     if ( fieldDef.array_length > 1 ) {
       var value = [];
       switch ( fieldDef.pb_type ) {
@@ -642,6 +638,7 @@ BinaryDecoder.prototype.getFieldValueAsPbType = function( buffer, fieldDef, bitO
           break;
 
         case 'uint16':
+        case 'CFE_SB_MsgId_t':
           for ( var i = 0; i < fieldDef.array_length; ++i ) {
             if ( this.endian == 'little' ) {
               value.push( buffer.readUInt16LE( ( bitOffset / 8 ) + i ) );
@@ -754,6 +751,7 @@ BinaryDecoder.prototype.getFieldValueAsPbType = function( buffer, fieldDef, bitO
           break;
 
         case 'uint16':
+        case 'CFE_SB_MsgId_t':
           if ( this.endian == 'little' ) {
             value = buffer.readUInt16LE( bitOffset / 8 );
           } else {
@@ -876,6 +874,7 @@ BinaryDecoder.prototype.getFieldValue = function( buffer, fieldDef, bitOffset, r
           break;
 
         case 'uint16':
+        case 'CFE_SB_MsgId_t':
           for ( var i = 0; i < fieldDef.array_length; ++i ) {
             if ( this.endian == 'little' ) {
               value.push( buffer.readUInt16LE( ( bitOffset / 8 ) + i ) );
@@ -968,9 +967,14 @@ BinaryDecoder.prototype.getFieldValue = function( buffer, fieldDef, bitOffset, r
 
           if ( typeof nextFieldDef === 'undefined' ) {
             console.log( '2 **********************' );
-            for ( var i = 0; i < fieldDef.array_length; ++i ) {
-              //				    	    value.push(this.getFieldAsPbType(buffer, fieldDef, bitOffset));
-            }
+//            console.log(fieldDef);
+//            var elementBitSize = fieldDef.bit_size / fieldDef.array_length;
+//            
+//            for ( var i = 0; i < fieldDef.array_length; ++i ) {
+//              var nextBitOffset = bitOffset + ( ( fieldDef.bit_size / fieldDef.array_length ) * i );
+//              value.push(this.getFieldValueAsPbType(buffer, fieldDef, bitOffset + nextBitOffset, rootDef));
+//            }
+//            console.log(value);
           } else {
             var nextFields = nextFieldDef.fields;
             var value = [];
@@ -1002,6 +1006,7 @@ BinaryDecoder.prototype.getFieldValue = function( buffer, fieldDef, bitOffset, r
           break;
 
         case 'uint16':
+        case 'CFE_SB_MsgId_t':
           if ( this.endian == 'little' ) {
             value = buffer.readUInt16LE( bitOffset / 8 );
           } else {
