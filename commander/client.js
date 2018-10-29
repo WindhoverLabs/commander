@@ -277,18 +277,58 @@ CommanderClient.prototype.getTlmDefs = function( tlmObj, cb ) {
  */
 CommanderClient.prototype.updateTelemetry = function( items ) {
   var self = this;
+  var subscribersToUpdate = {};
 
+  /* We want to make sure that the subscribers get all the variables they 
+   * subscribed to in a single callback.  So if a subscriber subscribed
+   * to an array of multiple items, we want to collect all those items in
+   * a single array, and send that to the subscriber.  So the first step
+   * is to build an array of subscribers, each with an array of all the
+   * messages they subscribed to that arrived in this update.  To do this
+   * first we loop through the items to find their subscribers.
+   */
   for ( var itemID in items ) {
     var subs = self.subscriptions[ itemID ];
+    
+    /* Loop through all the subscriber callbacks 
+     * assigned to this item. */
     for ( var funcName in subs ) {
-      var cb = subs[ funcName ].cb;
-      var opsPath = subs[ funcName ].opsPath;
+      var subscription = subs[funcName];
+      
+      if(subscribersToUpdate.hasOwnProperty(funcName)) {
+    	/* This subscription must have already got a item queued up for it in
+    	 * this call because it already has an entry.  Just get a handle to 
+    	 * the subscriber record.
+    	 */
+    	var subscriptionUpdate = subscribersToUpdate[funcName];
+      } else {
+      	/* This is the first time we've added an item to this subscribers
+      	 * shopping cart in this call.  Create an entry for this subscription.
+      	 */
+    	var subscriptionUpdate = {subscription: subscription, items: []};
+    	subscribersToUpdate[funcName] = subscriptionUpdate;
+      }
+      
+      /* Great.  Now we have the subscription entry.  Now build up an object
+       * and push the this new item onto the items array.
+       */
       var param = {
         sample: items[ itemID ].sample,
-        opsPath: opsPath
+        opsPath: itemID
       };
-      cb( param );
+      subscriptionUpdate.items.push(param);
     }
+  }
+  
+  /* Now that we've built up a list of subscriptions to update.  Loop through
+   * the list and send the updates.
+   */
+  for ( var funcName in subscribersToUpdate ) {
+    var subUpdate = subscribersToUpdate[funcName];
+
+    var cb = subUpdate.subscription.cb;
+
+    cb( subUpdate.items );
   }
 }
 
@@ -317,13 +357,13 @@ CommanderClient.prototype.unsubscribe = function( tlmObj ) {
   };
 };
 
+
 /**
  * Subscribe to telemetry
  * @param  {Object}   tlmObj Telemetry Object
  * @param  {Function} cb     Callback
  */
 CommanderClient.prototype.subscribe = function( tlmObj, cb ) {
-
   if ( this.isSocketConnected ) {
     var tlmOpsPaths = [];
 
@@ -342,8 +382,6 @@ CommanderClient.prototype.subscribe = function( tlmObj, cb ) {
     }
 
     this.socket.emit( 'subscribe', tlmOpsPaths );
-
-
   };
 };
 

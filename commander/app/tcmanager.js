@@ -404,7 +404,11 @@ class Panel {
         } );
       }
       /* Subscribe to tlm */
-      session.subscribe( d.tlm, processTelemetryUpdate );
+      session.subscribe( d.tlm, (params)=>{
+    	  for(var idx in params) {
+    		  processTelemetryUpdate(params[idx])
+    	  }
+    	  });
       /* Get tlm definitions and add this additinal info to subscriptions */
       session.getTlmDefs( d.tlm, function( tlmDef ) {
         var opsPaths = [];

@@ -45,26 +45,6 @@ class CdrPlugin {
 
       this.processContentTree( content, '/' + name );
     }
-
-    //		var panels = this.getPanels();
-    //		if(typeof panels !== 'undefined') {
-    //			global.PANELS_TREE.push(panels);
-    //
-    //			var appViews = global.NODE_APP.get('views');
-    //			appViews.push(webRoot);
-    //
-    //			this.processPanelsTree(panels);
-    //		}
-    //
-    //        var layouts = this.getLayouts();
-    //        if(typeof layouts !== 'undefined') {
-    //            global.LAYOUTS_TREE.push(layouts);
-    //
-    //            var appViews = global.NODE_APP.get('views');
-    //            appViews.push(webRoot);
-    //
-    //            this.processLayoutsTree(layouts);
-    //        }
   }
 
   /**
@@ -88,7 +68,7 @@ class CdrPlugin {
       global.NODE_APP.get( inPath, function( req, res ) {
         var fullFilePath = path.join( self.webRoot, filePath );
         if ( path.extname( fullFilePath ) === '.pug' ) {
-          res.render( fullFilePath );
+	  res.render(fullFilePath, {query: req.query});
         } else {
           readJSONFile( fullFilePath, function( err, json ) {
             res.send( json );
