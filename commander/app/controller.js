@@ -169,6 +169,40 @@ $( () => {
           onNodeSelected: NodeSelected,
         } );
       } );
+      session.getWidgets( '/', function( dirEntries ) {
+        var entries = [];
+        /* modify dirEntries */
+        for ( var entryID in dirEntries ) {
+          var entry = {
+            name: '/' + entryID,
+            text: dirEntries[ entryID ].shortDescription,
+            longDescription: dirEntries[ entryID ].longDescription,
+            path: '/' + entryID,
+            urlPath: '/' + entryID,
+            type: dirEntries[ entryID ].type,
+            lazyLoad: true,
+            ext: entryID,
+            selectable: false,
+            checkable: false
+          };
+          entries.push( entry );
+        }
+        $( '#cdr-widget-menu-container' ).treeview( {
+          data: entries,
+          levels: 1,
+          backColor: '#343a40',
+          selectedBackColor: "#fff",
+          selectedColor: "#343a40",
+          onhoverColor: "#fff",
+          wrapNodeText: true,
+          collapseIcon: 'fa fa-folder-open',
+          expandIcon: 'fa fa-folder',
+          showBorder: false,
+          lazyLoad: UpdateWidgetNode,
+          onNodeRendered: WidgetNodeRendered,
+          // onNodeSelected: NodeSelected,
+        } );
+      } );
       /**
        * Load a layout for the application for first time
        * @type {window}
@@ -184,6 +218,7 @@ $( () => {
       InitScrollBar();
       InitResizeCtl();
       InitSidebar();
+      InitWidgets();
       /* false means previously, there had already been a session connection */
       _sescon_never = false;
     }

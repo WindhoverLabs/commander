@@ -98,6 +98,43 @@ CommanderClient.prototype.getPanels = function( path, cb ) {
 };
 
 /**
+ * Get a directory listing of widget of .pug files
+ * @param  {String}   path Starting path of directory
+ * @param  {Function} cb   Callback
+ */
+CommanderClient.prototype.getWidgets = function( path, cb ) {
+  this.socket.emit( 'getWidgets', path, function( result ) {
+    cb( result );
+  } );
+};
+
+/**
+ * Save widgets
+ * @param  {Object}   widInfoObj this object used to generate widgets
+ */
+CommanderClient.prototype.saveWidgets = function( widInfoObj ) {
+  /* save widget state stub */
+  // TODO: add feature to save this object at server side.
+  if ( widInfoObj != undefined ) {
+    localStorage.setItem( "widgetState", JSON.stringify( widInfoObj ) );
+  }
+};
+
+/**
+ * Load widgets
+ * @param  {Function}   cb callback
+ */
+CommanderClient.prototype.loadWidgets = function( cb ) {
+  /* load widget state stub */
+  // TODO: add feature to retrieve result from server side.
+  if ( localStorage.widgetState != undefined && typeof JSON.parse( localStorage.widgetState ) == 'object' ) {
+    cb( JSON.parse( localStorage.widgetState ) )
+  } else {
+    cu.logError( 'loadWidgets | no widget state may be available' );
+  }
+};
+
+/**
  * Get random number
  * @param  {Function} cb Callback
  */

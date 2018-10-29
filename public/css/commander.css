@@ -11,8 +11,9 @@ html {
 body {
   background-color: #353535;
   color: #ffffff;
-  max-height: calc(100% - 57px) !important;
-  height: calc(100% - 57px) !important;
+  max-height: calc(100%) !important;
+  height: calc(100%) !important;
+  overflow: hidden;
 }
 
 h2 {
@@ -35,8 +36,8 @@ h2 {
 #cdr-nav-btm {
   box-shadow: 0px -4px 15px #000;
   padding: 0.25em 0em;
-  max-height: 20px;
-  height: 20px;
+  max-height: 38px;
+  height: 38px;
 }
 
 /* max-width < 992px - top navbar buttons */
@@ -76,6 +77,10 @@ h2 {
     margin: 5px auto;
     text-align: center;
   }
+
+  #cdr-btm-nav-utility {
+    display: none;
+  }
 }
 
 /******************************************
@@ -98,12 +103,14 @@ h2 {
 *******************************************/
 .cdr-container {
   margin-top: 38px;
-  margin-bottom: 18px;
+  margin-bottom: 38px;
   width: 100%;
+  height: calc(100% - 76px);
   background-color: #353535;
   padding-left: 0px !important;
   padding-right: 0px !important;
   max-width: 100% !important;
+  position: fixed !important;
 }
 
 .cdr-content-wrapper {
@@ -148,7 +155,8 @@ h2 {
 }
 
 #cdr-panel-menu-toggle,
-#cdr-layout-menu-toggle {
+#cdr-layout-menu-toggle,
+#cdr-widget-menu-toggle {
   padding: 10px;
 }
 
@@ -247,29 +255,166 @@ h2 {
   top: 0;
   left: 0;
 }
+
 /******************************************
-  Documentation
+  Bottom Navigation
 *******************************************/
+#cdr-btm-nav-utility {
+  text-align: left;
+  background-image: linear-gradient(90deg, #343a40 30%, #343a40 50%, #00000000 75%);
+  z-index: 5;
+  min-height: 18px;
+  max-height: 18px;
+  /* display: block; */
+}
+
 #cdr-docs-container {
-    text-align: left;
-    font-size: small;
+  margin: 0px 2px;
+  color: var(--btn-primary-background-color);
+  padding: 0px 3px;
+  cursor: pointer;
 }
-#cdr-docs-container > a {
-    margin: 0px 2px;
-    color: var(--btn-primary-background-color);
-    text-decoration: underline;
-    border-radius: 5px;
-    padding: 0px 3px;
-    cursor: pointer;
+
+#cdr-docs-container:hover {
+  margin: 0px 2px;
+  color: var(--btn-primary-background-hover-color);
+  text-decoration: underline;
+  border-radius: 5px;
+  padding: 0px 3px;
+  cursor: pointer;
 }
-#cdr-docs-container > a:hover {
-    margin: 0px 2px;
-    color: var(--btn-primary-background-hover-color);
-    text-decoration: underline;
-    border-radius: 5px;
-    padding: 0px 3px;
-    cursor: pointer;
+
+#get-scroll-ui-container {
+  margin: 0px 3px;
+  position: absolute;
+  left: 25px;
 }
+
+#cdr-gadget-scroll-ui-container>i {
+  padding: 0px 2px;
+  margin: 0px 0.5px;
+  border-radius: 2px;
+  background-color: grey;
+  position: absolute;
+}
+
+#cdr-gadget-scroll-ui-container>.fa.fa-angle-left {
+  left: 0px;
+}
+
+#cdr-gadget-scroll-ui-container>.fa.fa-circle {
+  left: 13px;
+}
+
+#cdr-gadget-scroll-ui-container>.fa.fa-angle-right {
+  left: 33px;
+}
+
+#cdr-gadget-scroll-ui-container>i:hover {
+  background-color: var(--btn-primary-background-color);
+}
+
+#cdr-gadget-container {
+  display: flex !important;
+  margin: 0px 5px;
+}
+
+#cdr-gadget-parent {
+  position: absolute;
+  right: 0px;
+  /* overflow-x: hidden; */
+  transform: translateX(0px);
+  -webkit-transition: transform 0.8s ease-out;
+  -moz-transition: transform 0.8s ease-out;
+  -o-transition: transform 0.8s ease-out;
+  transition: transform 0.8s ease-out;
+}
+
+.cdr-well {
+  width: 500px;
+  height: 25px;
+  box-shadow: inset 2px 2px 1px rgba(0, 0, 0, .05);
+  background: #7e798333;
+  border-radius: 4px;
+  align-items: center;
+}
+
+#cdr-nav-btm>.cdr-well {
+  width: 100%;
+  margin: 0px 3px;
+  flex-flow: row-reverse;
+}
+
+.cdr-gadget {
+  background: blueviolet;
+  border-radius: 5px;
+  margin: 0px 3px;
+  display: flex;
+  max-height: 25px;
+  font-size: small;
+  vertical-align: middle;
+  overflow: auto;
+}
+
+.cdr-gadget-dragged {
+  z-index: 10000;
+  height: 25px;
+}
+
+.cdr-gadget-content {
+  font-size: small;
+  padding: 0px 4px;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.cdr-gadget-text {
+  font-size: small;
+  margin: 0px 3px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cdr-gadget-value {
+  font-size: small;
+  color: black;
+  background: white;
+  border-radius: 5px;
+  padding: 0px 10px;
+  font-weight: bold;
+}
+
+.cdr-gadget-close {
+  font-size: 12px;
+  color: black;
+  background: #b1b1b1;
+  border-radius: 2px;
+  position: relative;
+  padding: 2px;
+  text-align: center;
+  vertical-align: middle;
+  display: none;
+  cursor: pointer;
+}
+
+.cdr-gadget-on-status {
+  background: #56ab2f !important;
+  /* fallback for old browsers */
+  background: -webkit-linear-gradient(to right, #a8e063, #56ab2f) !important;
+  /* Chrome 10-25, Safari 5.1-6 */
+  background: linear-gradient(to right, #a8e063, #56ab2f) !important;
+  /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
+}
+
+.cdr-gadget-off-status {
+  background: #ED213A !important;
+  /* fallback for old browsers */
+  background: -webkit-linear-gradient(to right, #93291E, #ED213A) !important;
+  /* Chrome 10-25, Safari 5.1-6 */
+  background: linear-gradient(to right, #93291E, #ED213A) !important;
+  /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
+}
+
 /******************************************
   Application Control Classes
 *******************************************/
@@ -319,70 +464,6 @@ h2 {
 }
 
 .led-off {
-  background: #ED213A !important;
-  /* fallback for old browsers */
-  background: -webkit-linear-gradient(to right, #93291E, #ED213A) !important;
-  /* Chrome 10-25, Safari 5.1-6 */
-  background: linear-gradient(to right, #93291E, #ED213A) !important;
-  /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
-}
-
-#cdr-gadget-container {
-  display: flex !important;
-}
-
-.cdr-gadget {
-  background: blueviolet;
-  border-radius: 5px;
-  margin: 0px 3px;
-  display: flex;
-  max-height: 18px;
-}
-
-.cdr-gadget-content {
-  font-size: small;
-  padding: 0px 4px;
-  text-align: center;
-  vertical-align: middle;
-}
-
-.cdr-gadget-text {
-  font-size: small;
-  margin: 0px 3px;
-}
-
-.cdr-gadget-value {
-  font-size: small;
-  color: black;
-  background: white;
-  border-radius: 5px;
-  padding: 0px 10px;
-  font-weight: bold;
-}
-
-.cdr-gadget-close {
-  font-size: 12px;
-  color: black;
-  background: #b1b1b1;
-  border-radius: 2px;
-  position: relative;
-  padding: 2px;
-  text-align: center;
-  vertical-align: middle;
-  display: none;
-  cursor: pointer;
-}
-
-.cdr-gadget-on-status {
-  background: #56ab2f !important;
-  /* fallback for old browsers */
-  background: -webkit-linear-gradient(to right, #a8e063, #56ab2f) !important;
-  /* Chrome 10-25, Safari 5.1-6 */
-  background: linear-gradient(to right, #a8e063, #56ab2f) !important;
-  /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
-}
-
-.cdr-gadget-off-status {
   background: #ED213A !important;
   /* fallback for old browsers */
   background: -webkit-linear-gradient(to right, #93291E, #ED213A) !important;
