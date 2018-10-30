@@ -413,8 +413,9 @@ ADSB.prototype = {
 
     session.subscribe( [ {
       'name': '/PE/PE_HkTlm_t/AltOrigin'
-    } ], ( param ) => {
+    } ], ( paramArr ) => {
       try {
+        var param = paramArr[ 0 ]
         var sample = param.sample[ param.sample.length - 1 ];
         var value = sample.value;
         groundElevation = Math.random() * 10;
@@ -423,30 +424,31 @@ ADSB.prototype = {
       }
     } );
     session.subscribe( [ {
-        'name': '/PX4/PX4_VehicleGpsPositionMsg_t/Lat'
+        'name': '/PX4/PX4_VehicleGlobalPositionMsg_t/Lat'
       },
       {
-        'name': '/PX4/PX4_VehicleGpsPositionMsg_t/Lon'
+        'name': '/PX4/PX4_VehicleGlobalPositionMsg_t/Lon'
       },
       {
-        'name': '/PX4/PX4_VehicleGpsPositionMsg_t/Alt'
+        'name': '/PX4/PX4_VehicleGlobalPositionMsg_t/Alt'
       }
-    ], ( param ) => {
+    ], ( paramArr ) => {
       try {
+        var param = paramArr[ 0 ]
         var sample = param.sample[ param.sample.length - 1 ];
         var value = sample.value;
         switch ( param.opsPath ) {
-          case '/PX4/PX4_VehicleGpsPositionMsg_t/Lat':
+          case '/PX4/PX4_VehicleGlobalPositionMsg_t/Lat':
             {
               Position.Lat = value;
               break;
             }
-          case '/PX4/PX4_VehicleGpsPositionMsg_t/Lon':
+          case '/PX4/PX4_VehicleGlobalPositionMsg_t/Lon':
             {
               Position.Lon = value;
               break;
             }
-          case '/PX4/PX4_VehicleGpsPositionMsg_t/Alt':
+          case '/PX4/PX4_VehicleGlobalPositionMsg_t/Alt':
             {
               Position.Alt = value;
               break;

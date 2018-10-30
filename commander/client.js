@@ -150,7 +150,7 @@ CommanderClient.prototype.getRandom = function( cb ) {
  * Disable video stream
  */
 CommanderClient.prototype.diableVideoSteam = function() {
-  console.log( 'video stream disabled.' )
+  // console.log( 'video stream disabled.' )
 }
 
 /**
@@ -158,23 +158,23 @@ CommanderClient.prototype.diableVideoSteam = function() {
  * @param  {Function} cb Callback
  */
 CommanderClient.prototype.getVideoSteam = function( cb ) {
-  console.log( 'video stream subscribed.' )
+  // console.log( 'video stream subscribed.' )
   /* stub */
   var width = 600;
   var height = 400;
   var i;
   var end = width * height;
-  setInterval( () => {
-    var image = [];
-    for ( i = 0; i < end; ++i ) {
-      image.push( '0123456789abcdef'.split( '' ).map( function( v, i, a ) {
-        return i > 1 ? null : a[ Math.floor( Math.random() * 16 ) ]
-      } ).join( '' ) );
-    }
-    image = image.join( '' );
-    image = btoa( image )
-    cb( image );
-  }, 5000 );
+  // setInterval( () => {
+  //   var image = [];
+  //   for ( i = 0; i < end; ++i ) {
+  //     image.push( '0123456789abcdef'.split( '' ).map( function( v, i, a ) {
+  //       return i > 1 ? null : a[ Math.floor( Math.random() * 16 ) ]
+  //     } ).join( '' ) );
+  //   }
+  //   image = image.join( '' );
+  //   image = btoa( image )
+  //   cb( image );
+  // }, 5000 );
 }
 
 
@@ -279,7 +279,7 @@ CommanderClient.prototype.updateTelemetry = function( items ) {
   var self = this;
   var subscribersToUpdate = {};
 
-  /* We want to make sure that the subscribers get all the variables they 
+  /* We want to make sure that the subscribers get all the variables they
    * subscribed to in a single callback.  So if a subscriber subscribed
    * to an array of multiple items, we want to collect all those items in
    * a single array, and send that to the subscriber.  So the first step
@@ -289,26 +289,29 @@ CommanderClient.prototype.updateTelemetry = function( items ) {
    */
   for ( var itemID in items ) {
     var subs = self.subscriptions[ itemID ];
-    
-    /* Loop through all the subscriber callbacks 
+
+    /* Loop through all the subscriber callbacks
      * assigned to this item. */
     for ( var funcName in subs ) {
-      var subscription = subs[funcName];
-      
-      if(subscribersToUpdate.hasOwnProperty(funcName)) {
-    	/* This subscription must have already got a item queued up for it in
-    	 * this call because it already has an entry.  Just get a handle to 
-    	 * the subscriber record.
-    	 */
-    	var subscriptionUpdate = subscribersToUpdate[funcName];
+      var subscription = subs[ funcName ];
+
+      if ( subscribersToUpdate.hasOwnProperty( funcName ) ) {
+        /* This subscription must have already got a item queued up for it in
+         * this call because it already has an entry.  Just get a handle to
+         * the subscriber record.
+         */
+        var subscriptionUpdate = subscribersToUpdate[ funcName ];
       } else {
-      	/* This is the first time we've added an item to this subscribers
-      	 * shopping cart in this call.  Create an entry for this subscription.
-      	 */
-    	var subscriptionUpdate = {subscription: subscription, items: []};
-    	subscribersToUpdate[funcName] = subscriptionUpdate;
+        /* This is the first time we've added an item to this subscribers
+         * shopping cart in this call.  Create an entry for this subscription.
+         */
+        var subscriptionUpdate = {
+          subscription: subscription,
+          items: []
+        };
+        subscribersToUpdate[ funcName ] = subscriptionUpdate;
       }
-      
+
       /* Great.  Now we have the subscription entry.  Now build up an object
        * and push the this new item onto the items array.
        */
@@ -316,15 +319,15 @@ CommanderClient.prototype.updateTelemetry = function( items ) {
         sample: items[ itemID ].sample,
         opsPath: itemID
       };
-      subscriptionUpdate.items.push(param);
+      subscriptionUpdate.items.push( param );
     }
   }
-  
+
   /* Now that we've built up a list of subscriptions to update.  Loop through
    * the list and send the updates.
    */
   for ( var funcName in subscribersToUpdate ) {
-    var subUpdate = subscribersToUpdate[funcName];
+    var subUpdate = subscribersToUpdate[ funcName ];
 
     var cb = subUpdate.subscription.cb;
 

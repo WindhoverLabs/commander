@@ -83,6 +83,16 @@ h2 {
   }
 }
 
+@media only screen and (max-width: 1260px) {
+  a.cdr-nav-top-brand.navbar-brand {
+    display: none;
+  }
+  #cdr-well-top-left.navbar-nav.cdr-well,
+  #cdr-well-top-right.navbar-nav.cdr-well{
+    width: 100%;
+  }
+
+}
 /******************************************
   Generic Modal
 *******************************************/
@@ -165,6 +175,9 @@ h2 {
 }
 
 #cdr-layout-menu-toggle.active {
+  background-color: var(--btn-primary-background-hover-color);
+}
+#cdr-widget-menu-toggle.active {
   background-color: var(--btn-primary-background-hover-color);
 }
 

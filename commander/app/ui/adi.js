@@ -36,6 +36,7 @@ var hudHeight;
 var hudWidth;
 var pxPer15Degrees;
 var pxPerDegree;
+var adiState;
 /**
  * Degrees per pitch line
  * @type {Number}
@@ -95,41 +96,39 @@ var GetTime = function() {
  * @return {undefined}
  */
 function getSubscriptions() {
-  session.subscribe( {
-      homogeneity: {
-        tolerance: 0
+  console.log( 'hello' );
+  session.subscribe( [ {
+        'name': '/PX4/PX4_VehicleAttitudeMsg_t/Q[0]'
       },
-      tlm: [ {
-          'name': '/CFS/PX4/VA_Q_0'
-        },
-        {
-          'name': '/CFS/PX4/VA_Q_1'
-        },
-        {
-          'name': '/CFS/PX4/VA_Q_2'
-        },
-        {
-          'name': '/CFS/PX4/VA_Q_3'
-        }
-      ]
-    },
+      {
+        'name': '/PX4/PX4_VehicleAttitudeMsg_t/Q[1]'
+      },
+      {
+        'name': '/PX4/PX4_VehicleAttitudeMsg_t/Q[2]'
+      },
+      {
+        'name': '/PX4/PX4_VehicleAttitudeMsg_t/Q[3]'
+      }
+    ],
     function( params ) {
       for ( var i = 0; i < params.length; ++i ) {
-        switch ( params[ i ].id.name ) {
-          case '/CFS/PX4/VA_Q_0':
-            Q[ 0 ] = params[ i ].engValue.floatValue;
+        var opsPath = params[ i ].opsPath;
+        var value = params[ i ].sample[ params[ i ].sample.length - 1 ].value;
+        switch ( opsPath ) {
+          case '/PX4/PX4_VehicleAttitudeMsg_t/Q[0]':
+            Q[ 0 ] = value;
             break;
 
-          case '/CFS/PX4/VA_Q_1':
-            Q[ 1 ] = params[ i ].engValue.floatValue;
+          case '/PX4/PX4_VehicleAttitudeMsg_t/Q[1]':
+            Q[ 1 ] = value;
             break;
 
-          case '/CFS/PX4/VA_Q_2':
-            Q[ 2 ] = params[ i ].engValue.floatValue;
+          case '/PX4/PX4_VehicleAttitudeMsg_t/Q[2]':
+            Q[ 2 ] = value;
             break;
 
-          case '/CFS/PX4/VA_Q_3':
-            Q[ 3 ] = params[ i ].engValue.floatValue;
+          case '/PX4/PX4_VehicleAttitudeMsg_t/Q[3]':
+            Q[ 3 ] = value;
             break;
         }
       }
@@ -205,7 +204,6 @@ function updateHUDRoll( newRoll ) {
  * @return {undefined}
  */
 function drawHUD( id ) {
-
   var aspectRatio = 320.0 / 180.0;
   hudWidth = $( '#' + id ).width();
   hudHeight = $( '#' + id ).height();

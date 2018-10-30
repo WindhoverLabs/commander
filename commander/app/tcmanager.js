@@ -22,6 +22,24 @@ var dataplot_subscriptions = {};
  */
 var rougeCleanUpInterval = 10000;
 
+/**
+ * Savely add rogue subscriptions to rouge_subscriptions
+ * @param {String} key  operation path
+ * @param {String} type type of subscription
+ * @param {String} cls  class name
+ */
+function setRougeSubsc( key, type, cls ) {
+  if ( key in rouge_subscriptions ) {
+    if ( type in rouge_subscriptions[ key ] ) {
+      ouge_subscriptions[ key ][ type ].push( cls );
+    } else {
+      ouge_subscriptions[ key ][ type ] = [ cls ];
+    }
+  } else {
+    rouge_subscriptions[ key ] = {}
+    rouge_subscriptions[ key ][ type ] = [ cls ];
+  }
+}
 
 /**
  * Regularly checks the DOM for rouge subscriptions or
@@ -404,11 +422,11 @@ class Panel {
         } );
       }
       /* Subscribe to tlm */
-      session.subscribe( d.tlm, (params)=>{
-    	  for(var idx in params) {
-    		  processTelemetryUpdate(params[idx])
-    	  }
-    	  });
+      session.subscribe( d.tlm, ( params ) => {
+        for ( var idx in params ) {
+          processTelemetryUpdate( params[ idx ] )
+        }
+      } );
       /* Get tlm definitions and add this additinal info to subscriptions */
       session.getTlmDefs( d.tlm, function( tlmDef ) {
         var opsPaths = [];
@@ -822,6 +840,13 @@ window.addEventListener( 'layout-load-complete', () => {
         ug.resize();
         ug.setupGrid();
         ug.draw();
+      }
+    }
+    /* ADI resize handle */
+    for ( var i in display_controllers ) {
+      if ( display_controllers[ i ].DISP_META.LAYERS[ display_controllers[ i ].DISP_STATE.LAYERS ] == 'ADI' ) {
+        $( '#cdr-guages-' + i ).empty();
+        drawHUD( 'cdr-guages-' + i );
       }
     }
   } );
