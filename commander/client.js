@@ -81,10 +81,20 @@ CommanderClient.prototype.isSocketConnected = function() {
  * @param  {Function} cb   Callback
  */
 CommanderClient.prototype.getLayouts = function( path, cb ) {
+  var self = this;
+  
   this.socket.emit( 'getLayouts', path, function( result ) {
     cb( result );
   } );
 };
+
+
+CommanderClient.prototype.callPlugin = function(pluginName, funcName, args, cb) {
+    this.socket.emit( 'pluginFunction', pluginName, funcName, args, function(results) {
+        cb(results)
+    } );
+};
+
 
 /**
  * Get a directory listing of panels of .pug files

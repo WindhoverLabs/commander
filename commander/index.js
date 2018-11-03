@@ -105,6 +105,7 @@ function Commander( workspace, configFile ) {
   this.workspace = workspace;
   this.instances = {};
   var self = this;
+  this.registeredFunctions = [];
 
   /* Load environment dependent configuration */
   config.loadFile( configFile );
@@ -178,6 +179,20 @@ function Commander( workspace, configFile ) {
       self.sendCmd( cmdObj );
     } );
 
+    socket.on( 'pluginFunction', function(pluginName, funcName, args, cb) {        
+      for( var i in self.registeredFunctions ) {
+          if(self.registeredFunctions[i].pluginName === pluginName) {
+              if(self.registeredFunctions[i].funcName === funcName) {
+                  if(typeof self.registeredFunctions[i].cb === 'function') {
+                      self.registeredFunctions[i].cb(args, function (results) {
+                          cb(results);
+                      });
+                  }
+              }
+          }
+      }
+    } );
+
     function updateTelemetry( update ) {
       socket.emit( 'telemetry-update', update );
     }
@@ -247,6 +262,12 @@ Commander.prototype.getPanelsByPath = function( paths, panelsObj ) {
     }
   }
 }
+
+
+Commander.prototype.registerFunction = function(pluginName, cb) {
+    this.registeredFunctions.push({pluginName: pluginName, funcName: cb.name, cb: cb});
+}
+
 
 /**
  * Get layout by path

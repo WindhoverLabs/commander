@@ -34,6 +34,7 @@ class CdrPlugin {
     }
 
     this.webRoot = webRoot;
+    this.name = name;
 
     var content = this.getContent();
     if ( typeof content !== 'undefined' ) {
@@ -46,6 +47,24 @@ class CdrPlugin {
     }
   }
 
+  
+  /**
+   * This is called by the underlying framework to initialize the plugin.
+   */
+  initialize(commander) {
+      var self = this;
+      
+      if(typeof this.getFunctions === 'function') {
+          var functions = this.getFunctions();
+          if ( typeof functions !== 'undefined') {
+              for(var funcName in functions) {
+                  commander.registerFunction(self.name, functions[funcName]);  
+              }
+          }
+      }
+  }
+
+  
   /**
    * Returns content type
    * @type {Object}

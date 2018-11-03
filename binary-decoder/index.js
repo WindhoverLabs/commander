@@ -641,9 +641,9 @@ BinaryDecoder.prototype.getFieldValueAsPbType = function( buffer, fieldDef, bitO
         case 'CFE_SB_MsgId_t':
           for ( var i = 0; i < fieldDef.array_length; ++i ) {
             if ( this.endian == 'little' ) {
-              value.push( buffer.readUInt16LE( ( bitOffset / 8 ) + i ) );
+              value.push( buffer.readUInt16LE( ( bitOffset / 8 ) + (i*2) ) );
             } else {
-              value.push( buffer.readUInt16BE( ( bitOffset / 8 ) + i ) );
+              value.push( buffer.readUInt16BE( ( bitOffset / 8 ) + (i*2) ) );
             }
           }
           break;
@@ -651,9 +651,9 @@ BinaryDecoder.prototype.getFieldValueAsPbType = function( buffer, fieldDef, bitO
         case 'int16':
           for ( var i = 0; i < fieldDef.array_length; ++i ) {
             if ( this.endian == 'little' ) {
-              value.push( buffer.readInt16LE( ( bitOffset / 8 ) + i ) );
+              value.push( buffer.readInt16LE( ( bitOffset / 8 ) + (i*2) ) );
             } else {
-              value.push( buffer.readInt16BE( ( bitOffset / 8 ) + i ) );
+              value.push( buffer.readInt16BE( ( bitOffset / 8 ) + (i*2) ) );
             }
           }
           break;
@@ -661,9 +661,9 @@ BinaryDecoder.prototype.getFieldValueAsPbType = function( buffer, fieldDef, bitO
         case 'uint32':
           for ( var i = 0; i < fieldDef.array_length; ++i ) {
             if ( this.endian == 'little' ) {
-              value.push( buffer.readUInt32LE( ( bitOffset / 8 ) + i ) );
+              value.push( buffer.readUInt32LE( ( bitOffset / 8 ) + (i*4) ) );
             } else {
-              value.push( buffer.readUInt32BE( ( bitOffset / 8 ) + i ) );
+              value.push( buffer.readUInt32BE( ( bitOffset / 8 ) + (i*4) ) );
             }
           }
           break;
@@ -671,9 +671,9 @@ BinaryDecoder.prototype.getFieldValueAsPbType = function( buffer, fieldDef, bitO
         case 'int32':
           for ( var i = 0; i < fieldDef.array_length; ++i ) {
             if ( this.endian == 'little' ) {
-              value.push( buffer.readInt32LE( ( bitOffset / 8 ) + i ) );
+              value.push( buffer.readInt32LE( ( bitOffset / 8 ) + (i*4) ) );
             } else {
-              value.push( buffer.readInt32BE( ( bitOffset / 8 ) + i ) );
+              value.push( buffer.readInt32BE( ( bitOffset / 8 ) + (i*4) ) );
             }
           }
           break;
@@ -681,9 +681,9 @@ BinaryDecoder.prototype.getFieldValueAsPbType = function( buffer, fieldDef, bitO
         case 'float':
           for ( var i = 0; i < fieldDef.array_length; ++i ) {
             if ( this.endian == 'little' ) {
-              value.push( buffer.readFloatLE( ( bitOffset / 8 ) + i ) );
+              value.push( buffer.readFloatLE( ( bitOffset / 8 ) + (i*4) ) );
             } else {
-              value.push( buffer.readFloatBE( ( bitOffset / 8 ) + i ) );
+              value.push( buffer.readFloatBE( ( bitOffset / 8 ) + (i*4) ) );
             }
           }
           break;
@@ -691,25 +691,25 @@ BinaryDecoder.prototype.getFieldValueAsPbType = function( buffer, fieldDef, bitO
         case 'double':
           for ( var i = 0; i < fieldDef.array_length; ++i ) {
             if ( this.endian == 'little' ) {
-              value.push( buffer.readDoubleLE( ( bitOffset / 8 ) + i ) );
+              value.push( buffer.readDoubleLE( ( bitOffset / 8 ) + (i*8) ) );
             } else {
-              value.push( buffer.readDoubleBE( ( bitOffset / 8 ) + i ) );
+              value.push( buffer.readDoubleBE( ( bitOffset / 8 ) + (i*8) ) );
             }
           }
           break;
 
         case 'boolean':
           for ( var i = 0; i < fieldDef.array_length; ++i ) {
-            value.push( buffer.readUInt8( ( bitOffset / 8 ) + i ) );
+            value.push( buffer.readUInt8( ( bitOffset / 8 ) + (i*4) ) );
           }
           break;
 
         case 'uint64':
           for ( var i = 0; i < fieldDef.array_length; ++i ) {
             if ( this.endian == 'little' ) {
-              var uint64Value = new Uint64LE( buffer, ( bitOffset / 8 ) + i );
+              var uint64Value = new Uint64LE( buffer, ( bitOffset / 8 ) + (i*8) );
             } else {
-              var uint64Value = new Uint64BE( buffer, ( bitOffset / 8 ) + i );
+              var uint64Value = new Uint64BE( buffer, ( bitOffset / 8 ) + (i*8) );
             }
             value.push( uint64Value.toString( 10 ) );
           }
@@ -718,9 +718,9 @@ BinaryDecoder.prototype.getFieldValueAsPbType = function( buffer, fieldDef, bitO
         case 'int64':
           for ( var i = 0; i < fieldDef.array_length; ++i ) {
             if ( this.endian == 'little' ) {
-              var int64Value = new Int64LE( buffer, ( bitOffset / 8 ) + i );
+              var int64Value = new Int64LE( buffer, ( bitOffset / 8 ) + (i*8) );
             } else {
-              var int64Value = new Int64BE( buffer, ( bitOffset / 8 ) + i );
+              var int64Value = new Int64BE( buffer, ( bitOffset / 8 ) + (i*8) );
             }
             value.push( int64Value.toString( 10 ) );
           }
@@ -877,9 +877,9 @@ BinaryDecoder.prototype.getFieldValue = function( buffer, fieldDef, bitOffset, r
         case 'CFE_SB_MsgId_t':
           for ( var i = 0; i < fieldDef.array_length; ++i ) {
             if ( this.endian == 'little' ) {
-              value.push( buffer.readUInt16LE( ( bitOffset / 8 ) + i ) );
+              value.push( buffer.readUInt16LE( ( bitOffset / 8 ) + (i*2) ) );
             } else {
-              value.push( buffer.readUInt16BE( ( bitOffset / 8 ) + i ) );
+              value.push( buffer.readUInt16BE( ( bitOffset / 8 ) + (i*2) ) );
             }
           }
           break;
@@ -887,9 +887,9 @@ BinaryDecoder.prototype.getFieldValue = function( buffer, fieldDef, bitOffset, r
         case 'int16':
           for ( var i = 0; i < fieldDef.array_length; ++i ) {
             if ( this.endian == 'little' ) {
-              value.push( buffer.readInt16LE( ( bitOffset / 8 ) + i ) );
+              value.push( buffer.readInt16LE( ( bitOffset / 8 ) + (i*2) ) );
             } else {
-              value.push( buffer.readInt16BE( ( bitOffset / 8 ) + i ) );
+              value.push( buffer.readInt16BE( ( bitOffset / 8 ) + (i*2) ) );
             }
           }
           break;
@@ -897,9 +897,9 @@ BinaryDecoder.prototype.getFieldValue = function( buffer, fieldDef, bitOffset, r
         case 'uint32':
           for ( var i = 0; i < fieldDef.array_length; ++i ) {
             if ( this.endian == 'little' ) {
-              value.push( buffer.readUInt32LE( ( bitOffset / 8 ) + i ) );
+              value.push( buffer.readUInt32LE( ( bitOffset / 8 ) + (i*4) ) );
             } else {
-              value.push( buffer.readUInt32BE( ( bitOffset / 8 ) + i ) );
+              value.push( buffer.readUInt32BE( ( bitOffset / 8 ) + (i*4) ) );
             }
           }
           break;
@@ -907,9 +907,9 @@ BinaryDecoder.prototype.getFieldValue = function( buffer, fieldDef, bitOffset, r
         case 'int32':
           for ( var i = 0; i < fieldDef.array_length; ++i ) {
             if ( this.endian == 'little' ) {
-              value.push( buffer.readInt32LE( ( bitOffset / 8 ) + i ) );
+              value.push( buffer.readInt32LE( ( bitOffset / 8 ) + (i*4) ) );
             } else {
-              value.push( buffer.readInt32BE( ( bitOffset / 8 ) + i ) );
+              value.push( buffer.readInt32BE( ( bitOffset / 8 ) + (i*4) ) );
             }
           }
           break;
@@ -917,9 +917,9 @@ BinaryDecoder.prototype.getFieldValue = function( buffer, fieldDef, bitOffset, r
         case 'float':
           for ( var i = 0; i < fieldDef.array_length; ++i ) {
             if ( this.endian == 'little' ) {
-              value.push( buffer.readFloatLE( ( bitOffset / 8 ) + i ) );
+              value.push( buffer.readFloatLE( ( bitOffset / 8 ) + (i*4) ) );
             } else {
-              value.push( buffer.readFloatBE( ( bitOffset / 8 ) + i ) );
+              value.push( buffer.readFloatBE( ( bitOffset / 8 ) + (i*4) ) );
             }
           }
           break;
@@ -927,25 +927,25 @@ BinaryDecoder.prototype.getFieldValue = function( buffer, fieldDef, bitOffset, r
         case 'double':
           for ( var i = 0; i < fieldDef.array_length; ++i ) {
             if ( this.endian == 'little' ) {
-              value.push( buffer.readDoubleLE( ( bitOffset / 8 ) + i ) );
+              value.push( buffer.readDoubleLE( ( bitOffset / 8 ) + (i*8) ) );
             } else {
-              value.push( buffer.readDoubleBE( ( bitOffset / 8 ) + i ) );
+              value.push( buffer.readDoubleBE( ( bitOffset / 8 ) + (i*8) ) );
             }
           }
           break;
 
         case 'boolean':
           for ( var i = 0; i < fieldDef.array_length; ++i ) {
-            value.push( buffer.readUInt8( ( bitOffset / 8 ) + i ) );
+            value.push( buffer.readUInt8( ( bitOffset / 8 ) + (i*4) ) );
           }
           break;
 
         case 'uint64':
           for ( var i = 0; i < fieldDef.array_length; ++i ) {
             if ( this.endian == 'little' ) {
-              var uint64Value = new Uint64LE( buffer, ( bitOffset / 8 ) + i );
+              var uint64Value = new Uint64LE( buffer, ( bitOffset / 8 ) + (i*8) );
             } else {
-              var uint64Value = new Uint64BE( buffer, ( bitOffset / 8 ) + i );
+              var uint64Value = new Uint64BE( buffer, ( bitOffset / 8 ) + (i*8) );
             }
             value.push( uint64Value.toString( 10 ) );
           }
@@ -954,9 +954,9 @@ BinaryDecoder.prototype.getFieldValue = function( buffer, fieldDef, bitOffset, r
         case 'int64':
           for ( var i = 0; i < fieldDef.array_length; ++i ) {
             if ( this.endian == 'little' ) {
-              var int64Value = new Int64LE( buffer, ( bitOffset / 8 ) + i );
+              var int64Value = new Int64LE( buffer, ( bitOffset / 8 ) + (i*8) );
             } else {
-              var int64Value = new Int64BE( buffer, ( bitOffset / 8 ) + i );
+              var int64Value = new Int64BE( buffer, ( bitOffset / 8 ) + (i*8) );
             }
             value.push( int64Value.toString( 10 ) );
           }

@@ -513,6 +513,7 @@ BinaryEncoder.prototype.getCmdByteLength = function( cmd ) {
     return this.cmdHeaderLength / 8;
   } else {
     var msgDef = this.getMsgDefByName( cmd.airliner_msg );
+
     return msgDef.bit_size / 8;
   }
 }
