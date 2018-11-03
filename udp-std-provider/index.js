@@ -123,7 +123,7 @@ function UdpStdProvider( configFile ) {
 
   this.listener.on( 'error', ( err ) => {
     this.logCriticalEvent( EventEnum.UDP_ERROR, `UDP connector error:\n${err}.` );
-    server.close();
+    // server.close(); // server not defined here
   } );
 
   this.listener.on( 'listening', () => {

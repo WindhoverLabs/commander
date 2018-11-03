@@ -87,6 +87,7 @@ var publicFunctions = [
   'sendCommand',
   'getPanels',
   'getLayouts',
+  'getWidgets',
   'queryConfigDB'
 ];
 
@@ -308,6 +309,45 @@ Commander.prototype.getLayoutsByPath = function( paths, layoutsObj ) {
 }
 
 /**
+ * Get panels by widget
+ * @param  {String} paths     directory path
+ * @param  {Object} panelsObj panel object
+ */
+Commander.prototype.getWidgetsByPath = function( paths, panelsObj ) {
+  if ( paths.length == 1 ) {
+    var targetPath = paths[ 0 ];
+    if ( targetPath === '' ) {
+      return panelsObj;
+    } else {
+
+      var targetObj = panelsObj[ targetPath ];
+      if ( typeof targetObj === 'object' ) {
+        var nodes = targetObj.nodes;
+        var outNodes = {};
+        for ( var nodeID in nodes ) {
+          if ( typeof nodes[ nodeID ].type !== 'undefined' ) {
+            if ( nodes[ nodeID ].type === ContentTypeEnum.WIDGET ) {
+              outNodes[ nodeID ] = nodes[ nodeID ];
+            }
+          } else {
+            outNodes[ nodeID ] = nodes[ nodeID ];
+          }
+        }
+        return outNodes;
+      }
+    }
+  } else {
+    var targetPath = paths[ 0 ];
+    var targetObj = panelsObj[ targetPath ];
+    if ( typeof targetObj === 'object' ) {
+      var nodes = targetObj.nodes;
+      paths.shift();
+      return this.getWidgetsByPath( paths, nodes );
+    }
+  }
+}
+
+/**
  * Gets panels
  * @param  {String}   inPath input path
  * @param  {Function} cb     callback
@@ -337,6 +377,23 @@ Commander.prototype.getLayouts = function( inPath, cb ) {
   paths.shift();
 
   var content = this.getLayoutsByPath( paths, global.CONTENT_TREE );
+
+  cb( content );
+}
+
+/**
+ * Gets widget
+ * @param  {String}   inPath input path
+ * @param  {Function} cb     callback
+ */
+Commander.prototype.getWidgets = function( inPath, cb ) {
+  var outObj = {};
+
+  var paths = inPath.split( '/' );
+
+  paths.shift();
+
+  var content = this.getWidgetsByPath( paths, global.CONTENT_TREE );
 
   cb( content );
 }

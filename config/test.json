@@ -1,0 +1,11 @@
+{
+  "AirlinerBasePath":"/home/karthik/airliners/airliner",
+  "AirlinerMsgDefPath":"/build/typhoon_h480/sitl/target/explain",
+  "UdpStdProvider":{
+    "configFile" : "/build/typhoon_h480/sitl/target/commander/commander_workspace/etc/udpstdprovider-config.json"
+  },
+  "BinaryDecoder":{
+    "workspace": "/build/typhoon_h480/sitl/target/commander/commander_workspace",
+    "configFile":"/build/typhoon_h480/sitl/target/commander/commander_workspace/etc/binary-decoder-config.json"
+  }
+}

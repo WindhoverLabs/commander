@@ -104,3 +104,91 @@ function NodesCollapse( item ) {
     silent: true
   } );
 }
+
+/**
+ * Keeps track of the specific widget being moved
+ * @type {Boolean}
+ */
+var original = false;
+/**
+ * Stores widget state
+ * @type {Object}
+ */
+var widgetState = {}
+
+/**
+ * This function is triggered when a new widget node is rendered
+ * @param       {Object} e    event object
+ * @param       {Object} node node object
+ */
+function WidgetNodeRendered( e, node ) {
+  /* if node to be rendered is a file, a .pug file */
+  if ( node.type === "file" & !isAlreadyRendered( node.$el[ 0 ] ) ) {
+    node.$el.mousedown( function() {
+      original = true;
+    } );
+    node.$el.draggable( {
+      cursor: "move",
+      appendTo: "body",
+      containment: "body",
+      snapMode: "inner",
+      scroll: false,
+      zIndex: 10000,
+      helper: function( event ) {
+        var uniqueID = cu.makeKey();
+        var uniqueGadgetID = 'cdr-gadget-' + uniqueID
+        var gadgetHtml = '<div id=' + uniqueGadgetID + ' data-url=' + node.url + ' class="cdr-gadget cdr-gadget-dragged">' +
+          '<div data-key=' + uniqueID + ' class="cdr-gadget-close" onclick=gadgetCloseHandle(this)>x' +
+          '</div>' +
+          '<div data-key=' + uniqueID + ' class="cdr-gadget-content">' +
+          '</div></div>';
+        var opObj = $( gadgetHtml );
+        opObj.find( '.cdr-gadget-content' ).load( node.url );
+
+        return opObj;
+      },
+      stop: function( event ) {
+        console.log( "drag end" )
+      }
+
+    } );
+
+  }
+  /* adds tooltips and context menu feature to navbar */
+  navBarTooltips( node, node.$el );
+}
+
+
+/* Droppable functionality on widgets dragged from side bar */
+$( ".cdr-well" ).droppable( {
+  drop: function( event, ui ) {
+    var feasiblility = true;
+    var wellWidth = $( this ).width();
+    var totalChildenWidth = 0;
+    var childrenCount = 0;
+    $( this ).children().each( function() {
+      totalChildenWidth = totalChildenWidth + $( this ).width() + 10;
+      childrenCount += 1;
+    } );
+    if ( wellWidth - totalChildenWidth < ( ( childrenCount * 10 ) + 50 ) ) {
+      feasiblility = false;
+    }
+    if ( original && feasiblility ) {
+      ui.helper.removeClass( 'ui-draggable-dragging' );
+      ui.helper.removeClass( 'cdr-gadget-dragged' );
+      ui.helper.attr( 'onmouseleave', 'gadgetHoverHandle(this,"onmouseleave")' );
+      ui.helper.attr( 'onmouseover', 'gadgetHoverHandle(this,"onmouseover")' );
+      var newDiv = $( ui.helper ).clone().removeClass( 'ui-draggable-dragging' ).removeClass( 'cdr-gadget-dragged' );
+      newDiv.css( 'position', 'inherit' )
+      $( this ).append( newDiv );
+
+      if ( $( this ).attr( 'id' ) in widgetState ) {
+        widgetState[ $( this ).attr( 'id' ) ].push( newDiv.data( 'url' ) )
+      } else {
+        widgetState[ $( this ).attr( 'id' ) ] = [ newDiv.data( 'url' ) ]
+      }
+      session.saveWidgets( widgetState )
+      original = false;
+    }
+  }
+} );

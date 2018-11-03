@@ -63,6 +63,7 @@ function InitMenuState() {
     var open = $( "#cdr-panel-menu-container" ).data( "open" );
     if ( !open ) {
       HideMenu( "layout" );
+      HideMenu( "widget" );
       ShowMenu( "panel" );
     } else {
       HideMenu( "panel" );
@@ -73,9 +74,21 @@ function InitMenuState() {
     var open = $( "#cdr-layout-menu-container" ).data( "open" );
     if ( !open ) {
       HideMenu( "panel" );
+      HideMenu( "widget" );
       ShowMenu( "layout" );
     } else {
       HideMenu( "layout" );
+    }
+  } );
+  /* clicked on widgets, display widget menu hide all others */
+  $( "#cdr-widget-menu-toggle" ).click( () => {
+    var open = $( "#cdr-widget-menu-container" ).data( "open" );
+    if ( !open ) {
+      HideMenu( "panel" );
+      HideMenu( "layout" );
+      ShowMenu( "widget" );
+    } else {
+      HideMenu( "widget" );
     }
   } );
 }
@@ -232,7 +245,7 @@ function InitToolTips() {
 function InitScrollBar() {
   var applyScrollTo = [
     '.os-theme-dark',
-    '#cdr-app-menu'
+    '#cdr-app-menu',
   ]
   /* os-theme-dark class should be added to every pug file in the top element */
   setTimeout( function() {
@@ -277,4 +290,30 @@ function InitResizeCtl() {
 function showDocumentation() {
   window.open( '/client-docs/index.html' );
   window.open( '/server-docs/index.html' );
+}
+
+/**
+ * Loads preset widgets from server on page load
+ */
+function InitWidgets() {
+  session.loadWidgets( ( state ) => {
+    window.widgetState = state;
+    Object.keys( widgetState ).forEach( ( well ) => {
+      var urls = widgetState[ well ];
+      if ( urls.length > 0 ) {
+        urls.forEach( ( url ) => {
+          var uniqueID = cu.makeKey();
+          var uniqueGadgetID = 'cdr-gadget-' + uniqueID
+          var gadgetHtml = '<div id=' + uniqueGadgetID + ' data-url=' + url + ' class="cdr-gadget" ' +
+            'onmouseover=gadgetHoverHandle(this,"onmouseover") onmouseleave=gadgetHoverHandle(this,"onmouseleave")>' +
+            '<div data-key=' + uniqueID + ' class="cdr-gadget-close" onclick=gadgetCloseHandle(this)>x' +
+            '</div>' +
+            '<div data-key=' + uniqueID + ' class="cdr-gadget-content">' +
+            '</div></div>';
+          $( '#' + well ).append( gadgetHtml );
+          $( '#' + well ).find( '.cdr-gadget-content[data-key=' + uniqueID + ']' ).load( url );
+        } )
+      }
+    } );
+  } );
 }

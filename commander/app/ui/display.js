@@ -207,7 +207,7 @@ CommanderDisplay.prototype.InitVideoStream = function() {
 /**
  * Updates Display
  */
-CommanderDisplay.prototype.updateDisplay = function() {
+CommanderDisplay.prototype.updateDisplay = function( thisChanged ) {
   var SUCCESS = true;
 
   var channel = this.DISP_META.DISPLAY_CHANNELS[ this.DISP_STATE.DISPLAY_CHANNELS ];
@@ -231,13 +231,13 @@ CommanderDisplay.prototype.updateDisplay = function() {
     }
     this.DestroyVideoStream();
 
-    if ( map == 'DEFAULT_MAP' ) {
+    if ( map == 'DEFAULT_MAP' & thisChanged != 'LAYERS' ) {
       this.CesiumViewer.imageryLayers.addImageryProvider(
         new Cesium.IonImageryProvider( {
           assetId: 4
         } )
       );
-    } else if ( map == 'SATELLITE_MAP' ) {
+    } else if ( map == 'SATELLITE_MAP' & thisChanged != 'LAYERS' ) {
       this.CesiumViewer.imageryLayers.addImageryProvider(
         new Cesium.IonImageryProvider( {
           assetId: 2
@@ -247,9 +247,9 @@ CommanderDisplay.prototype.updateDisplay = function() {
 
     }
 
-    if ( terrain == '2D_TERRAIN' ) {
+    if ( terrain == '2D_TERRAIN' & thisChanged != 'LAYERS' ) {
       this.CesiumViewer.scene.terrainProvider = new Cesium.EllipsoidTerrainProvider( {} );
-    } else if ( terrain == '3D_TERRAIN' ) {
+    } else if ( terrain == '3D_TERRAIN' & thisChanged != 'LAYERS' ) {
       this.CesiumViewer.scene.terrainProvider = new Cesium.CesiumTerrainProvider( {
         url: Cesium.IonResource.fromAssetId( 1 ),
         requestWaterMask: true
@@ -292,11 +292,10 @@ CommanderDisplay.prototype.updateDisplayState = function( key, value ) {
   cu.assert( key in this.DISP_META, 'Commander Display | updateDisplayState | unknown key received' );
   cu.assert( typeof value == 'number', 'Commander Display | updateDisplayState | value should be a number' );
   cu.assert( value in Object.keys( this.DISP_META[ key ] ).map( Number ), 'Commander Display | updateDisplayState | got invalid channel value' );
-
   var prevValue = this.DISP_STATE[ key ];
   this.DISP_STATE[ key ] = value;
 
-  if ( !this.updateDisplay() ) {
+  if ( !this.updateDisplay( key ) ) {
     this.DISP_STATE[ key ] = prevValue;
     cu.logError( 'Commander Display | updateDisplayState | Unable to update, ', key, ' from ', prevValue, ' to ', value );
   } else {

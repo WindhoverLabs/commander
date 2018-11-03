@@ -17,11 +17,29 @@ var rouge_subscriptions = {};
 var dataplot_subscriptions = {};
 /**
  * Time interval to check and unsubsscribe to rogue subscriptions
- * is set to a default value of 20 seconds
+ * is set to a default value of 10 seconds
  * @type {Number}
  */
-var rougeCleanUpInterval = 20000;
+var rougeCleanUpInterval = 10000;
 
+/**
+ * Savely add rogue subscriptions to rouge_subscriptions
+ * @param {String} key  operation path
+ * @param {String} type type of subscription
+ * @param {String} cls  class name
+ */
+function setRougeSubsc( key, type, cls ) {
+  if ( key in rouge_subscriptions ) {
+    if ( type in rouge_subscriptions[ key ] ) {
+      ouge_subscriptions[ key ][ type ].push( cls );
+    } else {
+      ouge_subscriptions[ key ][ type ] = [ cls ];
+    }
+  } else {
+    rouge_subscriptions[ key ] = {}
+    rouge_subscriptions[ key ][ type ] = [ cls ];
+  }
+}
 
 /**
  * Regularly checks the DOM for rouge subscriptions or
@@ -30,12 +48,38 @@ var rougeCleanUpInterval = 20000;
  */
 setInterval( () => {
   for ( var e in rouge_subscriptions ) {
-    var rougeClasses = rouge_subscriptions[ e ];
-    if ( $( rougeClasses ).length == 0 ) {
+    var rougeClassesCollection = [];
+    if ( rouge_subscriptions[ e ].hasOwnProperty( 'text' ) ) {
+      for ( var i in rouge_subscriptions[ e ][ 'text' ] ) {
+        rougeClassesCollection.push( {
+          cls: rouge_subscriptions[ e ][ 'text' ][ i ],
+          ind: 'text'
+        } );
+      }
+    }
+    if ( rouge_subscriptions[ e ].hasOwnProperty( 'plot' ) ) {
+      for ( var i in rouge_subscriptions[ e ][ 'plot' ] ) {
+        rougeClassesCollection.push( {
+          cls: rouge_subscriptions[ e ][ 'plot' ][ i ],
+          ind: 'plot'
+        } );
+      }
+    }
+    for ( var i in rougeClassesCollection ) {
+      var rougeClasses = rougeClassesCollection[ i ];
+      if ( $( rougeClasses.cls ).length == 0 ) {
+        /* Delete the record of that rogue class */
+        var index = rouge_subscriptions[ e ][ rougeClasses.ind ].indexOf( rougeClasses.cls );
+        rouge_subscriptions[ e ][ rougeClasses.ind ].splice( index, 1 );
+      }
+    }
+    /* delete record */
+    if ( rougeClassesCollection.length == 0 ) {
+      delete rouge_subscriptions[ e ]
       /*
        * has no DOM listeners or users
        */
-      if ( !( e in Object.keys( subscriptions ) ) ) {
+      if ( !( subscriptions.hasOwnProperty( e ) ) ) {
         /*
          * the subscription has no active DOM users therefore
          * will unsubscribe to it
@@ -45,10 +89,6 @@ setInterval( () => {
         } ] );
         cu.logInfo( 'RougeUnsubscribe | ', e, ' tlm unsubscribed' );
       }
-      /*
-       * Delete the record of that rogue subscribe
-       */
-      delete rouge_subscriptions[ e ];
     }
   }
 }, rougeCleanUpInterval );
@@ -382,11 +422,11 @@ class Panel {
         } );
       }
       /* Subscribe to tlm */
-      session.subscribe( d.tlm, (params)=>{
-    	  for(var idx in params) {
-    		  processTelemetryUpdate(params[idx])
-    	  }
-    	  });
+      session.subscribe( d.tlm, ( params ) => {
+        for ( var idx in params ) {
+          processTelemetryUpdate( params[ idx ] )
+        }
+      } );
       /* Get tlm definitions and add this additinal info to subscriptions */
       session.getTlmDefs( d.tlm, function( tlmDef ) {
         var opsPaths = [];
@@ -742,9 +782,11 @@ class Panel {
 
                 delete subscriptions[ opsPath ];
                 /* Unsubscribe */
-                session.unsubscribe( [ {
-                  name: opsPath
-                } ] );
+                if ( !( opsPath in rouge_subscriptions ) ) {
+                  session.unsubscribe( [ {
+                    name: opsPath
+                  } ] );
+                }
                 cu.logDebug( 'Panel | ', opsPath, ' tlm unsubscribed' );
               }
             } else {
@@ -798,6 +840,13 @@ window.addEventListener( 'layout-load-complete', () => {
         ug.resize();
         ug.setupGrid();
         ug.draw();
+      }
+    }
+    /* ADI resize handle */
+    for ( var i in display_controllers ) {
+      if ( display_controllers[ i ].DISP_META.LAYERS[ display_controllers[ i ].DISP_STATE.LAYERS ] == 'ADI' ) {
+        $( '#cdr-guages-' + i ).empty();
+        drawHUD( 'cdr-guages-' + i );
       }
     }
   } );

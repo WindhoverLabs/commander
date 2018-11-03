@@ -6,7 +6,8 @@ var fs = require( 'fs' );
 /* Content Types */
 const ContentTypeEnum = Object.freeze( {
   'PANEL': 1,
-  'LAYOUT': 2
+  'LAYOUT': 2,
+  'WIDGET': 3
 } );
 
 

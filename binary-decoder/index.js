@@ -213,7 +213,7 @@ BinaryDecoder.prototype.setInstanceEmitter = function( newInstanceEmitter ) {
       /* This must be an array. */
       var outTlmDefs = [];
       for ( var i = 0; i < tlmReqs.length; ++i ) {
-        var tlmDef = self.getTlmDefByName( stripArrayIdentifiers( tlmReqs[ i ].name ) );
+        var tlmDef = self.getTlmDefByName( self.stripArrayIdentifiers( tlmReqs[ i ].name ) );
         if ( typeof tlmDef !== 'undefined' ) {
           tlmDef.opsPath = tlmReqs[ i ].name;
           outTlmDefs.push( tlmDef );
@@ -224,7 +224,7 @@ BinaryDecoder.prototype.setInstanceEmitter = function( newInstanceEmitter ) {
       cb( outTlmDefs );
     } else {
       /* This is a single request. */
-      var tlmDef = self.getTlmDefByName( stripArrayIdentifiers( tlmReqs.name ) );
+      var tlmDef = self.getTlmDefByName( self.stripArrayIdentifiers( tlmReqs.name ) );
       if ( typeof tlmDef === 'undefined' ) {
         self.logErrorEvent( EventEnum.TELEMETRY_NOT_FOUND, 'TlmDefReq: Telemetry not found.  \'' + tlmReqs.name + '\'' );
       } else {
@@ -288,7 +288,8 @@ BinaryDecoder.prototype.getTlmDefByName = function( name ) {
             break;
 
           default:
-            console.log( "Data type not found" );
+            // console.log( "Data type not found" );
+            outTlmDef.dataType = undefined;
         }
     }
 
@@ -306,9 +307,12 @@ BinaryDecoder.prototype.getTlmDefByName = function( name ) {
  * @param  {String} path telemetry path
  * @return {String}      App name
  */
-var getAppNameFromPath = function( path ) {
-  var splitName = path.split( '/' );
-  return splitName[ 1 ];
+BinaryDecoder.prototype.getAppNameFromPath = function( path ) {
+  if ( typeof path === 'string' ) {
+    var splitName = path.split( '/' );
+    return splitName[ 1 ];
+  }
+  return undefined
 }
 
 
@@ -317,9 +321,12 @@ var getAppNameFromPath = function( path ) {
  * @param  {String} path telemetry path
  * @return {String}      Operation name
  */
-var getOperationFromPath = function( path ) {
-  var splitName = path.split( '/' );
-  return splitName[ 2 ];
+BinaryDecoder.prototype.getOperationFromPath = function( path ) {
+  if ( typeof path === 'string' ) {
+    var splitName = path.split( '/' );
+    return splitName[ 2 ];
+  }
+  return undefined;
 }
 
 
@@ -344,8 +351,9 @@ BinaryDecoder.prototype.getAppDefinition = function( appName ) {
  * @return {Object}      telemetry definition
  */
 BinaryDecoder.prototype.getTlmDefByPath = function( path ) {
-  var appName = getAppNameFromPath( path );
-  var operationName = getOperationFromPath( path );
+  var self = this;
+  var appName = self.getAppNameFromPath( path );
+  var operationName = self.getOperationFromPath( path );
   if ( typeof operationName === 'undefined' ) {
     this.logErrorEvent( EventEnum.OPS_PATH_NOT_FOUND, 'getTlmDefByPath: Ops path not found. \'' + path + '\'' );
     return undefined;
@@ -365,7 +373,7 @@ BinaryDecoder.prototype.getTlmDefByPath = function( path ) {
             return undefined;
           } else {
             var splitName = path.split( '/' );
-            var opNameID = stripArrayIdentifier( splitName[ 3 ] );
+            var opNameID = self.stripArrayIdentifier( splitName[ 3 ] );
 
             var fieldObj = msgDef.operational_names[ opNameID ];
 
@@ -377,7 +385,7 @@ BinaryDecoder.prototype.getTlmDefByPath = function( path ) {
               if ( typeof fieldPath === 'undefined' ) {
                 return undefined;
               } else {
-                var fieldDef = getFieldFromOperationalName( msgDef, fieldPath, 0 );
+                var fieldDef = self.getFieldFromOperationalName( msgDef, fieldPath, 0 );
 
                 return fieldDef.fieldDef;
               }
@@ -395,17 +403,18 @@ BinaryDecoder.prototype.getTlmDefByPath = function( path ) {
  * @param  {String} opName operation name
  * @return {Boolean}        true if opName is a string array otherwise false
  */
-var isOpNameAnArray = function( opName ) {
-  var start = opName.indexOf( '[' );
+BinaryDecoder.prototype.isOpNameAnArray = function( opName ) {
+  if ( typeof opName == 'string' ) {
+    var start = opName.indexOf( '[' );
 
-  if ( start > 0 ) {
-    var end = opName.indexOf( ']' );
+    if ( start > 0 ) {
+      var end = opName.indexOf( ']' );
 
-    if ( end > start ) {
-      return true;
+      if ( end > start ) {
+        return true;
+      }
     }
   }
-
   return false;
 }
 
@@ -415,8 +424,9 @@ var isOpNameAnArray = function( opName ) {
  * @param  {String} opName operation name
  * @return {String}        indentifier
  */
-var stripArrayIdentifier = function( opName ) {
-  if ( isOpNameAnArray( opName ) == true ) {
+BinaryDecoder.prototype.stripArrayIdentifier = function( opName ) {
+  var self = this;
+  if ( self.isOpNameAnArray( opName ) == true ) {
     var start = 0;
     var end = opName.indexOf( '[' );
 
@@ -434,14 +444,19 @@ var stripArrayIdentifier = function( opName ) {
  * @param  {String} opName operation name
  * @return {String}        indentifiers
  */
-var stripArrayIdentifiers = function( opName ) {
-  var splitPath = opName.split( '.' );
+BinaryDecoder.prototype.stripArrayIdentifiers = function( opName ) {
+  var self = this;
+  if ( typeof opName == 'string' ) {
+    var splitPath = opName.split( '.' );
 
-  for ( var i = 0; i < splitPath.length; ++i ) {
-    splitPath[ i ] = stripArrayIdentifier( splitPath[ i ] );
+    for ( var i = 0; i < splitPath.length; ++i ) {
+      splitPath[ i ] = self.stripArrayIdentifier( splitPath[ i ] );
+    }
+    return splitPath.join( '.' );
   }
+  return undefined;
 
-  return splitPath.join( '.' );
+
 }
 
 
@@ -466,10 +481,11 @@ BinaryDecoder.prototype.__proto__ = Emitter.prototype;
 
 /**
  * Get telemetry definiton by telemetry name
- * @param  {Number} msgName message name
+ * @param  {String} msgName message name
  * @return {Object}         telemetry defintion
  */
 BinaryDecoder.prototype.getMsgDefByName = function( msgName ) {
+  // console.log( msgName )
   for ( var appID in this.defs.Airliner.apps ) {
     var app = this.defs.Airliner.apps[ appID ];
     for ( var protoID in app.proto_msgs ) {
@@ -479,6 +495,7 @@ BinaryDecoder.prototype.getMsgDefByName = function( msgName ) {
       }
     }
   }
+  return undefined;
 }
 
 
@@ -492,7 +509,7 @@ BinaryDecoder.prototype.getMsgDefByMsgID = function( msgID ) {
     var app = this.defs.Airliner.apps[ appID ];
     for ( var opID in app.operations ) {
       var operation = app.operations[ opID ];
-      if ( operation.airliner_mid == msgID ) {
+      if ( typeof msgID === 'number' && operation.airliner_mid == msgID ) {
         var opsPath = '/' + appID + '/' + opID;
         return {
           opsPath: opsPath,
@@ -501,6 +518,7 @@ BinaryDecoder.prototype.getMsgDefByMsgID = function( msgID ) {
       }
     }
   }
+  return undefined;
 }
 
 
@@ -511,7 +529,8 @@ BinaryDecoder.prototype.getMsgDefByMsgID = function( msgID ) {
  * @param  {Number} bitOffset      bit offset
  * @return {Object}                field object
  */
-var getFieldObjFromPbMsg = function( pbMsgDef, fieldPathArray, bitOffset ) {
+BinaryDecoder.prototype.getFieldObjFromPbMsg = function( pbMsgDef, fieldPathArray, bitOffset ) {
+  var self = this;
   if ( fieldPathArray.hasOwnProperty( 'length' ) ) {
     var fieldName = fieldPathArray[ 0 ];
     var fieldDef = pbMsgDef.fields[ fieldName ];
@@ -527,10 +546,10 @@ var getFieldObjFromPbMsg = function( pbMsgDef, fieldPathArray, bitOffset ) {
 
       fieldPathArray.shift();
 
-      return getFieldObjFromPbMsg( childMsgDef, fieldPathArray, fieldDef.bit_offset + bitOffset );
+      return self.getFieldObjFromPbMsg( childMsgDef, fieldPathArray, fieldDef.bit_offset + bitOffset );
     }
   } else {
-
+    return undefined;
   }
 }
 
@@ -542,11 +561,12 @@ var getFieldObjFromPbMsg = function( pbMsgDef, fieldPathArray, bitOffset ) {
  * @param  {Number} bitOffset bit offset
  * @return {Object}           field object
  */
-var getFieldFromOperationalName = function( msgDef, opName, bitOffset ) {
+BinaryDecoder.prototype.getFieldFromOperationalName = function( msgDef, opName, bitOffset ) {
+  var self = this;
   var op = msgDef.operational_names[ opName ];
   var fieldPathArray = opName.split( '.' );
 
-  var pbMsg = getFieldObjFromPbMsg( msgDef, fieldPathArray, bitOffset );
+  var pbMsg = self.getFieldObjFromPbMsg( msgDef, fieldPathArray, bitOffset );
 
   return pbMsg;
 }
@@ -967,14 +987,14 @@ BinaryDecoder.prototype.getFieldValue = function( buffer, fieldDef, bitOffset, r
 
           if ( typeof nextFieldDef === 'undefined' ) {
             console.log( '2 **********************' );
-//            console.log(fieldDef);
-//            var elementBitSize = fieldDef.bit_size / fieldDef.array_length;
-//            
-//            for ( var i = 0; i < fieldDef.array_length; ++i ) {
-//              var nextBitOffset = bitOffset + ( ( fieldDef.bit_size / fieldDef.array_length ) * i );
-//              value.push(this.getFieldValueAsPbType(buffer, fieldDef, bitOffset + nextBitOffset, rootDef));
-//            }
-//            console.log(value);
+            //            console.log(fieldDef);
+            //            var elementBitSize = fieldDef.bit_size / fieldDef.array_length;
+            //
+            //            for ( var i = 0; i < fieldDef.array_length; ++i ) {
+            //              var nextBitOffset = bitOffset + ( ( fieldDef.bit_size / fieldDef.array_length ) * i );
+            //              value.push(this.getFieldValueAsPbType(buffer, fieldDef, bitOffset + nextBitOffset, rootDef));
+            //            }
+            //            console.log(value);
           } else {
             var nextFields = nextFieldDef.fields;
             var value = [];

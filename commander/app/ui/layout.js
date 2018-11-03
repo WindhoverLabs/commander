@@ -195,3 +195,47 @@ function UpdatePanelNode( node, display ) {
     } );
   } );
 }
+
+/**
+ * Update callback for panel in navtree
+ * @param       {Object} node    node
+ * @param       {Object} display display
+ * @constructor
+ */
+function UpdateWidgetNode( node, display ) {
+  session.getWidgets( node.path, function( dirEntries ) {
+    var panelEntries = [];
+    /* modify dirEntries */
+    for ( var entryID in dirEntries ) {
+      var dirEntry = dirEntries[ entryID ];
+      var panelEntry = {
+        name: '/' + entryID,
+        text: dirEntry.shortDescription,
+        longDescription: dirEntry.longDescription,
+        path: node.path + '/' + entryID,
+        urlPath: node.path + '/' + entryID,
+        selectable: false,
+        checkable: false
+      };
+      if ( dirEntry.hasOwnProperty( 'nodes' ) ) {
+        panelEntry.lazyLoad = true;
+        panelEntry.selectable = false;
+      } else {
+        panelEntry.icon = 'fa fa-code';
+        panelEntry.lazyLoad = false;
+        panelEntry.selectable = true;
+        panelEntry.type = 'file';
+        panelEntry.url = node.path + '/' + entryID
+      }
+      panelEntries.push( panelEntry );
+    }
+    var tree = $( '#cdr-widget-menu-container' ).treeview( true )
+    tree.addNode( panelEntries, node, node.index, {
+      silent: true
+    } );
+    tree.expandNode( node, {
+      silent: true,
+      ignoreChildren: true
+    } );
+  } );
+}
