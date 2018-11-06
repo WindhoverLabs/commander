@@ -75,7 +75,11 @@ cdr-nav-iconshtml(lang='en-us')
             i.cdr-nav-icons.fa.fa-download
         ul.navbar-nav.cdr-nav-btn(data-tooltip='true' title='Save Layout')
           button.btn.btn-outline-primary(data-toggle="modal" data-target="#genericInputModal" data-title="Save Layout" data-submit="SaveLayout" data-custom='[{"label":"Enter Layout Name ", "type":"field", "dtype":"text"}]') 
-            i.cdr-nav-icons.fa.fa-save 
+            i.cdr-nav-icons.fa.fa-save
+        ul.navbar-nav.cdr-nav-btn#noop-test
+          button.btn.btn-outline-primary(data-cdr={cmd:{name:'/CFE/CFE_ES_NoopCmd'},indicator:'cmd'}) 
+            i.cdr-nav-icons No-Op 
+
     <!-- Central Content Area -->
     div.cdr-container.ui.main.text
       div.cdr-content-wrapper

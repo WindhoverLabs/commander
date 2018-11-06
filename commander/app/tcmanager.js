@@ -1,4 +1,4 @@
-/**
+  /**
  * Stores (k,v) pair of opsPath and a array of dependant DOM elements.
  * @type {Object}
  */
@@ -803,6 +803,23 @@ class Panel {
       }
     } );
   }
+
+}
+
+/**
+ * A function call to forcefully load commands given selector
+ */
+function forceLoadCommands(selector){
+  $(selector).find('[data-cdr]').each(function(){
+    var dataObj = cu.parseJSON( $( this ).data( 'cdr' ) );
+    var self = this;
+    var format = dataObj.indicator;
+    cu.assert( format != undefined, 'indicator format is not found' );
+    if(format =='cmd'){
+      Panel.prototype.loadCommanding(dataObj,self)
+      cu.logInfo('forceLoadCommands | command loaded');
+    }
+  });
 
 }
 
