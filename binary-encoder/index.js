@@ -514,7 +514,11 @@ BinaryEncoder.prototype.getCmdByteLength = function( cmd ) {
   } else {
     var msgDef = this.getMsgDefByName( cmd.airliner_msg );
 
-    return msgDef.bit_size / 8;
+    if(typeof msgDef !== 'undefined') {
+        return msgDef.bit_size / 8;
+    } else {
+        return 0;
+    }
   }
 }
 
@@ -651,49 +655,62 @@ BinaryEncoder.prototype.setField = function( buffer, fieldDef, bitOffset, value 
  * @param  {Object} args command arguments
  */
 BinaryEncoder.prototype.sendCommand = function( cmd, args ) {
-  var opDef = this.getOperationByPath( cmd.opsPath );
-  var byteLength = this.getCmdByteLength( opDef.operation );
-  var buffer = new Buffer( byteLength );
-  buffer.fill( 0x00 );
-
-  buffer.writeUInt16BE( opDef.operation.airliner_mid, 0 );
-  buffer.writeUInt16BE( this.sequence, 2 );
-  buffer.writeUInt16BE( byteLength - 7, 4 );
-  if ( this.endian == 'big' ) {
-    buffer.writeUInt8( opDef.operation.airliner_cc, 6 );
-    buffer.writeUInt8( 0, 7 );
-  } else {
-    buffer.writeUInt8( 0, 6 );
-    buffer.writeUInt8( opDef.operation.airliner_cc, 7 );
-  }
-
-  this.sequence++;
-
-  var msgDef = this.getMsgDefByName( opDef.operation.airliner_msg );
-
-  if ( typeof msgDef === 'object' ) {
-    if ( msgDef.hasOwnProperty( 'operational_names' ) ) {
-      if ( typeof args === 'undefined' ) {
-        this.logErrorEvent( EventEnum.INVALID_ARGUMENTS, 'Unable to send command \'' + cmd.opsPath + '\'.  Required args missing.' );
-      } else {
-        for ( var opNameID in msgDef.operational_names ) {
-          var fieldNames = msgDef.operational_names[ opNameID ].field_path.split( '.' );
-          var fieldName = fieldNames[ 0 ];
-
-          var field = msgDef.fields[ fieldName ];
-
-          var arg_path = msgDef.operational_names[ opNameID ].field_path;
-
-          if ( args.hasOwnProperty( opNameID ) ) {
-            var fieldDef = this.getFieldFromOperationalName( msgDef, msgDef.operational_names[ opNameID ].field_path, 0 );
-            this.setField( buffer, fieldDef.fieldDef, fieldDef.bitOffset, args[ opNameID ] );
-          }
+    var opDef = this.getOperationByPath( cmd.opsPath );
+    if(typeof opDef === 'undefined') {
+        /* TODO */
+        /* This command was not found. */
+        console.log('Cmd ' + cmd.opsPath + ' operation definition not found.');
+    } else {
+        var byteLength = this.getCmdByteLength( opDef.operation );
+      
+        if(byteLength == 0) {
+            /* TODO */
+            /* This command was not found. */
+            console.log('Cmd ' + cmd.opsPath + ' operation not found.');
+        } else {
+            var buffer = new Buffer( byteLength );
+            buffer.fill( 0x00 );
+        
+            buffer.writeUInt16BE( opDef.operation.airliner_mid, 0 );
+            buffer.writeUInt16BE( this.sequence, 2 );
+            buffer.writeUInt16BE( byteLength - 7, 4 );
+            if ( this.endian == 'big' ) {
+                buffer.writeUInt8( opDef.operation.airliner_cc, 6 );
+                buffer.writeUInt8( 0, 7 );
+            } else {
+                buffer.writeUInt8( 0, 6 );
+                buffer.writeUInt8( opDef.operation.airliner_cc, 7 );
+            }
+    
+            this.sequence++;
+    
+            var msgDef = this.getMsgDefByName( opDef.operation.airliner_msg );
+    
+            if ( typeof msgDef === 'object' ) {
+                if ( msgDef.hasOwnProperty( 'operational_names' ) ) {
+                    if ( typeof args === 'undefined' ) {
+                        this.logErrorEvent( EventEnum.INVALID_ARGUMENTS, 'Unable to send command \'' + cmd.opsPath + '\'.  Required args missing.' );
+                    } else {
+                        for ( var opNameID in msgDef.operational_names ) {
+                            var fieldNames = msgDef.operational_names[ opNameID ].field_path.split( '.' );
+                            var fieldName = fieldNames[ 0 ];
+    
+                            var field = msgDef.fields[ fieldName ];
+    
+                            var arg_path = msgDef.operational_names[ opNameID ].field_path;
+    
+                            if ( args.hasOwnProperty( opNameID ) ) {
+                                var fieldDef = this.getFieldFromOperationalName( msgDef, msgDef.operational_names[ opNameID ].field_path, 0 );
+                                this.setField( buffer, fieldDef.fieldDef, fieldDef.bitOffset, args[ opNameID ] );
+                            }
+                        }
+                    }
+                }
+            }
+    
+            this.instanceEmit( config.get( 'binaryOutputStreamID' ), buffer );
         }
-      }
     }
-  }
-
-  this.instanceEmit( config.get( 'binaryOutputStreamID' ), buffer );
 }
 
 
