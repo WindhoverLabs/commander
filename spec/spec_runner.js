@@ -1,6 +1,13 @@
-var Jasmine = require( 'jasmine' ),
-  reporters = require( 'jasmine-reporters' ),
-  Reset = "\x1b[0m",
+var path = require( 'path' );
+var shell = require( 'shelljs' );
+var Jasmine = require( 'jasmine' );
+var reporters = require( 'jasmine-reporters' );
+
+/**
+ * Colors
+ * @type {String}
+ */
+var Reset = "\x1b[0m",
   Bright = "\x1b[1m",
   Dim = "\x1b[2m",
   Underscore = "\x1b[4m",
@@ -13,6 +20,23 @@ var Jasmine = require( 'jasmine' ),
   FgBlue = "\x1b[34m",
   FgMagenta = "\x1b[35m",
   FgWhite = "\x1b[37m";
+
+shell.exec( '. environment.sh' )
+global.AIRLINER_BASEPATH = ( path.join( process.env.CDR_WORKSPACE, '../../../../../../' ) || path.join( __dirname, '../../../../../' ) ).slice( 0, -1 );
+global.CDR_WORKSPACE = process.env.CDR_WORKSPACE || path.join( __dirname, '../workspace' );
+global.AIRLINER_MSG_DEF_PATH = process.env.AIRLINER_MSG_DEF_PATH;
+global.AIRLINER_PROTO_PATH = process.env.AIRLINER_PROTO_PATH;
+global.COMMANDER_PATH = process.env.COMMANDER_PATH;
+global.CDR_INSTALL_DIR = ( path.join( __dirname, '../' ) ).slice( 0, -1 );
+console.log( FgMagenta );
+console.log( ' ENVIRONMENT - ' );
+console.log( '    AIRLINER_BASEPATH       : ', global.AIRLINER_BASEPATH );
+console.log( '    CDR_WORKSPACE           : ', global.CDR_WORKSPACE );
+console.log( '    CDR_INSTALL_DIR         : ', global.CDR_INSTALL_DIR );
+console.log( '    AIRLINER_MSG_DEF_PATH   : ', global.AIRLINER_MSG_DEF_PATH );
+console.log( '    AIRLINER_PROTO_PATH     : ', global.AIRLINER_PROTO_PATH );
+console.log( '    COMMANDER_PATH          : ', global.COMMANDER_PATH );
+console.log( Reset );
 
 
 var junitReporter = new reporters.JUnitXmlReporter( {

@@ -43,9 +43,8 @@ describe( 'BinaryDecoder Constructor', () => {
 
   beforeAll( () => {
     this.testConfig = TestConfig;
-    var workspace = this.testConfig.AirlinerBasePath + this.testConfig.BinaryDecoder.workspace;
-    var configFile = this.testConfig.AirlinerBasePath + this.testConfig.BinaryDecoder.configFile;
-    process.env.AIRLINER_MSG_DEF_PATH = this.testConfig.AirlinerBasePath + this.testConfig.AirlinerMsgDefPath;
+    var workspace = global.AIRLINER_BASEPATH + this.testConfig.BinaryDecoder.workspace;
+    var configFile = global.AIRLINER_BASEPATH + this.testConfig.BinaryDecoder.configFile;
     this.bd = new BinaryDecoder( workspace, configFile );
   } );
 
@@ -67,9 +66,9 @@ describe( 'BinaryDecoder setInstanceEmitter', () => {
 
   beforeAll( () => {
     this.testConfig = TestConfig;
-    var workspace = this.testConfig.AirlinerBasePath + this.testConfig.BinaryDecoder.workspace;
-    var configFile = this.testConfig.AirlinerBasePath + this.testConfig.BinaryDecoder.configFile;
-    process.env.AIRLINER_MSG_DEF_PATH = this.testConfig.AirlinerBasePath + this.testConfig.AirlinerMsgDefPath;
+    var workspace = global.AIRLINER_BASEPATH + this.testConfig.BinaryDecoder.workspace;
+    var configFile = global.AIRLINER_BASEPATH + this.testConfig.BinaryDecoder.configFile;
+
     this.bd = new BinaryDecoder( workspace, configFile );
     this.emitter = new Emitter();
     this.bd.setInstanceEmitter( this.emitter );
@@ -155,17 +154,13 @@ describe( 'BinaryDecoder setInstanceEmitter', () => {
   it( 'Shoud throw error on receiving an object it does not expect on tlm-def-request', () => {
 
     expect( () => {
-      this.bd.instanceEmitter.emit( 'tlm-def-request', [ 'a', 'b' ], ( param ) => {
-        console.log( param );
-      } );
+      this.bd.instanceEmitter.emit( 'tlm-def-request', [ 'a', 'b' ], ( param ) => {} );
     } ).not.toThrow();
 
     expect( () => {
       this.bd.instanceEmitter.emit( 'tlm-def-request', {
         'a': 'b'
-      }, ( param ) => {
-        console.log( param );
-      } );
+      }, ( param ) => {} );
     } ).not.toThrow();
   } );
 } );
@@ -174,9 +169,9 @@ describe( 'BinaryDecoder getTlmDefByName', () => {
 
   beforeAll( () => {
     this.testConfig = TestConfig;
-    var workspace = this.testConfig.AirlinerBasePath + this.testConfig.BinaryDecoder.workspace;
-    var configFile = this.testConfig.AirlinerBasePath + this.testConfig.BinaryDecoder.configFile;
-    process.env.AIRLINER_MSG_DEF_PATH = this.testConfig.AirlinerBasePath + this.testConfig.AirlinerMsgDefPath;
+    var workspace = global.AIRLINER_BASEPATH + this.testConfig.BinaryDecoder.workspace;
+    var configFile = global.AIRLINER_BASEPATH + this.testConfig.BinaryDecoder.configFile;
+
     this.bd = new BinaryDecoder( workspace, configFile );
     this.emitter = new Emitter();
     this.bd.setInstanceEmitter( this.emitter );
@@ -221,9 +216,9 @@ describe( 'BinaryDecoder getAppNameFromPath', () => {
 
   beforeAll( () => {
     this.testConfig = TestConfig;
-    var workspace = this.testConfig.AirlinerBasePath + this.testConfig.BinaryDecoder.workspace;
-    var configFile = this.testConfig.AirlinerBasePath + this.testConfig.BinaryDecoder.configFile;
-    process.env.AIRLINER_MSG_DEF_PATH = this.testConfig.AirlinerBasePath + this.testConfig.AirlinerMsgDefPath;
+    var workspace = global.AIRLINER_BASEPATH + this.testConfig.BinaryDecoder.workspace;
+    var configFile = global.AIRLINER_BASEPATH + this.testConfig.BinaryDecoder.configFile;
+
     this.bd = new BinaryDecoder( workspace, configFile );
     this.emitter = new Emitter();
     this.bd.setInstanceEmitter( this.emitter );
@@ -247,9 +242,9 @@ describe( 'BinaryDecoder getOperationFromPath', () => {
 
   beforeAll( () => {
     this.testConfig = TestConfig;
-    var workspace = this.testConfig.AirlinerBasePath + this.testConfig.BinaryDecoder.workspace;
-    var configFile = this.testConfig.AirlinerBasePath + this.testConfig.BinaryDecoder.configFile;
-    process.env.AIRLINER_MSG_DEF_PATH = this.testConfig.AirlinerBasePath + this.testConfig.AirlinerMsgDefPath;
+    var workspace = global.AIRLINER_BASEPATH + this.testConfig.BinaryDecoder.workspace;
+    var configFile = global.AIRLINER_BASEPATH + this.testConfig.BinaryDecoder.configFile;
+
     this.bd = new BinaryDecoder( workspace, configFile );
     this.emitter = new Emitter();
     this.bd.setInstanceEmitter( this.emitter );
@@ -278,9 +273,9 @@ describe( 'BinaryDecoder getAppDefinition', () => {
 
   beforeAll( () => {
     this.testConfig = TestConfig;
-    var workspace = this.testConfig.AirlinerBasePath + this.testConfig.BinaryDecoder.workspace;
-    var configFile = this.testConfig.AirlinerBasePath + this.testConfig.BinaryDecoder.configFile;
-    process.env.AIRLINER_MSG_DEF_PATH = this.testConfig.AirlinerBasePath + this.testConfig.AirlinerMsgDefPath;
+    var workspace = global.AIRLINER_BASEPATH + this.testConfig.BinaryDecoder.workspace;
+    var configFile = global.AIRLINER_BASEPATH + this.testConfig.BinaryDecoder.configFile;
+
     this.bd = new BinaryDecoder( workspace, configFile );
     this.emitter = new Emitter();
     this.bd.setInstanceEmitter( this.emitter );
@@ -302,9 +297,9 @@ describe( 'BinaryDecoder getTlmDefByPath', () => {
 
   beforeAll( () => {
     this.testConfig = TestConfig;
-    var workspace = this.testConfig.AirlinerBasePath + this.testConfig.BinaryDecoder.workspace;
-    var configFile = this.testConfig.AirlinerBasePath + this.testConfig.BinaryDecoder.configFile;
-    process.env.AIRLINER_MSG_DEF_PATH = this.testConfig.AirlinerBasePath + this.testConfig.AirlinerMsgDefPath;
+    var workspace = global.AIRLINER_BASEPATH + this.testConfig.BinaryDecoder.workspace;
+    var configFile = global.AIRLINER_BASEPATH + this.testConfig.BinaryDecoder.configFile;
+
     this.bd = new BinaryDecoder( workspace, configFile );
     this.emitter = new Emitter();
     this.bd.setInstanceEmitter( this.emitter );
@@ -343,9 +338,9 @@ describe( 'BinaryDecoder isOpNameAnArray', () => {
 
   beforeAll( () => {
     this.testConfig = TestConfig;
-    var workspace = this.testConfig.AirlinerBasePath + this.testConfig.BinaryDecoder.workspace;
-    var configFile = this.testConfig.AirlinerBasePath + this.testConfig.BinaryDecoder.configFile;
-    process.env.AIRLINER_MSG_DEF_PATH = this.testConfig.AirlinerBasePath + this.testConfig.AirlinerMsgDefPath;
+    var workspace = global.AIRLINER_BASEPATH + this.testConfig.BinaryDecoder.workspace;
+    var configFile = global.AIRLINER_BASEPATH + this.testConfig.BinaryDecoder.configFile;
+
     this.bd = new BinaryDecoder( workspace, configFile );
     this.emitter = new Emitter();
     this.bd.setInstanceEmitter( this.emitter );
@@ -370,9 +365,9 @@ describe( 'BinaryDecoder stripArrayIdentifier', () => {
 
   beforeAll( () => {
     this.testConfig = TestConfig;
-    var workspace = this.testConfig.AirlinerBasePath + this.testConfig.BinaryDecoder.workspace;
-    var configFile = this.testConfig.AirlinerBasePath + this.testConfig.BinaryDecoder.configFile;
-    process.env.AIRLINER_MSG_DEF_PATH = this.testConfig.AirlinerBasePath + this.testConfig.AirlinerMsgDefPath;
+    var workspace = global.AIRLINER_BASEPATH + this.testConfig.BinaryDecoder.workspace;
+    var configFile = global.AIRLINER_BASEPATH + this.testConfig.BinaryDecoder.configFile;
+
     this.bd = new BinaryDecoder( workspace, configFile );
     this.emitter = new Emitter();
     this.bd.setInstanceEmitter( this.emitter );
@@ -397,9 +392,9 @@ describe( 'BinaryDecoder stripArrayIdentifier', () => {
 
   beforeAll( () => {
     this.testConfig = TestConfig;
-    var workspace = this.testConfig.AirlinerBasePath + this.testConfig.BinaryDecoder.workspace;
-    var configFile = this.testConfig.AirlinerBasePath + this.testConfig.BinaryDecoder.configFile;
-    process.env.AIRLINER_MSG_DEF_PATH = this.testConfig.AirlinerBasePath + this.testConfig.AirlinerMsgDefPath;
+    var workspace = global.AIRLINER_BASEPATH + this.testConfig.BinaryDecoder.workspace;
+    var configFile = global.AIRLINER_BASEPATH + this.testConfig.BinaryDecoder.configFile;
+
     this.bd = new BinaryDecoder( workspace, configFile );
     this.emitter = new Emitter();
     this.bd.setInstanceEmitter( this.emitter );
@@ -424,9 +419,9 @@ describe( 'BinaryDecoder getMsgDefByName', () => {
 
   beforeAll( () => {
     this.testConfig = TestConfig;
-    var workspace = this.testConfig.AirlinerBasePath + this.testConfig.BinaryDecoder.workspace;
-    var configFile = this.testConfig.AirlinerBasePath + this.testConfig.BinaryDecoder.configFile;
-    process.env.AIRLINER_MSG_DEF_PATH = this.testConfig.AirlinerBasePath + this.testConfig.AirlinerMsgDefPath;
+    var workspace = global.AIRLINER_BASEPATH + this.testConfig.BinaryDecoder.workspace;
+    var configFile = global.AIRLINER_BASEPATH + this.testConfig.BinaryDecoder.configFile;
+
     this.bd = new BinaryDecoder( workspace, configFile );
     this.emitter = new Emitter();
     this.bd.setInstanceEmitter( this.emitter );
@@ -449,9 +444,9 @@ describe( 'BinaryDecoder getMsgDefByMsgID', () => {
 
   beforeAll( () => {
     this.testConfig = TestConfig;
-    var workspace = this.testConfig.AirlinerBasePath + this.testConfig.BinaryDecoder.workspace;
-    var configFile = this.testConfig.AirlinerBasePath + this.testConfig.BinaryDecoder.configFile;
-    process.env.AIRLINER_MSG_DEF_PATH = this.testConfig.AirlinerBasePath + this.testConfig.AirlinerMsgDefPath;
+    var workspace = global.AIRLINER_BASEPATH + this.testConfig.BinaryDecoder.workspace;
+    var configFile = global.AIRLINER_BASEPATH + this.testConfig.BinaryDecoder.configFile;
+
     this.bd = new BinaryDecoder( workspace, configFile );
     this.emitter = new Emitter();
     this.bd.setInstanceEmitter( this.emitter );
@@ -474,32 +469,155 @@ describe( 'BinaryDecoder getMsgDefByMsgID', () => {
 } );
 
 describe( 'BinaryDecoder getFieldObjFromPbMsg', () => {
+  beforeAll( () => {
+    this.testConfig = TestConfig;
+    var workspace = global.AIRLINER_BASEPATH + this.testConfig.BinaryDecoder.workspace;
+    var configFile = global.AIRLINER_BASEPATH + this.testConfig.BinaryDecoder.configFile;
+
+    this.bd = new BinaryDecoder( workspace, configFile );
+    this.emitter = new Emitter();
+    this.bd.setInstanceEmitter( this.emitter );
+  } );
+
+  it( 'Parameter fieldPathArray should return undefined when incompatable objects or numbers are passed', () => {
+
+    expect( this.bd.getFieldObjFromPbMsg( {}, {}, 0 ) ).toEqual( undefined );
+    expect( this.bd.getFieldObjFromPbMsg( {}, 1, 0 ) ).toEqual( undefined );
+    expect( this.bd.getFieldObjFromPbMsg( {}, {
+      length: 3
+    }, 0 ) ).toEqual( undefined );
+
+  } );
+
+  it( 'Parameter fieldPathArray should return valid field object', () => {
+
+    expect( this.bd.getFieldObjFromPbMsg( {
+        'fields': {
+          'CmdCounter': {
+            bit_offset: 4
+          }
+        }
+      },
+      [ 'CmdCounter' ],
+      96 ) ).toEqual( {
+      fieldDef: {
+        bit_offset: 4
+      },
+      bitOffset: 100
+    } );
+  } );
 
 } );
 
 describe( 'BinaryDecoder getFieldFromOperationalName', () => {
+  beforeAll( () => {
+    this.testConfig = TestConfig;
+    var workspace = global.AIRLINER_BASEPATH + this.testConfig.BinaryDecoder.workspace;
+    var configFile = global.AIRLINER_BASEPATH + this.testConfig.BinaryDecoder.configFile;
+
+    this.bd = new BinaryDecoder( workspace, configFile );
+    this.emitter = new Emitter();
+    this.bd.setInstanceEmitter( this.emitter );
+  } );
+
+  it( 'Should log error when an incompatable operation name is given', () => {
+    expect( this.bd.getFieldFromOperationalName( {}, 'test', 0 ) ).toEqual( undefined )
+    expect( this.bd.getFieldFromOperationalName( {}, {}, 0 ) ).toEqual( undefined )
+  } );
+
+
+
+  it( 'Should log error when an incompatable operation name is given', () => {
+    spyOn( this.bd, 'getFieldObjFromPbMsg' ).and.returnValue( [ 'success' ] );
+    spyOn( this.bd, 'logErrorEvent' );
+    expect( this.bd.getFieldFromOperationalName( {
+      'operational_names': {
+        'Payload': {}
+      }
+    }, 'Payload.CmdCounter', 0 ) ).toEqual( [ 'success' ] )
+    expect( this.bd.logErrorEvent ).toHaveBeenCalledTimes( 0 );
+  } );
+
 
 } );
 
 describe( 'BinaryDecoder processBinaryMessage', () => {
+  beforeAll( () => {
+    this.testConfig = TestConfig;
+    var workspace = global.AIRLINER_BASEPATH + this.testConfig.BinaryDecoder.workspace;
+    var configFile = global.AIRLINER_BASEPATH + this.testConfig.BinaryDecoder.configFile;
+
+    this.bd = new BinaryDecoder( workspace, configFile );
+    this.emitter = new Emitter();
+    this.bd.setInstanceEmitter( this.emitter );
+  } );
+  beforeEach( () => {
+    this.sampleBuff1 = new Buffer( [ 10, 83, 211, 150, 0, 21, 248, 149, 15, 0, 125, 110, 142, 87, 209, 95, 0, 0, 0, 0, 0, 64, 28, 70, 1, 0, 0, 0 ] );
+    this.spy = spyOn( this.bd, 'instanceEmit' )
+  } );
+  it( 'Should populate tlm object ready to be sent', () => {
+
+    this.bd.processBinaryMessage( this.sampleBuff1 )
+    expect( this.bd.instanceEmit ).toHaveBeenCalledTimes( 1 );
+    expect( this.bd.instanceEmit.calls.argsFor( 0 )[ 0 ] ).toBe( 'json-tlm-stream' );
+    expect( this.bd.instanceEmit.calls.argsFor( 0 )[ 1 ].opsPath ).toBe( '/PX4/PX4_VehicleLandDetectedMsg_t' );
+  } );
+
+  it( 'Shoud not emit when erroneous value is passed in as buffer', () => {
+    this.spy.calls.reset();
+    this.bd.processBinaryMessage( [] )
+    expect( this.bd.instanceEmit ).not.toHaveBeenCalledTimes( 0 );
+    expect( this.bd.instanceEmit.calls.argsFor( 0 )[ 0 ] ).not.toBe( 'json-tlm-stream' );
+  } );
+
 
 } );
 
 describe( 'BinaryDecoder getFieldValueAsPbType', () => {
+  beforeAll( () => {
+    this.testConfig = TestConfig;
+    var workspace = global.AIRLINER_BASEPATH + this.testConfig.BinaryDecoder.workspace;
+    var configFile = global.AIRLINER_BASEPATH + this.testConfig.BinaryDecoder.configFile;
 
+    this.bd = new BinaryDecoder( workspace, configFile );
+    this.emitter = new Emitter();
+    this.bd.setInstanceEmitter( this.emitter );
+  } );
+  beforeEach( () => {
+    this.spy = spyOn( this.bd, 'logErrorEvent' )
+  } );
+  it( 'Should complete when compatable parameters are passed', () => {
+    this.spy.calls.reset();
+    expect( this.bd.getFieldValueAsPbType( new Buffer( [ 0, 0, 0, 0 ] ), {}, 0, {} ) ).toEqual( {} )
+  } );
 } );
 
 describe( 'BinaryDecoder getFieldValue', () => {
+  beforeAll( () => {
+    this.testConfig = TestConfig;
+    var workspace = global.AIRLINER_BASEPATH + this.testConfig.BinaryDecoder.workspace;
+    var configFile = global.AIRLINER_BASEPATH + this.testConfig.BinaryDecoder.configFile;
 
+    this.bd = new BinaryDecoder( workspace, configFile );
+    this.emitter = new Emitter();
+    this.bd.setInstanceEmitter( this.emitter );
+  } );
+  beforeEach( () => {
+    this.spy = spyOn( this.bd, 'logErrorEvent' )
+  } );
+  it( 'Should complete when compatable parameters are passed', () => {
+    this.spy.calls.reset();
+    expect( this.bd.getFieldValueAsPbType( new Buffer( [ 0, 0, 0, 0 ] ), {}, 0, {} ) ).toEqual( {} )
+  } );
 } );
 
 describe( 'BinaryDecoder getTlmDefByMsgID', () => {
 
   beforeAll( () => {
     this.testConfig = TestConfig;
-    var workspace = this.testConfig.AirlinerBasePath + this.testConfig.BinaryDecoder.workspace;
-    var configFile = this.testConfig.AirlinerBasePath + this.testConfig.BinaryDecoder.configFile;
-    process.env.AIRLINER_MSG_DEF_PATH = this.testConfig.AirlinerBasePath + this.testConfig.AirlinerMsgDefPath;
+    var workspace = global.AIRLINER_BASEPATH + this.testConfig.BinaryDecoder.workspace;
+    var configFile = global.AIRLINER_BASEPATH + this.testConfig.BinaryDecoder.configFile;
+
     this.bd = new BinaryDecoder( workspace, configFile );
     this.emitter = new Emitter();
     this.bd.setInstanceEmitter( this.emitter );
@@ -523,9 +641,9 @@ describe( 'BinaryDecoder getTlmDefByMsgID', () => {
 describe( 'BinaryDecoder cfeTimeToJsTime', () => {
   beforeAll( () => {
     this.testConfig = TestConfig;
-    var workspace = this.testConfig.AirlinerBasePath + this.testConfig.BinaryDecoder.workspace;
-    var configFile = this.testConfig.AirlinerBasePath + this.testConfig.BinaryDecoder.configFile;
-    process.env.AIRLINER_MSG_DEF_PATH = this.testConfig.AirlinerBasePath + this.testConfig.AirlinerMsgDefPath;
+    var workspace = global.AIRLINER_BASEPATH + this.testConfig.BinaryDecoder.workspace;
+    var configFile = global.AIRLINER_BASEPATH + this.testConfig.BinaryDecoder.configFile;
+
     this.bd = new BinaryDecoder( workspace, configFile );
     this.emitter = new Emitter();
     this.bd.setInstanceEmitter( this.emitter );

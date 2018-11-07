@@ -41,7 +41,7 @@ describe( 'UdpStdProvider Constructor', () => {
 
   beforeAll( () => {
     this.testConfig = TestConfig;
-    this.usp = new UdpStdProvider( this.testConfig.AirlinerBasePath + this.testConfig.UdpStdProvider.configFile );
+    this.usp = new UdpStdProvider( global.AIRLINER_BASEPATH + this.testConfig.UdpStdProvider.configFile );
     this.callEmitNTimes = 10;
   } );
 
@@ -90,7 +90,7 @@ describe( 'UdpStdProvider setInstanceEmitter', () => {
 
   beforeAll( () => {
     this.testConfig = TestConfig;
-    this.usp = new UdpStdProvider( this.testConfig.AirlinerBasePath + this.testConfig.UdpStdProvider.configFile );
+    this.usp = new UdpStdProvider( global.AIRLINER_BASEPATH + this.testConfig.UdpStdProvider.configFile );
     this.emitter = new Emitter();
     this.usp.setInstanceEmitter( this.emitter );
   } );
