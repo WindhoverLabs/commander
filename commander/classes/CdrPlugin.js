@@ -2,6 +2,7 @@
 
 var path = require( 'path' );
 var fs = require( 'fs' );
+var express = require( 'express' );
 
 /* Content Types */
 const ContentTypeEnum = Object.freeze( {
@@ -79,27 +80,33 @@ class CdrPlugin {
    * @param  {Object} content content object
    * @param  {String} inPath  input path
    */
-  processContentTree( content, inPath ) {
+  processContentTree( content, inPath, inNodeID ) {
     var self = this;
 
     var filePath = content.filePath;
     if ( typeof filePath !== 'undefined' ) {
-      global.NODE_APP.get( inPath, function( req, res ) {
-        var fullFilePath = path.join( self.webRoot, filePath );
-        if ( path.extname( fullFilePath ) === '.pug' ) {
-	  res.render(fullFilePath, {query: req.query});
-        } else {
+      var fullFilePath = path.join( self.webRoot, filePath );
+      
+      if ( path.extname( fullFilePath ) === '.pug' ) {
+        global.NODE_APP.get( inPath + '/' + inNodeID, function( req, res ) {
+  	      res.render(fullFilePath, {query: req.query});
+        });
+      } else if ( path.extname( fullFilePath ) === '.lyt' ) {
+        global.NODE_APP.get( inPath + '/' + inNodeID, function( req, res ) {
           readJSONFile( fullFilePath, function( err, json ) {
             res.send( json );
           } );
-        }
-      } );
+        } );
+      } 
+      
+      var staticPath = path.join(self.webRoot);
+      global.NODE_APP.use(inPath, express.static(staticPath));
     }
 
     var nodes = content.nodes;
     if ( typeof nodes !== 'undefined' ) {
       for ( var nodeID in nodes ) {
-        self.processContentTree( nodes[ nodeID ], inPath + '/' + nodeID );
+        self.processContentTree( nodes[ nodeID ], inPath, nodeID );
       }
     }
   }
