@@ -196,7 +196,6 @@ BinaryEncoder.prototype.setInstanceEmitter = function( newInstanceEmitter ) {
   this.instanceEmitter = newInstanceEmitter;
 
   this.instanceEmitter.on( config.get( 'cmdDefReqStreamID' ), function( cmdReqs, cb ) {
-    // console.log( cmdReqs );
     if ( typeof cmdReqs.length === 'number' ) {
       /* This must be an array. */
       var outCmdDefs = [];
@@ -248,7 +247,6 @@ BinaryEncoder.prototype.setInstanceEmitter = function( newInstanceEmitter ) {
 
   this.instanceEmitter.on( config.get( 'cmdSendStreamID' ), function( req ) {
     var cmdDef = self.getCmdDefByName( req.ops_path );
-
     if ( typeof cmdDef === 'undefined' ) {
       self.logErrorEvent( EventEnum.INVALID_REQUEST, 'CmdSend: Ops path not found.  \'' + req + '\'' );
     } else {
@@ -306,21 +304,24 @@ BinaryEncoder.prototype.getCmdOpNamesStripHeader = function( cmdDef ) {
 
   if ( cmdDef.hasOwnProperty( 'operational_names' ) ) {
     for ( var opNameID in cmdDef.operational_names ) {
-      var fieldNames = cmdDef.operational_names[ opNameID ].field_path.split( '.' );
-      var fieldName = fieldNames[ 0 ];
-      var field = cmdDef.fields[ fieldName ];
+      try {
+        var fieldNames = cmdDef.operational_names[ opNameID ].field_path.split( '.' );
+        var fieldName = fieldNames[ 0 ];
+        var field = cmdDef.fields[ fieldName ];
 
-      var fieldDef = this.getFieldFromOperationalName( cmdDef, opNameID, 0 );
+        var fieldDef = this.getFieldFromOperationalName( cmdDef, opNameID, 0 );
 
-      if ( fieldDef.bitOffset >= self.cmdHeaderLength ) {
-        opsPaths[ opNameID ] = {
-          dataType: self.getIntrinsicType( fieldDef.fieldDef ),
-          bitSize: fieldDef.fieldDef.bit_size
-        };
+        if ( fieldDef.bitOffset >= self.cmdHeaderLength ) {
+          opsPaths[ opNameID ] = {
+            dataType: self.getIntrinsicType( fieldDef.fieldDef ),
+            bitSize: fieldDef.fieldDef.bit_size
+          };
+        }
+      } catch ( e ) {
+        self.logErrorEvent( EventEnum.UNHANDLED_EXCEPTION, 'getCmdOpNamesStripHeader: Command definition format error.' );
       }
     }
   }
-
   return opsPaths;
 }
 
@@ -331,6 +332,7 @@ BinaryEncoder.prototype.getCmdOpNamesStripHeader = function( cmdDef ) {
  * @return {String}          derived intrinsic type
  */
 BinaryEncoder.prototype.getIntrinsicType = function( fieldDef ) {
+  var self = this;
   switch ( fieldDef.airliner_type ) {
     case 'char':
     case 'uint8':
@@ -367,7 +369,8 @@ BinaryEncoder.prototype.getIntrinsicType = function( fieldDef ) {
           break;
 
         default:
-          console.log( "Intrinsic data type not found" );
+          self.logErrorEvent( EventEnum.UNHANDLED_EXCEPTION, 'getIntrinsicType: Intrinsic data type not found.' );
+          return undefined;
       }
   }
 }
@@ -396,8 +399,11 @@ BinaryEncoder.prototype.__proto__ = Emitter.prototype;
  * @return {String}      App name
  */
 BinaryEncoder.prototype.getAppNameFromPath = function( path ) {
-  var splitName = path.split( '/' );
-  return splitName[ 1 ];
+  if ( typeof path === 'string' ) {
+    var splitName = path.split( '/' );
+    return splitName[ 1 ];
+  }
+  return undefined;
 }
 
 
@@ -407,8 +413,11 @@ BinaryEncoder.prototype.getAppNameFromPath = function( path ) {
  * @return {String}      Operation name
  */
 BinaryEncoder.prototype.getOperationFromPath = function( path ) {
-  var splitName = path.split( '/' );
-  return splitName[ 2 ];
+  if ( typeof path === 'string' ) {
+    var splitName = path.split( '/' );
+    return splitName[ 2 ];
+  }
+  return undefined;
 }
 
 
@@ -429,19 +438,25 @@ BinaryEncoder.prototype.getAppDefinition = function( appName ) {
  * @return {Object}           operation object
  */
 BinaryEncoder.prototype.getOperationByPath = function( inOpsPath ) {
-  for ( var appID in this.defs.Airliner.apps ) {
-    var app = this.defs.Airliner.apps[ appID ];
-    for ( var opID in app.operations ) {
-      var operation = app.operations[ opID ];
-      var opsPath = '/' + appID + '/' + opID;
-      if ( opsPath === inOpsPath ) {
-        return {
-          ops_path: opsPath,
-          operation: operation
-        };
+  var self = this;
+  try {
+    for ( var appID in this.defs.Airliner.apps ) {
+      var app = this.defs.Airliner.apps[ appID ];
+      for ( var opID in app.operations ) {
+        var operation = app.operations[ opID ];
+        var opsPath = '/' + appID + '/' + opID;
+        if ( opsPath === inOpsPath ) {
+          return {
+            ops_path: opsPath,
+            operation: operation
+          };
+        }
       }
     }
+  } catch ( e ) {
+    self.logErrorEvent( EventEnum.UNHANDLED_EXCEPTION, 'getOperationByPath: Cannot get operations by path.' );
   }
+  return undefined;
 }
 
 
@@ -452,20 +467,26 @@ BinaryEncoder.prototype.getOperationByPath = function( inOpsPath ) {
  * @return {Object}         operation object
  */
 BinaryEncoder.prototype.getOperationByMsgIDandCC = function( msgID, cmdCode ) {
-  for ( var appID in this.defs.Airliner.apps ) {
-    var app = this.defs.Airliner.apps[ appID ];
-    for ( var opID in app.operations ) {
-      var operation = app.operations[ opID ];
-      var opsPath = '/' + appID + '/' + opID
-      if ( ( parseInt( operation.airliner_mid ) == msgID ) && ( operation.airliner_cc == cmdCode ) ) {
-        var result = {
-          ops_path: opsPath,
-          operation: operation
-        };
-        return result;
+  var self = this;
+  try {
+    for ( var appID in this.defs.Airliner.apps ) {
+      var app = this.defs.Airliner.apps[ appID ];
+      for ( var opID in app.operations ) {
+        var operation = app.operations[ opID ];
+        var opsPath = '/' + appID + '/' + opID
+        if ( ( parseInt( operation.airliner_mid ) === msgID ) & ( operation.airliner_cc === cmdCode ) ) {
+          var result = {
+            ops_path: opsPath,
+            operation: operation
+          };
+          return result;
+        }
       }
     }
+  } catch ( e ) {
+    self.logErrorEvent( EventEnum.UNHANDLED_EXCEPTION, 'getOperationByMsgIDandCC: Cannot get operations by msgID and cmdCode.' );
   }
+  return undefined;
 }
 
 
@@ -492,15 +513,21 @@ BinaryEncoder.prototype.getCmdDefByMsgIDandCC = function( msgID, cmdCode ) {
  * @return {Object}         command defintion
  */
 BinaryEncoder.prototype.getMsgDefByName = function( msgName ) {
-  for ( var appID in this.defs.Airliner.apps ) {
-    var app = this.defs.Airliner.apps[ appID ];
-    for ( var protoID in app.proto_msgs ) {
-      var protomsg = app.proto_msgs[ protoID ];
-      if ( protoID == msgName ) {
-        return protomsg;
+  var self = this;
+  try {
+    for ( var appID in this.defs.Airliner.apps ) {
+      var app = this.defs.Airliner.apps[ appID ];
+      for ( var protoID in app.proto_msgs ) {
+        var protomsg = app.proto_msgs[ protoID ];
+        if ( protoID == msgName ) {
+          return protomsg;
+        }
       }
     }
+  } catch ( e ) {
+    self.logErrorEvent( EventEnum.UNHANDLED_EXCEPTION, 'getMsgDefByName: Cannot get definition by name.' );
   }
+  return undefined;
 }
 
 
@@ -510,17 +537,23 @@ BinaryEncoder.prototype.getMsgDefByName = function( msgName ) {
  * @return {Number}     byte length
  */
 BinaryEncoder.prototype.getCmdByteLength = function( cmd ) {
-  if ( cmd.airliner_msg === '' ) {
-    return this.cmdHeaderLength / 8;
-  } else {
-    var msgDef = this.getMsgDefByName( cmd.airliner_msg );
-
-    if ( typeof msgDef !== 'undefined' ) {
-      return msgDef.bit_size / 8;
+  var self = this;
+  try {
+    if ( cmd.airliner_msg === '' ) {
+      return this.cmdHeaderLength / 8;
     } else {
-      return 0;
+      var msgDef = this.getMsgDefByName( cmd.airliner_msg );
+
+      if ( typeof msgDef !== 'undefined' ) {
+        return msgDef.bit_size / 8;
+      } else {
+        return 0;
+      }
     }
+  } catch ( e ) {
+    self.logErrorEvent( EventEnum.UNHANDLED_EXCEPTION, 'getCmdByteLength: Cannot get command length.' );
   }
+  return 0;
 }
 
 
@@ -532,8 +565,9 @@ BinaryEncoder.prototype.getCmdByteLength = function( cmd ) {
  * @param  {Number} value     value
  */
 BinaryEncoder.prototype.setField = function( buffer, fieldDef, bitOffset, value ) {
+  var self = this;
   try {
-    var fieldType = this.getIntrinsicType( fieldDef );
+    var fieldType = self.getIntrinsicType( fieldDef );
 
     if ( fieldDef.array_length > 1 ) {
       switch ( fieldType ) {
@@ -553,7 +587,7 @@ BinaryEncoder.prototype.setField = function( buffer, fieldDef, bitOffset, value 
 
         case 'uint16':
           for ( var i = 0; i < fieldDef.array_length; ++i ) {
-            if ( this.endian == 'little' ) {
+            if ( self.endian == 'little' ) {
               buffer.writeUInt16LE( value, ( bitOffset / 8 ) + i );
             } else {
               buffer.writeUInt16BE( value, ( bitOffset / 8 ) + i );
@@ -563,7 +597,7 @@ BinaryEncoder.prototype.setField = function( buffer, fieldDef, bitOffset, value 
 
         case 'int16':
           for ( var i = 0; i < fieldDef.array_length; ++i ) {
-            if ( this.endian == 'little' ) {
+            if ( self.endian == 'little' ) {
               buffer.writeInt16LE( value, ( bitOffset / 8 ) + i );
             } else {
               buffer.writeInt16BE( value, ( bitOffset / 8 ) + i );
@@ -573,7 +607,7 @@ BinaryEncoder.prototype.setField = function( buffer, fieldDef, bitOffset, value 
 
         case 'uint32':
           for ( var i = 0; i < fieldDef.array_length; ++i ) {
-            if ( this.endian == 'little' ) {
+            if ( self.endian == 'little' ) {
               buffer.writeUInt32LE( value, ( bitOffset / 8 ) + i );
             } else {
               buffer.writeUInt32BE( value, ( bitOffset / 8 ) + i );
@@ -583,7 +617,7 @@ BinaryEncoder.prototype.setField = function( buffer, fieldDef, bitOffset, value 
 
         case 'int32':
           for ( var i = 0; i < fieldDef.array_length; ++i ) {
-            if ( this.endian == 'little' ) {
+            if ( self.endian == 'little' ) {
               buffer.writeInt32LE( value, ( bitOffset / 8 ) + i );
             } else {
               buffer.writeInt32BE( value, ( bitOffset / 8 ) + i );
@@ -592,7 +626,7 @@ BinaryEncoder.prototype.setField = function( buffer, fieldDef, bitOffset, value 
           break;
 
         default:
-          this.logErrorEvent( EventEnum.UNKNOWN_DATA_TYPE, 'setField: Unknown data type.  \'' + fieldType + '\'' );
+          self.logErrorEvent( EventEnum.UNKNOWN_DATA_TYPE, 'setField: Unknown data type.  \'' + fieldType + '\'' );
       }
     } else {
       switch ( fieldType ) {
@@ -609,7 +643,7 @@ BinaryEncoder.prototype.setField = function( buffer, fieldDef, bitOffset, value 
           break;
 
         case 'uint16':
-          if ( this.endian == 'little' ) {
+          if ( self.endian == 'little' ) {
             buffer.writeUInt16LE( value, bitOffset / 8 );
           } else {
             buffer.writeUInt16BE( value, bitOffset / 8 );
@@ -617,7 +651,7 @@ BinaryEncoder.prototype.setField = function( buffer, fieldDef, bitOffset, value 
           break;
 
         case 'int16':
-          if ( this.endian == 'little' ) {
+          if ( self.endian == 'little' ) {
             buffer.writeInt16LE( value, bitOffset / 8 );
           } else {
             buffer.writeInt16BE( value, bitOffset / 8 );
@@ -625,7 +659,7 @@ BinaryEncoder.prototype.setField = function( buffer, fieldDef, bitOffset, value 
           break;
 
         case 'uint32':
-          if ( this.endian == 'little' ) {
+          if ( self.endian == 'little' ) {
             buffer.writeUInt32LE( value, bitOffset / 8 );
           } else {
             buffer.writeUInt32BE( value, bitOffset / 8 );
@@ -633,7 +667,7 @@ BinaryEncoder.prototype.setField = function( buffer, fieldDef, bitOffset, value 
           break;
 
         case 'int32':
-          if ( this.endian == 'little' ) {
+          if ( self.endian == 'little' ) {
             buffer.writeInt32LE( value, bitOffset / 8 );
           } else {
             buffer.writeInt32BE( value, bitOffset / 8 );
@@ -641,11 +675,11 @@ BinaryEncoder.prototype.setField = function( buffer, fieldDef, bitOffset, value 
           break;
 
         default:
-          this.logErrorEvent( EventEnum.UNKNOWN_DATA_TYPE, 'setField: Unknown data type.  \'' + fieldType + '\'' );
+          self.logErrorEvent( EventEnum.UNKNOWN_DATA_TYPE, 'setField: Unknown data type.  \'' + fieldType + '\'' );
       }
     }
   } catch ( err ) {
-    this.logErrorEvent( EventEnum.UNHANDLED_EXCEPTION, 'setField: Unhandled exception. \'' + err + '\'' );
+    self.logErrorEvent( EventEnum.UNHANDLED_EXCEPTION, 'setField: Unhandled exception. \'' + err + '\'' );
   }
 }
 
@@ -660,14 +694,14 @@ BinaryEncoder.prototype.sendCommand = function( cmd, args ) {
   if ( typeof opDef === 'undefined' ) {
     /* TODO */
     /* This command was not found. */
-    console.log( 'Cmd ' + cmd.opsPath + ' operation definition not found.' );
+    this.logErrorEvent( EventEnum.UNHANDLED_EXCEPTION, 'Cmd ' + cmd.opsPath + ' operation definition not found.' );
   } else {
     var byteLength = this.getCmdByteLength( opDef.operation );
 
     if ( byteLength == 0 ) {
       /* TODO */
       /* This command was not found. */
-      console.log( 'Cmd ' + cmd.opsPath + ' operation not found.' );
+      this.logErrorEvent( EventEnum.UNHANDLED_EXCEPTION, 'Cmd ' + cmd.opsPath + ' operation not found.' );
     } else {
       var buffer = new Buffer( byteLength );
       buffer.fill( 0x00 );
@@ -708,7 +742,6 @@ BinaryEncoder.prototype.sendCommand = function( cmd, args ) {
           }
         }
       }
-
       this.instanceEmit( config.get( 'binaryOutputStreamID' ), buffer );
     }
   }
@@ -723,41 +756,29 @@ BinaryEncoder.prototype.sendCommand = function( cmd, args ) {
  * @return {Object}                field object
  */
 BinaryEncoder.prototype.getFieldObjFromPbMsg = function( pbMsgDef, fieldPathArray, bitOffset ) {
-  var fieldName = fieldPathArray[ 0 ];
-  var fieldDef = pbMsgDef.fields[ fieldName ];
-  var pbType = fieldDef.pb_type;
-
-  if ( fieldPathArray.length == 1 ) {
-    return {
-      fieldDef: fieldDef,
-      bitOffset: fieldDef.bit_offset + bitOffset
-    };
-  } else {
-    var childMsgDef = pbMsgDef.required_pb_msgs[ fieldDef.pb_type ];
-
-    if ( typeof childMsgDef === 'undefined' ) {
-      /* This is a little bit of a kludge.  The airliner.json file has a sort of short cut.  If the
-         operational name requires multiple drill downs to get the actual type, sometimes it
-         collapses it into the first field.  So if we can't drill down any further, i.e. there is
-         no childMsgDef and the variable is now undefined, just use the current field definition. */
-      switch ( fieldDef.airliner_type ) {
-        case 'char':
-        case 'uint8':
-        case 'int8':
-        case 'string':
-        case 'uint16':
-        case 'int16':
-        case 'uint32':
-        case 'int32':
-        case 'float':
-        case 'double':
-        case 'boolean':
-        case 'uint64':
-        case 'int64':
-          break;
-
-        default:
-          switch ( fieldDef.pb_type ) {
+  var self = this;
+  if ( fieldPathArray.hasOwnProperty( 'length' ) ) {
+    try {
+      var fieldName = fieldPathArray[ 0 ];
+      var fieldDef = pbMsgDef.fields[ fieldName ];
+      var pbType = fieldDef.pb_type;
+    } catch ( e ) {
+      self.logErrorEvent( EventEnum.UNHANDLED_EXCEPTION, 'getFieldObjFromPbMsg: Unable to retrive field.  \'' + e + '\'' );
+    }
+    if ( fieldPathArray.length == 1 ) {
+      return {
+        fieldDef: fieldDef,
+        bitOffset: fieldDef.bit_offset + bitOffset
+      };
+    } else {
+      try {
+        var childMsgDef = pbMsgDef.required_pb_msgs[ fieldDef.pb_type ];
+        if ( typeof childMsgDef === 'undefined' ) {
+          /* This is a little bit of a kludge.  The airliner.json file has a sort of short cut.  If the
+             operational name requires multiple drill downs to get the actual type, sometimes it
+             collapses it into the first field.  So if we can't drill down any further, i.e. there is
+             no childMsgDef and the variable is now undefined, just use the current field definition. */
+          switch ( fieldDef.airliner_type ) {
             case 'char':
             case 'uint8':
             case 'int8':
@@ -771,24 +792,45 @@ BinaryEncoder.prototype.getFieldObjFromPbMsg = function( pbMsgDef, fieldPathArra
             case 'boolean':
             case 'uint64':
             case 'int64':
-              fieldDef.airliner_type = fieldDef.pb_type;
               break;
 
             default:
-              console.log( "Data type not found" );
+              switch ( fieldDef.pb_type ) {
+                case 'char':
+                case 'uint8':
+                case 'int8':
+                case 'string':
+                case 'uint16':
+                case 'int16':
+                case 'uint32':
+                case 'int32':
+                case 'float':
+                case 'double':
+                case 'boolean':
+                case 'uint64':
+                case 'int64':
+                  fieldDef.airliner_type = fieldDef.pb_type;
+                  break;
+
+                default:
+                  self.logErrorEvent( EventEnum.UNHANDLED_EXCEPTION, 'Data type not found.' );
+              }
           }
+
+          return {
+            fieldDef: fieldDef,
+            bitOffset: fieldDef.bit_offset + bitOffset
+          };
+        } else {
+          fieldPathArray.shift();
+          return self.getFieldObjFromPbMsg( childMsgDef, fieldPathArray, fieldDef.bit_offset + bitOffset );
+        }
+      } catch ( e ) {
+        self.logErrorEvent( EventEnum.UNHANDLED_EXCEPTION, 'getFieldObjFromPbMsg: Unable to retrive field.  \'' + e + '\'' );
       }
-
-      return {
-        fieldDef: fieldDef,
-        bitOffset: fieldDef.bit_offset + bitOffset
-      };
-    } else {
-      fieldPathArray.shift();
-
-      return this.getFieldObjFromPbMsg( childMsgDef, fieldPathArray, fieldDef.bit_offset + bitOffset );
     }
   }
+  return undefined;
 }
 
 
@@ -800,11 +842,16 @@ BinaryEncoder.prototype.getFieldObjFromPbMsg = function( pbMsgDef, fieldPathArra
  * @return {Object}           field object
  */
 BinaryEncoder.prototype.getFieldFromOperationalName = function( msgDef, opName, bitOffset ) {
-  var op = msgDef.operational_names[ opName ];
-  var fieldPathArray = opName.split( '.' );
+  var self = this;
+  var pbMsg = undefined;
+  try {
+    var op = msgDef.operational_names[ opName ];
+    var fieldPathArray = opName.split( '.' );
 
-  var pbMsg = this.getFieldObjFromPbMsg( msgDef, fieldPathArray, bitOffset );
-
+    var pbMsg = this.getFieldObjFromPbMsg( msgDef, fieldPathArray, bitOffset );
+  } catch ( e ) {
+    self.logErrorEvent( EventEnum.UNHANDLED_EXCEPTION, 'getFieldFromOperationalName: Unable to retrive field.  \'' + e + '\'' );
+  }
   return pbMsg;
 }
 

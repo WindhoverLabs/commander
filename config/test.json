@@ -1,14 +1,14 @@
 {
-  "AirlinerMsgDefPath":"/build/typhoon_h480/sitl/target/explain",
   "UdpStdProvider":{
-    "configFile" : "/build/typhoon_h480/sitl/target/commander/commander_workspace/etc/udpstdprovider-config.json"
+    "configFile" : "/etc/udpstdprovider-config.json"
   },
   "BinaryDecoder":{
-    "workspace": "/build/typhoon_h480/sitl/target/commander/commander_workspace",
-    "configFile":"/build/typhoon_h480/sitl/target/commander/commander_workspace/etc/binary-decoder-config.json"
+    "configFile":"/etc/binary-decoder-config.json"
   },
   "BinaryEncoder":{
-    "workspace": "/build/typhoon_h480/sitl/target/commander/commander_workspace",
-    "configFile":"/build/typhoon_h480/sitl/target/commander/commander_workspace/etc/binary-encoder-config.json"
+    "configFile":"/etc/binary-encoder-config.json"
+  },
+  "ConfigDatabase":{
+    "configFile":"/etc/binary-encoder-config.json"
   }
 }

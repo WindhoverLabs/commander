@@ -43,8 +43,8 @@ describe( 'BinaryDecoder Constructor', () => {
 
   beforeAll( () => {
     this.testConfig = TestConfig;
-    var workspace = global.AIRLINER_BASEPATH + this.testConfig.BinaryDecoder.workspace;
-    var configFile = global.AIRLINER_BASEPATH + this.testConfig.BinaryDecoder.configFile;
+    var workspace = global.CDR_WORKSPACE;
+    var configFile = global.CDR_WORKSPACE + this.testConfig.BinaryDecoder.configFile;
     this.bd = new BinaryDecoder( workspace, configFile );
   } );
 
@@ -66,8 +66,8 @@ describe( 'BinaryDecoder setInstanceEmitter', () => {
 
   beforeAll( () => {
     this.testConfig = TestConfig;
-    var workspace = global.AIRLINER_BASEPATH + this.testConfig.BinaryDecoder.workspace;
-    var configFile = global.AIRLINER_BASEPATH + this.testConfig.BinaryDecoder.configFile;
+    var workspace = global.CDR_WORKSPACE;
+    var configFile = global.CDR_WORKSPACE + this.testConfig.BinaryDecoder.configFile;
 
     this.bd = new BinaryDecoder( workspace, configFile );
     this.emitter = new Emitter();
@@ -169,8 +169,8 @@ describe( 'BinaryDecoder getTlmDefByName', () => {
 
   beforeAll( () => {
     this.testConfig = TestConfig;
-    var workspace = global.AIRLINER_BASEPATH + this.testConfig.BinaryDecoder.workspace;
-    var configFile = global.AIRLINER_BASEPATH + this.testConfig.BinaryDecoder.configFile;
+    var workspace = global.CDR_WORKSPACE;
+    var configFile = global.CDR_WORKSPACE + this.testConfig.BinaryDecoder.configFile;
 
     this.bd = new BinaryDecoder( workspace, configFile );
     this.emitter = new Emitter();
@@ -216,8 +216,8 @@ describe( 'BinaryDecoder getAppNameFromPath', () => {
 
   beforeAll( () => {
     this.testConfig = TestConfig;
-    var workspace = global.AIRLINER_BASEPATH + this.testConfig.BinaryDecoder.workspace;
-    var configFile = global.AIRLINER_BASEPATH + this.testConfig.BinaryDecoder.configFile;
+    var workspace = global.CDR_WORKSPACE;
+    var configFile = global.CDR_WORKSPACE + this.testConfig.BinaryDecoder.configFile;
 
     this.bd = new BinaryDecoder( workspace, configFile );
     this.emitter = new Emitter();
@@ -242,8 +242,8 @@ describe( 'BinaryDecoder getOperationFromPath', () => {
 
   beforeAll( () => {
     this.testConfig = TestConfig;
-    var workspace = global.AIRLINER_BASEPATH + this.testConfig.BinaryDecoder.workspace;
-    var configFile = global.AIRLINER_BASEPATH + this.testConfig.BinaryDecoder.configFile;
+    var workspace = global.CDR_WORKSPACE;
+    var configFile = global.CDR_WORKSPACE + this.testConfig.BinaryDecoder.configFile;
 
     this.bd = new BinaryDecoder( workspace, configFile );
     this.emitter = new Emitter();
@@ -264,17 +264,14 @@ describe( 'BinaryDecoder getOperationFromPath', () => {
     expect( this.bd.getOperationFromPath( 'test/test2/return/' ) ).toBe( 'return' );
   } );
 
-
-
-
 } );
 
 describe( 'BinaryDecoder getAppDefinition', () => {
 
   beforeAll( () => {
     this.testConfig = TestConfig;
-    var workspace = global.AIRLINER_BASEPATH + this.testConfig.BinaryDecoder.workspace;
-    var configFile = global.AIRLINER_BASEPATH + this.testConfig.BinaryDecoder.configFile;
+    var workspace = global.CDR_WORKSPACE;
+    var configFile = global.CDR_WORKSPACE + this.testConfig.BinaryDecoder.configFile;
 
     this.bd = new BinaryDecoder( workspace, configFile );
     this.emitter = new Emitter();
@@ -297,8 +294,8 @@ describe( 'BinaryDecoder getTlmDefByPath', () => {
 
   beforeAll( () => {
     this.testConfig = TestConfig;
-    var workspace = global.AIRLINER_BASEPATH + this.testConfig.BinaryDecoder.workspace;
-    var configFile = global.AIRLINER_BASEPATH + this.testConfig.BinaryDecoder.configFile;
+    var workspace = global.CDR_WORKSPACE;
+    var configFile = global.CDR_WORKSPACE + this.testConfig.BinaryDecoder.configFile;
 
     this.bd = new BinaryDecoder( workspace, configFile );
     this.emitter = new Emitter();
@@ -338,8 +335,8 @@ describe( 'BinaryDecoder isOpNameAnArray', () => {
 
   beforeAll( () => {
     this.testConfig = TestConfig;
-    var workspace = global.AIRLINER_BASEPATH + this.testConfig.BinaryDecoder.workspace;
-    var configFile = global.AIRLINER_BASEPATH + this.testConfig.BinaryDecoder.configFile;
+    var workspace = global.CDR_WORKSPACE;
+    var configFile = global.CDR_WORKSPACE + this.testConfig.BinaryDecoder.configFile;
 
     this.bd = new BinaryDecoder( workspace, configFile );
     this.emitter = new Emitter();
@@ -365,8 +362,8 @@ describe( 'BinaryDecoder stripArrayIdentifier', () => {
 
   beforeAll( () => {
     this.testConfig = TestConfig;
-    var workspace = global.AIRLINER_BASEPATH + this.testConfig.BinaryDecoder.workspace;
-    var configFile = global.AIRLINER_BASEPATH + this.testConfig.BinaryDecoder.configFile;
+    var workspace = global.CDR_WORKSPACE;
+    var configFile = global.CDR_WORKSPACE + this.testConfig.BinaryDecoder.configFile;
 
     this.bd = new BinaryDecoder( workspace, configFile );
     this.emitter = new Emitter();
@@ -392,8 +389,8 @@ describe( 'BinaryDecoder stripArrayIdentifier', () => {
 
   beforeAll( () => {
     this.testConfig = TestConfig;
-    var workspace = global.AIRLINER_BASEPATH + this.testConfig.BinaryDecoder.workspace;
-    var configFile = global.AIRLINER_BASEPATH + this.testConfig.BinaryDecoder.configFile;
+    var workspace = global.CDR_WORKSPACE;
+    var configFile = global.CDR_WORKSPACE + this.testConfig.BinaryDecoder.configFile;
 
     this.bd = new BinaryDecoder( workspace, configFile );
     this.emitter = new Emitter();
@@ -419,8 +416,8 @@ describe( 'BinaryDecoder getMsgDefByName', () => {
 
   beforeAll( () => {
     this.testConfig = TestConfig;
-    var workspace = global.AIRLINER_BASEPATH + this.testConfig.BinaryDecoder.workspace;
-    var configFile = global.AIRLINER_BASEPATH + this.testConfig.BinaryDecoder.configFile;
+    var workspace = global.CDR_WORKSPACE;
+    var configFile = global.CDR_WORKSPACE + this.testConfig.BinaryDecoder.configFile;
 
     this.bd = new BinaryDecoder( workspace, configFile );
     this.emitter = new Emitter();
@@ -444,8 +441,8 @@ describe( 'BinaryDecoder getMsgDefByMsgID', () => {
 
   beforeAll( () => {
     this.testConfig = TestConfig;
-    var workspace = global.AIRLINER_BASEPATH + this.testConfig.BinaryDecoder.workspace;
-    var configFile = global.AIRLINER_BASEPATH + this.testConfig.BinaryDecoder.configFile;
+    var workspace = global.CDR_WORKSPACE;
+    var configFile = global.CDR_WORKSPACE + this.testConfig.BinaryDecoder.configFile;
 
     this.bd = new BinaryDecoder( workspace, configFile );
     this.emitter = new Emitter();
@@ -471,8 +468,8 @@ describe( 'BinaryDecoder getMsgDefByMsgID', () => {
 describe( 'BinaryDecoder getFieldObjFromPbMsg', () => {
   beforeAll( () => {
     this.testConfig = TestConfig;
-    var workspace = global.AIRLINER_BASEPATH + this.testConfig.BinaryDecoder.workspace;
-    var configFile = global.AIRLINER_BASEPATH + this.testConfig.BinaryDecoder.configFile;
+    var workspace = global.CDR_WORKSPACE;
+    var configFile = global.CDR_WORKSPACE + this.testConfig.BinaryDecoder.configFile;
 
     this.bd = new BinaryDecoder( workspace, configFile );
     this.emitter = new Emitter();
@@ -512,8 +509,8 @@ describe( 'BinaryDecoder getFieldObjFromPbMsg', () => {
 describe( 'BinaryDecoder getFieldFromOperationalName', () => {
   beforeAll( () => {
     this.testConfig = TestConfig;
-    var workspace = global.AIRLINER_BASEPATH + this.testConfig.BinaryDecoder.workspace;
-    var configFile = global.AIRLINER_BASEPATH + this.testConfig.BinaryDecoder.configFile;
+    var workspace = global.CDR_WORKSPACE;
+    var configFile = global.CDR_WORKSPACE + this.testConfig.BinaryDecoder.configFile;
 
     this.bd = new BinaryDecoder( workspace, configFile );
     this.emitter = new Emitter();
@@ -527,7 +524,7 @@ describe( 'BinaryDecoder getFieldFromOperationalName', () => {
 
 
 
-  it( 'Should log error when an incompatable operation name is given', () => {
+  it( 'Should return field when operational name is passed', () => {
     spyOn( this.bd, 'getFieldObjFromPbMsg' ).and.returnValue( [ 'success' ] );
     spyOn( this.bd, 'logErrorEvent' );
     expect( this.bd.getFieldFromOperationalName( {
@@ -544,8 +541,8 @@ describe( 'BinaryDecoder getFieldFromOperationalName', () => {
 describe( 'BinaryDecoder processBinaryMessage', () => {
   beforeAll( () => {
     this.testConfig = TestConfig;
-    var workspace = global.AIRLINER_BASEPATH + this.testConfig.BinaryDecoder.workspace;
-    var configFile = global.AIRLINER_BASEPATH + this.testConfig.BinaryDecoder.configFile;
+    var workspace = global.CDR_WORKSPACE;
+    var configFile = global.CDR_WORKSPACE + this.testConfig.BinaryDecoder.configFile;
 
     this.bd = new BinaryDecoder( workspace, configFile );
     this.emitter = new Emitter();
@@ -576,8 +573,8 @@ describe( 'BinaryDecoder processBinaryMessage', () => {
 describe( 'BinaryDecoder getFieldValueAsPbType', () => {
   beforeAll( () => {
     this.testConfig = TestConfig;
-    var workspace = global.AIRLINER_BASEPATH + this.testConfig.BinaryDecoder.workspace;
-    var configFile = global.AIRLINER_BASEPATH + this.testConfig.BinaryDecoder.configFile;
+    var workspace = global.CDR_WORKSPACE;
+    var configFile = global.CDR_WORKSPACE + this.testConfig.BinaryDecoder.configFile;
 
     this.bd = new BinaryDecoder( workspace, configFile );
     this.emitter = new Emitter();
@@ -595,8 +592,8 @@ describe( 'BinaryDecoder getFieldValueAsPbType', () => {
 describe( 'BinaryDecoder getFieldValue', () => {
   beforeAll( () => {
     this.testConfig = TestConfig;
-    var workspace = global.AIRLINER_BASEPATH + this.testConfig.BinaryDecoder.workspace;
-    var configFile = global.AIRLINER_BASEPATH + this.testConfig.BinaryDecoder.configFile;
+    var workspace = global.CDR_WORKSPACE;
+    var configFile = global.CDR_WORKSPACE + this.testConfig.BinaryDecoder.configFile;
 
     this.bd = new BinaryDecoder( workspace, configFile );
     this.emitter = new Emitter();
@@ -615,8 +612,8 @@ describe( 'BinaryDecoder getTlmDefByMsgID', () => {
 
   beforeAll( () => {
     this.testConfig = TestConfig;
-    var workspace = global.AIRLINER_BASEPATH + this.testConfig.BinaryDecoder.workspace;
-    var configFile = global.AIRLINER_BASEPATH + this.testConfig.BinaryDecoder.configFile;
+    var workspace = global.CDR_WORKSPACE;
+    var configFile = global.CDR_WORKSPACE + this.testConfig.BinaryDecoder.configFile;
 
     this.bd = new BinaryDecoder( workspace, configFile );
     this.emitter = new Emitter();
@@ -641,8 +638,8 @@ describe( 'BinaryDecoder getTlmDefByMsgID', () => {
 describe( 'BinaryDecoder cfeTimeToJsTime', () => {
   beforeAll( () => {
     this.testConfig = TestConfig;
-    var workspace = global.AIRLINER_BASEPATH + this.testConfig.BinaryDecoder.workspace;
-    var configFile = global.AIRLINER_BASEPATH + this.testConfig.BinaryDecoder.configFile;
+    var workspace = global.CDR_WORKSPACE;
+    var configFile = global.CDR_WORKSPACE + this.testConfig.BinaryDecoder.configFile;
 
     this.bd = new BinaryDecoder( workspace, configFile );
     this.emitter = new Emitter();

@@ -312,7 +312,7 @@ BinaryDecoder.prototype.getAppNameFromPath = function( path ) {
     var splitName = path.split( '/' );
     return splitName[ 1 ];
   }
-  return undefined
+  return undefined;
 }
 
 
@@ -485,15 +485,19 @@ BinaryDecoder.prototype.__proto__ = Emitter.prototype;
  * @return {Object}         telemetry defintion
  */
 BinaryDecoder.prototype.getMsgDefByName = function( msgName ) {
-  // console.log( msgName )
-  for ( var appID in this.defs.Airliner.apps ) {
-    var app = this.defs.Airliner.apps[ appID ];
-    for ( var protoID in app.proto_msgs ) {
-      var protomsg = app.proto_msgs[ protoID ];
-      if ( protoID == msgName ) {
-        return protomsg;
+  var self = this;
+  try {
+    for ( var appID in this.defs.Airliner.apps ) {
+      var app = this.defs.Airliner.apps[ appID ];
+      for ( var protoID in app.proto_msgs ) {
+        var protomsg = app.proto_msgs[ protoID ];
+        if ( protoID == msgName ) {
+          return protomsg;
+        }
       }
     }
+  } catch ( e ) {
+    self.logErrorEvent( EventEnum.UNHANDLED_EXCEPTION, 'getMsgDefByName: Cannot get definition by name.' );
   }
   return undefined;
 }
