@@ -246,8 +246,6 @@ Commander.prototype.getPanelsByPath = function( paths, panelsObj ) {
             if ( nodes[ nodeID ].type === ContentTypeEnum.PANEL ) {
               outNodes[ nodeID ] = nodes[ nodeID ];
             }
-          } else {
-            outNodes[ nodeID ] = nodes[ nodeID ];
           }
         }
         return outNodes;
@@ -290,8 +288,6 @@ Commander.prototype.getLayoutsByPath = function( paths, layoutsObj ) {
             if ( nodes[ nodeID ].type === ContentTypeEnum.LAYOUT ) {
               outNodes[ nodeID ] = nodes[ nodeID ];
             }
-          } else {
-            outNodes[ nodeID ] = nodes[ nodeID ];
           }
         }
         return outNodes;
