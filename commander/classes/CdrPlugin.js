@@ -39,7 +39,6 @@ class CdrPlugin {
     this.name = name;
 
     var content = this.getContent();
-    console.log(name);
     if ( typeof content !== 'undefined' ) {
       global.CONTENT_TREE[ name ] = content;
 
@@ -50,24 +49,24 @@ class CdrPlugin {
     }
   }
 
-  
+
   /**
    * This is called by the underlying framework to initialize the plugin.
    */
-  initialize(commander) {
-      var self = this;
-      
-      if(typeof this.getFunctions === 'function') {
-          var functions = this.getFunctions();
-          if ( typeof functions !== 'undefined') {
-              for(var funcName in functions) {
-                  commander.registerFunction(self.name, functions[funcName]);  
-              }
-          }
+  initialize( commander ) {
+    var self = this;
+
+    if ( typeof this.getFunctions === 'function' ) {
+      var functions = this.getFunctions();
+      if ( typeof functions !== 'undefined' ) {
+        for ( var funcName in functions ) {
+          commander.registerFunction( self.name, functions[ funcName ] );
+        }
       }
+    }
   }
 
-  
+
   /**
    * Returns content type
    * @type {Object}
@@ -84,29 +83,29 @@ class CdrPlugin {
   processContentTree( content, inPath, inNodeID ) {
     var self = this;
     var newPath = inPath + inNodeID;
-    console.log('**********');
-    
-    
+
+
     var filePath = content.filePath;
     if ( typeof filePath !== 'undefined' ) {
       var fullFilePath = path.join( self.webRoot, filePath );
 
-      console.log(newPath);
-      
+
       if ( path.extname( fullFilePath ) === '.pug' ) {
         global.NODE_APP.get( newPath, function( req, res ) {
-  	      res.render(fullFilePath, {query: req.query});
-        });
+          res.render( fullFilePath, {
+            query: req.query
+          } );
+        } );
       } else if ( path.extname( fullFilePath ) === '.lyt' ) {
         global.NODE_APP.get( newPath, function( req, res ) {
           readJSONFile( fullFilePath, function( err, json ) {
             res.send( json );
           } );
         } );
-      } 
-      
-      var staticPath = path.join(self.webRoot);
-      global.NODE_APP.use(inPath, express.static(staticPath));
+      }
+
+      var staticPath = path.join( self.webRoot );
+      global.NODE_APP.use( inPath, express.static( staticPath ) );
     }
 
     var nodes = content.nodes;

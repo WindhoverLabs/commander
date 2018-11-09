@@ -244,6 +244,7 @@ describe( 'VariableServer', () => {
     } );
 
     it( 'Should react to emit on json-tlm-stream', () => {
+      this.vs.logErrorEvent.calls.reset();
       this.vs.instanceEmitter.emit( Config.get( 'jsonInputStreamID' ), this.testcase2 );
       expect( this.vs.logErrorEvent ).toHaveBeenCalledTimes( 1 );
       this.vs.logErrorEvent.calls.reset();
@@ -292,7 +293,6 @@ describe( 'VariableServer', () => {
       var someFunc = jasmine.any( Function );
       var someObj = jasmine.any( Object );
       spyOn( this.vs, 'removeSubscriber' ).and.callFake( () => {} );
-      // spyOn( this.vs, 'getTlmDefinitions' ).and.callFake( ( someObj, someFunc ) => {} );
       this.vs.instanceEmitter.emit( Config.get( 'reqSubscribeStreamID' ), {
         cmd: 'unsubscribe',
         opsPath: '/CFE/CFE_ES_HkPacket_t/Payload.CmdCounter'
@@ -309,6 +309,95 @@ describe( 'VariableServer', () => {
         opsPath: 9
       }, someFunc );
       expect( this.vs.logErrorEvent ).toHaveBeenCalledTimes( 1 );
+
+    } );
+
+  } );
+
+  describe( 'SubscribeToVariable', () => {
+
+    beforeAll( () => {
+      spyOn( this.vs, 'addSubscriber' );
+    } );
+
+    it( 'Should call addSubscriber function', () => {
+      this.vs.SubscribeToVariable( jasmine.any( String ), jasmine.any( Function ) );
+      expect( this.vs.addSubscriber ).toHaveBeenCalledTimes( 1 );
+    } );
+
+  } );
+
+  describe( 'isVarNameAnArray', () => {
+
+    it( 'Should return true if a array string is passed', () => {
+      expect( this.vs.isVarNameAnArray( 'test[]' ) ).toBe( true );
+      expect( this.vs.isVarNameAnArray( 'test[1,2,3]' ) ).toBe( true );
+      expect( this.vs.isVarNameAnArray( 'test[asdas asdasd]' ) ).toBe( true );
+    } );
+
+    it( 'Should return false if any other object or string is passed', () => {
+      expect( this.vs.isVarNameAnArray( 'test' ) ).toBe( false );
+      expect( this.vs.isVarNameAnArray( '[1,2,3]' ) ).toBe( false );
+      expect( this.vs.isVarNameAnArray( {} ) ).toBe( false );
+      expect( this.vs.isVarNameAnArray( [] ) ).toBe( false );
+    } );
+
+  } );
+
+  describe( 'getTlmDefinitions', () => {
+
+    beforeAll( () => {
+      spyOn( this.vs, 'instanceEmit' );
+      spyOn( this.vs, 'logErrorEvent' );
+    } );
+
+    it( 'Should call instance emit function on tlm-def-request', () => {
+      this.vs.instanceEmit.calls.reset();
+      this.vs.getTlmDefinitions( [ 'requestObj' ], jasmine.any( Function ) );
+      expect( this.vs.instanceEmit ).toHaveBeenCalledTimes( 1 );
+      expect( this.vs.instanceEmit.calls.argsFor( 0 )[ 1 ] ).toEqual( [ 'requestObj' ] );
+    } );
+
+    it( 'Should execute callback', () => {
+      var cb_undefined = function( val ) {
+        expect( val ).toEqual( undefined )
+      }
+      var cb_array = function( val ) {
+        console.log( val );
+        expect( typeof val.length ).toEqual( 'number' )
+      }
+      var cb_single = function( val ) {
+        expect( typeof val ).toEqual( 'object' )
+      }
+      this.vs.instanceEmit.calls.reset();
+      this.vs.logErrorEvent.calls.reset();
+      this.vs.getTlmDefinitions( [ 'requestObj' ], cb_undefined );
+      this.vs.getTlmDefinitions( {
+        name: '/CFE/CFE_ES_HkPacket_t/Payload.CmdCounter'
+      }, cb_single );
+      this.vs.getTlmDefinitions( [ {
+        name: '/CFE/CFE_ES_HkPacket_t/Payload.CmdCounter'
+      } ], cb_array );
+
+      /* the callback function passed into instanceEmit */
+      var callback = this.vs.instanceEmit.calls.argsFor( 0 )[ 2 ];
+      var callback2 = this.vs.instanceEmit.calls.argsFor( 1 )[ 2 ];
+      var callback3 = this.vs.instanceEmit.calls.argsFor( 2 )[ 2 ];
+      callback( undefined );
+      callback2( [ {
+        opsPath: '/CFE/CFE_ES_HkPacket_t/Payload.CmdCounter',
+        dataType: 'uint8'
+      } ] );
+      callback3( {
+        opsPath: '/CFE/CFE_ES_HkPacket_t/Payload.ErrCounter',
+        dataType: 'uint8'
+      } );
+      //
+      // expect( this.vs.logErrorEvent ).toHaveBeenCalledTimes( 1 )
+      // console.log( this.vs.logErrorEvent.calls.argsFor( 0 ) );
+      // expect( this.vs.logErrorEvent.calls.argsFor( 0 )[ 0 ] ).toEqual( 4 );
+
+
 
     } );
 

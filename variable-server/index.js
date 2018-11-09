@@ -49,6 +49,8 @@ var EventEnum = Object.freeze( {
   'INVALID_SUBSCRIPTION_REQUEST': 2
 }, {
   'CONFIG_ERROR': 3
+}, {
+  'UNHANDLED_ERROR': 4
 } );
 
 var emit = Emitter.prototype.emit;
@@ -328,20 +330,20 @@ VariableServer.prototype.setInstanceEmitter = function( newInstanceEmitter ) {
 }
 
 // DEBUG: This function is not being used any where in the commander directory
-VariableServer.prototype.getSampleByArrayIndex = function( variable, sampleID, arrayIndex ) {
-  var newValue = variable.sample[ variable.sample.length - 1 ].value[ arrayIndex ];
-
-  var outSample = {};
-  for ( var sampleItemID in variable.sample[ sampleID ] ) {
-    if ( sampleItemID === 'value' ) {
-      outSample.value = variable.sample[ sampleID ].value[ arrayIndex ];
-    } else {
-      outSample[ sampleItemID ] = variable.sample[ sampleID ][ sampleItemID ];
-    }
-  }
-
-  return outSample;
-}
+// VariableServer.prototype.getSampleByArrayIndex = function( variable, sampleID, arrayIndex ) {
+//   var newValue = variable.sample[ variable.sample.length - 1 ].value[ arrayIndex ];
+//
+//   var outSample = {};
+//   for ( var sampleItemID in variable.sample[ sampleID ] ) {
+//     if ( sampleItemID === 'value' ) {
+//       outSample.value = variable.sample[ sampleID ].value[ arrayIndex ];
+//     } else {
+//       outSample[ sampleItemID ] = variable.sample[ sampleID ][ sampleItemID ];
+//     }
+//   }
+//
+//   return outSample;
+// }
 
 
 /**
@@ -363,50 +365,51 @@ VariableServer.prototype.SubscribeToVariable = function( opsPath, cb ) {
  * @return {Boolean}        true if variable name is a array otherwise false
  */
 VariableServer.prototype.isVarNameAnArray = function( varName ) {
-  var start = varName.indexOf( '[' );
+  if ( typeof varName == 'string' ) {
+    var start = varName.indexOf( '[' );
 
-  if ( start > 0 ) {
-    var end = varName.indexOf( ']' );
+    if ( start > 0 ) {
+      var end = varName.indexOf( ']' );
 
-    if ( end > start ) {
-      return true;
+      if ( end > start ) {
+        return true;
+      }
     }
   }
-
   return false;
 }
 
 
 // DEBUG: this function might not be used anywhere
-VariableServer.prototype.stripArrayIdentifier = function( varName ) {
-  if ( this.isVarNameAnArray( varName ) == true ) {
-    var start = 0;
-    var end = varName.indexOf( '[' );
-
-    if ( end > 0 ) {
-      var outString = varName.substring( start, end );
-
-      return outString;
-    }
-  }
-  return varName;
-}
+// VariableServer.prototype.stripArrayIdentifier = function( varName ) {
+//   if ( this.isVarNameAnArray( varName ) == true ) {
+//     var start = 0;
+//     var end = varName.indexOf( '[' );
+//
+//     if ( end > 0 ) {
+//       var outString = varName.substring( start, end );
+//
+//       return outString;
+//     }
+//   }
+//   return varName;
+// }
 
 
 // DEBUG: this function might not be used anywhere
-VariableServer.prototype.getArrayIndex = function( varName ) {
-  if ( this.isVarNameAnArray( varName ) == true ) {
-    var start = varName.indexOf( '[' ) + 1;
-    var end = varName.indexOf( ']' );
-
-    if ( end > start ) {
-      var value = parseInt( varName.substring( start, end ) );
-
-      return value;
-    }
-  }
-  return -1;
-}
+// VariableServer.prototype.getArrayIndex = function( varName ) {
+//   if ( this.isVarNameAnArray( varName ) == true ) {
+//     var start = varName.indexOf( '[' ) + 1;
+//     var end = varName.indexOf( ']' );
+//
+//     if ( end > start ) {
+//       var value = parseInt( varName.substring( start, end ) );
+//
+//       return value;
+//     }
+//   }
+//   return -1;
+// }
 
 
 /**
@@ -416,7 +419,9 @@ VariableServer.prototype.getArrayIndex = function( varName ) {
  */
 VariableServer.prototype.getTlmDefinitions = function( req, cb ) {
   var self = this;
+  // console.log( 'REQ          ', req );
   this.instanceEmit( config.get( 'tlmDefReqStreamID' ), req, function( tlmDefs ) {
+    // console.log( 'DEF          ', tlmDefs )
     if ( typeof tlmDefs === 'undefined' ) {
       cb( undefined );
     } else {
