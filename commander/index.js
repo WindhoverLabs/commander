@@ -202,7 +202,7 @@ function Commander( workspace, configFile ) {
       ( function( funcName ) {
         socket.on( funcName, function() {
           var cb = arguments[ arguments.length - 1 ];
-          self.logDebugEvent( EventEnum.SOCKET_PUBLIC_FUNCTION_CALL, 'SocketIO: ' + funcName );
+          self.logDebugEvent( EventEnum.SOCKET_PUBLIC_FUNCTION_CALL, 'SocketIO: ' + funcName);
           if ( typeof self[ funcName ] !== 'function' ) {
             /* TODO */
             console.log( 'Invalid function' );
@@ -695,7 +695,7 @@ Commander.prototype.logEvent = function( instance, plugin, component, eventID, c
 
     switch ( criticality ) {
       case 'DEBUG':
-        console.log( FgGreen + 'EVT' + FgWhite + ' | ' + FgCyan + dateString + FgWhite + ' | ' + FgWhite + instance + ' | ' + FgWhite + component + ' | ' + FgWhite + plugin + ' | ' + FgWhite + eventID + ' | ' + FgWhite + criticality + FgWhite + ' | ' + FgWhite + text );
+        //console.log( FgGreen + 'EVT' + FgWhite + ' | ' + FgCyan + dateString + FgWhite + ' | ' + FgWhite + instance + ' | ' + FgWhite + component + ' | ' + FgWhite + plugin + ' | ' + FgWhite + eventID + ' | ' + FgWhite + criticality + FgWhite + ' | ' + FgWhite + text );
         break;
 
       case 'INFO':

@@ -39,7 +39,6 @@ class CdrPlugin {
     this.name = name;
 
     var content = this.getContent();
-    console.log(name);
     if ( typeof content !== 'undefined' ) {
       global.CONTENT_TREE[ name ] = content;
 
@@ -84,14 +83,10 @@ class CdrPlugin {
   processContentTree( content, inPath, inNodeID ) {
     var self = this;
     var newPath = inPath + inNodeID;
-    console.log('**********');
-    
     
     var filePath = content.filePath;
     if ( typeof filePath !== 'undefined' ) {
       var fullFilePath = path.join( self.webRoot, filePath );
-
-      console.log(newPath);
       
       if ( path.extname( fullFilePath ) === '.pug' ) {
         global.NODE_APP.get( newPath, function( req, res ) {
