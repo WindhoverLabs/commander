@@ -31,31 +31,52 @@
  *
  *****************************************************************************/
 
-var ConfigDatabase = require( '../../config-database/index' );
-var TestConfig = require( '../../config/test.json' );
+var ConfigDatabase = require( './index' );
+var TestConfig = require( '../config/test.json' );
+var Config = require( './config.js' );
 var Emitter = require( 'events' );
 var fs = require( 'fs' );
 
-describe( 'ConfigDatabase Constructor', () => {
+describe( 'ConfigDatabase', () => {
 
   beforeAll( () => {
     this.testConfig = TestConfig;
-    var workspace = global.CDR_INSTALL_DIR;
-    var configFile = global.CDR_INSTALL_DIR + this.testConfig.ConfigDatabase.configFile;;
-    this.cd = new BinaryEncoder( workspace, configFile );
+    var workspace = global.CDR_WORKSPACE;
+    var configFile = global.CDR_WORKSPACE + this.testConfig.ConfigDatabase.configFile;
+    this.cd = new ConfigDatabase( workspace, configFile );
+    this.emitter = new Emitter();
+    this.cd.setInstanceEmitter( this.emitter );
+    Config.loadFile( configFile );
   } );
 
-  // it( 'Should load airliner.json to memory', () => {
-  //   expect( this.cd.defs ).toBeDefined();
-  // } );
-  //
-  // it( 'Should Configure Endianess', () => {
-  //   expect( this.cd.ccsdsPriHdr ).toBeDefined();
-  //   expect( this.cd.ccsdsCmdSecHdr ).toBeDefined();
-  //   expect( this.cd.ccsdsTlmSecHdr ).toBeDefined();
-  //   expect( this.cd.tlmHeaderLength ).toBeDefined();
-  //   expect( this.cd.ccsds ).toBeDefined();
-  // } );
+  describe( 'Constructor', () => {
 
+    it( 'Should load airliner.json to memory', () => {
+      expect( this.cd.defs ).toBeDefined();
+    } );
+
+  } );
+
+  describe( 'setInstanceEmitter', () => {
+
+    beforeEach( () => {
+      spyOn( this.cd, 'logErrorEvent' );
+      spyOn( this.cd.instanceEmitter._events, Config.get( 'queryConfigStreamID' ) );
+    } );
+
+    it( 'Should react to emit on config-db-query', () => {
+
+      var someFunc = jasmine.any( Function );
+      this.cd.instanceEmitter.emit( Config.get( 'queryConfigStreamID' ), '$.Airliner.apps.CFE.scheduler', someFunc );
+      expect( this.cd.instanceEmitter._events[ Config.get( 'queryConfigStreamID' ) ].calls.argsFor( 0 )[ 0 ] ).toBe( '$.Airliner.apps.CFE.scheduler' );
+      this.cd.instanceEmitter.emit( Config.get( 'queryConfigStreamID' ), '$.Airliner.apps.SCH.config', someFunc );
+      expect( this.cd.instanceEmitter._events[ Config.get( 'queryConfigStreamID' ) ].calls.argsFor( 1 )[ 0 ] ).toBe( '$.Airliner.apps.SCH.config' );
+      this.cd.instanceEmitter.emit( Config.get( 'queryConfigStreamID' ), '$.Airliner.apps.CFE.events', someFunc );
+      expect( this.cd.instanceEmitter._events[ Config.get( 'queryConfigStreamID' ) ].calls.argsFor( 2 )[ 0 ] ).toBe( '$.Airliner.apps.CFE.events' );
+      expect( this.cd.instanceEmitter._events[ Config.get( 'queryConfigStreamID' ) ] ).toHaveBeenCalledTimes( 3 );
+
+    } );
+
+  } );
 
 } );

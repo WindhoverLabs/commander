@@ -75,33 +75,6 @@ var listenerCount = Emitter.listenerCount ||
     return emitter.listeners( type ).length
   }
 
-/**
- * Generates an array of paths of files that are located in the
- * base directory which matches the extention passed into parameters.
- * @param  {String} base   base directory path
- * @param  {String} ext    file extention
- * @param  {Object} files  file read object or undefined
- * @param  {Object} result empty array or undefined
- * @return {Object}        array of matching paths
- */
-function recFindByExt( base, ext, files, result ) {
-  files = files || fs.readdirSync( base )
-  result = result || []
-
-  files.forEach(
-    function( file ) {
-      var newbase = path.join( base, file )
-      if ( fs.statSync( newbase ).isDirectory() ) {
-        result = recFindByExt( newbase, ext, fs.readdirSync( newbase ), result )
-      } else {
-        if ( file.substr( -1 * ( ext.length + 1 ) ) == '.' + ext ) {
-          result.push( newbase )
-        }
-      }
-    }
-  )
-  return result
-}
 
 /**
  * Constructor for protobuf decoder
@@ -190,8 +163,7 @@ function ProtobufDecoder( workspace, configFile ) {
     var fullPath = process.env.AIRLINER_PROTO_PATH;
   }
 
-  var protoFiles = recFindByExt( fullPath, 'proto' );
-
+  var protoFiles = this.recFindByExt( fullPath, 'proto' );
   for ( var i = 0; i < protoFiles.length; i++ ) {
     this.parseProtoFile( protoFiles[ i ] );
   }
@@ -268,6 +240,33 @@ ProtobufDecoder.prototype.setInstanceEmitter = function( newInstanceEmitter ) {
   this.logInfoEvent( EventEnum.INITIALIZED, 'Initialized' );
 }
 
+/**
+ * Generates an array of paths of files that are located in the
+ * base directory which matches the extention passed into parameters.
+ * @param  {String} base   base directory path
+ * @param  {String} ext    file extention
+ * @param  {Object} files  file read object or undefined
+ * @param  {Object} result empty array or undefined
+ * @return {Object}        array of matching paths
+ */
+ProtobufDecoder.prototype.recFindByExt = function( base, ext, files, result ) {
+  files = files || fs.readdirSync( base )
+  result = result || []
+
+  files.forEach(
+    function( file ) {
+      var newbase = path.join( base, file )
+      if ( fs.statSync( newbase ).isDirectory() ) {
+        result = this.recFindByExt( newbase, ext, fs.readdirSync( newbase ), result )
+      } else {
+        if ( file.substr( -1 * ( ext.length + 1 ) ) == '.' + ext ) {
+          result.push( newbase )
+        }
+      }
+    }
+  )
+  return result
+}
 
 /**
  * protobuf decoder sends command

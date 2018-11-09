@@ -119,7 +119,6 @@ ConfigDatabase.prototype.setInstanceEmitter = function( newInstanceEmitter ) {
 
   this.instanceEmitter.on( config.get( 'queryConfigStreamID' ), function( query, cb ) {
     var result = jp.query( self.defs, query );
-
     cb( result );
   } );
 

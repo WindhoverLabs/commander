@@ -21,13 +21,14 @@ var Reset = "\x1b[0m",
   FgMagenta = "\x1b[35m",
   FgWhite = "\x1b[37m";
 
-shell.exec( '. environment.sh' )
+
 global.AIRLINER_BASEPATH = ( path.join( process.env.CDR_WORKSPACE, '../../../../../../' ) || path.join( __dirname, '../../../../../' ) ).slice( 0, -1 );
 global.CDR_WORKSPACE = process.env.CDR_WORKSPACE || path.join( __dirname, '../workspace' );
 global.AIRLINER_MSG_DEF_PATH = process.env.AIRLINER_MSG_DEF_PATH;
 global.AIRLINER_PROTO_PATH = process.env.AIRLINER_PROTO_PATH;
 global.COMMANDER_PATH = process.env.COMMANDER_PATH;
 global.CDR_INSTALL_DIR = ( path.join( __dirname, '../' ) ).slice( 0, -1 );
+
 console.log( FgMagenta );
 console.log( ' ENVIRONMENT - ' );
 console.log( '    AIRLINER_BASEPATH       : ', global.AIRLINER_BASEPATH );
@@ -40,7 +41,7 @@ console.log( Reset );
 
 
 var junitReporter = new reporters.JUnitXmlReporter( {
-  savePath: __dirname + '/reports/XML/',
+  savePath: global.CDR_WORKSPACE + '/unit_test_reports/XML/',
   consolidateAll: false
 } );
 

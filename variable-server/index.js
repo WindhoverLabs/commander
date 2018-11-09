@@ -66,26 +66,7 @@ var listenerCount = Emitter.listenerCount ||
     return emitter.listeners( type ).length
   }
 
-/**
- * Checks if a object is empty
- * @param  {Object}  obj object
- * @return {Boolean}     true if empty otherwise false
- */
-function isEmpty( obj ) {
-  if ( typeof obj === 'object' ) {
-    for ( var key in obj ) {
-      if ( obj.hasOwnProperty( key ) )
-        return false;
-    }
-    return true;
-  } else if ( typeof obj === 'array' ) {
-    if ( obj.length == 0 ) {
-      return true;
-    } else {
-      return false;
-    }
-  }
-}
+
 
 /**
  * Constructor for variable server
@@ -107,6 +88,28 @@ function VariableServer( configFile ) {
   } );
 };
 
+/**
+ * Checks if a object is empty
+ * @param  {Object}  obj object
+ * @return {Boolean}     true if empty otherwise false
+ */
+VariableServer.prototype.isEmpty = function( obj ) {
+  if ( typeof obj === 'object' ) {
+    for ( var key in obj ) {
+      if ( obj.hasOwnProperty( key ) )
+        return false;
+    }
+    return true;
+  } else if ( typeof obj === 'array' ) {
+    if ( obj.length == 0 ) {
+      return true;
+    } else {
+      return false;
+    }
+  } else {
+    return undefined;
+  }
+}
 
 /**
  * Parse and return app name
@@ -114,8 +117,11 @@ function VariableServer( configFile ) {
  * @return {String}      App name
  */
 VariableServer.prototype.getAppNameFromPath = function( path ) {
-  var splitName = path.split( '/' );
-  return splitName[ 1 ];
+  if ( typeof path === 'string' ) {
+    var splitName = path.split( '/' );
+    return splitName[ 1 ];
+  }
+  return undefined;
 }
 
 
@@ -125,8 +131,11 @@ VariableServer.prototype.getAppNameFromPath = function( path ) {
  * @return {String}      Operation name
  */
 VariableServer.prototype.getOpNameFromPath = function( path ) {
-  var splitName = path.split( '/' );
-  return splitName[ 2 ];
+  if ( typeof path === 'string' ) {
+    var splitName = path.split( '/' );
+    return splitName[ 2 ];
+  }
+  return undefined;
 }
 
 
@@ -138,8 +147,13 @@ VariableServer.prototype.getOpNameFromPath = function( path ) {
 VariableServer.prototype.getMessageOpsPath = function( path ) {
   var appName = this.getAppNameFromPath( path );
   var opName = this.getOpNameFromPath( path );
-  var msgOpsPath = '/' + appName + '/' + opName;
-  return msgOpsPath;
+  if ( appName != undefined & opName != undefined ) {
+    var msgOpsPath = '/' + appName + '/' + opName;
+    return msgOpsPath;
+  } else {
+    return undefined
+  }
+
 }
 
 
@@ -149,8 +163,11 @@ VariableServer.prototype.getMessageOpsPath = function( path ) {
  * @return {String}      variable operation name
  */
 VariableServer.prototype.getVariableOpsName = function( path ) {
-  var splitName = path.split( '/' );
-  return splitName[ 3 ];
+  if ( typeof path === 'string' ) {
+    var splitName = path.split( '/' );
+    return splitName[ 3 ];
+  }
+  return undefined;
 }
 
 
@@ -162,14 +179,12 @@ VariableServer.prototype.getVariableOpsName = function( path ) {
 VariableServer.prototype.getVariablesFromMsgOpsName = function( opsName ) {
   var self = this;
   var outVars = {};
-  // DEBUG:  opsPath is undefined in this scope.
   for ( var opsPath in self.vars ) {
     var msgOpsName = self.getMessageOpsPath( opsPath );
     if ( msgOpsName == opsName ) {
       outVars[ opsPath ] = self.vars[ opsPath ];
     }
   }
-
   return outVars;
 }
 
@@ -184,8 +199,7 @@ VariableServer.prototype.setInstanceEmitter = function( newInstanceEmitter ) {
 
   this.instanceEmitter.on( config.get( 'jsonInputStreamID' ), function( message ) {
     var vars = self.getVariablesFromMsgOpsName( message.opsPath );
-
-    if ( isEmpty( vars ) == false ) {
+    if ( self.isEmpty( vars ) == false ) {
       /* We have variables either persisted or subscribed to in this message.  Iterate through
        * each variable that we're looking for.
        */
@@ -197,12 +211,12 @@ VariableServer.prototype.setInstanceEmitter = function( newInstanceEmitter ) {
       for ( var itemID in vars ) {
         var variable = vars[ itemID ];
         var varOpName = self.getVariableOpsName( itemID );
-
         var valueObj = jp.query( msgRoot, '$.' + varOpName );
 
-        if ( isEmpty( valueObj ) == true ) {
-          console.log( 'OpName ' + itemID + ' not found.' );
+        if ( self.isEmpty( valueObj ) == true ) {
+          self.logErrorEvent( EventEnum.INVALID_SUBSCRIPTION_REQUEST, 'OpName ' + itemID + ' not found.' );
         } else {
+
           var value = valueObj[ 0 ];
 
           /* Update the current value. */
@@ -217,6 +231,7 @@ VariableServer.prototype.setInstanceEmitter = function( newInstanceEmitter ) {
 
           /* Get the persistence value and set the array of retained values accordingly. */
           var persistenceCount = self.getVariablePersistence( itemID );
+
           if ( variable.sample.length > persistenceCount ) {
             /* The array is too big.  We need to take the oldest sample out. */
             variable.sample.shift();
@@ -265,119 +280,7 @@ VariableServer.prototype.setInstanceEmitter = function( newInstanceEmitter ) {
         }
       }
     }
-
     self.instanceEmit( config.get( 'outputEventsStreamID' ), 'message-received' );
-
-
-
-    //    	for(var itemID in message.fields) {
-    //    		var item = message.fields[itemID];
-    //
-    //    		if(self.vars.hasOwnProperty(itemID) == false) {
-    //    			/* This is the first time we've seen this variable and it does
-    //    			 * not already have a definition.  Create a new record. */
-    //        		var variable = {opsPath: itemID};
-    //                variable.sample = [];
-    //    			self.vars[itemID] = variable;
-    //
-    //    		} else {
-    //    			/* We've already received this or have a predefinition. */
-    //    			var variable = self.vars[itemID];
-    //    			if(typeof variable.sample === 'undefined') {
-    //    			    variable.sample = [];
-    //    			}
-    //    		}
-    //
-    //            /* Update the current value. */
-    //            variable.sample.push({value: item.value, msgTime:item.msgTime, gndTime:currentDateAndTime});
-    //
-    //    		/* Get the persistence value and set the array of retained values accordingly. */
-    //    		var persistenceCount = self.getVariablePersistence(itemID);
-    //    		if(variable.sample.length > persistenceCount) {
-    //    		    /* The array is too big.  We need to take the oldest sample out. */
-    //    		    variable.sample.shift();
-    //    		}
-    //
-    //    		/* Now loop through all the subscribers, if any. */
-    //    		for(var subscriber in variable.subscribers) {
-    //    			/* First make sure this subscriber callback still exists. */
-    //    			if(typeof variable.subscribers[subscriber] !== 'function') {
-    //    				/* It doesn't exist.  It must have been destroyed.  Delete
-    //    				 * the reference to this callback.
-    //    				 */
-    //    				delete variable.subscribers[subscriber];
-    //    			} else {
-    //	    			if(subscribersToUpdate.hasOwnProperty(subscriber) == false) {
-    //	    				/* This is the first time in this function call that we've
-    //	    				 * processed a variable for this particular subscriber.
-    //	    				 * Create a new subscriber record in this temporary
-    //	    				 * object.
-    //	    				 */
-    //	    				subscribersToUpdate[subscriber] = {cb:variable.subscribers[subscriber], variables: {}};
-    //	    			}
-    //
-    //	    			subscribersToUpdate[subscriber].variables[itemID] = {};
-    //
-    //	    			var updatedVariable = subscribersToUpdate[subscriber].variables[itemID];
-    //
-    //    				updatedVariable['sample'] = [variable.sample[variable.sample.length - 1]];
-    //    			}
-    //    		}
-    //
-    //    		/* Now check to see if this item is an array. */
-    //			if(Array.isArray(item.value) == true) {
-    //				/* This is an array.  See if we have a subscriber for the individual array indices by looping through
-    //				 * the array indices that are subscribed to. */
-    //				for(var arrayIndexID in variable.arrayIndices) {
-    //					/* This array index has at least one subscriber.  Loop through the subscribers. */
-    //		    		for(var subscriber in variable.arrayIndices[arrayIndexID]) {
-    //		    			var subscription = variable.arrayIndices[arrayIndexID][subscriber];
-    //
-    //		    			/* First make sure this subscriber callback still exists. */
-    //		    			if(typeof subscription !== 'function') {
-    //		    				/* It doesn't exist.  It must have been destroyed.  Delete
-    //		    				 * the reference to this callback.
-    //		    				 */
-    //		    				delete  variable.arrayIndices[arrayIndexID][subscriber];
-    //		    			} else {
-    //		    				/* It does still exist.  Start processing this subscription. */
-    //		    				if(subscribersToUpdate.hasOwnProperty(subscriber) == false) {
-    //		    					/* This is the first time in this function call that we've
-    //		    					 * processed a variable for this particular subscriber.
-    //		    					 * Create a new subscriber record in this temporary
-    //		    					 * object.
-    //		    					 */
-    //		    					subscribersToUpdate[subscriber] = {cb:variable.subscribers[subscriber], variables: {}};
-    //		    				}
-    //
-    //							/* Build an opsName that includes the array index */
-    //		    				var newOpsName = itemID + '[' + arrayIndexID + ']';
-    //		    				subscribersToUpdate[subscriber].variables[newOpsName] = {};
-    //
-    //			    			var updatedVariable = subscribersToUpdate[subscriber].variables[newOpsName];
-    //
-    //			    			var outSample = self.getSampleByArrayIndex(variable, variable.sample.length - 1, arrayIndexID);
-    //
-    //			    			updatedVariable['sample'] = [outSample];
-    //		    			}
-    //		    		}
-    //				}
-    //			}
-    //    	}
-
-    //    	/* Lastly, loop through all the subscriptions to update, and send them
-    //    	 * an array of updates.
-    //    	 */
-    //		for(var subscriber in subscribersToUpdate) {
-    //			var callback = subscribersToUpdate[subscriber].cb;
-    //
-    //			/* Make sure this callback still exists. */
-    //			if(typeof callback === 'function') {
-    //				callback(subscribersToUpdate[subscriber].variables);
-    //			}
-    //		}
-    //
-    //    	self.instanceEmit(config.get('outputEventsStreamID'), 'message-received');
   } );
 
   this.instanceEmitter.on( config.get( 'varDefReqStreamID' ), function( req, cb ) {
@@ -397,7 +300,7 @@ VariableServer.prototype.setInstanceEmitter = function( newInstanceEmitter ) {
           } );
         }
       } else {
-        this.logErrorEvent( EventEnum.INVALID_SUBSCRIPTION_REQUEST, 'Subscription request invalid. \'' + req + '\'' );
+        self.logErrorEvent( EventEnum.INVALID_SUBSCRIPTION_REQUEST, 'Subscription request invalid. \'' + req + '\'' );
       }
     } else if ( req.cmd === 'unsubscribe' ) {
       if ( typeof req.opsPath === 'string' || req.opsPath instanceof String ) {
@@ -407,7 +310,7 @@ VariableServer.prototype.setInstanceEmitter = function( newInstanceEmitter ) {
           self.removeSubscriber( req.opsPath[ i ], cb );
         }
       } else {
-        this.logErrorEvent( EventEnum.INVALID_SUBSCRIPTION_REQUEST, 'Subscription request invalid. \'' + req + '\'' );
+        self.logErrorEvent( EventEnum.INVALID_SUBSCRIPTION_REQUEST, 'Subscription request invalid. \'' + req + '\'' );
       }
     }
   } );
@@ -513,7 +416,6 @@ VariableServer.prototype.getArrayIndex = function( varName ) {
  */
 VariableServer.prototype.getTlmDefinitions = function( req, cb ) {
   var self = this;
-
   this.instanceEmit( config.get( 'tlmDefReqStreamID' ), req, function( tlmDefs ) {
     if ( typeof tlmDefs === 'undefined' ) {
       cb( undefined );
