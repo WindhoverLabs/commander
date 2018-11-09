@@ -1,5 +1,4 @@
 var path = require( 'path' );
-var shell = require( 'shelljs' );
 var Jasmine = require( 'jasmine' );
 var reporters = require( 'jasmine-reporters' );
 
