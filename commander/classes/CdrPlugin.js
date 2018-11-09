@@ -84,11 +84,9 @@ class CdrPlugin {
     var self = this;
     var newPath = inPath + inNodeID;
 
-
     var filePath = content.filePath;
     if ( typeof filePath !== 'undefined' ) {
       var fullFilePath = path.join( self.webRoot, filePath );
-
 
       if ( path.extname( fullFilePath ) === '.pug' ) {
         global.NODE_APP.get( newPath, function( req, res ) {
