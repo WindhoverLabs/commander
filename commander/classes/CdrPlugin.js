@@ -39,13 +39,14 @@ class CdrPlugin {
     this.name = name;
 
     var content = this.getContent();
+    console.log(name);
     if ( typeof content !== 'undefined' ) {
       global.CONTENT_TREE[ name ] = content;
 
       var appViews = global.NODE_APP.get( 'views' );
       appViews.push( webRoot );
 
-      this.processContentTree( content, '/' + name );
+      this.processContentTree( content, '', name );
     }
   }
 
@@ -82,6 +83,8 @@ class CdrPlugin {
    */
   processContentTree( content, inPath, inNodeID ) {
     var self = this;
+    
+    console.log(inPath + '/' + inNodeID);
 
     var filePath = content.filePath;
     if ( typeof filePath !== 'undefined' ) {
