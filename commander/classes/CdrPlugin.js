@@ -46,7 +46,7 @@ class CdrPlugin {
       var appViews = global.NODE_APP.get( 'views' );
       appViews.push( webRoot );
 
-      this.processContentTree( content, '', name );
+      this.processContentTree( content, '/', name );
     }
   }
 
@@ -83,19 +83,22 @@ class CdrPlugin {
    */
   processContentTree( content, inPath, inNodeID ) {
     var self = this;
+    var newPath = inPath + inNodeID;
+    console.log('**********');
     
-    console.log(inPath + '/' + inNodeID);
-
+    
     var filePath = content.filePath;
     if ( typeof filePath !== 'undefined' ) {
       var fullFilePath = path.join( self.webRoot, filePath );
+
+      console.log(newPath);
       
       if ( path.extname( fullFilePath ) === '.pug' ) {
-        global.NODE_APP.get( inPath + '/' + inNodeID, function( req, res ) {
+        global.NODE_APP.get( newPath, function( req, res ) {
   	      res.render(fullFilePath, {query: req.query});
         });
       } else if ( path.extname( fullFilePath ) === '.lyt' ) {
-        global.NODE_APP.get( inPath + '/' + inNodeID, function( req, res ) {
+        global.NODE_APP.get( newPath, function( req, res ) {
           readJSONFile( fullFilePath, function( err, json ) {
             res.send( json );
           } );
@@ -109,7 +112,7 @@ class CdrPlugin {
     var nodes = content.nodes;
     if ( typeof nodes !== 'undefined' ) {
       for ( var nodeID in nodes ) {
-        self.processContentTree( nodes[ nodeID ], inPath, nodeID );
+        self.processContentTree( nodes[ nodeID ], newPath + '/', nodeID );
       }
     }
   }
