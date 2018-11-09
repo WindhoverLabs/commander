@@ -47,12 +47,7 @@
     "promise": "^8.0.1",
     "protobufjs": "^6.8.8",
     "pug": "2.0.0-beta11",
-<<<<<<< HEAD
-=======
     "radar-chart-d3": "^1.2.0",
-    "rewire": "^4.0.1",
-    "shelljs": "^0.8.2",
->>>>>>> 785c927bc98ca0d25e48868f74ab5af79bf0d0b5
     "socket.io": "^2.1.1",
     "sparkles": "^1.0.1",
     "sparklines": "^1.2.0",
