@@ -57,7 +57,8 @@ var EventEnum = Object.freeze( {
   'OPS_PATH_NOT_FOUND': 2,
   'MSG_OPS_PATH_NOT_FOUND': 3,
   'MSG_DEF_NOT_FOUND': 4,
-  'APP_NOT_FOUND': 5
+  'APP_NOT_FOUND': 5,
+  'UNHANDLED_EXCEPTION ': 6
 } );
 
 var emit = Emitter.prototype.emit;
@@ -79,37 +80,6 @@ var listenerCount = Emitter.listenerCount ||
   function( emitter, type ) {
     return emitter.listeners( type ).length
   }
-
-
-/**
- * Generates an array of paths of files that are located in the
- * base directory which matches the extention passed into parameters.
- * @param  {String} base   base directory path
- * @param  {String} ext    file extention
- * @param  {Object} files  file read object or undefined
- * @param  {Object} result empty array or undefined
- * @return {Object}        array of matching paths
- */
-function recFindByExt( base, ext, files, result ) {
-  files = files || fs.readdirSync( base )
-  result = result || []
-
-  files.forEach(
-    function( file ) {
-      var newbase = path.join( base, file )
-      if ( fs.statSync( newbase ).isDirectory() ) {
-        result = recFindByExt( newbase, ext, fs.readdirSync( newbase ), result )
-      } else {
-        if ( file.substr( -1 * ( ext.length + 1 ) ) == '.' + ext ) {
-          result.push( newbase )
-        }
-      }
-    }
-  )
-  return result
-}
-
-
 
 /**
  * Constructor for protobuf encoder
@@ -193,6 +163,38 @@ function ProtobufEncoder( workspace, configFile ) {
     } );
 };
 
+/**
+ * Generates an array of paths of files that are located in the
+ * base directory which matches the extention passed into parameters.
+ * @param  {String} base   base directory path
+ * @param  {String} ext    file extention
+ * @param  {Object} files  file read object or undefined
+ * @param  {Object} result empty array or undefined
+ * @return {Object}        array of matching paths
+ */
+ProtobufEncoder.prototype.recFindByExt = function( base, ext, files, result ) {
+  var self = this
+
+  result = result || []
+  try {
+    files = files || fs.readdirSync( base )
+    files.forEach(
+      function( file ) {
+        var newbase = path.join( base, file )
+        if ( fs.statSync( newbase ).isDirectory() ) {
+          result = self.recFindByExt( newbase, ext, fs.readdirSync( newbase ), result )
+        } else {
+          if ( file.substr( -1 * ( ext.length + 1 ) ) == '.' + ext ) {
+            result.push( newbase )
+          }
+        }
+      }
+    )
+  } catch ( e ) {
+    self.logErrorEvent( EventEnum.UNHANDLED_EXCEPTION, 'recFindByExt | unknown error  \'' + e.message + '\'' );
+  }
+  return result
+}
 
 /**
  * Configure and set instance emitter
@@ -202,7 +204,6 @@ ProtobufEncoder.prototype.setInstanceEmitter = function( newInstanceEmitter ) {
   var self = this;
   this.instanceEmitter = newInstanceEmitter;
   var inMsgDefs = config.get( 'msgDefs' )
-
   for ( var i = 0; i < inMsgDefs.length; ++i ) {
     if ( typeof process.env.AIRLINER_MSG_DEF_PATH === 'undefined' ) {
       var fullPath = path.join( this.workspace, config.get( 'msgDefPath' ), inMsgDefs[ i ].file );
@@ -219,7 +220,7 @@ ProtobufEncoder.prototype.setInstanceEmitter = function( newInstanceEmitter ) {
   } else {
     var fullPath = process.env.AIRLINER_PROTO_PATH;
   }
-  var protoFiles = recFindByExt( fullPath, 'proto' );
+  var protoFiles = self.recFindByExt( fullPath, 'proto' );
 
   for ( var i = 0; i < protoFiles.length; i++ ) {
     this.parseProtoFile( protoFiles[ i ] );
@@ -227,14 +228,15 @@ ProtobufEncoder.prototype.setInstanceEmitter = function( newInstanceEmitter ) {
 
   this.instanceEmitter.on( config.get( 'jsonInputStreamID' ), function( message ) {
     var tlmDef = self.getTlmDefByPath( message.opsPath );
-
     if ( typeof tlmDef === 'undefined' ) {
-      /* TODO */
+      self.logErrorEvent( EventEnum.UNHANDLED_EXCEPTION, 'tlmDef is undefined for  \'' + message.opsPath + '\'' );
+      return undefined;
     } else {
       var msgDef = self.getMsgDefByName( tlmDef.airliner_msg );
 
       if ( typeof msgDef === 'undefined' ) {
-        /* TODO */
+        self.logErrorEvent( EventEnum.UNHANDLED_EXCEPTION, 'msgDef is undefined for  \'' + message.opsPath + '\'' );
+        return undefined;
       } else {
         if ( msgDef.hasOwnProperty( 'proto_root' ) ) {
           var symbolName = self.getSymbolNameFromOpsPath( message.opsPath );
@@ -276,7 +278,7 @@ ProtobufEncoder.prototype.instanceEmit = function( streamID, msg ) {
   if ( typeof this.instanceEmitter === 'object' ) {
     this.instanceEmitter.emit( streamID, msg );
   } else {
-    console.log( '--- ' + msg.component + ', ' + msg.eventID + ', ' + msg.text );
+    this.logErrorEvent( EventEnum.UNHANDLED_EXCEPTION, 'instanceEmitter not defined ' + ' | ' + msg.component + ', ' + msg.eventID + ', ' + msg.text );
   }
 }
 
@@ -296,10 +298,12 @@ ProtobufEncoder.prototype.__proto__ = Emitter.prototype;
 ProtobufEncoder.prototype.getMsgOpsPathFromFullOpsPath = function( opsPath ) {
   var appName = this.getAppNameFromPath( opsPath );
   var opName = this.getOperationFromPath( opsPath );
-
-  var msgOpsPath = '/' + appName + '/' + opName;
-
-  return msgOpsPath;
+  if ( appName != undefined & opName != undefined ) {
+    var msgOpsPath = '/' + appName + '/' + opName;
+    return msgOpsPath;
+  } else {
+    return undefined
+  }
 }
 
 
@@ -323,6 +327,7 @@ ProtobufEncoder.prototype.getSymbolNameFromOpsPath = function( opsPath ) {
       return msgDef.airliner_msg;
     }
   }
+  return undefined;
 }
 
 
@@ -336,34 +341,40 @@ ProtobufEncoder.prototype.convertJsonToProtoJson = function( inJSON ) {
 
   for ( var itemID in inJSON ) {
     var msgOpsPath = this.getMsgOpsPathFromFullOpsPath( itemID );
+    if ( msgOpsPath != undefined ) {
+      var updatedItemID = itemID.replace( msgOpsPath + '/', '' );
+      updatedItemID = updatedItemID.replace( '/', '.' );
 
-    var updatedItemID = itemID.replace( msgOpsPath + '/', '' );
-    updatedItemID = updatedItemID.replace( '/', '.' );
-
-    outJSON[ updatedItemID ] = inJSON[ itemID ].value;
+      outJSON[ updatedItemID ] = inJSON[ itemID ].value;
+    }
   }
 
   dot.object( outJSON );
-
   return outJSON;
 }
 
 
 /**
  * Gets message definition by message name
- * @param  {String} msgName message nsme
+ * @param  {String} msgName message name
  * @return {Object}         message definition
  */
 ProtobufEncoder.prototype.getMsgDefByName = function( msgName ) {
-  for ( var appID in this.defs.Airliner.apps ) {
-    var app = this.defs.Airliner.apps[ appID ];
-    for ( var protoID in app.proto_msgs ) {
-      var protomsg = app.proto_msgs[ protoID ];
-      if ( protoID == msgName ) {
-        return protomsg;
+  var self = this;
+  try {
+    for ( var appID in this.defs.Airliner.apps ) {
+      var app = this.defs.Airliner.apps[ appID ];
+      for ( var protoID in app.proto_msgs ) {
+        var protomsg = app.proto_msgs[ protoID ];
+        if ( protoID == msgName ) {
+          return protomsg;
+        }
       }
     }
+  } catch ( e ) {
+    self.logErrorEvent( EventEnum.UNHANDLED_EXCEPTION, 'getMsgDefByName: Cannot get definition by name.' );
   }
+  return undefined;
 }
 
 
@@ -373,19 +384,23 @@ ProtobufEncoder.prototype.getMsgDefByName = function( msgName ) {
  */
 ProtobufEncoder.prototype.parseProtoFile = function( filePath ) {
   var self = this;
+  try {
+    var fileName = filePath.replace( /^.*[\\\/]/, '' );
+    var structureName = fileName.replace( /\.[^/.]+$/, '' );
 
-  var fileName = filePath.replace( /^.*[\\\/]/, '' );
-  var structureName = fileName.replace( /\.[^/.]+$/, '' );
+    var msgDef = this.getMsgDefByName( structureName );
 
-  var msgDef = this.getMsgDefByName( structureName );
+    if ( typeof msgDef === 'undefined' ) {
+      this.logErrorEvent( EventEnum.MSG_DEF_NOT_FOUND, 'parseProtoFile (\'' + filePath + '\'): Message definition not found. \'' + structureName + '\'.' );
+    } else {
+      msgDef.proto_root = new protobuf.Root();
 
-  if ( typeof msgDef === 'undefined' ) {
-    this.logErrorEvent( EventEnum.MSG_DEF_NOT_FOUND, 'parseProtoFile (\'' + filePath + '\'): Message definition not found. \'' + structureName + '\'.' );
-  } else {
-    msgDef.proto_root = new protobuf.Root();
-
-    protobuf.loadSync( filePath, msgDef.proto_root );
+      protobuf.loadSync( filePath, msgDef.proto_root );
+    }
+  } catch ( e ) {
+    this.logErrorEvent( EventEnum.UNHANDLED_EXCEPTION, 'parseProtoFile parse error \'' + e.message + '\'' );
   }
+
 }
 
 
@@ -395,8 +410,11 @@ ProtobufEncoder.prototype.parseProtoFile = function( filePath ) {
  * @return {String}      App name
  */
 ProtobufEncoder.prototype.getAppNameFromPath = function( path ) {
-  var splitName = path.split( '/' );
-  return splitName[ 1 ];
+  if ( typeof path === 'string' ) {
+    var splitName = path.split( '/' );
+    return splitName[ 1 ];
+  }
+  return undefined;
 }
 
 
@@ -406,8 +424,11 @@ ProtobufEncoder.prototype.getAppNameFromPath = function( path ) {
  * @return {String}      Operation name
  */
 ProtobufEncoder.prototype.getOperationFromPath = function( path ) {
-  var splitName = path.split( '/' );
-  return splitName[ 2 ];
+  if ( typeof path === 'string' ) {
+    var splitName = path.split( '/' );
+    return splitName[ 2 ];
+  }
+  return undefined;
 }
 
 
@@ -433,7 +454,6 @@ ProtobufEncoder.prototype.getAppDefinition = function( appName ) {
  */
 ProtobufEncoder.prototype.getMsgDefByPath = function( path ) {
   var tlmDef = this.getTlmDefByPath( path );
-
   if ( typeof tlmDef === 'undefined' ) {
     this.logErrorEvent( EventEnum.OPS_PATH_NOT_FOUND, 'getMsgDefByPath:  Ops path not found. \'' + path + '\'.' );
     return undefined;
@@ -452,6 +472,7 @@ ProtobufEncoder.prototype.getTlmDefByPath = function( path ) {
   var appName = this.getAppNameFromPath( path );
   if ( typeof appName === 'undefined' ) {
     this.logErrorEvent( EventEnum.APP_NOT_FOUND, 'getTlmDefByPath:  App not found in path. \'' + path + '\'.' );
+    return undefined;
   } else {
     var operationName = this.getOperationFromPath( path );
     if ( typeof operationName === 'undefined' ) {
@@ -459,7 +480,6 @@ ProtobufEncoder.prototype.getTlmDefByPath = function( path ) {
       return undefined;
     } else {
       var appDefinition = this.getAppDefinition( appName );
-
       if ( typeof appDefinition === 'undefined' ) {
         this.logErrorEvent( EventEnum.APP_NOT_FOUND, 'getTlmDefByPath:  App not found. \'' + appName + '\'.' );
         return undefined;

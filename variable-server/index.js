@@ -419,9 +419,7 @@ VariableServer.prototype.isVarNameAnArray = function( varName ) {
  */
 VariableServer.prototype.getTlmDefinitions = function( req, cb ) {
   var self = this;
-  // console.log( 'REQ          ', req );
   this.instanceEmit( config.get( 'tlmDefReqStreamID' ), req, function( tlmDefs ) {
-    // console.log( 'DEF          ', tlmDefs )
     if ( typeof tlmDefs === 'undefined' ) {
       cb( undefined );
     } else {

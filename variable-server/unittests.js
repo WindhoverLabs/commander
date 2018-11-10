@@ -363,41 +363,167 @@ describe( 'VariableServer', () => {
         expect( val ).toEqual( undefined )
       }
       var cb_array = function( val ) {
-        console.log( val );
         expect( typeof val.length ).toEqual( 'number' )
+        for ( var i = 0; i < val.length; ++i ) {
+          var valObj = val[ i ];
+          expect( typeof valObj ).toEqual( 'object' )
+          expect( valObj.hasOwnProperty( 'opsPath' ) ).toBe( true );
+          expect( valObj.hasOwnProperty( 'dataType' ) ).toBe( true );
+          expect( valObj.hasOwnProperty( 'persistence' ) ).toBe( true );
+          expect( valObj.hasOwnProperty( 'timeout' ) ).toBe( true );
+        }
       }
       var cb_single = function( val ) {
         expect( typeof val ).toEqual( 'object' )
+        expect( val.hasOwnProperty( 'opsPath' ) ).toBe( true );
+        expect( val.hasOwnProperty( 'dataType' ) ).toBe( true );
+        expect( val.hasOwnProperty( 'persistence' ) ).toBe( true );
+        expect( val.hasOwnProperty( 'timeout' ) ).toBe( true );
       }
       this.vs.instanceEmit.calls.reset();
       this.vs.logErrorEvent.calls.reset();
       this.vs.getTlmDefinitions( [ 'requestObj' ], cb_undefined );
+      /* the callback function passed into instanceEmit */
+      var callback = this.vs.instanceEmit.calls.argsFor( 0 )[ 2 ];
+      callback( undefined );
+      this.vs.instanceEmit.calls.reset();
       this.vs.getTlmDefinitions( {
         name: '/CFE/CFE_ES_HkPacket_t/Payload.CmdCounter'
       }, cb_single );
-      this.vs.getTlmDefinitions( [ {
-        name: '/CFE/CFE_ES_HkPacket_t/Payload.CmdCounter'
-      } ], cb_array );
-
       /* the callback function passed into instanceEmit */
-      var callback = this.vs.instanceEmit.calls.argsFor( 0 )[ 2 ];
-      var callback2 = this.vs.instanceEmit.calls.argsFor( 1 )[ 2 ];
-      var callback3 = this.vs.instanceEmit.calls.argsFor( 2 )[ 2 ];
-      callback( undefined );
-      callback2( [ {
+      var callback2 = this.vs.instanceEmit.calls.argsFor( 0 )[ 2 ];
+      callback2( {
         opsPath: '/CFE/CFE_ES_HkPacket_t/Payload.CmdCounter',
         dataType: 'uint8'
-      } ] );
-      callback3( {
+      } );
+      this.vs.instanceEmit.calls.reset();
+      this.vs.getTlmDefinitions( [ {
+        name: '/CFE/CFE_ES_HkPacket_t/Payload.ErrCounter'
+      } ], cb_array );
+      /* the callback function passed into instanceEmit */
+      var callback3 = this.vs.instanceEmit.calls.argsFor( 0 )[ 2 ];
+      callback3( [ {
         opsPath: '/CFE/CFE_ES_HkPacket_t/Payload.ErrCounter',
         dataType: 'uint8'
-      } );
-      //
-      // expect( this.vs.logErrorEvent ).toHaveBeenCalledTimes( 1 )
-      // console.log( this.vs.logErrorEvent.calls.argsFor( 0 ) );
-      // expect( this.vs.logErrorEvent.calls.argsFor( 0 )[ 0 ] ).toEqual( 4 );
+      } ] );
 
+    } );
 
+  } );
+
+  describe( 'addSubscriber', () => {
+
+    beforeAll( () => {
+      delete this.vs.vars[ 'test' ];
+    } );
+
+    it( 'Should add subscribers to this.vars when a new subscribe request is received', () => {
+      delete this.vs.vars[ 'test' ];
+      this.vs.addSubscriber( 'test', jasmine.any( Function ) );
+      expect( this.vs.vars[ 'test' ] ).not.toEqual( undefined );
+      expect( this.vs.vars[ 'test' ].hasOwnProperty( 'opsPath' ) ).toBe( true );
+      expect( this.vs.vars[ 'test' ].hasOwnProperty( 'arrayIndices' ) ).toBe( true );
+    } );
+
+    it( 'Should call a callback function when subscriber has already been defined', () => {
+      var cb = function( outVar ) {
+        expect( outVar[ 'test' ].hasOwnProperty( 'sample' ) ).toBe( true );
+      }
+      delete this.vs.vars[ 'test' ];
+      this.vs.addSubscriber( 'test', jasmine.any( Function ) );
+      this.vs.addSubscriber( 'test', cb );
+      expect( this.vs.vars[ 'test' ].hasOwnProperty( 'subscribers' ) ).toBe( true );
+      expect( this.vs.vars[ 'test' ][ 'subscribers' ][ cb ] ).toEqual( cb );
+    } );
+
+  } );
+
+  describe( 'setVariablePersistence', () => {
+
+    it( 'Should add subscribers to this.vars when a new setVariablePersistence request is received', () => {
+      delete this.vs.vars[ 'test' ];
+      this.vs.setVariablePersistence( 'test', jasmine.any( Number ) );
+      expect( this.vs.vars[ 'test' ] ).not.toEqual( undefined );
+      expect( this.vs.vars[ 'test' ].hasOwnProperty( 'opsPath' ) ).toBe( true );
+      expect( this.vs.vars[ 'test' ].hasOwnProperty( 'persistence' ) ).toBe( true );
+    } );
+
+    it( 'Should add persistence to existing variable', () => {
+      delete this.vs.vars[ 'test' ];
+      this.vs.setVariablePersistence( 'test', jasmine.any( Number ) );
+      this.vs.setVariablePersistence( 'test', 3 );
+      expect( this.vs.vars[ 'test' ].hasOwnProperty( 'persistence' ) ).toBe( true );
+      expect( this.vs.vars[ 'test' ][ 'persistence' ][ 'count' ] ).toEqual( 3 );
+    } );
+
+  } );
+
+  describe( 'getVariablePersistence', () => {
+
+    it( 'Should return 1 when the variable name is not pre-defined', () => {
+      delete this.vs.vars[ 'test' ];
+      expect( this.vs.getVariablePersistence( 'test' ) ).toBe( 1 );
+      this.vs.addSubscriber( 'test', jasmine.any( Function ) );
+      expect( this.vs.getVariablePersistence( 'test' ) ).toBe( 1 );
+    } );
+
+    it( 'Should return persistence count when the variable name is pre-defined', () => {
+      delete this.vs.vars[ 'test' ];
+      this.vs.setVariablePersistence( 'test', 3 );
+      expect( this.vs.getVariablePersistence( 'test' ) ).toBe( 3 );
+    } );
+
+  } );
+
+  describe( 'setVariableTimeout', () => {
+
+    it( 'Should add subscribers to this.vars when a new setVariableTimeout request is received', () => {
+      delete this.vs.vars[ 'test' ];
+      this.vs.setVariableTimeout( 'test', jasmine.any( Number ) );
+      expect( this.vs.vars[ 'test' ] ).not.toEqual( undefined );
+      expect( this.vs.vars[ 'test' ].hasOwnProperty( 'opsPath' ) ).toBe( true );
+      expect( this.vs.vars[ 'test' ].hasOwnProperty( 'timeout' ) ).toBe( true );
+    } );
+
+    it( 'Should add timeout to existing variable', () => {
+      delete this.vs.vars[ 'test' ];
+      this.vs.setVariableTimeout( 'test', jasmine.any( Number ) );
+      this.vs.setVariableTimeout( 'test', 3 );
+      expect( this.vs.vars[ 'test' ].hasOwnProperty( 'timeout' ) ).toBe( true );
+      expect( this.vs.vars[ 'test' ][ 'timeout' ] ).toEqual( 3 );
+    } );
+
+  } );
+
+  describe( 'getVariableTimeout', () => {
+
+    it( 'Should return 0 when the variable name is not pre-defined', () => {
+      delete this.vs.vars[ 'test' ];
+      expect( this.vs.getVariableTimeout( 'test' ) ).toBe( 0 );
+      this.vs.addSubscriber( 'test', jasmine.any( Function ) );
+      expect( this.vs.getVariableTimeout( 'test' ) ).toBe( 0 );
+    } );
+
+    it( 'Should return persistence count when the variable name is pre-defined', () => {
+      delete this.vs.vars[ 'test' ];
+      this.vs.setVariableTimeout( 'test', 3 );
+      expect( this.vs.getVariableTimeout( 'test' ) ).toBe( 3 );
+    } );
+
+  } );
+
+  describe( 'removeSubscriber', () => {
+
+    it( 'Should empty vars', () => {
+      var cb = function( outVar ) {
+        expect( outVar[ 'test' ].hasOwnProperty( 'sample' ) ).toBe( true );
+      }
+      this.vs.addSubscriber( 'test', cb );
+      this.vs.setVariableTimeout( 'test', 1 );
+      this.vs.setVariableTimeout( 'test', 2 );
+      expect( this.vs.vars[ 'test' ][ 'subscribers' ][ cb ] ).toEqual( cb );
+      this.vs.removeSubscriber( 'test', cb );
+      expect( this.vs.vars[ 'test' ][ 'subscribers' ][ cb ] ).toEqual( {} );
 
     } );
 
