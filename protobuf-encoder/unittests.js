@@ -49,6 +49,26 @@ describe( 'ProtobufEncoder', () => {
     this.pe.setInstanceEmitter( this.emitter );
   } );
 
+  it( 'Should excercise all cases while parsing ccsds header', () => {
+    var workspace = global.CDR_WORKSPACE;
+    var configFile = global.CDR_WORKSPACE + this.testConfig.ProtobufEncoder.configFile;
+    var testcases = [ 'CFE_SB_TIME_32_32_SUBS', 'CFE_SB_TIME_32_32_M_20' ];
+    var spy = spyOn( Config, 'get' );
+    var protobufEncoder = undefined;
+    for ( e in testcases ) {
+      spy.and.returnValue( testcases[ e ] );
+      protobufEncoder = new ProtobufEncoder( workspace, configFile );
+      expect( protobufEncoder.ccsdsPriHdr ).toBeDefined();
+      expect( protobufEncoder.ccsdsCmdSecHdr ).toBeDefined();
+      expect( protobufEncoder.ccsdsTlmSecHdr ).toBeDefined();
+      expect( protobufEncoder.tlmHeaderLength ).toBeDefined();
+      expect( protobufEncoder.ccsds ).toBeDefined();
+    }
+
+
+
+  } );
+
   describe( 'Constructor', () => {
 
     it( 'Should configure Endianess', () => {
@@ -261,31 +281,35 @@ describe( 'ProtobufEncoder', () => {
   describe( 'parseProtoFile', () => {
 
     beforeAll( () => {
-      this.testcase = [
-        global.AIRLINER_PROTO_PATH + '/AMC_CurrentValueTable_t.proto',
-        global.AIRLINER_PROTO_PATH + '/AMC_HkTlm_t.proto',
-        global.AIRLINER_PROTO_PATH + '/AMC_NoArgCmd_t.proto',
-        global.AIRLINER_PROTO_PATH + '/AMC_PwmConfigTbl_t.proto',
-        global.AIRLINER_PROTO_PATH + '/BAT_ConfigTbl_t.proto',
-      ];
+
       spyOn( this.pe, 'logErrorEvent' );
     } );
 
     it( 'Should parse proto file', () => {
-      for ( e in this.testcase ) {
-        this.pe.parseProtoFile( this.testcase[ e ] );
-        expect( this.pe.logErrorEvent ).toHaveBeenCalledTimes( 0 )
+      var testcase = [
+        '/AMC_CurrentValueTable_t.proto',
+        '/AMC_HkTlm_t.proto',
+        '/AMC_NoArgCmd_t.proto',
+        '/AMC_PwmConfigTbl_t.proto',
+        '/BAT_ConfigTbl_t.proto',
+      ];
+      for ( e in testcase ) {
+        this.pe.logErrorEvent.calls.reset();
+        this.pe.parseProtoFile( global.AIRLINER_PROTO_PATH + testcase[ e ] );
+        expect( this.pe.logErrorEvent ).toHaveBeenCalledTimes( 0 );
+
+
       }
     } );
 
     it( 'Should log error', () => {
       this.pe.logErrorEvent.calls.reset();
       this.pe.parseProtoFile( '' );
-      expect( this.pe.logErrorEvent ).toHaveBeenCalledTimes( 1 )
+      expect( this.pe.logErrorEvent ).toHaveBeenCalledTimes( 1 );
 
       this.pe.logErrorEvent.calls.reset();
       this.pe.parseProtoFile( global.AIRLINER_PROTO_PATH + 'BAT_CurrentValueTable_t.proto' );
-      expect( this.pe.logErrorEvent ).toHaveBeenCalledTimes( 1 )
+      expect( this.pe.logErrorEvent ).toHaveBeenCalledTimes( 1 );
     } );
 
 

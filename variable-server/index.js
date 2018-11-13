@@ -96,18 +96,18 @@ function VariableServer( configFile ) {
  * @return {Boolean}     true if empty otherwise false
  */
 VariableServer.prototype.isEmpty = function( obj ) {
-  if ( typeof obj === 'object' ) {
-    for ( var key in obj ) {
-      if ( obj.hasOwnProperty( key ) )
-        return false;
-    }
-    return true;
-  } else if ( typeof obj === 'array' ) {
+  if ( obj.length != undefined & typeof obj != 'string' ) {
     if ( obj.length == 0 ) {
       return true;
     } else {
       return false;
     }
+  } else if ( typeof obj === 'object' ) {
+    for ( var key in obj ) {
+      if ( obj.hasOwnProperty( key ) )
+        return false;
+    }
+    return true;
   } else {
     return undefined;
   }

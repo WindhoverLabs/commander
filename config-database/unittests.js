@@ -79,4 +79,28 @@ describe( 'ConfigDatabase', () => {
 
   } );
 
+  it( 'Should emit debug events', () => {
+    spyOn( this.cd, 'instanceEmit' );
+    this.cd.logDebugEvent( 1, 'DEBUG' );
+    expect( this.cd.instanceEmit.calls.argsFor( 0 )[ 1 ].eventID ).toBe( 1 );
+  } );
+
+  it( 'Should emit info events', () => {
+    spyOn( this.cd, 'instanceEmit' );
+    this.cd.logInfoEvent( 1, 'INFO' );
+    expect( this.cd.instanceEmit.calls.argsFor( 0 )[ 1 ].eventID ).toBe( 1 );
+  } );
+
+  it( 'Should emit error events', () => {
+    spyOn( this.cd, 'instanceEmit' );
+    this.cd.logErrorEvent( 1, 'ERROR' );
+    expect( this.cd.instanceEmit.calls.argsFor( 0 )[ 1 ].eventID ).toBe( 1 );
+  } );
+
+  it( 'Should emit critical events', () => {
+    spyOn( this.cd, 'instanceEmit' );
+    this.cd.logCriticalEvent( 1, 'CRITICAL' );
+    expect( this.cd.instanceEmit.calls.argsFor( 0 )[ 1 ].eventID ).toBe( 1 );
+  } );
+
 } );

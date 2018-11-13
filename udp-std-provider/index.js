@@ -170,10 +170,6 @@ UdpStdProvider.prototype.instanceEmit = function( streamID, msg ) {
  */
 UdpStdProvider.prototype.__proto__ = Emitter.prototype;
 
-// DEBUG: no functionality
-UdpStdProvider.prototype.send = function( text ) {};
-
-
 /**
  * Log debug events
  * @param  {number} eventID event id

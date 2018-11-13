@@ -53,7 +53,8 @@ var dot = require( 'dot-object' );
  */
 var EventEnum = Object.freeze( {
   'INITIALIZED': 1,
-  'CMD_MSG_NOT_FOUND': 2
+  'CMD_MSG_NOT_FOUND': 2,
+  'UNHANDLED_EXCEPTION': 3
 } );
 
 var emit = Emitter.prototype.emit;
@@ -250,21 +251,26 @@ ProtobufDecoder.prototype.setInstanceEmitter = function( newInstanceEmitter ) {
  * @return {Object}        array of matching paths
  */
 ProtobufDecoder.prototype.recFindByExt = function( base, ext, files, result ) {
-  files = files || fs.readdirSync( base )
-  result = result || []
+  var self = this
 
-  files.forEach(
-    function( file ) {
-      var newbase = path.join( base, file )
-      if ( fs.statSync( newbase ).isDirectory() ) {
-        result = this.recFindByExt( newbase, ext, fs.readdirSync( newbase ), result )
-      } else {
-        if ( file.substr( -1 * ( ext.length + 1 ) ) == '.' + ext ) {
-          result.push( newbase )
+  result = result || []
+  try {
+    files = files || fs.readdirSync( base )
+    files.forEach(
+      function( file ) {
+        var newbase = path.join( base, file )
+        if ( fs.statSync( newbase ).isDirectory() ) {
+          result = self.recFindByExt( newbase, ext, fs.readdirSync( newbase ), result )
+        } else {
+          if ( file.substr( -1 * ( ext.length + 1 ) ) == '.' + ext ) {
+            result.push( newbase )
+          }
         }
       }
-    }
-  )
+    )
+  } catch ( e ) {
+    self.logErrorEvent( EventEnum.UNHANDLED_EXCEPTION, 'recFindByExt | unknown error  \'' + e.message + '\'' );
+  }
   return result
 }
 
@@ -334,22 +340,6 @@ ProtobufDecoder.prototype.requestTlmDefinition = function( msgID, cb ) {
  */
 ProtobufDecoder.prototype.__proto__ = Emitter.prototype;
 
-
-/**
- * Gets command definiton by command path
- * @param  {String} path command path
- * @return {Object}      command object
- */
-ProtobufDecoder.prototype.getCmdDefByPath = function( path ) {
-  for ( var name in this.defs ) {
-    var cmd = this.defs[ name ];
-    if ( cmd.path == path ) {
-      return cmd;
-    }
-  }
-}
-
-
 /**
  * Gets definitions by symbol name
  * @param  {String} name symbol name
@@ -358,22 +348,6 @@ ProtobufDecoder.prototype.getCmdDefByPath = function( path ) {
 ProtobufDecoder.prototype.getMsgDefBySymbolName = function( name ) {
   return this.defs[ name ];
 };
-
-
-/**
- * Get command definiton by command code and message id
- * @param  {Number} msgID   message id
- * @param  {Number} cmdCode command code
- * @return {Object}         command defintion
- */
-ProtobufDecoder.prototype.getCmdDefByMsgIDandCC = function( msgID, cmdCode ) {
-  for ( var name in this.defs ) {
-    var cmd = this.defs[ name ];
-    if ( ( cmd.msgID == msgID ) && ( cmd.commandCode == cmdCode ) ) {
-      return cmd;
-    }
-  }
-}
 
 
 /**
@@ -390,22 +364,6 @@ ProtobufDecoder.prototype.getCmdByName = function( name ) {
   }
 }
 
-
-/**
- * Gets telemetry definition by message id
- * @param  {Number} msgID message id
- * @return {Object}       telemetry definition
- */
-ProtobufDecoder.prototype.getTlmDefByMsgID = function( msgID ) {
-  for ( var name in this.defs ) {
-    var tlm = this.defs[ name ];
-    if ( tlm.msgID == msgID ) {
-      return tlm;
-    }
-  }
-}
-
-
 /**
  * Parses protobuf file and stores schema specific protobuf object
  * in corresponding defs dictionary
@@ -413,16 +371,19 @@ ProtobufDecoder.prototype.getTlmDefByMsgID = function( msgID ) {
  */
 ProtobufDecoder.prototype.parseProtoFile = function( filePath ) {
   var self = this;
+  try {
+    var fileName = filePath.replace( /^.*[\\\/]/, '' );
+    var structureName = fileName.replace( /\.[^/.]+$/, '' );
 
-  var fileName = filePath.replace( /^.*[\\\/]/, '' );
-  var structureName = fileName.replace( /\.[^/.]+$/, '' );
+    self.defs[ structureName ] = {
+      name: structureName,
+      proto: new protobuf.Root()
+    };
 
-  self.defs[ structureName ] = {
-    name: structureName,
-    proto: new protobuf.Root()
-  };
-
-  protobuf.loadSync( filePath, self.defs[ structureName ].proto );
+    protobuf.loadSync( filePath, self.defs[ structureName ].proto );
+  } catch ( e ) {
+    this.logErrorEvent( EventEnum.UNHANDLED_EXCEPTION, 'parseProtoFile parse error \'' + e.message + '\'' );
+  }
 }
 
 

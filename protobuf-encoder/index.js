@@ -277,8 +277,6 @@ ProtobufEncoder.prototype.setInstanceEmitter = function( newInstanceEmitter ) {
 ProtobufEncoder.prototype.instanceEmit = function( streamID, msg ) {
   if ( typeof this.instanceEmitter === 'object' ) {
     this.instanceEmitter.emit( streamID, msg );
-  } else {
-    this.logErrorEvent( EventEnum.UNHANDLED_EXCEPTION, 'instanceEmitter not defined ' + ' | ' + msg.component + ', ' + msg.eventID + ', ' + msg.text );
   }
 }
 
@@ -360,19 +358,14 @@ ProtobufEncoder.prototype.convertJsonToProtoJson = function( inJSON ) {
  * @return {Object}         message definition
  */
 ProtobufEncoder.prototype.getMsgDefByName = function( msgName ) {
-  var self = this;
-  try {
-    for ( var appID in this.defs.Airliner.apps ) {
-      var app = this.defs.Airliner.apps[ appID ];
-      for ( var protoID in app.proto_msgs ) {
-        var protomsg = app.proto_msgs[ protoID ];
-        if ( protoID == msgName ) {
-          return protomsg;
-        }
+  for ( var appID in this.defs.Airliner.apps ) {
+    var app = this.defs.Airliner.apps[ appID ];
+    for ( var protoID in app.proto_msgs ) {
+      var protomsg = app.proto_msgs[ protoID ];
+      if ( protoID == msgName ) {
+        return protomsg;
       }
     }
-  } catch ( e ) {
-    self.logErrorEvent( EventEnum.UNHANDLED_EXCEPTION, 'getMsgDefByName: Cannot get definition by name.' );
   }
   return undefined;
 }
@@ -391,7 +384,7 @@ ProtobufEncoder.prototype.parseProtoFile = function( filePath ) {
     var msgDef = this.getMsgDefByName( structureName );
 
     if ( typeof msgDef === 'undefined' ) {
-      this.logErrorEvent( EventEnum.MSG_DEF_NOT_FOUND, 'parseProtoFile (\'' + filePath + '\'): Message definition not found. \'' + structureName + '\'.' );
+      this.logErrorEvent( EventEnum.MSG_DEF_NOT_FOUND, 'parseProtoFile (' + filePath + '): Message definition not found.' + structureName + '.' );
     } else {
       msgDef.proto_root = new protobuf.Root();
 
