@@ -249,8 +249,10 @@ describe( 'VariableServer', () => {
       expect( this.vs.logErrorEvent ).toHaveBeenCalledTimes( 1 );
       this.vs.logErrorEvent.calls.reset();
       spyOn( this.vs, 'isEmpty' ).and.returnValues( false, false );
+      spyOn( this.vs, 'getVariablePersistence' ).and.returnValues( 0 );
       this.vs.instanceEmitter.emit( Config.get( 'jsonInputStreamID' ), this.testcase2 );
       expect( this.vs.logErrorEvent ).toHaveBeenCalledTimes( 0 );
+
     } );
 
     it( 'Should react to emit on var-def-request', () => {

@@ -21,12 +21,20 @@ var Reset = "\x1b[0m",
   FgWhite = "\x1b[37m";
 
 
-global.AIRLINER_BASEPATH = ( path.join( process.env.CDR_WORKSPACE, '../../../../../../' ) || path.join( __dirname, '../../../../../' ) ).slice( 0, -1 );
-global.CDR_WORKSPACE = process.env.CDR_WORKSPACE || path.join( __dirname, '../workspace' );
+// global.AIRLINER_BASEPATH = ( path.join( process.env.CDR_WORKSPACE, '../../../../../../' ) || path.join( __dirname, '../../../../../' ) ).slice( 0, -1 );
+// global.CDR_WORKSPACE = process.env.CDR_WORKSPACE || path.join( __dirname, '../workspace' );
+// global.AIRLINER_MSG_DEF_PATH = process.env.AIRLINER_MSG_DEF_PATH;
+// global.AIRLINER_PROTO_PATH = process.env.AIRLINER_PROTO_PATH;
+// global.COMMANDER_PATH = process.env.COMMANDER_PATH;
+// global.CDR_INSTALL_DIR = ( path.join( __dirname, '../' ) ).slice( 0, -1 );
+
+global.AIRLINER_BASEPATH = process.env.AIRLINER_BASEPATH;
+global.CDR_WORKSPACE = process.env.CDR_WORKSPACE;
 global.AIRLINER_MSG_DEF_PATH = process.env.AIRLINER_MSG_DEF_PATH;
 global.AIRLINER_PROTO_PATH = process.env.AIRLINER_PROTO_PATH;
 global.COMMANDER_PATH = process.env.COMMANDER_PATH;
-global.CDR_INSTALL_DIR = ( path.join( __dirname, '../' ) ).slice( 0, -1 );
+global.CDR_INSTALL_DIR = process.env.CDR_INSTALL_DIR;
+
 
 console.log( FgMagenta );
 console.log( ' ENVIRONMENT - ' );

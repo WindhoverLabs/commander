@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "start": "node ./bin/www",
-    "test": "node spec/spec_runner.js"
+    "test": "node spec/spec_runner.js",
+    "test-cov": "istanbul cover spec/spec_runner.js --dir $CDR_WORKSPACE/unit_test_reports/ "
   },
   "dependencies": {
     "@webcomponents/webcomponentsjs": "^2.0.0",
@@ -29,6 +30,7 @@
     "handlebars": "^4.0.12",
     "http-errors": "^1.7.0",
     "int64-buffer": "^0.1.10",
+    "istanbul": "^0.4.5",
     "jasmine": "^3.3.0",
     "jasmine-reporters": "^2.3.2",
     "jquery": "^3.3.1",

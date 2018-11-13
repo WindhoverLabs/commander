@@ -86,8 +86,6 @@ describe( 'UdpStdProvider', () => {
       expect( this.usp.listener._events.listening ).toHaveBeenCalledTimes( 0 );
     } );
 
-
-
   } );
 
   describe( 'setInstanceEmitter', () => {
@@ -111,5 +109,31 @@ describe( 'UdpStdProvider', () => {
 
 
   } );
+
+
+  it( 'Should emit debug events', () => {
+    spyOn( this.usp, 'instanceEmit' );
+    this.usp.logDebugEvent( 1, 'DEBUG' );
+    expect( this.usp.instanceEmit.calls.argsFor( 0 )[ 1 ].eventID ).toBe( 1 );
+  } );
+
+  it( 'Should emit info events', () => {
+    spyOn( this.usp, 'instanceEmit' );
+    this.usp.logInfoEvent( 1, 'INFO' );
+    expect( this.usp.instanceEmit.calls.argsFor( 0 )[ 1 ].eventID ).toBe( 1 );
+  } );
+
+  it( 'Should emit error events', () => {
+    spyOn( this.usp, 'instanceEmit' );
+    this.usp.logErrorEvent( 1, 'ERROR' );
+    expect( this.usp.instanceEmit.calls.argsFor( 0 )[ 1 ].eventID ).toBe( 1 );
+  } );
+
+  it( 'Should emit critical events', () => {
+    spyOn( this.usp, 'instanceEmit' );
+    this.usp.logCriticalEvent( 1, 'CRITICAL' );
+    expect( this.usp.instanceEmit.calls.argsFor( 0 )[ 1 ].eventID ).toBe( 1 );
+  } );
+
 
 } );
