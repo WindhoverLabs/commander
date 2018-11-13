@@ -351,27 +351,53 @@ BinaryEncoder.prototype.getIntrinsicType = function( fieldDef ) {
       break;
 
     default:
-      switch ( fieldDef.pb_type ) {
-        case 'char':
-        case 'uint8':
-        case 'int8':
-        case 'string':
-        case 'uint16':
-        case 'int16':
-        case 'uint32':
-        case 'int32':
-        case 'float':
-        case 'double':
-        case 'boolean':
-        case 'uint64':
-        case 'int64':
-          return fieldDef.pb_type;
-          break;
-
-        default:
-          self.logErrorEvent( EventEnum.UNHANDLED_EXCEPTION, 'getIntrinsicType: Intrinsic data type not found.' );
-          return undefined;
-      }
+      if(fieldDef.bit_size == 16) {
+	    switch ( fieldDef.pb_type ) {
+	      case 'char':
+	      case 'uint8':
+	      case 'int8':
+	      case 'string':
+	      case 'uint16':
+	      case 'int16':
+	      case 'float':
+	      case 'double':
+	      case 'boolean':
+	      case 'uint64':
+	      case 'int64':
+	        return fieldDef.pb_type;
+	        break;
+	      case 'uint32':
+		    return 'uint16';
+		    break;
+	      case 'int32':
+			return 'int16';
+			break;
+	      default:
+	          self.logErrorEvent( EventEnum.UNHANDLED_EXCEPTION, 'getIntrinsicType: Intrinsic data type not found.' );
+	          return undefined;
+	    }
+	  } else {
+		switch ( fieldDef.pb_type ) {
+	      case 'char':
+	      case 'uint8':
+	      case 'int8':
+	      case 'string':
+	      case 'uint16':
+	      case 'int16':
+	      case 'uint32':
+	      case 'int32':
+	      case 'float':
+	      case 'double':
+	      case 'boolean':
+	      case 'uint64':
+	      case 'int64':
+	          return fieldDef.pb_type;
+	          break;
+	      default:
+	          self.logErrorEvent( EventEnum.UNHANDLED_EXCEPTION, 'getIntrinsicType: Intrinsic data type not found.' );
+	          return undefined;
+		}
+     }
   }
 }
 

@@ -139,6 +139,14 @@ function processTelemetryUpdate( param ) {
             if ( name == opsPath ) {
               if ( tlmObj.hasOwnProperty( 'format' ) ) {
                 value = sprintf( tlmObj.format, value );
+              } else if ( tlmObj.hasOwnProperty( 'calibration' ) ) {
+            	if(tlmObj.calibration.hasOwnProperty('type')) {
+            	  if(tlmObj.calibration.type === 'function') {
+            	    if(tlmObj.calibration.hasOwnProperty('function')) {
+            	    	value = window[tlmObj.calibration.function](value);
+            		}
+            	  }
+            	}
               }
             }
           }
