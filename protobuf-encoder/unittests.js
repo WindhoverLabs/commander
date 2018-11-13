@@ -54,9 +54,10 @@ describe( 'ProtobufEncoder', () => {
     var configFile = global.CDR_WORKSPACE + this.testConfig.ProtobufEncoder.configFile;
     var testcases = [ 'CFE_SB_TIME_32_32_SUBS', 'CFE_SB_TIME_32_32_M_20' ];
     var spy = spyOn( Config, 'get' );
+    spy.withArgs( 'msgDefs' ).and.callThrough();
     var protobufEncoder = undefined;
     for ( e in testcases ) {
-      spy.and.returnValue( testcases[ e ] );
+      spy.withArgs( 'CFE_SB_PACKET_TIME_FORMAT' ).and.returnValue( testcases[ e ] );
       protobufEncoder = new ProtobufEncoder( workspace, configFile );
       expect( protobufEncoder.ccsdsPriHdr ).toBeDefined();
       expect( protobufEncoder.ccsdsCmdSecHdr ).toBeDefined();

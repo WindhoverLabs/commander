@@ -61,7 +61,7 @@ describe( 'ConfigDatabase', () => {
 
     beforeEach( () => {
       spyOn( this.cd, 'logErrorEvent' );
-      spyOn( this.cd.instanceEmitter._events, Config.get( 'queryConfigStreamID' ) );
+      this.spy = spyOn( this.cd.instanceEmitter._events, Config.get( 'queryConfigStreamID' ) );
     } );
 
     it( 'Should react to emit on config-db-query', () => {
@@ -76,6 +76,17 @@ describe( 'ConfigDatabase', () => {
       expect( this.cd.instanceEmitter._events[ Config.get( 'queryConfigStreamID' ) ] ).toHaveBeenCalledTimes( 3 );
 
     } );
+
+    it( 'Should excercise emit on queryConfigStreamID', () => {
+      var someFunc = function( res ) {
+        expect( res ).toEqual( [] );
+      }
+      this.spy.and.callThrough();
+      this.cd.instanceEmitter.emit( Config.get( 'queryConfigStreamID' ), 'test', someFunc );
+
+
+    } );
+
 
   } );
 

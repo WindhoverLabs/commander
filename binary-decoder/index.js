@@ -613,7 +613,7 @@ BinaryDecoder.prototype.processBinaryMessage = function( buffer ) {
 
           var pbMsg = def.msgDef.proto_msg;
           var symbolName = pbMsg.substring( 0, pbMsg.length - 3 );
-          
+
           this.instanceEmit( config.get( 'jsonOutputStreamID' ), {
             content: tlmObj,
             opsPath: def.opsPath,
@@ -668,7 +668,7 @@ BinaryDecoder.prototype.getFieldValueAsPbType = function( buffer, fieldDef, bitO
           break;
 
         case 'char':
-            value = buffer.toString( 'utf8', bitOffset / 8, ( bitOffset / 8 ) + fieldDef.array_length );
+          value = buffer.toString( 'utf8', bitOffset / 8, ( bitOffset / 8 ) + fieldDef.array_length );
           break;
 
         case 'uint16':
@@ -761,11 +761,11 @@ BinaryDecoder.prototype.getFieldValueAsPbType = function( buffer, fieldDef, bitO
           break;
 
         default:
-          var nextFieldDef = rootDef.required_pb_msgs[fieldDef.pb_type];
+          var nextFieldDef = rootDef.required_pb_msgs[ fieldDef.pb_type ];
           var elementBitSize = fieldDef.bit_size / fieldDef.array_length;
           for ( var i = 0; i < fieldDef.array_length; ++i ) {
-            var nextBitOffset =  bitOffset + ( elementBitSize * i );
-            
+            var nextBitOffset = bitOffset + ( elementBitSize * i );
+
             var nextValue = {};
             var fields = nextFieldDef.fields;
             for ( var fieldName in fields ) {
@@ -773,7 +773,7 @@ BinaryDecoder.prototype.getFieldValueAsPbType = function( buffer, fieldDef, bitO
 
               nextValue[ fieldName ] = self.getFieldValueAsPbType( buffer, field, nextBitOffset + field.bit_offset, rootDef );
             }
-            value.push(nextValue);
+            value.push( nextValue );
           }
       }
     } else {
@@ -862,10 +862,10 @@ BinaryDecoder.prototype.getFieldValueAsPbType = function( buffer, fieldDef, bitO
           break;
 
         default:
-          var nextFieldDef = rootDef.required_pb_msgs[fieldDef.pb_type];
+          var nextFieldDef = rootDef.required_pb_msgs[ fieldDef.pb_type ];
           var elementBitSize = fieldDef.bit_size;
-          var nextBitOffset =  elementBitSize;
-                        
+          var nextBitOffset = elementBitSize;
+
           var value = {};
           var fields = nextFieldDef.fields;
           for ( var fieldName in fields ) {
@@ -1011,7 +1011,7 @@ BinaryDecoder.prototype.getFieldValue = function( buffer, fieldDef, bitOffset, r
           var nextFieldDef = this.getMsgDefByName( fieldDef.airliner_type );
 
           if ( typeof nextFieldDef === 'undefined' ) {
-              value = this.getFieldValueAsPbType( buffer, fieldDef, bitOffset, rootDef );
+            value = this.getFieldValueAsPbType( buffer, fieldDef, bitOffset, rootDef );
           } else {
             var nextFields = nextFieldDef.fields;
             var value = [];
@@ -1104,7 +1104,7 @@ BinaryDecoder.prototype.getFieldValue = function( buffer, fieldDef, bitOffset, r
           value = uint64Value.toString( 10 );
           break;
 
-        case 'uint64':
+        case 'int64':
           if ( this.endian == 'little' ) {
             var int64Value = new Int64LE( buffer, bitOffset / 8 );
           } else {

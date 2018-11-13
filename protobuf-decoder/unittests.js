@@ -69,7 +69,52 @@ describe( 'ProtobufDecoder', () => {
   } );
 
   describe( 'setInstanceEmitter', () => {
+    it( 'Should react to buffer data on  binaryInputStreamID', () => {
+      var spy = spyOn( this.pd.instanceEmitter._events, Config.get( 'binaryInputStreamID' ) );
+      var sampleBuff = new Buffer( [ 10, 80, 233, 201, 0, 109, 153, 103, 15, 0, 252, 59, 1, 22, 79, 143, 10, 0, 0, 0, 99,
+        230, 77, 143, 10, 0, 0, 0, 52, 116, 228, 29, 233, 178, 71, 64, 54, 1, 133, 196, 87, 23, 33, 64, 159, 64, 244, 67,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 104, 249, 48, 188, 1, 120, 16, 62, 148, 237,
+        231, 188, 103, 65, 94, 63, 245, 248, 184, 62, 27, 66, 187, 60, 0, 0, 0, 0, 0, 0, 0, 0, 110, 195, 241, 67, 210, 134, 162, 64, 1, 0, 0, 0
+      ] );
+      var sampleBuff2 = new Buffer( [ 24, 6, 0, 0, 0, 1, 0, 0 ] );
+      this.pd.instanceEmitter.emit( Config.get( 'binaryInputStreamID' ), sampleBuff );
+      expect( this.pd.instanceEmitter._events[ Config.get( 'binaryInputStreamID' ) ] ).toHaveBeenCalledTimes( 1 );
+      var callbackFunc = this.pd.instanceEmitter._events[ Config.get( 'binaryInputStreamID' ) ];
 
+      spy.and.callThrough();
+      spyOn( this.pd, 'logErrorEvent' );
+      spyOn( this.pd, 'sendCmd' );
+      var cmdDefSpy = spyOn( this.pd, 'requestCmdDefinition' );
+      var tlmDefSpy = spyOn( this.pd, 'requestTlmDefinition' );
+      /* cmd */
+      callbackFunc( sampleBuff2 );
+      expect( this.pd.requestCmdDefinition ).toHaveBeenCalledTimes( 1 );
+      var cmdCallbackFunc = this.pd.requestCmdDefinition.calls.argsFor( 0 )[ 2 ];
+      cmdCallbackFunc( {
+        operation: {
+          airliner_msg: ''
+        }
+      } );
+      expect( this.pd.sendCmd ).toHaveBeenCalledTimes( 1 );
+      expect( this.pd.sendCmd.calls.argsFor( 0 )[ 0 ] ).toEqual( undefined );
+      expect( this.pd.sendCmd.calls.argsFor( 0 )[ 1 ] ).toEqual( [] );
+      cmdCallbackFunc( {
+        operation: {
+          airliner_msg: 'CFE_EVS_Noop'
+        }
+      } );
+      expect( this.pd.sendCmd ).toHaveBeenCalledTimes( 1 );
+      expect( this.pd.sendCmd.calls.argsFor( 0 )[ 0 ] ).toEqual( undefined );
+      expect( this.pd.sendCmd.calls.argsFor( 0 )[ 1 ] ).toEqual( [] );
+      /* tlm */
+      callbackFunc( sampleBuff );
+      expect( this.pd.requestTlmDefinition ).toHaveBeenCalledTimes( 1 );
+      var tlmCallbackFunc = this.pd.requestTlmDefinition.calls.argsFor( 0 )[ 1 ];
+
+
+
+
+    } );
 
   } );
 
