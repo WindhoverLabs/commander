@@ -34,6 +34,7 @@
 var BinaryDecoder = require( './index' );
 var TestConfig = require( '../config/test.json' );
 var Emitter = require( 'events' );
+var Config = require( './config.js' );
 var fs = require( 'fs' );
 
 describe( 'BinaryDecoder', () => {
@@ -43,8 +44,45 @@ describe( 'BinaryDecoder', () => {
     var workspace = global.CDR_WORKSPACE;
     var configFile = global.CDR_WORKSPACE + this.testConfig.BinaryDecoder.configFile;
     this.bd = new BinaryDecoder( workspace, configFile );
+    Config.loadFile( configFile );
     this.emitter = new Emitter();
     this.bd.setInstanceEmitter( this.emitter );
+  } );
+
+  it( 'Should excercise code with endianess value being big', () => {
+    spyOn( JSON, 'parse' ).and.returnValue( {
+      Airliner: {
+        little_endian: false,
+        apps: {}
+      },
+      autogen_version: ''
+    } );
+    var workspace = global.CDR_WORKSPACE;
+    var configFile = global.CDR_WORKSPACE + this.testConfig.BinaryDecoder.configFile;
+    var bd1 = new BinaryDecoder( workspace, configFile );
+    expect( bd1.ccsdsPriHdr ).toBeDefined();
+    expect( bd1.ccsdsCmdSecHdr ).toBeDefined();
+    expect( bd1.ccsdsTlmSecHdr ).toBeDefined();
+    expect( bd1.tlmHeaderLength ).toBeDefined();
+    expect( bd1.ccsds ).toBeDefined();
+  } );
+
+  it( 'Should excercise all cases while parsing ccsds header', () => {
+    var workspace = global.CDR_WORKSPACE;
+    var configFile = global.CDR_WORKSPACE + this.testConfig.BinaryDecoder.configFile;
+    var testcases = [ 'CFE_SB_TIME_32_32_SUBS', 'CFE_SB_TIME_32_32_M_20' ];
+    var spy = spyOn( Config, 'get' );
+    spy.withArgs( 'msgDefs' ).and.callThrough();
+    var binaryDecoder = undefined;
+    for ( e in testcases ) {
+      spy.withArgs( 'CFE_SB_PACKET_TIME_FORMAT' ).and.returnValue( testcases[ e ] );
+      binaryDecoder = new BinaryDecoder( workspace, configFile );
+      expect( binaryDecoder.ccsdsPriHdr ).toBeDefined();
+      expect( binaryDecoder.ccsdsCmdSecHdr ).toBeDefined();
+      expect( binaryDecoder.ccsdsTlmSecHdr ).toBeDefined();
+      expect( binaryDecoder.tlmHeaderLength ).toBeDefined();
+      expect( binaryDecoder.ccsds ).toBeDefined();
+    }
   } );
 
   describe( 'Constructor', () => {
@@ -67,7 +105,7 @@ describe( 'BinaryDecoder', () => {
 
     beforeEach( () => {
       spyOn( this.bd, 'logErrorEvent' );
-      spyOn( this.bd.instanceEmitter._events, 'bin-tlm-stream' )
+      spyOn( this.bd.instanceEmitter._events, Config.get( 'binaryInputStreamID' ) )
       this.smallPayload = {
         name: '/CFE/CFE_ES_HkPacket_t/Payload.SysLogEntries'
       };
@@ -91,30 +129,30 @@ describe( 'BinaryDecoder', () => {
     } );
 
     it( 'Should react to emit on bin-tlm-stream', () => {
-      this.bd.instanceEmitter.emit( 'bin-tlm-stream', this.payload );
-      expect( this.bd.instanceEmitter._events[ 'bin-tlm-stream' ] ).toHaveBeenCalledTimes( 1 );
-      expect( this.bd.instanceEmitter._events[ 'bin-tlm-stream' ] ).toHaveBeenCalledWith( this.payload );
+      this.bd.instanceEmitter.emit( Config.get( 'binaryInputStreamID' ), this.payload );
+      expect( this.bd.instanceEmitter._events[ Config.get( 'binaryInputStreamID' ) ] ).toHaveBeenCalledTimes( 1 );
+      expect( this.bd.instanceEmitter._events[ Config.get( 'binaryInputStreamID' ) ] ).toHaveBeenCalledWith( this.payload );
     } );
 
     it( 'Should react to emit on tlm-def-request', () => {
       var someFunc = jasmine.any( Function );
-      spyOn( this.bd.instanceEmitter._events, 'tlm-def-request' )
-      this.bd.instanceEmitter.emit( 'tlm-def-request', this.payload, someFunc );
-      expect( this.bd.instanceEmitter._events[ 'tlm-def-request' ] ).toHaveBeenCalledTimes( 1 );
-      expect( this.bd.instanceEmitter._events[ 'tlm-def-request' ] ).toHaveBeenCalledWith( this.payload, someFunc );
+      spyOn( this.bd.instanceEmitter._events, Config.get( 'tlmDefReqStreamID' ) )
+      this.bd.instanceEmitter.emit( Config.get( 'tlmDefReqStreamID' ), this.payload, someFunc );
+      expect( this.bd.instanceEmitter._events[ Config.get( 'tlmDefReqStreamID' ) ] ).toHaveBeenCalledTimes( 1 );
+      expect( this.bd.instanceEmitter._events[ Config.get( 'tlmDefReqStreamID' ) ] ).toHaveBeenCalledWith( this.payload, someFunc );
     } );
 
     it( 'Should log error when {}/[] is sent on tlm-def-request', () => {
 
       spyOn( this.bd, 'stripArrayIdentifiers' ).and.returnValue( undefined );
       spyOn( this.bd, 'getTlmDefByName' ).and.returnValue( undefined );
-      this.bd.instanceEmitter.emit( 'tlm-def-request', {}, ( param ) => {
+      this.bd.instanceEmitter.emit( Config.get( 'tlmDefReqStreamID' ), {}, ( param ) => {
         expect( param ).toEqual( undefined );
       } );
       expect( this.bd.logErrorEvent ).toHaveBeenCalledTimes( 1 );
       expect( this.bd.logErrorEvent.calls.argsFor( 0 )[ 0 ] ).toBe( 8 );
 
-      this.bd.instanceEmitter.emit( 'tlm-def-request', [], ( param ) => {
+      this.bd.instanceEmitter.emit( Config.get( 'tlmDefReqStreamID' ), [], ( param ) => {
         expect( param ).toEqual( [] );
       } );
 
@@ -122,12 +160,12 @@ describe( 'BinaryDecoder', () => {
 
     it( 'Should call callback with defintions is sent on tlm-def-request', () => {
 
-      this.bd.instanceEmitter.emit( 'tlm-def-request', this.smallPayload, ( param ) => {
+      this.bd.instanceEmitter.emit( Config.get( 'tlmDefReqStreamID' ), this.smallPayload, ( param ) => {
         expect( param.opsPath ).toBe( this.smallPayload.name );
         expect( param.dataType ).toBeDefined();
       } );
 
-      this.bd.instanceEmitter.emit( 'tlm-def-request', this.bigPayload, ( param ) => {
+      this.bd.instanceEmitter.emit( Config.get( 'tlmDefReqStreamID' ), this.bigPayload, ( param ) => {
         expect( typeof param.length ).toBe( 'number' );
         expect( param.length ).toBe( this.bigPayload.length );
         for ( var i = 0; i < param.length; ++i ) {
@@ -145,11 +183,11 @@ describe( 'BinaryDecoder', () => {
     it( 'Shoud throw error on receiving an object it does not expect on tlm-def-request', () => {
 
       expect( () => {
-        this.bd.instanceEmitter.emit( 'tlm-def-request', [ 'a', 'b' ], ( param ) => {} );
+        this.bd.instanceEmitter.emit( Config.get( 'tlmDefReqStreamID' ), [ 'a', 'b' ], ( param ) => {} );
       } ).not.toThrow();
 
       expect( () => {
-        this.bd.instanceEmitter.emit( 'tlm-def-request', {
+        this.bd.instanceEmitter.emit( Config.get( 'tlmDefReqStreamID' ), {
           'a': 'b'
         }, ( param ) => {} );
       } ).not.toThrow();
@@ -184,6 +222,18 @@ describe( 'BinaryDecoder', () => {
         dataType: undefined
       } );
 
+      spy.and.returnValue( {
+        airliner_type: 'char'
+      } );
+      expect( this.bd.getTlmDefByName( '' ).dataType ).toEqual( 'char' );
+
+      spy.and.returnValue( {
+        pb_type: 'char'
+      } );
+      expect( this.bd.getTlmDefByName( '' ).dataType ).toEqual( 'char' );
+
+
+
     } );
 
     it( 'Should accept valid tlm paths and return fully formed defs', () => {
@@ -192,6 +242,8 @@ describe( 'BinaryDecoder', () => {
       expect( this.bd.getTlmDefByName( opsName ).dataType ).toBe( 'uint32' );
 
     } );
+
+
   } );
 
   describe( 'getAppNameFromPath', () => {
@@ -423,7 +475,7 @@ describe( 'BinaryDecoder', () => {
 
       this.bd.processBinaryMessage( this.sampleBuff1 )
       expect( this.bd.instanceEmit ).toHaveBeenCalledTimes( 1 );
-      expect( this.bd.instanceEmit.calls.argsFor( 0 )[ 0 ] ).toBe( 'json-tlm-stream' );
+      expect( this.bd.instanceEmit.calls.argsFor( 0 )[ 0 ] ).toBe( Config.get( 'jsonOutputStreamID' ) );
       expect( this.bd.instanceEmit.calls.argsFor( 0 )[ 1 ].opsPath ).toBe( '/PX4/PX4_VehicleLandDetectedMsg_t' );
     } );
 
@@ -431,7 +483,7 @@ describe( 'BinaryDecoder', () => {
       this.spy.calls.reset();
       this.bd.processBinaryMessage( [] )
       expect( this.bd.instanceEmit ).not.toHaveBeenCalledTimes( 0 );
-      expect( this.bd.instanceEmit.calls.argsFor( 0 )[ 0 ] ).not.toBe( 'json-tlm-stream' );
+      expect( this.bd.instanceEmit.calls.argsFor( 0 )[ 0 ] ).not.toBe( Config.get( 'jsonOutputStreamID' ) );
     } );
 
 
@@ -442,10 +494,99 @@ describe( 'BinaryDecoder', () => {
     beforeEach( () => {
       this.spy = spyOn( this.bd, 'logErrorEvent' )
     } );
+
     it( 'Should complete when compatable parameters are passed', () => {
       this.spy.calls.reset();
-      expect( this.bd.getFieldValueAsPbType( new Buffer( [ 0, 0, 0, 0 ] ), {}, 0, {} ) ).toEqual( {} )
+      expect( this.bd.getFieldValueAsPbType( new Buffer( [ 0, 0, 0, 0 ] ), {
+        array_length: 2
+      }, 0, {} ) ).toEqual( [] )
+      expect( this.bd.getFieldValueAsPbType( new Buffer( [ 0, 0, 0, 0 ] ), {
+        airliner_type: 'CFE_SB_PipeId_t'
+      }, 0, {} ) ).toEqual( 0 );
+
     } );
+
+    it( 'Should excercise code when fieldDef.array_length less than or equal to  1', () => {
+
+      var pbtype_testcases = [ 'char', 'int8', 'uint16', 'CFE_SB_MsgId_t', 'int16', 'uint32', 'int32', 'float', 'double', 'boolean', 'uint64', 'int64' ];
+      for ( var e in pbtype_testcases ) {
+        if ( pbtype_testcases[ e ] == 'uint64' | pbtype_testcases[ e ] == 'int64' ) {
+          expect( this.bd.getFieldValueAsPbType( new Buffer( [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ] ), {
+            pb_type: pbtype_testcases[ e ],
+            array_length: 0
+          }, 0, {} ) ).toEqual( '0' );
+        } else {
+          expect( this.bd.getFieldValueAsPbType( new Buffer( [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ] ), {
+            pb_type: pbtype_testcases[ e ],
+            array_length: 0
+          }, 0, {} ) ).toEqual( 0 );
+        }
+      }
+      /* big endianess */
+      this.bd.endian = 'big';
+      for ( var e in pbtype_testcases ) {
+        if ( pbtype_testcases[ e ] == 'uint64' | pbtype_testcases[ e ] == 'int64' ) {
+          expect( this.bd.getFieldValueAsPbType( new Buffer( [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ] ), {
+            pb_type: pbtype_testcases[ e ],
+            array_length: 0
+          }, 0, {} ) ).toEqual( '0' );
+        } else {
+          expect( this.bd.getFieldValueAsPbType( new Buffer( [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ] ), {
+            pb_type: pbtype_testcases[ e ],
+            array_length: 0
+          }, 0, {} ) ).toEqual( 0 );
+        }
+      }
+      this.bd.endian = 'little';
+
+    } );
+
+    it( 'Should excercise code when fieldDef.array_length greater than to  1', () => {
+
+      var pbtype_testcases = [ 'char', 'uint8', 'int8', 'string', 'CFE_SB_MsgId_t', 'int16', 'uint16', 'uint32', 'int32', 'float', 'double', 'boolean', 'uint64', 'int64' ];
+      for ( var e in pbtype_testcases ) {
+        if ( pbtype_testcases[ e ] == 'uint64' | pbtype_testcases[ e ] == 'int64' ) {
+          expect( this.bd.getFieldValueAsPbType( new Buffer( [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ] ), {
+            pb_type: pbtype_testcases[ e ],
+            array_length: 2
+          }, 0, {} ) ).toEqual( [ '0', '0' ] );
+        } else if ( pbtype_testcases[ e ] == 'char' | pbtype_testcases[ e ] == 'string' ) {
+          // expect( this.bd.getFieldValueAsPbType( new Buffer( [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ] ), {
+          //   pb_type: pbtype_testcases[ e ],
+          //   array_length: 2
+          // }, 0, {} ) ).toEqual( [ '0', '0' ] );
+        } else {
+          expect( this.bd.getFieldValueAsPbType( new Buffer( [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ] ), {
+            pb_type: pbtype_testcases[ e ],
+            array_length: 2
+          }, 0, {} ) ).toEqual( [ 0, 0 ] );
+        }
+      }
+      /* big endianess */
+      this.bd.endian = 'big';
+      for ( var e in pbtype_testcases ) {
+        if ( pbtype_testcases[ e ] == 'uint64' | pbtype_testcases[ e ] == 'int64' ) {
+          expect( this.bd.getFieldValueAsPbType( new Buffer( [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ] ), {
+            pb_type: pbtype_testcases[ e ],
+            array_length: 2
+          }, 0, {} ) ).toEqual( [ '0', '0' ] );
+        } else if ( pbtype_testcases[ e ] == 'char' | pbtype_testcases[ e ] == 'string' ) {
+          // expect( this.bd.getFieldValueAsPbType( new Buffer( [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ] ), {
+          //   pb_type: pbtype_testcases[ e ],
+          //   array_length: 2
+          // }, 0, {} ) ).toEqual( [ '0', '0' ] );
+        } else {
+          expect( this.bd.getFieldValueAsPbType( new Buffer( [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ] ), {
+            pb_type: pbtype_testcases[ e ],
+            array_length: 2
+          }, 0, {} ) ).toEqual( [ 0, 0 ] );
+        }
+      }
+      this.bd.endian = 'little';
+
+    } );
+
+
   } );
 
   describe( 'getFieldValue', () => {
@@ -455,8 +596,91 @@ describe( 'BinaryDecoder', () => {
     } );
     it( 'Should complete when compatable parameters are passed', () => {
       this.spy.calls.reset();
-      expect( this.bd.getFieldValueAsPbType( new Buffer( [ 0, 0, 0, 0 ] ), {}, 0, {} ) ).toEqual( {} )
+      expect( this.bd.getFieldValueAsPbType( new Buffer( [ 0, 0, 0, 0 ] ), {
+        array_length: 2
+      }, 0, {} ) ).toEqual( [] );
     } );
+
+    it( 'Should excercise code when fieldDef.array_length less than or equal to  1', () => {
+
+      var pbtype_testcases = [ 'char', 'int8', 'uint16', 'CFE_SB_MsgId_t', 'int16', 'uint32', 'int32', 'float', 'double', 'boolean', 'uint64', 'int64' ];
+      for ( var e in pbtype_testcases ) {
+        if ( pbtype_testcases[ e ] == 'uint64' | pbtype_testcases[ e ] == 'int64' ) {
+          expect( this.bd.getFieldValue( new Buffer( [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ] ), {
+            airliner_type: pbtype_testcases[ e ],
+            array_length: 0
+          }, 0, {} ) ).toEqual( '0' );
+        } else {
+          expect( this.bd.getFieldValue( new Buffer( [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ] ), {
+            airliner_type: pbtype_testcases[ e ],
+            array_length: 0
+          }, 0, {} ) ).toEqual( 0 );
+        }
+      }
+      /* big endianess */
+      this.bd.endian = 'big';
+      for ( var e in pbtype_testcases ) {
+        if ( pbtype_testcases[ e ] == 'uint64' | pbtype_testcases[ e ] == 'int64' ) {
+          expect( this.bd.getFieldValue( new Buffer( [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ] ), {
+            airliner_type: pbtype_testcases[ e ],
+            array_length: 0
+          }, 0, {} ) ).toEqual( '0' );
+        } else {
+          expect( this.bd.getFieldValue( new Buffer( [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ] ), {
+            airliner_type: pbtype_testcases[ e ],
+            array_length: 0
+          }, 0, {} ) ).toEqual( 0 );
+        }
+      }
+      this.bd.endian = 'little';
+
+    } );
+
+    it( 'Should excercise code when fieldDef.array_length greater than to  1', () => {
+
+      var pbtype_testcases = [ 'char', 'uint8', 'int8', 'string', 'CFE_SB_MsgId_t', 'int16', 'uint16', 'uint32', 'int32', 'float', 'double', 'boolean', 'uint64', 'int64' ];
+      for ( var e in pbtype_testcases ) {
+        if ( pbtype_testcases[ e ] == 'uint64' | pbtype_testcases[ e ] == 'int64' ) {
+          expect( this.bd.getFieldValue( new Buffer( [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ] ), {
+            airliner_type: pbtype_testcases[ e ],
+            array_length: 2
+          }, 0, {} ) ).toEqual( [ '0', '0' ] );
+        } else if ( pbtype_testcases[ e ] == 'char' | pbtype_testcases[ e ] == 'string' ) {
+          // expect( this.bd.getFieldValue( new Buffer( [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ] ), {
+          //   airliner_type: pbtype_testcases[ e ],
+          //   array_length: 2
+          // }, 0, {} ) ).toEqual( [ '0', '0' ] );
+        } else {
+          expect( this.bd.getFieldValue( new Buffer( [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ] ), {
+            airliner_type: pbtype_testcases[ e ],
+            array_length: 2
+          }, 0, {} ) ).toEqual( [ 0, 0 ] );
+        }
+      }
+      /* big endianess */
+      this.bd.endian = 'big';
+      for ( var e in pbtype_testcases ) {
+        if ( pbtype_testcases[ e ] == 'uint64' | pbtype_testcases[ e ] == 'int64' ) {
+          expect( this.bd.getFieldValue( new Buffer( [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ] ), {
+            airliner_type: pbtype_testcases[ e ],
+            array_length: 2
+          }, 0, {} ) ).toEqual( [ '0', '0' ] );
+        } else if ( pbtype_testcases[ e ] == 'char' | pbtype_testcases[ e ] == 'string' ) {
+          // expect( this.bd.getFieldValue( new Buffer( [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ] ), {
+          //   airliner_type: pbtype_testcases[ e ],
+          //   array_length: 2
+          // }, 0, {} ) ).toEqual( [ '0', '0' ] );
+        } else {
+          expect( this.bd.getFieldValue( new Buffer( [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ] ), {
+            airliner_type: pbtype_testcases[ e ],
+            array_length: 2
+          }, 0, {} ) ).toEqual( [ 0, 0 ] );
+        }
+      }
+      this.bd.endian = 'little';
+
+    } );
+
   } );
 
   describe( 'getTlmDefByMsgID', () => {

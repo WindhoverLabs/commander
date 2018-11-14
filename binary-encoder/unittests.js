@@ -33,6 +33,7 @@
 
 var BinaryEncoder = require( './index' );
 var TestConfig = require( '../config/test.json' );
+var Config = require( './config.js' );
 var Emitter = require( 'events' );
 var fs = require( 'fs' );
 
@@ -43,8 +44,45 @@ describe( 'BinaryEncoder', () => {
     var workspace = global.CDR_WORKSPACE;
     var configFile = global.CDR_WORKSPACE + this.testConfig.BinaryEncoder.configFile;
     this.be = new BinaryEncoder( workspace, configFile );
+    Config.loadFile( configFile );
     this.emitter = new Emitter();
     this.be.setInstanceEmitter( this.emitter );
+  } );
+
+  it( 'Should excercise code with endianess value being big', () => {
+    spyOn( JSON, 'parse' ).and.returnValue( {
+      Airliner: {
+        little_endian: false,
+        apps: {}
+      },
+      autogen_version: ''
+    } );
+    var workspace = global.CDR_WORKSPACE;
+    var configFile = global.CDR_WORKSPACE + this.testConfig.BinaryEncoder.configFile;
+    var be1 = new BinaryEncoder( workspace, configFile );
+    expect( be1.ccsdsPriHdr ).toBeDefined();
+    expect( be1.ccsdsCmdSecHdr ).toBeDefined();
+    expect( be1.ccsdsTlmSecHdr ).toBeDefined();
+    expect( be1.tlmHeaderLength ).toBeDefined();
+    expect( be1.ccsds ).toBeDefined();
+  } );
+
+  it( 'Should excercise all cases while parsing ccsds header', () => {
+    var workspace = global.CDR_WORKSPACE;
+    var configFile = global.CDR_WORKSPACE + this.testConfig.BinaryEncoder.configFile;
+    var testcases = [ 'CFE_SB_TIME_32_32_SUBS', 'CFE_SB_TIME_32_32_M_20' ];
+    var spy = spyOn( Config, 'get' );
+    spy.withArgs( 'msgDefs' ).and.callThrough();
+    var binaryEncoder = undefined;
+    for ( e in testcases ) {
+      spy.withArgs( 'CFE_SB_PACKET_TIME_FORMAT' ).and.returnValue( testcases[ e ] );
+      binaryEncoder = new BinaryEncoder( workspace, configFile );
+      expect( binaryEncoder.ccsdsPriHdr ).toBeDefined();
+      expect( binaryEncoder.ccsdsCmdSecHdr ).toBeDefined();
+      expect( binaryEncoder.ccsdsTlmSecHdr ).toBeDefined();
+      expect( binaryEncoder.tlmHeaderLength ).toBeDefined();
+      expect( binaryEncoder.ccsds ).toBeDefined();
+    }
   } );
 
   describe( 'Constructor', () => {
@@ -273,6 +311,16 @@ describe( 'BinaryEncoder', () => {
       expect( this.be.logErrorEvent ).toHaveBeenCalledTimes( 3 );
       expect( this.be.getIntrinsicType( this.fieldDefErD ) ).toEqual( undefined );
       expect( this.be.logErrorEvent ).toHaveBeenCalledTimes( 4 );
+
+      expect( this.be.getIntrinsicType( {
+        airliner_type: 'char'
+      } ) ).toEqual( 'char' );
+
+
+      expect( this.be.getIntrinsicType( {
+        pb_type: 'char'
+      } ) ).toEqual( 'char' );
+
     } );
   } );
 
@@ -450,6 +498,65 @@ describe( 'BinaryEncoder', () => {
       expect( this.be.logErrorEvent.calls.count() > 0 ).toBe( true );
     } );
 
+    it( 'Should excercise all switch cases', () => {
+      var testcase = {
+        'char': 's',
+        'uint8': 2,
+        'string': 'test',
+        'uint16': 3,
+        'int16': 3,
+        'uint32': 3,
+        'int32': 3,
+      }
+      var buffer = undefined;
+      var cpybuffer = undefined;
+
+      for ( var key in testcase ) {
+
+        buffer = new Buffer( [ 0, 0, 0, 0 ] );
+        cpybuffer = new Buffer( [ 0, 0, 0, 0 ] );
+
+        this.be.setField( buffer, {
+          array_length: 2,
+          airliner_type: key
+        }, 0, testcase[ key ] );
+        expect( buffer ).not.toEqual( cpybuffer );
+      }
+      this.be.endian = 'big';
+      for ( var key in testcase ) {
+
+        buffer = new Buffer( [ 0, 0, 0, 0 ] );
+        cpybuffer = new Buffer( [ 0, 0, 0, 0 ] );
+
+        this.be.setField( buffer, {
+          array_length: 2,
+          airliner_type: key
+        }, 0, testcase[ key ] );
+        expect( buffer ).not.toEqual( cpybuffer );
+      }
+      this.be.endian = 'little';
+
+      for ( var key in testcase ) {
+
+        this.be.setField( this.sampleBuffBase, {
+          array_length: 0,
+          airliner_type: key
+        }, 0, testcase[ key ] );
+        expect( this.sampleBuffBase ).not.toEqual( this.sampleBuff );
+      }
+      this.be.endian = 'big';
+      for ( var key in testcase ) {
+
+        this.be.setField( this.sampleBuffBase, {
+          array_length: 0,
+          airliner_type: key
+        }, 0, testcase[ key ] );
+        expect( this.sampleBuffBase ).not.toEqual( this.sampleBuff );
+      }
+      this.be.endian = 'little';
+
+    } );
+
   } );
 
   describe( 'sendCommand', () => {
@@ -481,7 +588,7 @@ describe( 'BinaryEncoder', () => {
         opsPath: '/CFE/CFE_ES_OverWriteSysLogCmd_t',
         args: [ {
           name: 'Payload.Mode',
-          type: 'uint32',
+          type: 'char',
           bitSize: 32
         } ]
       }, {
@@ -537,6 +644,7 @@ describe( 'BinaryEncoder', () => {
         },
         bitOffset: 64
       } );
+
     } );
 
   } );

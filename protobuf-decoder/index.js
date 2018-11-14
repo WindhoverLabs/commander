@@ -183,7 +183,6 @@ ProtobufDecoder.prototype.setInstanceEmitter = function( newInstanceEmitter ) {
   this.instanceEmitter.on( config.get( 'binaryInputStreamID' ), function( buffer ) {
     var message = self.ccsds.parse( buffer );
     var msgID = buffer.readUInt16BE( 0 );
-
     if ( self.isCommandMsg( msgID ) ) {
       var cmdCode = message.SecHdr.code;
 
@@ -212,16 +211,14 @@ ProtobufDecoder.prototype.setInstanceEmitter = function( newInstanceEmitter ) {
             } );
 
             var args = dot.dot( obj );
-
             self.sendCmd( cmdDef.ops_path, args );
           } else {
-            this.logErrorEvent( EventEnum.CMD_MSG_NOT_FOUND, 'Command message \'' + cmdDef.operation.airliner_msg + '\' not found.' );
+            self.logErrorEvent( EventEnum.CMD_MSG_NOT_FOUND, 'Command message \'' + cmdDef.operation.airliner_msg + '\' not found.' );
           }
         }
       } )
     } else {
       var msgLength = message.PriHdr.length;
-
       if ( msgLength > 1 ) {
         self.requestTlmDefinition( msgID, function( tlmDef ) {
 
