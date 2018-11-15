@@ -195,16 +195,6 @@ CommanderInstance.prototype.addApp = function( name, newAppObj ) {
   };
 
   newAppObj.setInstanceEmitter( this.emitter );
-
-  // use a closure to avoid scope erasure
-  //(function (streamID) {
-  //    appObj.on(streamID, function () {
-  //        console.log(streamID + ': ' + arguments);
-  //    });
-  //});
-  //appObj.on('bin-tlm-stream', function() {
-  //	console.log('bin-tlm-stream: ' + arguments[0]);
-  //});
 }
 
 

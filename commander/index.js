@@ -64,7 +64,8 @@ var EventEnum = Object.freeze( {
   'SOCKET_PING': 10,
   'SOCKET_PONG': 11,
   'MESSAGE_RECEIVED': 12,
-  'SOCKET_PUBLIC_FUNCTION_CALL': 13
+  'SOCKET_PUBLIC_FUNCTION_CALL': 13,
+  'UNHANDLED_EXCEPTION': 14
 } );
 
 var emit = Emitter.prototype.emit;
@@ -180,17 +181,17 @@ function Commander( workspace, configFile ) {
       self.sendCmd( cmdObj );
     } );
 
-    socket.on( 'pluginFunction', function(pluginName, funcName, args, cb) {        
-      for( var i in self.registeredFunctions ) {
-          if(self.registeredFunctions[i].pluginName === pluginName) {
-              if(self.registeredFunctions[i].funcName === funcName) {
-                  if(typeof self.registeredFunctions[i].cb === 'function') {
-                      self.registeredFunctions[i].cb(args, function (results) {
-                          cb(results);
-                      });
-                  }
-              }
+    socket.on( 'pluginFunction', function( pluginName, funcName, args, cb ) {
+      for ( var i in self.registeredFunctions ) {
+        if ( self.registeredFunctions[ i ].pluginName === pluginName ) {
+          if ( self.registeredFunctions[ i ].funcName === funcName ) {
+            if ( typeof self.registeredFunctions[ i ].cb === 'function' ) {
+              self.registeredFunctions[ i ].cb( args, function( results ) {
+                cb( results );
+              } );
+            }
           }
+        }
       }
     } );
 
@@ -202,10 +203,9 @@ function Commander( workspace, configFile ) {
       ( function( funcName ) {
         socket.on( funcName, function() {
           var cb = arguments[ arguments.length - 1 ];
-          self.logDebugEvent( EventEnum.SOCKET_PUBLIC_FUNCTION_CALL, 'SocketIO: ' + funcName);
+          self.logDebugEvent( EventEnum.SOCKET_PUBLIC_FUNCTION_CALL, 'SocketIO: ' + funcName );
           if ( typeof self[ funcName ] !== 'function' ) {
-            /* TODO */
-            console.log( 'Invalid function' );
+            self.logErrorEvent( EventEnum.UNHANDLED_EXCEPTION, 'Invalid function' );
           } else {
             self[ funcName ].apply( self, arguments );
           }
@@ -213,8 +213,7 @@ function Commander( workspace, configFile ) {
       } )( publicFunctions[ i ] );
     }
   } );
-
-  return this;
+  // return this;
 }
 
 
@@ -265,8 +264,12 @@ Commander.prototype.getPanelsByPath = function( paths, panelsObj ) {
 }
 
 
-Commander.prototype.registerFunction = function(pluginName, cb) {
-    this.registeredFunctions.push({pluginName: pluginName, funcName: cb.name, cb: cb});
+Commander.prototype.registerFunction = function( pluginName, cb ) {
+  this.registeredFunctions.push( {
+    pluginName: pluginName,
+    funcName: cb.name,
+    cb: cb
+  } );
 }
 
 
@@ -358,7 +361,6 @@ Commander.prototype.getPanels = function( inPath, cb ) {
   var paths = inPath.split( '/' );
 
   paths.shift();
-
   var content = this.getPanelsByPath( paths, global.CONTENT_TREE );
 
   cb( content );
@@ -404,51 +406,13 @@ Commander.prototype.getWidgets = function( inPath, cb ) {
  * @param  {Function} cb     callback
  */
 Commander.prototype.queryConfigDB = function( inPath, cb ) {
-  if ( typeof this.defaultInstance.emit === 'function' ) {
+  if ( typeof this.defaultInstance.emit === 'function' & typeof inPath == 'string' ) {
     this.defaultInstance.emit( config.get( 'queryConfigStreamID' ), inPath, function( resp ) {
       cb( resp );
     } );
   };
 }
 
-/**
- * Gets directory listing
- * @param  {String}   inPath input path
- * @param  {Function} cb     callback
- */
-Commander.prototype.getDirectoryListing = function( inPath, cb ) {
-  var outFiles = [];
-  var fullPath = path.join( this.workspace + '/web', inPath );
-
-  fs.readdir( fullPath, function( err, files ) {
-    if ( err == null ) {
-      for ( var i = 0; i < files.length; ++i ) {
-        var currentFile = fullPath + '/' + files[ i ];
-        var stats = fs.statSync( currentFile );
-        var transPath = inPath + '/' + files[ i ];
-        var entry = {
-          path: transPath,
-          name: files[ i ],
-          size: stats.size,
-          mtime: stats.mtime
-        };
-        if ( stats.isFile() ) {
-          entry.type = 'file';
-        } else if ( stats.isDirectory() ) {
-          entry.type = 'dir';
-        } else {
-          entry.type = 'unknown';
-        }
-        outFiles.push( entry );
-      };
-    };
-    cb( {
-      err: err,
-      path: inPath,
-      files: outFiles
-    } );
-  } );
-}
 
 /**
  * Gets command definition
@@ -457,11 +421,13 @@ Commander.prototype.getDirectoryListing = function( inPath, cb ) {
  */
 Commander.prototype.getCmdDef = function( cmdObj, cb ) {
   if ( typeof this.defaultInstance.emit === 'function' ) {
-    this.defaultInstance.emit( config.get( 'cmdDefReqStreamID' ), {
-      opsPath: cmdObj.name
-    }, function( resp ) {
-      cb( resp );
-    } );
+    if ( typeof cmdObj == 'object' && cmdObj.hasOwnProperty( 'name' ) ) {
+      this.defaultInstance.emit( config.get( 'cmdDefReqStreamID' ), {
+        opsPath: cmdObj.name
+      }, function( resp ) {
+        cb( resp );
+      } );
+    }
   };
 }
 
@@ -471,7 +437,7 @@ Commander.prototype.getCmdDef = function( cmdObj, cb ) {
  * @param  {Function} cb      callback
  */
 Commander.prototype.getTlmDefs = function( tlmObjs, cb ) {
-  if ( typeof this.defaultInstance.emit === 'function' ) {
+  if ( typeof this.defaultInstance.emit === 'function' && typeof tlmObjs == 'object' ) {
     this.defaultInstance.emit( config.get( 'varDefReqStreamID' ), tlmObjs, function( resp ) {
       cb( resp );
     } );
@@ -492,49 +458,14 @@ Commander.prototype.sendCommand = function( cb ) {
 var hasOwnProperty = Object.prototype.hasOwnProperty;
 
 /**
- * Checks if the object passed in is empty
- * @param  {Object}  obj input object
- * @return {Boolean}     true is object is empty otherwise false.
- */
-function isEmpty( obj ) {
-
-  // null and undefined are "empty"
-  if ( obj == null ) return true;
-
-  // Assume if it has a length property with a non-zero value
-  // that that property is correct.
-  if ( obj.length > 0 ) return false;
-  if ( obj.length === 0 ) return true;
-
-  // If it isn't an object at this point
-  // it is empty, but it can't be anything *but* empty
-  // Is it empty?  Depends on your application.
-  if ( typeof obj !== "object" ) return true;
-
-  // Otherwise, does it have any properties of its own?
-  // Note that this doesn't handle
-  // toString and valueOf enumeration bugs in IE < 9
-  for ( var key in obj ) {
-    if ( hasOwnProperty.call( obj, key ) ) return false;
-  }
-}
-
-
-// DEBUG: empty function
-Commander.prototype.updateTelemetry = function( update ) {
-  //console.log(update);
-}
-
-
-/**
  * Sends command name and arguments
  * @param  {String} cmdName command name
  * @param  {Object} args    argument object
  */
 Commander.prototype.sendCmd = function( cmdName, args ) {
-  //if(this.defaultInstance.hasOwnProperty('emit')) {
-  this.defaultInstance.emit( config.get( 'cmdSendStreamID' ), cmdName, args );
-  //}
+  if ( cmdName.hasOwnProperty( 'ops_path' ) && cmdName.hasOwnProperty( 'args' ) ) {
+    this.defaultInstance.emit( config.get( 'cmdSendStreamID' ), cmdName, args );
+  }
 }
 
 
@@ -545,13 +476,12 @@ Commander.prototype.sendCmd = function( cmdName, args ) {
  */
 Commander.prototype.subscribe = function( varName, cb ) {
   var self = this;
-
-  //if(this.defaultInstance.hasOwnProperty('emit')) {
-  this.defaultInstance.emit( config.get( 'reqSubscribeStreamID' ), {
-    cmd: 'subscribe',
-    opsPath: varName
-  }, cb );
-  //}
+  if ( typeof varName == 'object' ) {
+    this.defaultInstance.emit( config.get( 'reqSubscribeStreamID' ), {
+      cmd: 'subscribe',
+      opsPath: varName
+    }, cb );
+  }
 }
 
 
@@ -562,13 +492,12 @@ Commander.prototype.subscribe = function( varName, cb ) {
  */
 Commander.prototype.unsubscribe = function( varName, cb ) {
   var self = this;
-
-  //if(this.defaultInstance.hasOwnProperty('emit')) {
-  this.defaultInstance.emit( config.get( 'reqSubscribeStreamID' ), {
-    cmd: 'unsubscribe',
-    opsPath: varName
-  }, cb );
-  //}
+  if ( typeof varName == 'object' ) {
+    this.defaultInstance.emit( config.get( 'reqSubscribeStreamID' ), {
+      cmd: 'unsubscribe',
+      opsPath: varName
+    }, cb );
+  }
 }
 
 
@@ -578,16 +507,6 @@ Commander.prototype.unsubscribe = function( varName, cb ) {
  * @type {Object}
  */
 Commander.prototype.__proto__ = Emitter.prototype;
-
-
-/**
- * Add application to commander
- * @param  {String} name   application name
- * @param  {Object} appObj application object
- */
-Commander.prototype.addApp = function( name, appObj ) {
-  this.instances[ ROOT_INSTANCE_NAME ].addApp( name, appObj );
-}
 
 
 /**

@@ -24,11 +24,7 @@ class CdrPlugin {
    * @param {String} urlBase base url
    */
   constructor( name, webRoot, urlBase ) {
-    //if(new.target === CdrPlugin) {
-    //	throw new TypeError('Cannot construct CdrPlugin instances directly');
-    //}
     if ( this.getContent === undefined ) {
-      // or maybe test typeof this.method === "function"
       throw new TypeError( 'Must override getContent' );
     }
     if ( typeof webRoot === 'undefined' ) {
@@ -96,7 +92,7 @@ class CdrPlugin {
         } );
       } else if ( path.extname( fullFilePath ) === '.lyt' ) {
         global.NODE_APP.get( newPath, function( req, res ) {
-          readJSONFile( fullFilePath, function( err, json ) {
+          self.readJSONFile( fullFilePath, function( err, json ) {
             res.send( json );
           } );
         } );
@@ -143,7 +139,7 @@ class CdrPlugin {
     if ( layouts.hasOwnProperty( 'urlPath' ) ) {
       var self = this;
       global.NODE_APP.get( layouts.urlPath, function( req, res ) {
-        readJSONFile( path.join( self.webRoot, layouts.filePath ), function( err, json ) {
+        self.readJSONFile( path.join( self.webRoot, layouts.filePath ), function( err, json ) {
           res.send( json );
         } );
 
@@ -156,27 +152,27 @@ class CdrPlugin {
       }
     }
   }
+
+  /**
+   * Reads a json file and applies a collback on read data.
+   * @param  {String}   filename file name
+   * @param  {Function} callback callback
+   */
+  readJSONFile( filename, callback ) {
+    fs.readFile( filename, function( err, data ) {
+      if ( err ) {
+        callback( err );
+        return;
+      }
+      try {
+        callback( null, data );
+      } catch ( exception ) {
+        callback( exception );
+      }
+    } );
+  }
 }
 
-
-/**
- * Reads a json file and applies a collback on read data.
- * @param  {String}   filename file name
- * @param  {Function} callback callback
- */
-function readJSONFile( filename, callback ) {
-  fs.readFile( filename, function( err, data ) {
-    if ( err ) {
-      callback( err );
-      return;
-    }
-    try {
-      callback( null, data );
-    } catch ( exception ) {
-      callback( exception );
-    }
-  } );
-}
 
 
 module.exports = {
