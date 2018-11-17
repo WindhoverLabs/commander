@@ -317,3 +317,218 @@ function InitWidgets() {
     } );
   } );
 }
+
+
+
+function addDpItem( elm ) {
+  var apl = elm.parentNode.parentNode.lastChild.firstChild;
+  var form = elm.parentNode.parentNode.parentNode;
+  var appName = $( form ).find( '[type="text"]' )[ 0 ].value == '' ? $( form ).find( '[type="text"]' )[ 0 ].getAttribute( 'placeholder' ) : $( form ).find( '[type="text"]' )[ 0 ].value;
+  var msgName = $( form ).find( '[type="text"]' )[ 1 ].value == '' ? $( form ).find( '[type="text"]' )[ 1 ].getAttribute( 'placeholder' ) : $( form ).find( '[type="text"]' )[ 1 ].value;
+  var fieldName = $( form ).find( '[type="text"]' )[ 2 ].value == '' ? $( form ).find( '[type="text"]' )[ 2 ].getAttribute( 'placeholder' ) : $( form ).find( '[type="text"]' )[ 2 ].value;
+
+  var opsName = '/' + appName + '/' + msgName + '/' + fieldName;
+
+  var dataPlotDef = $( apl ).data( 'PlotDef' );
+
+  if ( dataPlotDef == undefined || dataPlotDef == null ) {
+    dataPlotDef = {};
+    dataPlotDef[ 'data' ] = [];
+    dataPlotDef[ 'options' ] = {};
+  }
+
+  var duplicateExists = false;
+
+  for ( var i in dataPlotDef[ 'data' ] ) {
+    if ( opsName == dataPlotDef[ 'data' ][ i ][ 'tlm' ][ 'name' ] ) {
+      duplicateExists = true;
+    }
+  }
+
+  if ( !duplicateExists & dataPlotDef[ 'data' ].length < 5 ) {
+    var color = cu.makeColor()
+    dataPlotDef[ 'data' ].push( {
+      tlm: {
+        name: opsName
+      },
+      color: color,
+      label: fieldName,
+    } );
+    $( apl ).data( 'PlotDef', dataPlotDef );
+    renderAplPanel( $( apl ) );
+  }
+}
+
+function renderAplPanel( jqElm ) {
+  jqElm.empty();
+  var dataPlotDef = jqElm.data( 'PlotDef' ).data;
+
+  dataPlotDef.forEach( ( item ) => {
+    var opsPath = item.tlm.name;
+    var color = item.color;
+    var label = item.label;
+
+    var htmlStr = '<button type="button" class="data-plot-defs" data-active=false onclick=aplStateToggle(this) data-opspath=' + opsPath + '  style="color:' + color + ';border:1px solid ' + color + '">' + label + '</button>';
+    jqElm.append( htmlStr );
+
+  } );
+
+}
+
+function aplStateToggle( elm, color ) {
+  var state = $( elm ).data( 'active' );
+  if ( state ) {
+    $( elm ).attr( 'class', 'data-plot-defs' );
+    $( elm ).data( 'active', false );
+  } else {
+    $( elm ).attr( 'class', 'data-plot-defs active' );
+    $( elm ).data( 'active', true );
+  }
+}
+
+function removeDpItem( elm ) {
+  var apl = elm.parentNode.parentNode.lastChild.firstChild;
+  var form = elm.parentNode.parentNode.parentNode;
+  var nodeElm = $( form.parentNode.parentNode ).find( '[data-cdr]' )[ 0 ];
+  var finds = $( apl ).find( '.data-plot-defs.active' );
+  var dataPlotDef = $( apl ).data( 'PlotDef' );
+
+  for ( var i = 0; i < finds.length; i++ ) {
+    var opsPath = $( finds[ i ] ).data( 'opspath' );
+    for ( var j = 0; j < dataPlotDef[ 'data' ].length; j++ ) {
+      if ( opsPath == dataPlotDef[ 'data' ][ j ][ 'tlm' ][ 'name' ] ) {
+        dataPlotDef[ 'data' ].splice( j, 1 );
+      }
+    }
+  }
+  if ( dataPlotDef[ 'data' ].length == 0 ) {
+    try {
+      var key = nodeElm.getAttribute( 'plot-key' );
+      nodeElm.setAttribute( 'plot-key', undefined );
+      $( nodeElm ).empty();
+      dataplot_subscriptions[ key ].UtilGraph.destroy();
+      delete dataplot_subscriptions[ key ];
+    } catch ( e ) {
+      cu.logDebug( 'removeDpItem | failed to clear graph ' );
+    }
+  }
+  $( apl ).data( 'PlotDef', dataPlotDef );
+  renderAplPanel( $( apl ) );
+}
+
+function clearDataPlot( elm ) {
+  var dpcontainer = elm.parentElement.nextSibling;
+  var apl = $( dpcontainer ).find( '.active-plot-list' );
+  var nodeElm = $( dpcontainer ).find( '[data-cdr]' )[ 0 ];
+  var key = nodeElm.getAttribute( 'plot-key' );
+  dataplot_subscriptions[ key ].UtilGraph.destroy();
+  nodeElm.setAttribute( 'plot-key', undefined );
+  $( nodeElm ).empty();
+  delete dataplot_subscriptions[ key ];
+  apl.data( 'PlotDef', {
+    data: [],
+    options: {}
+  } );
+  renderAplPanel( $( apl ) )
+}
+
+function launchPlots( elm ) {
+  var dpcontainer = elm.parentElement.nextSibling;
+  var apl = $( dpcontainer ).find( '.active-plot-list' );
+  var nodeElm = $( dpcontainer ).find( '[data-cdr]' )[ 0 ];
+  var dataPlotDef = apl.data( 'PlotDef' );
+
+  try {
+    var key = nodeElm.getAttribute( 'plot-key' );
+    nodeElm.setAttribute( 'plot-key', undefined );
+    $( nodeElm ).empty();
+    dataplot_subscriptions[ key ].UtilGraph.destroy();
+    delete dataplot_subscriptions[ key ];
+  } catch ( e ) {
+    cu.logDebug( 'launchPlots | failed to clear graph ' );
+  }
+
+
+  if ( dataPlotDef != {} ) {
+    if ( dataPlotDef.hasOwnProperty( 'data' ) ) {
+      if ( dataPlotDef[ 'data' ].length != 0 ) {
+
+        var generatedKey = cu.makeKey();
+        nodeElm.setAttribute( 'plot-key', generatedKey );
+        dataplot_subscriptions[ generatedKey ] = new CmdrTimeSeriesDataplot( nodeElm, dataPlotDef, {}, true )
+        dataplot_subscriptions[ generatedKey ].start()
+      }
+    }
+  }
+
+
+}
+
+
+/**
+ * Display/Hide query selector for dataplot
+ */
+function DisplayControlForQuerySelector( elm ) {
+  var dispState = elm.parentNode.nextElementSibling.firstChild.style.display;
+  if ( dispState == 'none' | dispState == '' ) {
+    elm.parentNode.nextElementSibling.firstChild.style.display = 'grid';
+    elm.firstChild.setAttribute( 'class', 'fa fa-angle-up' )
+  } else if ( dispState == 'grid' ) {
+    elm.parentNode.nextElementSibling.firstChild.style.display = 'none';
+    elm.firstChild.setAttribute( 'class', 'fa fa-angle-down' )
+  }
+}
+
+/**
+ * Adds new line/path to plot
+ */
+function AddPlot( elm ) {
+  var form = elm.parentNode.nextElementSibling.firstChild.firstChild;
+  var appName = $( form ).find( '[type="text"]' )[ 0 ].value == '' ? $( form ).find( '[type="text"]' )[ 0 ].getAttribute( 'placeholder' ) : $( form ).find( '[type="text"]' )[ 0 ].value;
+  var msgName = $( form ).find( '[type="text"]' )[ 1 ].value == '' ? $( form ).find( '[type="text"]' )[ 1 ].getAttribute( 'placeholder' ) : $( form ).find( '[type="text"]' )[ 1 ].value;
+  var fieldName = $( form ).find( '[type="text"]' )[ 2 ].value == '' ? $( form ).find( '[type="text"]' )[ 2 ].getAttribute( 'placeholder' ) : $( form ).find( '[type="text"]' )[ 2 ].value;
+  var opsName = '/' + appName + '/' + msgName + '/' + fieldName;
+  var nodeElm = elm.parentNode.nextElementSibling.lastChild.firstChild;
+  var dataPlotDef = {};
+  dataPlotDef[ 'data' ] = [];
+  dataPlotDef[ 'options' ] = {};
+  dataPlotDef[ 'data' ].push( {
+    tlm: {
+      name: opsName
+    },
+    color: 'yellow',
+    label: opsName,
+  } );
+
+
+  var generatedKey = cu.makeKey();
+  nodeElm.setAttribute( 'plot-key', generatedKey );
+  dataplot_subscriptions[ generatedKey ] = new CmdrTimeSeriesDataplot( nodeElm, dataPlotDef, {}, true )
+  dataplot_subscriptions[ generatedKey ].start()
+  // console.log( data );
+  //
+  // var plotKey = plot.getAttribute( 'plot-key' );
+  // dataplot_subscriptions[ plotKey ].addNewPath( data );
+  // dataplot_subscriptions[ plotKey ].UtilGraph.setupGrid();
+  // dataplot_subscriptions[ plotKey ].UtilGraph.draw();
+  // }, 20 );
+
+  // var plot = elm.parentNode.nextElementSibling.lastChild.firstChild;
+  // var data = $( plot ).data( 'cdr' )
+  // data.tlm.push( {
+  //   name: opsName
+  // } );
+  // data.label.push( fieldName );
+  // data.color.push( 'yellow' );
+  // $( plot ).data( 'cdr', data )
+  // console.log( plot );
+  // console.log( $( plot ) );
+  //
+  // var plotKey = plot.getAttribute( 'plot-key' );
+  // dataplot_subscriptions[ plotKey ].UtilGraph.shutdown();
+  // dataplot_subscriptions[ plotKey ].unsubscribeAll();
+  // delete dataplot_subscriptions[ plotKey ];
+  // $( plot ).empty();
+  // forceLoadTlm( elm.parentNode.nextElementSibling )
+
+}

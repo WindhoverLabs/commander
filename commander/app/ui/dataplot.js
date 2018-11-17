@@ -41,7 +41,7 @@ function mergeDeep( target, ...sources ) {
  * @param       {Object} params
  * @constructor
  */
-function CmdrTimeSeriesDataplot( domObject, objData, params ) {
+function CmdrTimeSeriesDataplot( domObject, objData, params, flag = false ) {
   this.objData = objData;
   this.objMergedData = {};
   this.objTlm = [];
@@ -111,7 +111,7 @@ function CmdrTimeSeriesDataplot( domObject, objData, params ) {
       }
     }
   };
-
+  this.defaultObjMergedData = this.objMergedData;
   mergeDeep( this.objMergedData, objData );
 
   this.UtilGraph = $.plot( domObject, [], this.objMergedData.options );
@@ -122,65 +122,68 @@ function CmdrTimeSeriesDataplot( domObject, objData, params ) {
       this.objTlm.push( this.objMergedData.data[ i ].tlm );
     }
   }
+  if ( !flag ) {
+    var count = 0;
 
-  var count = 0;
+    this.values = new Array( this.objMergedData.data.length );
+    for ( var i = 0; i < this.objMergedData.data.length; ++i ) {
+      this.values[ i ] = [];
+    }
 
-  this.values = new Array( this.objMergedData.data.length );
-  for ( var i = 0; i < this.objMergedData.data.length; ++i ) {
-    this.values[ i ] = [];
-  }
+    var self = this;
 
-  var self = this;
-
-  if ( this.objTlm.length > 0 ) {
-    count = count + 1;
-    if ( self.objMergedData.ignore_count > 0 ) {
-      self.objMergedData.ignore_count = self.objMergedData.ignore_count - 1;
-    } else {
-      var sample = params.sample[ params.sample.length - 1 ];
-      var value = sample.value;
-      for ( var i = 0; i < self.objTlm.length; ++i ) {
-        if ( self.values[ i ].length >= self.objMergedData.maxcount ) {
-          self.values[ i ] = self.values[ i ].slice( 1 );
+    if ( this.objTlm.length > 0 ) {
+      count = count + 1;
+      if ( self.objMergedData.ignore_count > 0 ) {
+        self.objMergedData.ignore_count = self.objMergedData.ignore_count - 1;
+      } else {
+        var sample = params.sample[ params.sample.length - 1 ];
+        var value = sample.value;
+        for ( var i = 0; i < self.objTlm.length; ++i ) {
+          if ( self.values[ i ].length >= self.objMergedData.maxcount ) {
+            self.values[ i ] = self.values[ i ].slice( 1 );
+          }
+          if ( self.objTlm[ i ].name == params.opsPath ) {
+            self.values[ i ].push( [ new Date( sample.gndTime ), value ] );
+          }
         }
-        if ( self.objTlm[ i ].name == params.opsPath ) {
-          self.values[ i ].push( [ new Date( sample.gndTime ), value ] );
-        }
+
+        if ( self.objMergedData.update_interval <= 0 ) {
+          update( self );
+        };
       }
 
-      if ( self.objMergedData.update_interval <= 0 ) {
-        update( self );
-      };
+
+      update();
     }
 
+    function update() {
+      var dataArray = [];
 
-    update();
-  }
+      for ( var i = 0; i < self.objTlm.length; ++i ) {
+        var entry = {
+          data: self.values[ i ],
+          label: self.objMergedData.data[ i ].label,
+          color: self.objMergedData.data[ i ].color,
+        };
+        // console.log( entry );
+        dataArray.push( entry );
+      }
 
-  function update() {
-    var dataArray = [];
+      self.UtilGraph.setData( dataArray );
 
-    for ( var i = 0; i < self.objTlm.length; ++i ) {
-      var entry = {
-        data: self.values[ i ],
-        label: self.objMergedData.data[ i ].label,
-        color: self.objMergedData.data[ i ].color,
+      // since the axes don't change, we don't need to call plot.setupGrid()
+      self.UtilGraph.setupGrid();
+      self.UtilGraph.draw();
+
+      if ( self.objMergedData.update_interval > 0 ) {
+        setTimeout( update, self.objMergedData.update_interval );
       };
-
-      dataArray.push( entry );
     }
-
-    self.UtilGraph.setData( dataArray );
-
-    // since the axes don't change, we don't need to call plot.setupGrid()
-    self.UtilGraph.setupGrid();
-    self.UtilGraph.draw();
-
-    if ( self.objMergedData.update_interval > 0 ) {
-      setTimeout( update, self.objMergedData.update_interval );
-    };
   }
+
 };
+
 /**
  * Unsubscribe to all telementry
  * @return {undefined}
@@ -203,6 +206,76 @@ CmdrTimeSeriesDataplot.prototype.getTlmObj = function() {
 CmdrTimeSeriesDataplot.prototype.getUtilGraph = function() {
   return this.UtilGraph;
 }
+
+/**
+ * Add new path
+ */
+CmdrTimeSeriesDataplot.prototype.start = function() {
+
+  var count = 0;
+
+  this.values = new Array( this.objMergedData.data.length );
+  for ( var i = 0; i < this.objMergedData.data.length; ++i ) {
+    this.values[ i ] = [];
+  }
+
+  var self = this;
+  session.subscribe( self.objTlm, ( paramArr ) => {
+    try {
+      paramArr.forEach( ( param ) => {
+        self.addData( param )
+      } );
+
+    } catch ( e ) {
+      cu.logError( "RougeSubscribe | unable to process response1. error= ", e.message )
+    }
+  } );
+
+  var key = this.UtilGraph.getCanvas().parentElement.getAttribute( 'plot-key' )
+
+  for ( var i in self.objTlm ) {
+    if ( !( self.objTlm[ i ].name in Object.keys( rouge_subscriptions ) ) ) {
+      setRougeSubsc( self.objTlm[ i ].name, 'plot', '[plot-key=' + key + ']' );
+    }
+  }
+}
+
+/**
+ * Add new path
+ */
+CmdrTimeSeriesDataplot.prototype.addNewPath = function( pathOps ) {
+  // return this.UtilGraph;
+
+  this.objMergedData.data.push( pathOps );
+
+  var index = this.objTlm.push( {
+    name: pathOps.tlm.name
+  } )
+
+
+  this.values[ index - 1 ] = [];
+  for ( var i in this.values ) {
+    this.values[ i ] = [];
+  }
+
+  if ( !( pathOps.tlm.name in Object.keys( rouge_subscriptions ) ) ) {
+    session.subscribe( [ {
+      name: pathOps.tlm.name
+    } ], ( paramArr ) => {
+      try {
+        // console.log( paramArr );
+        this.addData( paramArr[ 0 ] )
+      } catch ( e ) {
+        cu.logDebug( "RougeSubscribe | unable to process response. error= ", e.message )
+      }
+    } );
+    var key = this.UtilGraph.getCanvas().parentElement.getAttribute( 'plot-key' )
+    setRougeSubsc( pathOps.tlm.name, 'plot', '[plot-key=' + key + ']' );
+  }
+
+}
+
+
 /**
  * Add data to plot
  * @param  {Object} params
@@ -244,12 +317,18 @@ CmdrTimeSeriesDataplot.prototype.addData = function( params ) {
 
       dataArray.push( entry );
     }
+    try {
+      self.UtilGraph.setData( dataArray );
+      // since the axes don't change, we don't need to call plot.setupGrid()
+      self.UtilGraph.setupGrid();
+      self.UtilGraph.draw();
+    } catch ( e ) {
+      cu.logDebug( 'update | util graph cannot set data' )
+    }
 
-    self.UtilGraph.setData( dataArray );
 
-    // since the axes don't change, we don't need to call plot.setupGrid()
-    self.UtilGraph.setupGrid();
-    self.UtilGraph.draw();
+
+
 
     if ( self.objMergedData.update_interval > 0 ) {
       setTimeout( update, self.objMergedData.update_interval );
