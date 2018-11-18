@@ -48,6 +48,7 @@ var Uint64LE = require( 'int64-buffer' ).Uint64LE;
 var Uint64BE = require( 'int64-buffer' ).Uint64BE;
 var path = require( 'path' );
 var Long = require( 'long' );
+var jp = require( 'jsonpath' );
 
 /**
  * Event id's
@@ -331,6 +332,20 @@ BinaryDecoder.prototype.getOperationFromPath = function( path ) {
 
 
 /**
+ * Parse and return symbol name from ops path
+ * @param  {String} path telemetry path
+ * @return {String}      Symbol name
+ */
+BinaryDecoder.prototype.getSymbolNameFromOpsPath = function( path ) {
+  if ( typeof path === 'string' ) {
+    var splitName = path.split( '/' );
+    return splitName[ 1 ];
+  }
+  return undefined;
+}
+
+
+/**
  * Gets application definition from application name
  * @param  {String} appName application name
  * @return {Object}         application object
@@ -504,6 +519,63 @@ BinaryDecoder.prototype.getMsgDefByName = function( msgName ) {
 
 
 /**
+ * Get telemetry field override by ops name
+ * @param  {String} msgName message name
+ * @return {Object}         telemetry defintion
+ */
+BinaryDecoder.prototype.getFieldOverrideByOpsPath = function( opsPath ) {
+  var symbolName = this.getSymbolNameFromOpsPath(opsPath);
+	
+  var fieldOverrides = this.getFieldOverridesByMsgName(symbolName);
+  
+  console.log(symbolName);
+  if(typeof fieldOverrides !== 'undefined') {
+	  console.log(fieldOverrides);
+  }
+//  var self = this;
+//  try {
+//    for ( var appID in this.defs.Airliner.apps ) {
+//      var app = this.defs.Airliner.apps[ appID ];
+//      for ( var opsID in app.operations ) {
+//        if ( opsID == symbolName ) {
+//          var operation = app.operations[ opsID ];
+//          return operation.fields;
+//        }
+//      }
+//    }
+//  } catch ( e ) {
+//    self.logErrorEvent( EventEnum.UNHANDLED_EXCEPTION, 'getFieldOverrideByOpsPath: Cannot get definition by name.' );
+//  }
+  return undefined;
+}
+
+
+/**
+ * Get telemetry field overrides by message name
+ * @param  {String} msgName message name
+ * @return {Object}         telemetry defintion
+ */
+BinaryDecoder.prototype.getFieldOverridesByMsgName = function( msgName ) {
+  /* TODO */
+  var self = this;
+  try {
+    for ( var appID in this.defs.Airliner.apps ) {
+      var app = this.defs.Airliner.apps[ appID ];
+      for ( var opsID in app.operations ) {
+        if ( opsID == msgName ) {
+          var operation = app.operations[ opsID ];
+          return operation.fields;
+        }
+      }
+    }
+  } catch ( e ) {
+    self.logErrorEvent( EventEnum.UNHANDLED_EXCEPTION, 'getFieldOverridesByMsgName: Cannot get definition by name.' );
+  }
+  return undefined;
+}
+
+
+/**
  * Get telemetry definition by message id
  * @param  {Number} msgID message id
  * @return {Object}       telemetry definition object
@@ -606,14 +678,14 @@ BinaryDecoder.prototype.processBinaryMessage = function( buffer ) {
       if ( def.hasOwnProperty( 'msgDef' ) ) {
         if ( typeof def.msgDef !== 'undefined' ) {
           var fields = def.msgDef.fields;
-          for ( var fieldName in fields ) {
-            var field = fields[ fieldName ];
-            tlmObj[ fieldName ] = this.getFieldValue( buffer, field, field.bit_offset, def.msgDef );
-          }
-
           var pbMsg = def.msgDef.proto_msg;
           var symbolName = pbMsg.substring( 0, pbMsg.length - 3 );
-
+          
+          for ( var fieldName in fields ) {
+            var field = fields[ fieldName ];
+            tlmObj[ fieldName ] = this.getFieldValue( buffer, field, field.bit_offset, def.msgDef, '/' + symbolName + '/' + fieldName);
+          }
+          
           this.instanceEmit( config.get( 'jsonOutputStreamID' ), {
             content: tlmObj,
             opsPath: def.opsPath,
@@ -891,9 +963,36 @@ BinaryDecoder.prototype.getFieldValueAsPbType = function( buffer, fieldDef, bitO
  * @param  {Object} rootDef   root definition
  * @return {Object}           value object
  */
-BinaryDecoder.prototype.getFieldValue = function( buffer, fieldDef, bitOffset, rootDef ) {
+BinaryDecoder.prototype.getFieldValue = function( buffer, fieldDef, bitOffset, rootDef, opsPath ) {
   try {
     var value;
+    
+    /* Check to see if this field is overridden. */
+    if(fieldDef.hasOwnProperty('type')) {
+    	console.log(fieldDef.type);
+    }
+//    var fieldOverride = this.getFieldOverrideByOpsPath(opsPath);
+//    console.log(fieldOverride)
+//    if(typeof fieldOverrides !== 'undefined') {              
+//        for ( var fieldName in fieldOverrides ) {
+//            var field = fieldOverrides[fieldName];
+//            
+//            if(field.hasOwnProperty('type')) {
+//          	  switch(field.type) {
+//          	      case 'enumeration' :
+//          	    	  if(field.hasOwnProperty('enumerations')) {
+//          	    		  var enums = field.enumerations;
+//  	    	              var valueObj = jp.value( tlmObj, '$.' + fieldName);
+//          	    		  for ( var enumID in enums ) {
+//          	    			  if(enums[enumID].value === valueObj) {
+//          	    	              jp.value( tlmObj, '$.' + fieldName, enums[enumID].name);
+//          	    			  }
+//          	    		  }
+//          	    	  }
+//          	  }
+//            }
+//        }
+//    }
 
     if ( fieldDef.array_length > 1 ) {
       var value = [];
@@ -1022,7 +1121,7 @@ BinaryDecoder.prototype.getFieldValue = function( buffer, fieldDef, bitOffset, r
 
               for ( var fieldName in nextFields ) {
                 var nextField = nextFields[ fieldName ];
-                nextValue[ fieldName ] = this.getFieldValue( buffer, nextField, nextField.bit_offset + nextBitOffset, nextFieldDef );
+                nextValue[ fieldName ] = this.getFieldValue( buffer, nextField, nextField.bit_offset + nextBitOffset, nextFieldDef, opsPath + '.' + fieldName );
               }
               value.push( nextValue );
             }
@@ -1123,7 +1222,7 @@ BinaryDecoder.prototype.getFieldValue = function( buffer, fieldDef, bitOffset, r
             var value = {};
             for ( var fieldName in nextFields ) {
               var nextField = nextFields[ fieldName ];
-              value[ fieldName ] = this.getFieldValue( buffer, nextField, nextField.bit_offset + bitOffset, nextFieldDef );
+              value[ fieldName ] = this.getFieldValue( buffer, nextField, nextField.bit_offset + bitOffset, nextFieldDef, opsPath + '.' + fieldName);
             }
           }
       }
