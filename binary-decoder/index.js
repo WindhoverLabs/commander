@@ -48,7 +48,6 @@ var Uint64LE = require( 'int64-buffer' ).Uint64LE;
 var Uint64BE = require( 'int64-buffer' ).Uint64BE;
 var path = require( 'path' );
 var Long = require( 'long' );
-var jp = require( 'jsonpath' );
 
 /**
  * Event id's
@@ -332,20 +331,6 @@ BinaryDecoder.prototype.getOperationFromPath = function( path ) {
 
 
 /**
- * Parse and return symbol name from ops path
- * @param  {String} path telemetry path
- * @return {String}      Symbol name
- */
-BinaryDecoder.prototype.getSymbolNameFromOpsPath = function( path ) {
-  if ( typeof path === 'string' ) {
-    var splitName = path.split( '/' );
-    return splitName[ 1 ];
-  }
-  return undefined;
-}
-
-
-/**
  * Gets application definition from application name
  * @param  {String} appName application name
  * @return {Object}         application object
@@ -519,63 +504,6 @@ BinaryDecoder.prototype.getMsgDefByName = function( msgName ) {
 
 
 /**
- * Get telemetry field override by ops name
- * @param  {String} msgName message name
- * @return {Object}         telemetry defintion
- */
-BinaryDecoder.prototype.getFieldOverrideByOpsPath = function( opsPath ) {
-  var symbolName = this.getSymbolNameFromOpsPath(opsPath);
-	
-  var fieldOverrides = this.getFieldOverridesByMsgName(symbolName);
-  
-  console.log(symbolName);
-  if(typeof fieldOverrides !== 'undefined') {
-	  console.log(fieldOverrides);
-  }
-//  var self = this;
-//  try {
-//    for ( var appID in this.defs.Airliner.apps ) {
-//      var app = this.defs.Airliner.apps[ appID ];
-//      for ( var opsID in app.operations ) {
-//        if ( opsID == symbolName ) {
-//          var operation = app.operations[ opsID ];
-//          return operation.fields;
-//        }
-//      }
-//    }
-//  } catch ( e ) {
-//    self.logErrorEvent( EventEnum.UNHANDLED_EXCEPTION, 'getFieldOverrideByOpsPath: Cannot get definition by name.' );
-//  }
-  return undefined;
-}
-
-
-/**
- * Get telemetry field overrides by message name
- * @param  {String} msgName message name
- * @return {Object}         telemetry defintion
- */
-BinaryDecoder.prototype.getFieldOverridesByMsgName = function( msgName ) {
-  /* TODO */
-  var self = this;
-  try {
-    for ( var appID in this.defs.Airliner.apps ) {
-      var app = this.defs.Airliner.apps[ appID ];
-      for ( var opsID in app.operations ) {
-        if ( opsID == msgName ) {
-          var operation = app.operations[ opsID ];
-          return operation.fields;
-        }
-      }
-    }
-  } catch ( e ) {
-    self.logErrorEvent( EventEnum.UNHANDLED_EXCEPTION, 'getFieldOverridesByMsgName: Cannot get definition by name.' );
-  }
-  return undefined;
-}
-
-
-/**
  * Get telemetry definition by message id
  * @param  {Number} msgID message id
  * @return {Object}       telemetry definition object
@@ -678,14 +606,14 @@ BinaryDecoder.prototype.processBinaryMessage = function( buffer ) {
       if ( def.hasOwnProperty( 'msgDef' ) ) {
         if ( typeof def.msgDef !== 'undefined' ) {
           var fields = def.msgDef.fields;
-          var pbMsg = def.msgDef.proto_msg;
-          var symbolName = pbMsg.substring( 0, pbMsg.length - 3 );
-          
           for ( var fieldName in fields ) {
             var field = fields[ fieldName ];
-            tlmObj[ fieldName ] = this.getFieldValue( buffer, field, field.bit_offset, def.msgDef, '/' + symbolName + '/' + fieldName);
+            tlmObj[ fieldName ] = this.getFieldValue( buffer, field, field.bit_offset, def.msgDef );
           }
-          
+
+          var pbMsg = def.msgDef.proto_msg;
+          var symbolName = pbMsg.substring( 0, pbMsg.length - 3 );
+
           this.instanceEmit( config.get( 'jsonOutputStreamID' ), {
             content: tlmObj,
             opsPath: def.opsPath,
@@ -963,36 +891,9 @@ BinaryDecoder.prototype.getFieldValueAsPbType = function( buffer, fieldDef, bitO
  * @param  {Object} rootDef   root definition
  * @return {Object}           value object
  */
-BinaryDecoder.prototype.getFieldValue = function( buffer, fieldDef, bitOffset, rootDef, opsPath ) {
+BinaryDecoder.prototype.getFieldValue = function( buffer, fieldDef, bitOffset, rootDef ) {
   try {
     var value;
-    
-    /* Check to see if this field is overridden. */
-    if(fieldDef.hasOwnProperty('type')) {
-    	console.log(fieldDef.type);
-    }
-//    var fieldOverride = this.getFieldOverrideByOpsPath(opsPath);
-//    console.log(fieldOverride)
-//    if(typeof fieldOverrides !== 'undefined') {              
-//        for ( var fieldName in fieldOverrides ) {
-//            var field = fieldOverrides[fieldName];
-//            
-//            if(field.hasOwnProperty('type')) {
-//          	  switch(field.type) {
-//          	      case 'enumeration' :
-//          	    	  if(field.hasOwnProperty('enumerations')) {
-//          	    		  var enums = field.enumerations;
-//  	    	              var valueObj = jp.value( tlmObj, '$.' + fieldName);
-//          	    		  for ( var enumID in enums ) {
-//          	    			  if(enums[enumID].value === valueObj) {
-//          	    	              jp.value( tlmObj, '$.' + fieldName, enums[enumID].name);
-//          	    			  }
-//          	    		  }
-//          	    	  }
-//          	  }
-//            }
-//        }
-//    }
 
     if ( fieldDef.array_length > 1 ) {
       var value = [];
@@ -1121,7 +1022,7 @@ BinaryDecoder.prototype.getFieldValue = function( buffer, fieldDef, bitOffset, r
 
               for ( var fieldName in nextFields ) {
                 var nextField = nextFields[ fieldName ];
-                nextValue[ fieldName ] = this.getFieldValue( buffer, nextField, nextField.bit_offset + nextBitOffset, nextFieldDef, opsPath + '.' + fieldName );
+                nextValue[ fieldName ] = this.getFieldValue( buffer, nextField, nextField.bit_offset + nextBitOffset, nextFieldDef );
               }
               value.push( nextValue );
             }
@@ -1222,7 +1123,7 @@ BinaryDecoder.prototype.getFieldValue = function( buffer, fieldDef, bitOffset, r
             var value = {};
             for ( var fieldName in nextFields ) {
               var nextField = nextFields[ fieldName ];
-              value[ fieldName ] = this.getFieldValue( buffer, nextField, nextField.bit_offset + bitOffset, nextFieldDef, opsPath + '.' + fieldName);
+              value[ fieldName ] = this.getFieldValue( buffer, nextField, nextField.bit_offset + bitOffset, nextFieldDef );
             }
           }
       }
@@ -1283,6 +1184,105 @@ BinaryDecoder.prototype.cfeTimeToJsTime = function( seconds, subseconds ) {
      **  C code equivalent:
      **  = ( ( ( ( ( x >> 7) * 125) >> 7) * 125) >> 12 )
      */
+
+    microseconds = ( ( ( ( ( subseconds >> 7 ) * 125 ) >> 7 ) * 125 ) >> 12 );
+
+    /* if the subseconds % 0x4000000 != 0 then we will need to
+     * add 1 to the result. the & is a faster way of doing the % */
+    if ( ( subseconds & 0x3ffffff ) != 0 ) {
+      microseconds++;
+    }
+
+    /* In the Micro2SubSecs conversion, we added an extra anomaly
+     * to get the subseconds to bump up against the end point,
+     * 0xFFFFF000. This must be accounted for here. Since we bumped
+     * at the half way mark, we must "unbump" at the same mark
+     */
+    if ( microseconds > 500000 ) {
+      microseconds--;
+    }
+  } /* end else */
+
+  /* Get a date with the correct year. */
+  var jsDateTime = new Date( "12/1/" + config.get( 'CFE_TIME_EPOCH_YEAR' ) );
+
+  /* Adjust days. */
+  jsDateTime.setDate( jsDateTime.getDate() + ( config.get( 'CFE_TIME_EPOCH_DAY' ) - 1 ) );
+
+  /* Adjust hours minutes and seconds. */
+  jsDateTime.setTime( jsDateTime.getTime() +
+    ( config.get( 'CFE_TIME_EPOCH_HOUR' ) * 3600000 ) +
+    ( config.get( 'CFE_TIME_EPOCH_MINUTE' ) * 60000 ) +
+    ( config.get( 'CFE_TIME_EPOCH_SECOND' ) * 1000 ) );
+
+  /* Add the CFE seconds. */
+  jsDateTime.setTime( jsDateTime.getTime() + ( seconds * 1000 ) );
+
+  /* Finally, add the CFE microseconds. */
+  jsDateTime.setMilliseconds( jsDateTime.getMilliseconds() + ( microseconds / 1000 ) );
+
+  return jsDateTime;
+}
+
+
+/**
+ * Log debug events
+ * @param  {number} eventID event id
+ * @param  {String} text    text
+ */
+BinaryDecoder.prototype.logDebugEvent = function( eventID, text ) {
+  this.instanceEmit( 'events-debug', {
+    sender: this,
+    component: 'BinaryDecoder',
+    eventID: eventID,
+    text: text
+  } );
+}
+
+
+/**
+ * Log info events
+ * @param  {number} eventID event id
+ * @param  {String} text    text
+ */
+BinaryDecoder.prototype.logInfoEvent = function( eventID, text ) {
+  this.instanceEmit( 'events-info', {
+    sender: this,
+    component: 'BinaryDecoder',
+    eventID: eventID,
+    text: text
+  } );
+}
+
+
+/**
+ * Log error events
+ * @param  {number} eventID event id
+ * @param  {String} text    text
+ */
+BinaryDecoder.prototype.logErrorEvent = function( eventID, text ) {
+  this.instanceEmit( 'events-error', {
+    sender: this,
+    component: 'BinaryDecoder',
+    eventID: eventID,
+    text: text
+  } );
+}
+
+
+/**
+ * Log critical events
+ * @param  {number} eventID event id
+ * @param  {String} text    text
+ */
+BinaryDecoder.prototype.logCriticalEvent = function( eventID, text ) {
+  this.instanceEmit( 'events-critical', {
+    sender: this,
+    component: 'BinaryDecoder',
+    eventID: eventID,
+    text: text
+  } );
+}    */
 
     microseconds = ( ( ( ( ( subseconds >> 7 ) * 125 ) >> 7 ) * 125 ) >> 12 );
 
