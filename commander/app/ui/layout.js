@@ -59,6 +59,15 @@ function SaveLayout() {
     name = form.val();
     name = name.replace( / /g, '_' );
   }
+  var components = myLayout.root.getItemsByType( 'component' );
+  for ( var i = 0; i < components.length; i++ ) {
+    if ( components[ i ].config.title == 'Dataplot' ) {
+      var apl = components[ i ].element.find( '.active-plot-list-content' );
+      components[ i ].config.componentState.PlotDef = apl.data( 'PlotDef' );
+    }
+  }
+
+
   /* stringify state config */
   var cfg = myLayout.toConfig();
   /* add database */
@@ -85,6 +94,7 @@ function LoadLayout() {
         if ( savedState !== null ) {
           myLayout.destroy()
           myLayout = new window.GoldenLayout( savedState, $( '#cdr-layout-container' ) );
+          updateDragSources();
           window.dispatchEvent( llc );
           InitLayout( myLayout );
           cu.logInfo( 'Layout | loaded from local drive' )

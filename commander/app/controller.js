@@ -47,6 +47,7 @@ var session;
  * @type {Boolean}
  */
 var _sescon_never = true;
+var global_drag_source_dict = [];
 
 /* appctl main - this script execution starts from here */
 $( () => {

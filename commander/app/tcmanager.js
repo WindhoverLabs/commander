@@ -141,27 +141,27 @@
                   value = sprintf( tlmObj.format, value );
                 } else if ( tlmObj.hasOwnProperty( 'calibration' ) ) {
                   if ( tlmObj.calibration.hasOwnProperty( 'type' ) ) {
-                	switch(tlmObj.calibration.type) {
-                	  case 'function' :
+                    switch ( tlmObj.calibration.type ) {
+                      case 'function':
                         if ( tlmObj.calibration.hasOwnProperty( 'function' ) ) {
                           value = window[ tlmObj.calibration.function ]( value );
                         }
-                	    break;
-                	    
-                	  case 'enumeration' :
-                	    if ( tlmObj.calibration.hasOwnProperty( 'enumerations' ) ) {
-                	      var enumerations = tlmObj.calibration.enumerations;
-                	      for(var enumID in enumerations) {
-                	    	var enumeration = enumerations[enumID];
-                	    	
-                	    	if(enumeration.hasOwnProperty('name') && enumeration.hasOwnProperty('value')) {
-                	    	  if(enumeration.value === value) {
-                	            value = enumeration.name;
-                	    	    break;
-                	    	  }
-                	    	}
-                	      }
-                	    }
+                        break;
+
+                      case 'enumeration':
+                        if ( tlmObj.calibration.hasOwnProperty( 'enumerations' ) ) {
+                          var enumerations = tlmObj.calibration.enumerations;
+                          for ( var enumID in enumerations ) {
+                            var enumeration = enumerations[ enumID ];
+
+                            if ( enumeration.hasOwnProperty( 'name' ) && enumeration.hasOwnProperty( 'value' ) ) {
+                              if ( enumeration.value === value ) {
+                                value = enumeration.name;
+                                break;
+                              }
+                            }
+                          }
+                        }
                     }
                   }
                 }
@@ -779,6 +779,11 @@
           }
         } );
         InitScrollBar();
+        if ( this.panelElm.config.title == 'Dataplot' ) {
+          var apl = this.panelElm.element.find( '.active-plot-list-content' );
+          apl.data( 'PlotDef', this.panelElm.config.componentState.PlotDef );
+          renderAplPanel( apl );
+        }
       }, this.loadTimeout );
 
     }

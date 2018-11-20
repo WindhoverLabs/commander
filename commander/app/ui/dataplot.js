@@ -223,11 +223,18 @@ CmdrTimeSeriesDataplot.prototype.start = function() {
   session.subscribe( self.objTlm, ( paramArr ) => {
     try {
       paramArr.forEach( ( param ) => {
-        self.addData( param )
+        var opsPath = param.opsPath;
+        for ( var key in dataplot_subscriptions ) {
+          var dpObj = dataplot_subscriptions[ key ].objTlm;
+          for ( each in dpObj ) {
+            dpObj[ each ].name == opsPath;
+            dataplot_subscriptions[ key ].addData( param );
+          }
+        }
       } );
 
     } catch ( e ) {
-      cu.logError( "RougeSubscribe | unable to process response1. error= ", e.message )
+      cu.logError( "RougeSubscribe | unable to process response. error= ", e.message )
     }
   } );
 
