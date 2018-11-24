@@ -380,7 +380,7 @@ function addDpItem( elm ) {
     }
   }
 
-  if ( !duplicateExists & dataPlotDef[ 'data' ].length < 5 ) {
+  if ( !duplicateExists & dataPlotDef[ 'data' ].length < 6 ) {
     // var color = cu.makeColor()
     dataPlotDef[ 'data' ].push( {
       tlm: {
