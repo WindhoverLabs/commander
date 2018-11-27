@@ -432,7 +432,6 @@ ArtNetSim.prototype.setInstanceEmitter = function(newInstanceEmitter) {
                 self.logErrorEvent( EventEnum.INVALID_SUBSCRIPTION_REQUEST, 'Subscription request invalid. \'' + req + '\'' );
             }
         }
-        console.log(req);
     } );
 
 //	this.instanceEmitter.on(config.get('jsonInputStreamID'), function(message) {
@@ -630,7 +629,6 @@ ArtNetSim.prototype.getPhysicalIDFromPath = function(path) {
 		var idxPhysical = parseInt(splitName[0].substring(splitName[0].length-1, 9));
 	}
 
-	console.log(idxPhysical);
 	return idxPhysical
 }
 
