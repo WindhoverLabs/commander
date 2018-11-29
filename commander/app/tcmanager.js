@@ -797,7 +797,7 @@
           var apl = this.panelElm.element.find( '.active-plot-list-content' );
           apl.data( 'PlotDef', this.panelElm.config.componentState.PlotDef );
           renderAplPanel( apl );
-          this.panelElm.element.find( '#cdr-dataplot-play' ).click();
+          // this.panelElm.element.find( '#cdr-dataplot-play' ).click();
         }
       }, this.loadTimeout );
 
