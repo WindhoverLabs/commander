@@ -131,6 +131,7 @@
           var nodeElm = subscriptions[ opsPath ].elms[ i ];
           var reqObj = cu.parseJSON( nodeElm.getAttribute( 'data-cdr' ) );
           var indicatorFormat = reqObj.indicator;
+          var colorSets = {};
           /* Set value format */
           if ( reqObj.hasOwnProperty( 'tlm' ) ) {
             for ( var j = 0; j < reqObj.tlm.length; ++j ) {
@@ -225,11 +226,24 @@
               if ( staleness ) {
                 nodeElm.setAttribute( 'class', 'led-basic' );
               } else {
+                /*
+                 * add attribures trueClass and falseClass to override default colors
+                 * example :
+                 * data-cdr={tlm:[{name:'/MPC/MPC_HkTlm_t/RunPosControl'}], indicator:'led', trueClass:'cdr-led-blue', falseClass:'cdr-led-yellow'}
+                 */
                 nodeElm.textContent = '';
                 if ( value ) {
-                  nodeElm.setAttribute( 'class', 'led-basic led-on' )
+                  if ( reqObj.hasOwnProperty( 'trueClass' ) ) {
+                    nodeElm.setAttribute( 'class', 'led-basic ' + reqObj.trueClass );
+                  } else {
+                    nodeElm.setAttribute( 'class', 'led-basic cdr-led-green' );
+                  }
                 } else {
-                  nodeElm.setAttribute( 'class', 'led-basic led-off' )
+                  if ( reqObj.hasOwnProperty( 'falseClass' ) ) {
+                    nodeElm.setAttribute( 'class', 'led-basic ' + reqObj.falseClass );
+                  } else {
+                    nodeElm.setAttribute( 'class', 'led-basic cdr-led-red' );
+                  }
                 }
               }
             } else {
@@ -783,6 +797,7 @@
           var apl = this.panelElm.element.find( '.active-plot-list-content' );
           apl.data( 'PlotDef', this.panelElm.config.componentState.PlotDef );
           renderAplPanel( apl );
+          this.panelElm.element.find( '#cdr-dataplot-play' ).click();
         }
       }, this.loadTimeout );
 

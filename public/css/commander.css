@@ -467,7 +467,7 @@ h2 {
   /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
 }
 
-.led-on {
+.cdr-led-green {
   background: #56ab2f !important;
   /* fallback for old browsers */
   background: -webkit-linear-gradient(to right, #a8e063, #56ab2f) !important;
@@ -476,12 +476,30 @@ h2 {
   /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
 }
 
-.led-off {
+.cdr-led-red {
   background: #ED213A !important;
   /* fallback for old browsers */
   background: -webkit-linear-gradient(to right, #93291E, #ED213A) !important;
   /* Chrome 10-25, Safari 5.1-6 */
   background: linear-gradient(to right, #93291E, #ED213A) !important;
+  /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
+}
+
+.cdr-led-blue {
+  background: #33ccff !important;
+  /* fallback for old browsers */
+  background: -webkit-linear-gradient(to right, #80dfff, #33ccff) !important;
+  /* Chrome 10-25, Safari 5.1-6 */
+  background: linear-gradient(to right, #80dfff, #33ccff) !important;
+  /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
+}
+
+.cdr-led-yellow {
+  background: #ffcc00 !important;
+  /* fallback for old browsers */
+  background: -webkit-linear-gradient(to right, #ffe066, #ffcc00) !important;
+  /* Chrome 10-25, Safari 5.1-6 */
+  background: linear-gradient(to right, #ffe066, #ffcc00) !important;
   /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
 }
 
@@ -671,6 +689,7 @@ header>.widget-icon {
   width: 50%;
   vertical-align: middle;
 }
+
 
 .widget-graph>div {
   background-color: var(--content-bg-color);
@@ -896,3 +915,10 @@ header>button {
 .white-text {
   color: #ffffff;
 }
+
+/**
+ * Sch plugin css
+ */
+ #app-sch-content{
+   margin: 5px 0px;
+ }
