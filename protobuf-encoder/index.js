@@ -227,42 +227,48 @@ ProtobufEncoder.prototype.setInstanceEmitter = function( newInstanceEmitter ) {
   }
 
   this.instanceEmitter.on( config.get( 'jsonInputStreamID' ), function( message ) {
-    var tlmDef = self.getTlmDefByPath( message.opsPath );
-    if ( typeof tlmDef === 'undefined' ) {
-      self.logErrorEvent( EventEnum.UNHANDLED_EXCEPTION, 'tlmDef is undefined for  \'' + message.opsPath + '\'' );
-      return undefined;
-    } else {
-      var msgDef = self.getMsgDefByName( tlmDef.airliner_msg );
-
-      if ( typeof msgDef === 'undefined' ) {
-        self.logErrorEvent( EventEnum.UNHANDLED_EXCEPTION, 'msgDef is undefined for  \'' + message.opsPath + '\'' );
-        return undefined;
-      } else {
-        if ( msgDef.hasOwnProperty( 'proto_root' ) ) {
-          var symbolName = self.getSymbolNameFromOpsPath( message.opsPath );
-          var msgID = tlmDef.airliner_mid;
-
-          if ( typeof symbolName !== 'undefined' ) {
-
-            var pbMsgDef = msgDef.proto_root.lookupType( symbolName + '_pb' );
-            var pbMsg = pbMsgDef.create( message.content );
-
-            var pbBuffer = pbMsgDef.encode( pbMsg ).finish();
-
-            var hdrBuffer = new Buffer( 12 )
-            hdrBuffer.writeUInt16BE( msgID, 0 );
-            hdrBuffer.writeUInt16BE( 1, 2 );
-            hdrBuffer.writeUInt16BE( pbBuffer.length - 1, 4 );
-            hdrBuffer.writeUInt16BE( 0, 6 );
-            hdrBuffer.writeUInt16BE( 0, 8 );
-            hdrBuffer.writeUInt16BE( 0, 10 );
-
-            var msgBuffer = Buffer.concat( [ hdrBuffer, pbBuffer ] );
-            self.instanceEmit( config.get( 'binaryOutputStreamID' ), msgBuffer );
+	try {
+	    var tlmDef = self.getTlmDefByPath( message.opsPath );
+	    if ( typeof tlmDef === 'undefined' ) {
+	      self.logErrorEvent( EventEnum.UNHANDLED_EXCEPTION, 'tlmDef is undefined for  \'' + message.opsPath + '\'' );
+	      return undefined;
+	    } else {
+	      var msgDef = self.getMsgDefByName( tlmDef.airliner_msg );
+	
+	      if ( typeof msgDef === 'undefined' ) {
+	        self.logErrorEvent( EventEnum.UNHANDLED_EXCEPTION, 'msgDef is undefined for  \'' + message.opsPath + '\'' );
+	        return undefined;
+	      } else {
+	        if ( msgDef.hasOwnProperty( 'proto_root' ) ) {
+	          var symbolName = message.symbol; //self.getSymbolNameFromOpsPath( message.opsPath );
+	          var msgID = message.msgID; //tlmDef.airliner_mid;
+	        	
+	
+	          if ( typeof symbolName !== 'undefined' ) {
+	
+	            var pbMsgDef = msgDef.proto_root.lookupType( symbolName + '_pb' );
+	            var pbMsg = pbMsgDef.create( message.content );
+	
+	            var pbBuffer = pbMsgDef.encode( pbMsg ).finish();
+	
+	            var hdrBuffer = new Buffer( 12 )
+	            hdrBuffer.writeUInt16BE( msgID, 0 );
+	            hdrBuffer.writeUInt16BE( 1, 2 );
+	            hdrBuffer.writeUInt16BE( pbBuffer.length - 1, 4 );
+	            hdrBuffer.writeUInt16BE( 0, 6 );
+	            hdrBuffer.writeUInt16BE( 0, 8 );
+	            hdrBuffer.writeUInt16BE( 0, 10 );
+	
+	            var msgBuffer = Buffer.concat( [ hdrBuffer, pbBuffer ] );
+	            
+	            self.instanceEmit( config.get( 'binaryOutputStreamID' ), msgBuffer );
+	          }
+	        }
           }
         }
-      }
-    }
+	} catch ( err ) {
+	    self.logErrorEvent( EventEnum.UNHANDLED_EXCEPTION, 'Input JSON: Unhandled exception. \'' + err + '\'' );
+	}
   } );
 
   this.logInfoEvent( EventEnum.INITIALIZED, 'Initialized' );

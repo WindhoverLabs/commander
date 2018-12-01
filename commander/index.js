@@ -133,6 +133,11 @@ function Commander( workspace, configFile ) {
   io.on( 'connection', function( socket ) {
     var address = socket.handshake.address;
 
+
+    socket.conn.server.pingTimeout = 60000;
+
+    // console.log( socket.conn.server );
+
     socket.on( 'connect_error', function( err ) {
       self.logErrorEvent( EventEnum.SOCKET_CONNECT_ERROR, 'SocketIO: Socket connect error.  \'' + err + '\'' );
     } );
@@ -161,8 +166,8 @@ function Commander( workspace, configFile ) {
       self.logErrorEvent( EventEnum.SOCKET_RECONNECT_FAILED, 'SocketIO: Socket reconnect failed.' );
     } );
 
-    socket.on( 'disconnect', function() {
-      self.logInfoEvent( EventEnum.SOCKET_DISCONNECT, 'SocketIO: Socket disconnected.' );
+    socket.on( 'disconnect', function( err ) {
+      self.logInfoEvent( EventEnum.SOCKET_DISCONNECT, 'SocketIO: Socket disconnected error.  \'' + err + '\'.' );
     } );
 
     socket.on( 'ping', function() {

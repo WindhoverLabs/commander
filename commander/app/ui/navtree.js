@@ -41,9 +41,22 @@ function NodeRendered( e, node ) {
     /* make this node dragable on to the layout
      * which will initialize a panel with tables and data. */
     myLayout.createDragSource( node.$el[ 0 ], newItemConfig );
+    global_drag_source_dict.push( {
+      elm: node.$el[ 0 ],
+      cfg: newItemConfig
+    } );
   }
   /* adds tooltips and context menu feature to navbar */
   navBarTooltips( node, node.$el );
+}
+/**
+ * Updated drag sources which were instantiated only one time on page load
+ */
+function updateDragSources() {
+  for ( var i in global_drag_source_dict ) {
+    window.myLayout.createDragSource( global_drag_source_dict[ i ].elm, global_drag_source_dict[ i ].cfg );
+  }
+
 }
 
 /**
@@ -86,6 +99,7 @@ function NodeSelected( e, node ) {
          * .lyt file and emit layout loaded event for dependencies to react */
         myLayout.destroy();
         myLayout = new window.GoldenLayout( jsonObj, $( '#cdr-layout-container' ) );
+        updateDragSources();
         window.dispatchEvent( llc );
         InitLayout( myLayout );
       } else {

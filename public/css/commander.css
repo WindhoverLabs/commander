@@ -467,7 +467,7 @@ h2 {
   /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
 }
 
-.led-on {
+.cdr-led-green {
   background: #56ab2f !important;
   /* fallback for old browsers */
   background: -webkit-linear-gradient(to right, #a8e063, #56ab2f) !important;
@@ -476,12 +476,30 @@ h2 {
   /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
 }
 
-.led-off {
+.cdr-led-red {
   background: #ED213A !important;
   /* fallback for old browsers */
   background: -webkit-linear-gradient(to right, #93291E, #ED213A) !important;
   /* Chrome 10-25, Safari 5.1-6 */
   background: linear-gradient(to right, #93291E, #ED213A) !important;
+  /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
+}
+
+.cdr-led-blue {
+  background: #33ccff !important;
+  /* fallback for old browsers */
+  background: -webkit-linear-gradient(to right, #80dfff, #33ccff) !important;
+  /* Chrome 10-25, Safari 5.1-6 */
+  background: linear-gradient(to right, #80dfff, #33ccff) !important;
+  /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
+}
+
+.cdr-led-yellow {
+  background: #ffcc00 !important;
+  /* fallback for old browsers */
+  background: -webkit-linear-gradient(to right, #ffe066, #ffcc00) !important;
+  /* Chrome 10-25, Safari 5.1-6 */
+  background: linear-gradient(to right, #ffe066, #ffcc00) !important;
   /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
 }
 
@@ -646,7 +664,7 @@ header>.widget-icon {
 .row {
   width: inherit;
   height: inherit;
-  padding: 3% 0% 0% 0% !important;
+  padding: 4% 0% 4% 0% !important;
   overflow: auto;
   margin: unset !important;
 }
@@ -672,14 +690,15 @@ header>.widget-icon {
   vertical-align: middle;
 }
 
+
 .widget-graph>div {
   background-color: var(--content-bg-color);
   width: 100%;
   height: 300px;
   border-radius: 5px;
 }
-div.query-block{
-  height: 150px;
+
+.query-block{
   width: 100%;
   background-color: var(--content-bg-color);
   margin: -5px 0px 5px 0px;
@@ -687,19 +706,30 @@ div.query-block{
   padding:5px;
   display: none;
 }
+
 .query-block>form>div{
-  margin:4px;
-  padding:3px;
+  margin:5px 3px;
+  padding:2px 3px;
 }
+.query-block>form>div>div{
+  margin:3px;
+
+}
+
+
 .active-plot-list{
   width:100%;
-  height:50px;
   box-shadow: inset 2px 2px 1px rgba(0, 0, 0, .05);
   background: #7e798333;
   border-radius: 4px;
   align-items: center;
-  display: flex;
 }
+
+.active-plot-list-content{
+  height: inherit;
+  width: inherit;
+}
+
 .data-plot-defs{
   border-radius: 5px;
   padding: 5px;
@@ -707,11 +737,24 @@ div.query-block{
   font-weight: none;
   background: none;
 }
+
 .data-plot-defs.active{
   border-width: 2px !important;
   font-weight: bolder !important ;
 }
 
+.cdr-clr-picker{
+  width: 100px;
+  height:50%;
+  color:white;
+  font-weight: bold;
+  background-color: #000;
+}
+
+/* color picker bug fix suggested by colorpicker */
+.colorpicker.colorpicker-popup {
+    -moz-user-select: none;
+}
 
 footer>button {
   padding: 2px 10px !important;
@@ -872,3 +915,10 @@ header>button {
 .white-text {
   color: #ffffff;
 }
+
+/**
+ * Sch plugin css
+ */
+ #app-sch-content{
+   margin: 5px 0px;
+ }

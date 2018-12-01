@@ -155,6 +155,7 @@ function navBarTooltips( node, JQObj ) {
                     setTimeout( () => {
                       window.myLayout.destroy();
                       window.myLayout = new window.GoldenLayout( x, $( '#cdr-layout-container' ) );
+                      updateDragSources();
                       window.dispatchEvent( llc );
                       window.InitLayout( myLayout );
                     }, 2000 )
@@ -247,31 +248,38 @@ function InitScrollBar() {
     '.os-theme-dark',
     '#cdr-app-menu',
   ]
+
+  var options = {
+    autoUpdate: true,
+    // autoUpdateInterval: 33
+    overflowBehavior: {
+      x: "scroll",
+      y: "scroll"
+    },
+    scrollbars: {
+      visibility: "visible",
+      autoHide: "never",
+      autoHideDelay: 800,
+      dragScrolling: true,
+      clickScrolling: false,
+      touchSupport: true
+    }
+  }
   /* os-theme-dark class should be added to every pug file in the top element */
   setTimeout( function() {
-    $( applyScrollTo.join( ',' ) ).overlayScrollbars( {
-      "autoUpdate": true
-    } );
+    $( applyScrollTo.join( ',' ) ).overlayScrollbars( options );
   }, 10 );
   setTimeout( function() {
-    $( applyScrollTo.join( ',' ) ).overlayScrollbars( {
-      "autoUpdate": true
-    } );
+    $( applyScrollTo.join( ',' ) ).overlayScrollbars( options );
   }, 100 );
   setTimeout( function() {
-    $( applyScrollTo.join( ',' ) ).overlayScrollbars( {
-      "autoUpdate": true
-    } );
+    $( applyScrollTo.join( ',' ) ).overlayScrollbars( options );
   }, 250 );
   setTimeout( function() {
-    $( applyScrollTo.join( ',' ) ).overlayScrollbars( {
-      "autoUpdate": true
-    } );
+    $( applyScrollTo.join( ',' ) ).overlayScrollbars( options );
   }, 500 );
   setTimeout( function() {
-    $( applyScrollTo.join( ',' ) ).overlayScrollbars( {
-      "autoUpdate": true
-    } );
+    $( applyScrollTo.join( ',' ) ).overlayScrollbars( options );
   }, 1000 );
 }
 /**
@@ -318,14 +326,41 @@ function InitWidgets() {
   } );
 }
 
-
+function invertColor( hex, bw = true ) {
+  if ( hex.indexOf( '#' ) === 0 ) {
+    hex = hex.slice( 1 );
+  }
+  // convert 3-digit hex to 6-digits.
+  if ( hex.length === 3 ) {
+    hex = hex[ 0 ] + hex[ 0 ] + hex[ 1 ] + hex[ 1 ] + hex[ 2 ] + hex[ 2 ];
+  }
+  if ( hex.length !== 6 ) {
+    throw new Error( 'Invalid HEX color.' );
+  }
+  var r = parseInt( hex.slice( 0, 2 ), 16 ),
+    g = parseInt( hex.slice( 2, 4 ), 16 ),
+    b = parseInt( hex.slice( 4, 6 ), 16 );
+  if ( bw ) {
+    // http://stackoverflow.com/a/3943023/112731
+    return ( r * 0.299 + g * 0.587 + b * 0.114 ) > 186 ?
+      '#000000' :
+      '#FFFFFF';
+  }
+  // invert color components
+  r = ( 255 - r ).toString( 16 );
+  g = ( 255 - g ).toString( 16 );
+  b = ( 255 - b ).toString( 16 );
+  // pad each with zeros and return
+  return "#" + padZero( r ) + padZero( g ) + padZero( b );
+}
 
 function addDpItem( elm ) {
-  var apl = elm.parentNode.parentNode.lastChild.firstChild;
+  var apl = $( elm.parentNode.parentNode.lastChild.firstChild ).find( '.active-plot-list-content' )[ 0 ];
   var form = elm.parentNode.parentNode.parentNode;
   var appName = $( form ).find( '[type="text"]' )[ 0 ].value == '' ? $( form ).find( '[type="text"]' )[ 0 ].getAttribute( 'placeholder' ) : $( form ).find( '[type="text"]' )[ 0 ].value;
   var msgName = $( form ).find( '[type="text"]' )[ 1 ].value == '' ? $( form ).find( '[type="text"]' )[ 1 ].getAttribute( 'placeholder' ) : $( form ).find( '[type="text"]' )[ 1 ].value;
   var fieldName = $( form ).find( '[type="text"]' )[ 2 ].value == '' ? $( form ).find( '[type="text"]' )[ 2 ].getAttribute( 'placeholder' ) : $( form ).find( '[type="text"]' )[ 2 ].value;
+  var color = $( form ).find( '[type="button"]' )[ 0 ].value;
 
   var opsName = '/' + appName + '/' + msgName + '/' + fieldName;
 
@@ -345,34 +380,40 @@ function addDpItem( elm ) {
     }
   }
 
-  if ( !duplicateExists & dataPlotDef[ 'data' ].length < 5 ) {
-    var color = cu.makeColor()
+  if ( !duplicateExists & dataPlotDef[ 'data' ].length < 6 ) {
+    // var color = cu.makeColor()
     dataPlotDef[ 'data' ].push( {
       tlm: {
         name: opsName
       },
       color: color,
-      label: fieldName,
+      label: opsName,
     } );
     $( apl ).data( 'PlotDef', dataPlotDef );
-    renderAplPanel( $( apl ) );
+    try {
+      renderAplPanel( $( apl ) );
+    } catch ( e ) {
+      cu.logDebug( 'renderAplPanel | Plot definition not defined' );
+    }
   }
 }
 
 function renderAplPanel( jqElm ) {
   jqElm.empty();
-  var dataPlotDef = jqElm.data( 'PlotDef' ).data;
+  try {
+    var dataPlotDef = jqElm.data( 'PlotDef' ).data;
+    dataPlotDef.forEach( ( item ) => {
+      var opsPath = item.tlm.name;
+      var color = item.color;
+      var label = item.label;
 
-  dataPlotDef.forEach( ( item ) => {
-    var opsPath = item.tlm.name;
-    var color = item.color;
-    var label = item.label;
+      var htmlStr = '<button type="button" class="data-plot-defs" data-active=false onclick=aplStateToggle(this) data-opspath=' + opsPath + '  style="color:' + color + ';border:1px solid ' + color + '">' + label + '</button>';
+      jqElm.append( htmlStr );
 
-    var htmlStr = '<button type="button" class="data-plot-defs" data-active=false onclick=aplStateToggle(this) data-opspath=' + opsPath + '  style="color:' + color + ';border:1px solid ' + color + '">' + label + '</button>';
-    jqElm.append( htmlStr );
-
-  } );
-
+    } );
+  } catch ( e ) {
+    cu.logDebug( 'renderAplPanel | Plot definition not defined' );
+  }
 }
 
 function aplStateToggle( elm, color ) {
@@ -387,7 +428,7 @@ function aplStateToggle( elm, color ) {
 }
 
 function removeDpItem( elm ) {
-  var apl = elm.parentNode.parentNode.lastChild.firstChild;
+  var apl = $( elm.parentNode.parentNode.lastChild.firstChild ).find( '.active-plot-list-content' )[ 0 ];
   var form = elm.parentNode.parentNode.parentNode;
   var nodeElm = $( form.parentNode.parentNode ).find( '[data-cdr]' )[ 0 ];
   var finds = $( apl ).find( '.data-plot-defs.active' );
@@ -413,12 +454,16 @@ function removeDpItem( elm ) {
     }
   }
   $( apl ).data( 'PlotDef', dataPlotDef );
-  renderAplPanel( $( apl ) );
+  try {
+    renderAplPanel( $( apl ) );
+  } catch ( e ) {
+    cu.logDebug( 'renderAplPanel | Plot definition not defined' );
+  }
 }
 
 function clearDataPlot( elm ) {
   var dpcontainer = elm.parentElement.nextSibling;
-  var apl = $( dpcontainer ).find( '.active-plot-list' );
+  var apl = $( dpcontainer ).find( '.active-plot-list-content' );
   var nodeElm = $( dpcontainer ).find( '[data-cdr]' )[ 0 ];
   var key = nodeElm.getAttribute( 'plot-key' );
   dataplot_subscriptions[ key ].UtilGraph.destroy();
@@ -429,12 +474,16 @@ function clearDataPlot( elm ) {
     data: [],
     options: {}
   } );
-  renderAplPanel( $( apl ) )
+  try {
+    renderAplPanel( $( apl ) );
+  } catch ( e ) {
+    cu.logDebug( 'renderAplPanel | Plot definition not defined' );
+  }
 }
 
 function launchPlots( elm ) {
   var dpcontainer = elm.parentElement.nextSibling;
-  var apl = $( dpcontainer ).find( '.active-plot-list' );
+  var apl = $( dpcontainer ).find( '.active-plot-list-content' );
   var nodeElm = $( dpcontainer ).find( '[data-cdr]' )[ 0 ];
   var dataPlotDef = apl.data( 'PlotDef' );
 
@@ -471,9 +520,9 @@ function launchPlots( elm ) {
 function DisplayControlForQuerySelector( elm ) {
   var dispState = elm.parentNode.nextElementSibling.firstChild.style.display;
   if ( dispState == 'none' | dispState == '' ) {
-    elm.parentNode.nextElementSibling.firstChild.style.display = 'grid';
+    elm.parentNode.nextElementSibling.firstChild.style.display = 'flow-root';
     elm.firstChild.setAttribute( 'class', 'fa fa-angle-up' )
-  } else if ( dispState == 'grid' ) {
+  } else if ( dispState == 'flow-root' ) {
     elm.parentNode.nextElementSibling.firstChild.style.display = 'none';
     elm.firstChild.setAttribute( 'class', 'fa fa-angle-down' )
   }

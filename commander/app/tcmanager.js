@@ -131,6 +131,7 @@
           var nodeElm = subscriptions[ opsPath ].elms[ i ];
           var reqObj = cu.parseJSON( nodeElm.getAttribute( 'data-cdr' ) );
           var indicatorFormat = reqObj.indicator;
+          var colorSets = {};
           /* Set value format */
           if ( reqObj.hasOwnProperty( 'tlm' ) ) {
             for ( var j = 0; j < reqObj.tlm.length; ++j ) {
@@ -141,27 +142,27 @@
                   value = sprintf( tlmObj.format, value );
                 } else if ( tlmObj.hasOwnProperty( 'calibration' ) ) {
                   if ( tlmObj.calibration.hasOwnProperty( 'type' ) ) {
-                	switch(tlmObj.calibration.type) {
-                	  case 'function' :
+                    switch ( tlmObj.calibration.type ) {
+                      case 'function':
                         if ( tlmObj.calibration.hasOwnProperty( 'function' ) ) {
                           value = window[ tlmObj.calibration.function ]( value );
                         }
-                	    break;
-                	    
-                	  case 'enumeration' :
-                	    if ( tlmObj.calibration.hasOwnProperty( 'enumerations' ) ) {
-                	      var enumerations = tlmObj.calibration.enumerations;
-                	      for(var enumID in enumerations) {
-                	    	var enumeration = enumerations[enumID];
-                	    	
-                	    	if(enumeration.hasOwnProperty('name') && enumeration.hasOwnProperty('value')) {
-                	    	  if(enumeration.value === value) {
-                	            value = enumeration.name;
-                	    	    break;
-                	    	  }
-                	    	}
-                	      }
-                	    }
+                        break;
+
+                      case 'enumeration':
+                        if ( tlmObj.calibration.hasOwnProperty( 'enumerations' ) ) {
+                          var enumerations = tlmObj.calibration.enumerations;
+                          for ( var enumID in enumerations ) {
+                            var enumeration = enumerations[ enumID ];
+
+                            if ( enumeration.hasOwnProperty( 'name' ) && enumeration.hasOwnProperty( 'value' ) ) {
+                              if ( enumeration.value === value ) {
+                                value = enumeration.name;
+                                break;
+                              }
+                            }
+                          }
+                        }
                     }
                   }
                 }
@@ -225,11 +226,24 @@
               if ( staleness ) {
                 nodeElm.setAttribute( 'class', 'led-basic' );
               } else {
+                /*
+                 * add attribures trueClass and falseClass to override default colors
+                 * example :
+                 * data-cdr={tlm:[{name:'/MPC/MPC_HkTlm_t/RunPosControl'}], indicator:'led', trueClass:'cdr-led-blue', falseClass:'cdr-led-yellow'}
+                 */
                 nodeElm.textContent = '';
                 if ( value ) {
-                  nodeElm.setAttribute( 'class', 'led-basic led-on' )
+                  if ( reqObj.hasOwnProperty( 'trueClass' ) ) {
+                    nodeElm.setAttribute( 'class', 'led-basic ' + reqObj.trueClass );
+                  } else {
+                    nodeElm.setAttribute( 'class', 'led-basic cdr-led-green' );
+                  }
                 } else {
-                  nodeElm.setAttribute( 'class', 'led-basic led-off' )
+                  if ( reqObj.hasOwnProperty( 'falseClass' ) ) {
+                    nodeElm.setAttribute( 'class', 'led-basic ' + reqObj.falseClass );
+                  } else {
+                    nodeElm.setAttribute( 'class', 'led-basic cdr-led-red' );
+                  }
                 }
               }
             } else {
@@ -779,6 +793,12 @@
           }
         } );
         InitScrollBar();
+        if ( this.panelElm.config.title == 'Dataplot' ) {
+          var apl = this.panelElm.element.find( '.active-plot-list-content' );
+          apl.data( 'PlotDef', this.panelElm.config.componentState.PlotDef );
+          renderAplPanel( apl );
+          // this.panelElm.element.find( '#cdr-dataplot-play' ).click();
+        }
       }, this.loadTimeout );
 
     }

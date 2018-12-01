@@ -9,6 +9,7 @@ cdr-nav-iconshtml(lang='en-us')
     script(type="text/javascript" src="/scripts/jquery/dist/jquery.js")
     script(type="text/javascript" src="/scripts/jquery-ui-dist/jquery-ui.min.js")
     script(type="text/javascript" src="/scripts/bootstrap/dist/js/bootstrap.min.js")
+    script(type="text/javascript" src="/scripts/bootstrap-colorpicker/dist/js/bootstrap-colorpicker.min.js")
     script(type="text/javascript" src="/scripts/patternfly-bootstrap-treeview/dist/bootstrap-treeview.min.js")
     script(type="text/javascript" src="/scripts/svg.js/dist/svg.js")
     script(type="text/javascript" src='/scripts/wolfy87-eventemitter/EventEmitter.js')
@@ -28,6 +29,7 @@ cdr-nav-iconshtml(lang='en-us')
     script(type="text/javascript" src="/scripts/jquery-contextmenu/dist/jquery.contextMenu.min.js")
     script(type="text/javascript" src="/scripts/handlebars/dist/handlebars.min.js")
     script(type="text/javascript" src="/scripts/d3/dist/d3.min.js")
+    
     <!-- script(type="text/javascript" src="http://d3js.org/d3.v3.js") -->
     <!-- script(type="text/javascript" src="/scripts/radar-chart-d3/src/radar-chart.js") -->
     
@@ -36,6 +38,7 @@ cdr-nav-iconshtml(lang='en-us')
     link(rel="stylesheet" type="text/css" href="/scripts/overlayscrollbars/css/OverlayScrollbars.min.css")
     link(rel="stylesheet" type="text/css" href="/scripts/patternfly-bootstrap-treeview/dist/bootstrap-treeview.min.css")
     link(rel="stylesheet" type="text/css" href="/scripts/bootstrap/dist/css/bootstrap.min.css")
+    link(rel="stylesheet" type="text/css" href="/scripts/bootstrap-colorpicker/dist/css/bootstrap-colorpicker.min.css")
     link(rel="stylesheet" type="text/css" href="/css/commander.css")
     link(rel="stylesheet" type="text/css" href="/scripts/font-awesome/css/font-awesome.min.css")
     link(type="text/css" rel="stylesheet" href="/css/goldenlayout-base.css")
@@ -82,9 +85,9 @@ cdr-nav-iconshtml(lang='en-us')
         ul.navbar-nav.cdr-nav-btn(data-tooltip='true' title='Save Layout')
           button.btn.btn-outline-primary(data-toggle="modal" data-target="#genericInputModal" data-title="Save Layout" data-submit="SaveLayout" data-custom='[{"label":"Enter Layout Name ", "type":"field", "dtype":"text"}]') 
             i.cdr-nav-icons.fa.fa-save
-        ul.navbar-nav.cdr-nav-btn#noop-test
-          button.btn.btn-outline-primary(data-cdr={cmd:{name:'/CFE/CFE_ES_NoopCmd'},indicator:'cmd'}) 
-            i.cdr-nav-icons No-Op 
+        <!--ul.navbar-nav.cdr-nav-btn#noop-test -->
+        <!--  button.btn.btn-outline-primary(data-cdr={cmd:{name:'/CFE/CFE_ES_NoopCmd'},indicator:'cmd'}) -->
+        <!--    i.cdr-nav-icons No-Op -->
 
     <!-- Central Content Area -->
     div.cdr-container.ui.main.text
