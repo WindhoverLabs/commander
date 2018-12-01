@@ -608,9 +608,13 @@ BinaryDecoder.prototype.processBinaryMessage = function( buffer ) {
           var fields = def.msgDef.fields;
           for ( var fieldName in fields ) {
             var field = fields[ fieldName ];
-            tlmObj[ fieldName ] = this.getFieldValue( buffer, field, field.bit_offset, def.msgDef );
+            try {
+              tlmObj[ fieldName ] = this.getFieldValue( buffer, field, field.bit_offset, def.msgDef );
+            } catch ( e ) {
+            	/* TODO: Do nothing for now. */
+            }
           }
-
+          
           var pbMsg = def.msgDef.proto_msg;
           var symbolName = pbMsg.substring( 0, pbMsg.length - 3 );
 
@@ -618,7 +622,7 @@ BinaryDecoder.prototype.processBinaryMessage = function( buffer ) {
             content: tlmObj,
             opsPath: def.opsPath,
             symbol: symbolName,
-            msgID: symbolName,
+            msgID: msgID,
             msgTime: msgTime
           } );
         }
@@ -650,25 +654,57 @@ BinaryDecoder.prototype.getFieldValueAsPbType = function( buffer, fieldDef, bitO
 
     if ( fieldDef.array_length > 1 ) {
       var value = [];
+      var fieldLength = 0;
       switch ( fieldDef.pb_type ) {
         case 'uint8':
-          for ( var i = 0; i < fieldDef.array_length; ++i ) {
+          if(buffer.length >= (( bitOffset / 8 ) + fieldDef.array_length )) {
+        	/* This field is not truncated. */
+        	fieldLength = fieldDef.array_length;
+          } else {
+        	/* This field is truncated. */
+          	fieldLength = ( buffer.length - ( bitOffset / 8 ) );
+          }
+            
+          for ( var i = 0; i < fieldLength; ++i ) {
             value.push( buffer.readUInt8( ( bitOffset / 8 ) + i ) );
           }
           break;
 
         case 'int8':
+          if(buffer.length >= (( bitOffset / 8 ) + fieldDef.array_length )) {
+        	/* This field is not truncated. */
+        	fieldLength = fieldDef.array_length;
+          } else {
+        	/* This field is truncated. */
+          	fieldLength = ( buffer.length - ( bitOffset / 8 ) );
+          }
+            
           for ( var i = 0; i < fieldDef.array_length; ++i ) {
             value.push( buffer.readInt8( ( bitOffset / 8 ) + i ) );
           }
           break;
 
         case 'string':
-          value = buffer.toString( 'utf8', bitOffset / 8, ( bitOffset / 8 ) + fieldDef.array_length );
-          break;
-
         case 'char':
-          value = buffer.toString( 'utf8', bitOffset / 8, ( bitOffset / 8 ) + fieldDef.array_length );
+          /* I wish there was a way around this, but we cannot automatically
+           * determine the difference between a string and char array.  
+           * Therefore, we will treat everything as a string.  However, some
+           * messages may really have char arrays containing binary data.
+           * To make it worse, some of these are actually variable size at 
+           * runtime.  In other words, the flight software truncates them.  
+           * So, to accomodate those, we are going to try to read the entire
+           * length, or up to the end of the buffer.
+           */
+          var fieldLength = 0;
+          if(buffer.length >= (( bitOffset / 8 ) + fieldDef.array_length )) {
+        	/* This field is not truncated. */
+        	fieldLength = fieldDef.array_length;
+          } else {
+        	/* This field is truncated. */
+          	fieldLength = ( buffer.length - ( bitOffset / 8 ) );
+          }
+          
+          value = buffer.toString( 'utf8', bitOffset / 8, fieldLength );
           break;
 
         case 'uint16':
@@ -778,6 +814,7 @@ BinaryDecoder.prototype.getFieldValueAsPbType = function( buffer, fieldDef, bitO
       }
     } else {
       switch ( fieldDef.pb_type ) {
+        case 'string':
         case 'char':
           value = buffer.readUInt8( bitOffset / 8 );
           break;
@@ -898,24 +935,54 @@ BinaryDecoder.prototype.getFieldValue = function( buffer, fieldDef, bitOffset, r
     if ( fieldDef.array_length > 1 ) {
       var value = [];
       switch ( fieldDef.airliner_type ) {
-        case 'char':
-          value = buffer.toString( 'utf8', bitOffset / 8, ( bitOffset / 8 ) + fieldDef.array_length );
-          break;
-
         case 'uint8':
-          for ( var i = 0; i < fieldDef.array_length; ++i ) {
+          if(buffer.length >= (( bitOffset / 8 ) + fieldDef.array_length )) {
+        	/* This field is not truncated. */
+        	fieldLength = fieldDef.array_length;
+          } else {
+        	/* This field is truncated. */
+          	fieldLength = ( buffer.length - ( bitOffset / 8 ) );
+          }
+            
+          for ( var i = 0; i < fieldLength; ++i ) {
             value.push( buffer.readUInt8( ( bitOffset / 8 ) + i ) );
           }
           break;
 
         case 'int8':
-          for ( var i = 0; i < fieldDef.array_length; ++i ) {
+          if(buffer.length >= (( bitOffset / 8 ) + fieldDef.array_length )) {
+        	/* This field is not truncated. */
+        	fieldLength = fieldDef.array_length;
+          } else {
+        	/* This field is truncated. */
+          	fieldLength = ( buffer.length - ( bitOffset / 8 ) );
+          }
+          for ( var i = 0; i < fieldLength; ++i ) {
             value.push( buffer.readInt8( ( bitOffset / 8 ) + i ) );
           }
           break;
 
         case 'string':
-          value = buffer.toString( 'utf8', bitOffset / 8, ( bitOffset / 8 ) + fieldDef.array_length );
+        case 'char':
+          /* I wish there was a way around this, but we cannot automatically
+           * determine the difference between a string and char array.  
+           * Therefore, we will treat everything as a string.  However, some
+           * messages may really have char arrays containing binary data.
+           * To make it worse, some of these are actually variable size at 
+           * runtime.  In other words, the flight software truncates them.  
+           * So, to accomodate those, we are going to try to read the entire
+           * length, or up to the end of the buffer.
+           */
+          var fieldLength = 0;
+          if(buffer.length >= (( bitOffset / 8 ) + fieldDef.array_length )) {
+      	    /* This field is not truncated. */
+      	    fieldLength = fieldDef.array_length;
+          } else {
+      	    /* This field is truncated. */
+        	fieldLength = ( buffer.length - ( bitOffset / 8 ) );
+          }
+        
+          value = buffer.toString( 'utf8', bitOffset / 8, fieldLength );
           break;
 
         case 'uint16':
@@ -1029,7 +1096,7 @@ BinaryDecoder.prototype.getFieldValue = function( buffer, fieldDef, bitOffset, r
           }
       }
     } else {
-      switch ( fieldDef.airliner_type ) {
+      switch ( fieldDef.airliner_type ) {        	
         case 'char':
           value = buffer.readUInt8( bitOffset / 8 );
           break;
@@ -1128,13 +1195,10 @@ BinaryDecoder.prototype.getFieldValue = function( buffer, fieldDef, bitOffset, r
           }
       }
     }
-
-    return value;
   } catch ( err ) {
-    this.logErrorEvent( EventEnum.UNHANDLED_EXCEPTION, 'getField: Unhandled exception. \'' + err + ' - ' + err.stack + '\'' );
-
-    return undefined;
+    this.logErrorEvent( EventEnum.UNHANDLED_EXCEPTION, 'getFieldValue: Unhandled exception. \'' + err + '\'' );
   }
+  return value;
 }
 
 
