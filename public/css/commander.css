@@ -782,7 +782,7 @@ header>button {
 .cdr-primary {
   padding: 0px 3px;
   font-size: 14px;
-  color: var(--btn-text-color);
+  color: #000066;
   background-color: var(--btn-primary-background-color);
   border: 1px solid var(--btn-primary-border-color);
 }
