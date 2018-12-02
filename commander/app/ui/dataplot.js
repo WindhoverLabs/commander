@@ -223,12 +223,17 @@ CmdrTimeSeriesDataplot.prototype.start = function() {
   session.subscribe( self.objTlm, ( paramArr ) => {
     try {
       paramArr.forEach( ( param ) => {
+        // console.log(new Date(),param);
         var opsPath = param.opsPath;
         for ( var key in dataplot_subscriptions ) {
           var dpObj = dataplot_subscriptions[ key ].objTlm;
           for ( each in dpObj ) {
-            dpObj[ each ].name == opsPath;
-            dataplot_subscriptions[ key ].addData( param );
+            if( dpObj[ each ].name == opsPath ){
+              // setTimeout(()=>{
+              //   dataplot_subscriptions[ key ].addData( param );
+              // },0)
+              dataplot_subscriptions[ key ].addData( param );
+            }
           }
         }
       } );
@@ -328,7 +333,10 @@ CmdrTimeSeriesDataplot.prototype.addData = function( params ) {
       self.UtilGraph.setData( dataArray );
       // since the axes don't change, we don't need to call plot.setupGrid()
       self.UtilGraph.setupGrid();
-      self.UtilGraph.draw();
+      // console.log('start')
+
+      setTimeout(()=>{self.UtilGraph.draw();},1);
+      // console.log('done')
     } catch ( e ) {
       cu.logDebug( 'update | util graph cannot set data' )
     }

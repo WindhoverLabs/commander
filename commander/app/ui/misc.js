@@ -357,12 +357,12 @@ function invertColor( hex, bw = true ) {
 function addDpItem( elm ) {
   var apl = $( elm.parentNode.parentNode.lastChild.firstChild ).find( '.active-plot-list-content' )[ 0 ];
   var form = elm.parentNode.parentNode.parentNode;
-  var appName = $( form ).find( '[type="text"]' )[ 0 ].value == '' ? $( form ).find( '[type="text"]' )[ 0 ].getAttribute( 'placeholder' ) : $( form ).find( '[type="text"]' )[ 0 ].value;
-  var msgName = $( form ).find( '[type="text"]' )[ 1 ].value == '' ? $( form ).find( '[type="text"]' )[ 1 ].getAttribute( 'placeholder' ) : $( form ).find( '[type="text"]' )[ 1 ].value;
-  var fieldName = $( form ).find( '[type="text"]' )[ 2 ].value == '' ? $( form ).find( '[type="text"]' )[ 2 ].getAttribute( 'placeholder' ) : $( form ).find( '[type="text"]' )[ 2 ].value;
+  var opsName = $( form ).find( '[type="text"]' )[ 0 ].value == '' ? $( form ).find( '[type="text"]' )[ 0 ].getAttribute( 'placeholder' ) : $( form ).find( '[type="text"]' )[ 0 ].value;
+  // var msgName = $( form ).find( '[type="text"]' )[ 1 ].value == '' ? $( form ).find( '[type="text"]' )[ 1 ].getAttribute( 'placeholder' ) : $( form ).find( '[type="text"]' )[ 1 ].value;
+  // var fieldName = $( form ).find( '[type="text"]' )[ 2 ].value == '' ? $( form ).find( '[type="text"]' )[ 2 ].getAttribute( 'placeholder' ) : $( form ).find( '[type="text"]' )[ 2 ].value;
   var color = $( form ).find( '[type="button"]' )[ 0 ].value;
 
-  var opsName = '/' + appName + '/' + msgName + '/' + fieldName;
+  // var opsName = '/' + appName + '/' + msgName + '/' + fieldName;
 
   var dataPlotDef = $( apl ).data( 'PlotDef' );
 
@@ -533,10 +533,10 @@ function DisplayControlForQuerySelector( elm ) {
  */
 function AddPlot( elm ) {
   var form = elm.parentNode.nextElementSibling.firstChild.firstChild;
-  var appName = $( form ).find( '[type="text"]' )[ 0 ].value == '' ? $( form ).find( '[type="text"]' )[ 0 ].getAttribute( 'placeholder' ) : $( form ).find( '[type="text"]' )[ 0 ].value;
-  var msgName = $( form ).find( '[type="text"]' )[ 1 ].value == '' ? $( form ).find( '[type="text"]' )[ 1 ].getAttribute( 'placeholder' ) : $( form ).find( '[type="text"]' )[ 1 ].value;
-  var fieldName = $( form ).find( '[type="text"]' )[ 2 ].value == '' ? $( form ).find( '[type="text"]' )[ 2 ].getAttribute( 'placeholder' ) : $( form ).find( '[type="text"]' )[ 2 ].value;
-  var opsName = '/' + appName + '/' + msgName + '/' + fieldName;
+  var opsName = $( form ).find( '[type="text"]' )[ 0 ].value == '' ? $( form ).find( '[type="text"]' )[ 0 ].getAttribute( 'placeholder' ) : $( form ).find( '[type="text"]' )[ 0 ].value;
+  // var msgName = $( form ).find( '[type="text"]' )[ 1 ].value == '' ? $( form ).find( '[type="text"]' )[ 1 ].getAttribute( 'placeholder' ) : $( form ).find( '[type="text"]' )[ 1 ].value;
+  // var fieldName = $( form ).find( '[type="text"]' )[ 2 ].value == '' ? $( form ).find( '[type="text"]' )[ 2 ].getAttribute( 'placeholder' ) : $( form ).find( '[type="text"]' )[ 2 ].value;
+  // var opsName = '/' + appName + '/' + msgName + '/' + fieldName;
   var nodeElm = elm.parentNode.nextElementSibling.lastChild.firstChild;
   var dataPlotDef = {};
   dataPlotDef[ 'data' ] = [];

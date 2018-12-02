@@ -133,10 +133,8 @@ function Commander( workspace, configFile ) {
   io.on( 'connection', function( socket ) {
     var address = socket.handshake.address;
 
-
-    socket.conn.server.pingTimeout = 60000;
-
-    // console.log( socket.conn.server );
+    // solig data plot connection for 60 minutes
+    socket.conn.server.pingTimeout = 60 * 60 * 1000;
 
     socket.on( 'connect_error', function( err ) {
       self.logErrorEvent( EventEnum.SOCKET_CONNECT_ERROR, 'SocketIO: Socket connect error.  \'' + err + '\'' );
