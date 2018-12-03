@@ -199,7 +199,7 @@ function Commander( workspace, configFile ) {
     } );
 
     function updateTelemetry( update ) {
-      socket.emit( 'telemetry-update', update );
+      socket.volatile.emit( 'telemetry-update', update );
     }
 
     for ( var i in publicFunctions ) {
