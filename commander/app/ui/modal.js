@@ -10,10 +10,11 @@ function InitModal() {
   } );
   /* modal on show handle - generate a form based on custom
    * information from dom elements*/
-  $( "#genericInputModal" ).on( 'show.bs.modal', ( e ) => {
-    if ( e.hasOwnProperty( 'relatedTarget' ) ) {
+  $( "#genericInputModal" ).on( 'show.bs.modal', ( event ) => {
+
+    if ( event.hasOwnProperty( 'relatedTarget' ) ) {
       /* which invoked the modal to show */
-      var btn = $( e.relatedTarget );
+      var btn = $( event.relatedTarget );
       var title = btn.data( 'title' );
       /* this can be a function of a string which will be executed
        * upon form submission */
@@ -91,6 +92,21 @@ function InitModal() {
       /* set submit action */
       $( '#modalSubmit' )[ 0 ].onclick = window[ submit ];
     }
+
+    /* supress the default reload event */
+    $( "#genericInputModal" ).on( 'submit', function( event ) {
+      event.preventDefault();
+    } );
+
+    /* support for form submission on enter key down event */
+    if ( event.currentTarget.onkeydown === null ) {
+      event.currentTarget.onkeydown = function( evt ) {
+        if ( evt.key == 'Enter' ) {
+          $( '#modalSubmit' )[ 0 ].click();
+        }
+      }
+    }
+
   } );
 
   /* modal on hide handle - unload a form based */

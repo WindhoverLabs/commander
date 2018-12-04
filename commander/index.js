@@ -89,6 +89,7 @@ var publicFunctions = [
   'getPanels',
   'getLayouts',
   'getWidgets',
+  'getDefaultLayout',
   'queryConfigDB'
 ];
 
@@ -367,6 +368,16 @@ Commander.prototype.getPanels = function( inPath, cb ) {
   var content = this.getPanelsByPath( paths, global.CONTENT_TREE );
 
   cb( content );
+}
+
+/**
+ * Gets default layout configuration
+ * @param  {Function} cb callback on response
+ */
+Commander.prototype.getDefaultLayout = function( cb ) {
+  /* is a stub needs to go in some configuration */
+  var layout = fs.readFileSync( global.CDR_WORKSPACE + '/plugins/cfe/web/pilot/main_layout.lyt' );
+  cb( JSON.parse( layout ) );
 }
 
 /**

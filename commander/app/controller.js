@@ -86,10 +86,12 @@ $( () => {
     } ]
   }
 
+
+
   /* if a different browser opened this application then that browser will set
    * the starting cofiguration of current layout, If such a configuration exists
    * copy over default configuration */
-  if ( window.__backupConfig != undefined ) {
+  if ( window.__backupConfig != undefined | window.__backupConfig != null ) {
     cu.lofDebug( 'Connection | window has preloaded configuration.' );
     config = window.__backupConfig;
   }
@@ -101,127 +103,143 @@ $( () => {
     cu.logInfo( 'Connection | session connected' );
 
     if ( _sescon_never ) {
+      var defaultLayoutPromise = new Promise( ( resolve, reject ) => {
 
-      session.getPanels( '/', function( dirEntries ) {
-        var panelEntries = [];
-        /* modify dirEntries */
-        for ( var entryID in dirEntries ) {
-          var entry = {
-            name: '/' + entryID,
-            text: dirEntries[ entryID ].shortDescription,
-            longDescription: dirEntries[ entryID ].longDescription,
-            path: '/' + entryID,
-            urlPath: '/' + entryID,
-            type: dirEntries[ entryID ].type,
-            lazyLoad: true,
-            ext: entryID,
-            selectable: false,
-            checkable: false
-          };
-          panelEntries.push( entry );
-        }
-        $( '#cdr-panel-menu-container' ).treeview( {
-          data: panelEntries,
-          levels: 1,
-          backColor: '#343a40',
-          selectedBackColor: "#fff",
-          selectedColor: "#343a40",
-          onhoverColor: "#fff",
-          wrapNodeText: true,
-          collapseIcon: 'fa fa-folder-open',
-          expandIcon: 'fa fa-folder',
-          showBorder: false,
-          lazyLoad: UpdatePanelNode,
-          onNodeRendered: NodeRendered,
-          onNodeSelected: NodeSelected,
+        session.getDefaultLayout( function( resp ) {
+          if ( window.__backupConfig == undefined | window.__backupConfig == null ) {
+            config = resp;
+            resolve( 'Success!' );
+          }
         } );
-      } );
-      session.getLayouts( '/', function( dirEntries ) {
-        var entries = [];
-        /* modify dirEntries */
-        for ( var entryID in dirEntries ) {
-          var entry = {
-            name: '/' + entryID,
-            text: dirEntries[ entryID ].shortDescription,
-            longDescription: dirEntries[ entryID ].longDescription,
-            path: '/' + entryID,
-            urlPath: '/' + entryID,
-            type: dirEntries[ entryID ].type,
-            lazyLoad: true,
-            ext: entryID,
-            selectable: false,
-            checkable: false
-          };
-          entries.push( entry );
-        }
-        $( '#cdr-layout-menu-container' ).treeview( {
-          data: entries,
-          levels: 1,
-          backColor: '#343a40',
-          selectedBackColor: "#fff",
-          selectedColor: "#343a40",
-          onhoverColor: "#fff",
-          wrapNodeText: true,
-          collapseIcon: 'fa fa-folder-open',
-          expandIcon: 'fa fa-folder',
-          showBorder: false,
-          lazyLoad: UpdateLayoutNode,
-          onNodeRendered: NodeRendered,
-          onNodeSelected: NodeSelected,
-        } );
-      } );
-      session.getWidgets( '/', function( dirEntries ) {
-        var entries = [];
-        /* modify dirEntries */
-        for ( var entryID in dirEntries ) {
-          var entry = {
-            name: '/' + entryID,
-            text: dirEntries[ entryID ].shortDescription,
-            longDescription: dirEntries[ entryID ].longDescription,
-            path: '/' + entryID,
-            urlPath: '/' + entryID,
-            type: dirEntries[ entryID ].type,
-            lazyLoad: true,
-            ext: entryID,
-            selectable: false,
-            checkable: false
-          };
-          entries.push( entry );
-        }
-        $( '#cdr-widget-menu-container' ).treeview( {
-          data: entries,
-          levels: 1,
-          backColor: '#343a40',
-          selectedBackColor: "#fff",
-          selectedColor: "#343a40",
-          onhoverColor: "#fff",
-          wrapNodeText: true,
-          collapseIcon: 'fa fa-folder-open',
-          expandIcon: 'fa fa-folder',
-          showBorder: false,
-          lazyLoad: UpdateWidgetNode,
-          onNodeRendered: WidgetNodeRendered,
-          // onNodeSelected: NodeSelected,
-        } );
-      } );
-      /**
-       * Load a layout for the application for first time
-       * @type {window}
-       */
-      myLayout = new window.GoldenLayout( config, $( '#cdr-layout-container' ) );
-      InitLayout( myLayout );
-      window.dispatchEvent( llc );
 
-      /* load resources */
-      InitModal();
-      InitMenuState();
-      InitToolTips();
-      InitScrollBar();
-      InitResizeCtl();
-      InitSidebar();
-      InitWidgets();
-      /* false means previously, there had already been a session connection */
-      _sescon_never = false;
+      } );
+      defaultLayoutPromise.then( () => {
+        console.log( config );
+
+        session.getPanels( '/', function( dirEntries ) {
+          var panelEntries = [];
+          /* modify dirEntries */
+          for ( var entryID in dirEntries ) {
+            var entry = {
+              name: '/' + entryID,
+              text: dirEntries[ entryID ].shortDescription,
+              longDescription: dirEntries[ entryID ].longDescription,
+              path: '/' + entryID,
+              urlPath: '/' + entryID,
+              type: dirEntries[ entryID ].type,
+              lazyLoad: true,
+              ext: entryID,
+              selectable: false,
+              checkable: false
+            };
+            panelEntries.push( entry );
+          }
+          $( '#cdr-panel-menu-container' ).treeview( {
+            data: panelEntries,
+            levels: 1,
+            backColor: '#343a40',
+            selectedBackColor: "#fff",
+            selectedColor: "#343a40",
+            onhoverColor: "#fff",
+            wrapNodeText: true,
+            collapseIcon: 'fa fa-folder-open',
+            expandIcon: 'fa fa-folder',
+            showBorder: false,
+            lazyLoad: UpdatePanelNode,
+            onNodeRendered: NodeRendered,
+            onNodeSelected: NodeSelected,
+          } );
+        } );
+        session.getLayouts( '/', function( dirEntries ) {
+          var entries = [];
+          /* modify dirEntries */
+          for ( var entryID in dirEntries ) {
+            var entry = {
+              name: '/' + entryID,
+              text: dirEntries[ entryID ].shortDescription,
+              longDescription: dirEntries[ entryID ].longDescription,
+              path: '/' + entryID,
+              urlPath: '/' + entryID,
+              type: dirEntries[ entryID ].type,
+              lazyLoad: true,
+              ext: entryID,
+              selectable: false,
+              checkable: false
+            };
+            entries.push( entry );
+          }
+          $( '#cdr-layout-menu-container' ).treeview( {
+            data: entries,
+            levels: 1,
+            backColor: '#343a40',
+            selectedBackColor: "#fff",
+            selectedColor: "#343a40",
+            onhoverColor: "#fff",
+            wrapNodeText: true,
+            collapseIcon: 'fa fa-folder-open',
+            expandIcon: 'fa fa-folder',
+            showBorder: false,
+            lazyLoad: UpdateLayoutNode,
+            onNodeRendered: NodeRendered,
+            onNodeSelected: NodeSelected,
+          } );
+        } );
+        session.getWidgets( '/', function( dirEntries ) {
+          var entries = [];
+          /* modify dirEntries */
+          for ( var entryID in dirEntries ) {
+            var entry = {
+              name: '/' + entryID,
+              text: dirEntries[ entryID ].shortDescription,
+              longDescription: dirEntries[ entryID ].longDescription,
+              path: '/' + entryID,
+              urlPath: '/' + entryID,
+              type: dirEntries[ entryID ].type,
+              lazyLoad: true,
+              ext: entryID,
+              selectable: false,
+              checkable: false
+            };
+            entries.push( entry );
+          }
+          $( '#cdr-widget-menu-container' ).treeview( {
+            data: entries,
+            levels: 1,
+            backColor: '#343a40',
+            selectedBackColor: "#fff",
+            selectedColor: "#343a40",
+            onhoverColor: "#fff",
+            wrapNodeText: true,
+            collapseIcon: 'fa fa-folder-open',
+            expandIcon: 'fa fa-folder',
+            showBorder: false,
+            lazyLoad: UpdateWidgetNode,
+            onNodeRendered: WidgetNodeRendered,
+            // onNodeSelected: NodeSelected,
+          } );
+        } );
+        /**
+         * Load a layout for the application for first time
+         * @type {window}
+         */
+        myLayout = new window.GoldenLayout( config, $( '#cdr-layout-container' ) );
+        updateDragSources();
+        window.dispatchEvent( llc );
+        InitLayout( myLayout );
+
+        /* load resources */
+        InitModal();
+        InitMenuState();
+        InitToolTips();
+        InitScrollBar();
+        InitResizeCtl();
+        InitSidebar();
+        InitWidgets();
+        /* false means previously, there had already been a session connection */
+        _sescon_never = false;
+      } ).catch( ( e ) => {
+        cu.logError( 'Error occured while loading default layout ', e );
+      } )
     }
   } );
 } );

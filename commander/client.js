@@ -145,6 +145,16 @@ CommanderClient.prototype.loadWidgets = function( cb ) {
 };
 
 /**
+ * Gets default layout configuration
+ * @param  {Function} cb callback on response
+ */
+CommanderClient.prototype.getDefaultLayout = function( cb ) {
+  this.socket.emit( 'getDefaultLayout', function( result ) {
+    cb( result );
+  } );
+}
+
+/**
  * Get random number
  * @param  {Function} cb Callback
  */
