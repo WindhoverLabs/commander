@@ -648,7 +648,8 @@ header {
   display: flex;
   margin: 10px auto;
   min-width: 200px;
-  overflow: hidden; 
+  overflow: hidden;
+  height: fit-content;
 }
 header>h2 {
   height: 100%;
