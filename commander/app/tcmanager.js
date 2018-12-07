@@ -930,7 +930,7 @@
       }
       /* ADI resize handle */
       for ( var i in display_controllers ) {
-        if ( display_controllers[ i ].DISP_META.LAYERS[ display_controllers[ i ].DISP_STATE.LAYERS ] == 'ADI' ) {
+        if ( display_controllers[ i ].DISP_STATE.ADDITIONAL_CTL[ display_controllers[ i ].DISP_META.ADDITIONAL_CTL.indexOf( 'ADI' ) ] ) {
           $( '#cdr-guages-' + i ).empty();
           drawHUD( 'cdr-guages-' + i );
         }

@@ -37,6 +37,7 @@ var Parser = require( 'binary-parser' ).Parser;
 const net = require( 'net' );
 var Emitter = require( 'events' );
 var fs = require( 'fs' );
+const dgram = require( 'dgram' );
 const util = require( 'util' );
 var protobuf = require( 'protobufjs' );
 var mergeJSON = require( 'merge-json' );
@@ -45,6 +46,7 @@ var socket_io = require( 'socket.io' );
 var CommanderInstance = require( './commander_instance.js' );
 var CommanderApp = require( './commander_app.js' );
 var path = require( 'path' );
+const http = require( 'http' );
 const ContentTypeEnum = require( './classes/CdrPlugin.js' ).ContentTypeEnum;
 
 /**
@@ -90,6 +92,7 @@ var publicFunctions = [
   'getLayouts',
   'getWidgets',
   'getDefaultLayout',
+  'getADSBJson',
   'queryConfigDB'
 ];
 
@@ -166,6 +169,7 @@ function Commander( workspace, configFile ) {
     } );
 
     socket.on( 'disconnect', function( err ) {
+      videoServer.close();
       self.logInfoEvent( EventEnum.SOCKET_DISCONNECT, 'SocketIO: Socket disconnected error.  \'' + err + '\'.' );
     } );
 
@@ -185,6 +189,8 @@ function Commander( workspace, configFile ) {
       self.sendCmd( cmdObj );
     } );
 
+
+
     socket.on( 'pluginFunction', function( pluginName, funcName, args, cb ) {
       for ( var i in self.registeredFunctions ) {
         if ( self.registeredFunctions[ i ].pluginName === pluginName ) {
@@ -202,6 +208,25 @@ function Commander( workspace, configFile ) {
     function updateTelemetry( update ) {
       socket.volatile.emit( 'telemetry-update', update );
     }
+
+    // video server
+    var videoServer = dgram.createSocket( 'udp4' );
+    global.NODE_APP.videoServer = videoServer;
+
+    videoServer.on( 'error', ( err ) => {
+      console.log( `server error:\n${err.stack}` );
+      videoServer.close();
+    } );
+
+    videoServer.on( 'message', ( msg, info ) => {
+      socket.volatile.emit( 'stream', {
+        image: true,
+        buffer: msg.toString( 'base64' )
+      } );
+    } );
+
+
+    videoServer.bind( 3001 );
 
     for ( var i in publicFunctions ) {
       ( function( funcName ) {
@@ -379,6 +404,25 @@ Commander.prototype.getDefaultLayout = function( cb ) {
   var layout = fs.readFileSync( global.CDR_WORKSPACE + '/plugins/cfe/web/pilot/main_layout.lyt' );
   cb( JSON.parse( layout ) );
 }
+
+/******************* STUBS ********************************************/
+/**
+ * Gets ADSB data in JSON (stub)
+ * @param  {Function} cb Callback
+ */
+Commander.prototype.getADSBJson = function( cb ) {
+  http.get( 'http://127.0.0.1:8080/dump1090/data.json', ( resp ) => {
+    var data = ''
+    resp.on( 'data', ( chunk ) => {
+      data += chunk;
+    } );
+    resp.on( 'end', () => {
+      cb( JSON.parse( data ) );
+    } );
+  } );
+}
+
+/******************* STUBS ********************************************/
 
 /**
  * Gets layout

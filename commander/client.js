@@ -61,6 +61,8 @@ function CommanderClient() {
    */
   this.subscriptions = {};
 
+  this.videoConnected = false;
+
   cu.logInfo( 'Clinet | CommanderClient' );
   /* Connect */
   this.connect();
@@ -82,17 +84,17 @@ CommanderClient.prototype.isSocketConnected = function() {
  */
 CommanderClient.prototype.getLayouts = function( path, cb ) {
   var self = this;
-  
+
   this.socket.emit( 'getLayouts', path, function( result ) {
     cb( result );
   } );
 };
 
 
-CommanderClient.prototype.callPlugin = function(pluginName, funcName, args, cb) {
-    this.socket.emit( 'pluginFunction', pluginName, funcName, args, function(results) {
-        cb(results)
-    } );
+CommanderClient.prototype.callPlugin = function( pluginName, funcName, args, cb ) {
+  this.socket.emit( 'pluginFunction', pluginName, funcName, args, function( results ) {
+    cb( results )
+  } );
 };
 
 
@@ -167,36 +169,55 @@ CommanderClient.prototype.getRandom = function( cb ) {
 
 
 /**
- * Disable video stream
- */
-CommanderClient.prototype.diableVideoSteam = function() {
-  // console.log( 'video stream disabled.' )
-}
-
-/**
  * Subscribe to video stream
  * @param  {Function} cb Callback
  */
-CommanderClient.prototype.getVideoSteam = function( cb ) {
-  // console.log( 'video stream subscribed.' )
-  /* stub */
-  var width = 600;
-  var height = 400;
-  var i;
-  var end = width * height;
-  // setInterval( () => {
-  //   var image = [];
-  //   for ( i = 0; i < end; ++i ) {
-  //     image.push( '0123456789abcdef'.split( '' ).map( function( v, i, a ) {
-  //       return i > 1 ? null : a[ Math.floor( Math.random() * 16 ) ]
-  //     } ).join( '' ) );
-  //   }
-  //   image = image.join( '' );
-  //   image = btoa( image )
-  //   cb( image );
-  // }, 5000 );
+CommanderClient.prototype.enableVideoSteam = function( cb ) {
+  var self = this;
+  self.videoConnected = true;
+
+  this.socket.on( 'stream', function( msg ) {
+    if ( self.videoConnected ) {
+      cb( msg )
+    }
+  } );
 }
 
+/**
+ * Unsubscribe to video stream
+ * @param  {Function} cb Callback
+ */
+CommanderClient.prototype.disableVideoStream = function() {
+  this.videoConnected = false;
+}
+
+/**
+ * Gets ADSB data in JSON
+ * @param  {Number} interval Time interval
+ * @param  {Function} cb Callback
+ */
+CommanderClient.prototype.getADSBJson = function( interval, cb ) {
+  if ( this.adsbInterval != undefined ) {
+    try {
+      this.clearADSBInterval();
+    } catch ( ex ) {
+      cu.logError( 'unable to clear ADSB interval ' );
+    }
+  }
+  this.adsbInterval = setInterval( () => {
+    this.socket.emit( 'getADSBJson', function( result ) {
+      cb( result );
+    } );
+  }, interval );
+}
+
+/**
+ * Clears adsb interval
+ */
+CommanderClient.prototype.clearADSBInterval = function() {
+  window.clearInterval( this.adsbInterval );
+  this.adsbInterval = undefined;
+}
 
 /**
  * Get directory listing
