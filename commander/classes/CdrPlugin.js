@@ -49,7 +49,7 @@ class CdrPlugin {
   /**
    * This is called by the underlying framework to initialize the plugin.
    */
-  initialize( commander ) {
+  initialize( commander, instance ) {
     var self = this;
 
     if ( typeof this.getFunctions === 'function' ) {
@@ -59,6 +59,21 @@ class CdrPlugin {
           commander.registerFunction( self.name, functions[ funcName ] );
         }
       }
+    }
+
+    if ( typeof this.getStreams === 'function' ) {
+      var functions = this.getStreams();
+      if ( typeof functions !== 'undefined' ) {
+        for ( var funcName in functions ) {
+          commander.registerStreams( self.name);
+        }
+      }
+    }
+
+    if ( typeof this.getServerApp === 'function' ) {
+      var serverApp = this.getServerApp();
+  	  
+      instance.addApp(serverApp.name, serverApp.obj);
     }
   }
 

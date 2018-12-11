@@ -112,6 +112,7 @@ function Commander( workspace, configFile ) {
   this.instances = {};
   var self = this;
   this.registeredFunctions = [];
+  this.registeredStreams = [];
 
   /* Load environment dependent configuration */
   config.loadFile( configFile );
@@ -136,6 +137,7 @@ function Commander( workspace, configFile ) {
 
   io.on( 'connection', function( socket ) {
     var address = socket.handshake.address;
+    var enabledStreams = {};
 
     // solig data plot connection for 60 minutes
     socket.conn.server.pingTimeout = 60 * 60 * 1000;
@@ -169,7 +171,6 @@ function Commander( workspace, configFile ) {
     } );
 
     socket.on( 'disconnect', function( err ) {
-      videoServer.close();
       self.logInfoEvent( EventEnum.SOCKET_DISCONNECT, 'SocketIO: Socket disconnected error.  \'' + err + '\'.' );
     } );
 
@@ -185,11 +186,17 @@ function Commander( workspace, configFile ) {
       self.subscribe( opsPaths, updateTelemetry );
     } );
 
+    socket.on( 'enable-stream', function( streamName ) {
+    	enabledStreams[streamName] = true;
+    } );
+
+    socket.on( 'disable-stream', function( streamName ) {
+    	enabledStreams[streamName] = false;
+    } );
+
     socket.on( 'sendCmd', function( cmdObj ) {
       self.sendCmd( cmdObj );
     } );
-
-
 
     socket.on( 'pluginFunction', function( pluginName, funcName, args, cb ) {
       for ( var i in self.registeredFunctions ) {
@@ -204,29 +211,22 @@ function Commander( workspace, configFile ) {
         }
       }
     } );
-
+    
     function updateTelemetry( update ) {
       socket.volatile.emit( 'telemetry-update', update );
     }
-
-    // video server
-    var videoServer = dgram.createSocket( 'udp4' );
-    global.NODE_APP.videoServer = videoServer;
-
-    videoServer.on( 'error', ( err ) => {
-      console.log( `server error:\n${err.stack}` );
-      videoServer.close();
-    } );
-
-    videoServer.on( 'message', ( msg, info ) => {
-      socket.volatile.emit( 'stream', {
-        image: true,
-        buffer: msg.toString( 'base64' )
-      } );
-    } );
-
-
-    videoServer.bind( 3001 );
+    
+    for ( var i in self.registeredStreams ) {
+      var streamName = self.registeredStreams[i].streamName;
+      self.defaultInstance.emitter.on( streamName, function( newData ) {
+    	var stream = enabledStreams[streamName];
+    	if(typeof stream === 'boolean') {
+    	  if(stream === true) {
+    	    socket.volatile.emit( streamName, newData );
+    	  }
+    	}
+      });
+    };
 
     for ( var i in publicFunctions ) {
       ( function( funcName ) {
@@ -251,7 +251,14 @@ function Commander( workspace, configFile ) {
  * @param  {Object} instance instance object
  */
 Commander.prototype.setDefaultInstance = function( instance ) {
+  var self = this;
   this.defaultInstance = instance;
+  
+  this.defaultInstance.emitter.on('advertise-stream', function( streamName ) {
+	  self.registeredStreams.push( {
+		streamName: streamName
+	  } );
+  });
 }
 
 /**
@@ -298,6 +305,13 @@ Commander.prototype.registerFunction = function( pluginName, cb ) {
     pluginName: pluginName,
     funcName: cb.name,
     cb: cb
+  } );
+}
+
+
+Commander.prototype.registerStreams = function( streamName ) {
+  this.registeredStreams.push( {
+    streamName: streamName
   } );
 }
 

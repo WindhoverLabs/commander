@@ -176,7 +176,9 @@ CommanderClient.prototype.enableVideoSteam = function( cb ) {
   var self = this;
   self.videoConnected = true;
 
-  this.socket.on( 'stream', function( msg ) {
+  this.socket.emit( 'enable-stream', 'video-stream');
+
+  this.socket.on( 'video-stream', function( msg ) {
     if ( self.videoConnected ) {
       cb( msg )
     }
@@ -188,6 +190,7 @@ CommanderClient.prototype.enableVideoSteam = function( cb ) {
  * @param  {Function} cb Callback
  */
 CommanderClient.prototype.disableVideoStream = function() {
+  //this.socket.emit( 'disable-stream', 'video-stream');
   this.videoConnected = false;
 }
 
