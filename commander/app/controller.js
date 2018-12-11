@@ -114,8 +114,6 @@ $( () => {
 
       } );
       defaultLayoutPromise.then( () => {
-        console.log( config );
-
         session.getPanels( '/', function( dirEntries ) {
           var panelEntries = [];
           /* modify dirEntries */

@@ -723,10 +723,12 @@ header>.widget-icon {
 
 .active-plot-list{
   width:100%;
+  height: inherit;
   box-shadow: inset 2px 2px 1px rgba(0, 0, 0, .05);
   background: #7e798333;
   border-radius: 4px;
   align-items: center;
+  display: table;
 }
 
 .active-plot-list-content{
@@ -749,7 +751,7 @@ header>.widget-icon {
 
 .cdr-clr-picker{
   width: 100px;
-  height:50%;
+  /* height:50%; */
   color:white;
   font-weight: bold;
   background-color: #000;

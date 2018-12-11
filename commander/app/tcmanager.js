@@ -304,7 +304,7 @@
         }
       }
     } catch ( e ) {
-      cu.logError( 'ProcessTelemetryUpdate | ', e.message );
+      cu.logError( 'ProcessTelemetryUpdate | ', e.message, ' | update ' + JSON.stringify( param ) );
     }
   }
   /**
@@ -797,7 +797,7 @@
           var apl = this.panelElm.element.find( '.active-plot-list-content' );
           apl.data( 'PlotDef', this.panelElm.config.componentState.PlotDef );
           renderAplPanel( apl );
-          // this.panelElm.element.find( '#cdr-dataplot-play' ).click();
+          this.panelElm.element.find( '#cdr-dataplot-play' ).click();
         }
       }, this.loadTimeout );
 
@@ -864,17 +864,29 @@
    * A function call to forcefully load commands given selector
    */
   function forceLoadCommands( selector ) {
-    $( selector ).find( '[data-cdr]' ).each( function() {
-      var dataObj = cu.parseJSON( $( this ).data( 'cdr' ) );
-      var self = this;
-      var format = dataObj.indicator;
-      cu.assert( format != undefined, 'indicator format is not found' );
-      if ( format == 'cmd' ) {
-        Panel.prototype.loadCommanding( dataObj, self )
-        cu.logInfo( 'forceLoadCommands | command loaded' );
-      }
-    } );
-
+    if ( typeof selector === 'string' ) {
+      $( selector ).find( '[data-cdr]' ).each( function() {
+        var dataObj = cu.parseJSON( $( this ).data( 'cdr' ) );
+        var self = this;
+        var format = dataObj.indicator;
+        cu.assert( format != undefined, 'indicator format is not found' );
+        if ( format == 'cmd' ) {
+          Panel.prototype.loadCommanding( dataObj, self )
+          cu.logInfo( 'forceLoadCommands | command loaded' );
+        }
+      } );
+    } else {
+      selector.find( '[data-cdr]' ).each( function() {
+        var dataObj = cu.parseJSON( $( this ).data( 'cdr' ) );
+        var self = this;
+        var format = dataObj.indicator;
+        cu.assert( format != undefined, 'indicator format is not found' );
+        if ( format == 'cmd' ) {
+          Panel.prototype.loadCommanding( dataObj, self )
+          cu.logInfo( 'forceLoadCommands | command loaded' );
+        }
+      } );
+    }
   }
 
   function forceLoadTlm( selector ) {
@@ -919,22 +931,24 @@
     } );
 
     myLayout.on( "stateChanged", ( i ) => {
-      /* Handle dataplot overflow when layout resize happens */
-      for ( var key in dataplot_subscriptions ) {
-        if ( dataplot_subscriptions.hasOwnProperty( key ) ) {
-          var ug = dataplot_subscriptions[ key ].getUtilGraph();
-          ug.resize();
-          ug.setupGrid();
-          ug.draw();
+      setTimeout( () => {
+        /* Handle dataplot overflow when layout resize happens */
+        for ( var key in dataplot_subscriptions ) {
+          if ( dataplot_subscriptions.hasOwnProperty( key ) ) {
+            var ug = dataplot_subscriptions[ key ].getUtilGraph();
+            ug.resize();
+            ug.setupGrid();
+            ug.draw();
+          }
         }
-      }
-      /* ADI resize handle */
-      for ( var i in display_controllers ) {
-        if ( display_controllers[ i ].DISP_STATE.ADDITIONAL_CTL[ display_controllers[ i ].DISP_META.ADDITIONAL_CTL.indexOf( 'ADI' ) ] ) {
-          $( '#cdr-guages-' + i ).empty();
-          drawHUD( 'cdr-guages-' + i );
+        /* ADI resize handle */
+        for ( var i in display_controllers ) {
+          if ( display_controllers[ i ].DISP_STATE.ADDITIONAL_CTL[ display_controllers[ i ].DISP_META.ADDITIONAL_CTL.indexOf( 'ADI' ) ] ) {
+            $( '#cdr-guages-' + i ).empty();
+            drawHUD( 'cdr-guages-' + i );
+          }
         }
-      }
+      }, 500 );
     } );
 
   } );

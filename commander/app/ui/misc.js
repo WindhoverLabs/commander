@@ -358,11 +358,7 @@ function addDpItem( elm ) {
   var apl = $( elm.parentNode.parentNode.lastChild.firstChild ).find( '.active-plot-list-content' )[ 0 ];
   var form = elm.parentNode.parentNode.parentNode;
   var opsName = $( form ).find( '[type="text"]' )[ 0 ].value == '' ? $( form ).find( '[type="text"]' )[ 0 ].getAttribute( 'placeholder' ) : $( form ).find( '[type="text"]' )[ 0 ].value;
-  // var msgName = $( form ).find( '[type="text"]' )[ 1 ].value == '' ? $( form ).find( '[type="text"]' )[ 1 ].getAttribute( 'placeholder' ) : $( form ).find( '[type="text"]' )[ 1 ].value;
-  // var fieldName = $( form ).find( '[type="text"]' )[ 2 ].value == '' ? $( form ).find( '[type="text"]' )[ 2 ].getAttribute( 'placeholder' ) : $( form ).find( '[type="text"]' )[ 2 ].value;
   var color = $( form ).find( '[type="button"]' )[ 0 ].value;
-
-  // var opsName = '/' + appName + '/' + msgName + '/' + fieldName;
 
   var dataPlotDef = $( apl ).data( 'PlotDef' );
 
@@ -381,7 +377,6 @@ function addDpItem( elm ) {
   }
 
   if ( !duplicateExists & dataPlotDef[ 'data' ].length < 6 ) {
-    // var color = cu.makeColor()
     dataPlotDef[ 'data' ].push( {
       tlm: {
         name: opsName
@@ -409,11 +404,13 @@ function renderAplPanel( jqElm ) {
 
       var htmlStr = '<button type="button" class="data-plot-defs" data-active=false onclick=aplStateToggle(this) data-opspath=' + opsPath + '  style="color:' + color + ';border:1px solid ' + color + '">' + label + '</button>';
       jqElm.append( htmlStr );
-
     } );
   } catch ( e ) {
     cu.logDebug( 'renderAplPanel | Plot definition not defined' );
   }
+  /* Query and add msgID to Telemetry Control section */
+  getMsgIdAndMacrosFromConfigDb( jqElm )
+
 }
 
 function aplStateToggle( elm, color ) {
@@ -461,56 +458,70 @@ function removeDpItem( elm ) {
   }
 }
 
-function clearDataPlot( elm ) {
-  var dpcontainer = elm.parentElement.nextSibling;
-  var apl = $( dpcontainer ).find( '.active-plot-list-content' );
-  var nodeElm = $( dpcontainer ).find( '[data-cdr]' )[ 0 ];
-  var key = nodeElm.getAttribute( 'plot-key' );
-  dataplot_subscriptions[ key ].UtilGraph.destroy();
-  nodeElm.setAttribute( 'plot-key', undefined );
-  $( nodeElm ).empty();
-  delete dataplot_subscriptions[ key ];
-  apl.data( 'PlotDef', {
-    data: [],
-    options: {}
-  } );
+function ClearPlots( elm ) {
   try {
-    renderAplPanel( $( apl ) );
+    var dpcontainer = elm.parentElement.nextSibling;
+    var apl = $( dpcontainer ).find( '.active-plot-list-content' );
+    var nodeElm = $( dpcontainer ).find( '[data-cdr]' )[ 0 ];
+    var key = nodeElm.getAttribute( 'plot-key' );
+    dataplot_subscriptions[ key ].UtilGraph.destroy();
+    nodeElm.removeAttribute( 'plot-key' );
+    $( nodeElm ).empty();
+    delete dataplot_subscriptions[ key ];
   } catch ( e ) {
-    cu.logDebug( 'renderAplPanel | Plot definition not defined' );
+    cu.logError( 'ClearPlots |  error=', e.message );
   }
 }
 
-function launchPlots( elm ) {
+function PlayPlots( elm ) {
+
   var dpcontainer = elm.parentElement.nextSibling;
   var apl = $( dpcontainer ).find( '.active-plot-list-content' );
   var nodeElm = $( dpcontainer ).find( '[data-cdr]' )[ 0 ];
   var dataPlotDef = apl.data( 'PlotDef' );
+  var key = nodeElm.getAttribute( 'plot-key' );
 
-  try {
-    var key = nodeElm.getAttribute( 'plot-key' );
-    nodeElm.setAttribute( 'plot-key', undefined );
-    $( nodeElm ).empty();
-    dataplot_subscriptions[ key ].UtilGraph.destroy();
-    delete dataplot_subscriptions[ key ];
-  } catch ( e ) {
-    cu.logDebug( 'launchPlots | failed to clear graph ' );
-  }
+  if ( key === undefined | key === null ) {
+    if ( dataPlotDef != {} ) {
+      if ( dataPlotDef.hasOwnProperty( 'data' ) ) {
+        if ( dataPlotDef[ 'data' ].length != 0 ) {
 
-
-  if ( dataPlotDef != {} ) {
-    if ( dataPlotDef.hasOwnProperty( 'data' ) ) {
-      if ( dataPlotDef[ 'data' ].length != 0 ) {
-
-        var generatedKey = cu.makeKey();
-        nodeElm.setAttribute( 'plot-key', generatedKey );
-        dataplot_subscriptions[ generatedKey ] = new CmdrTimeSeriesDataplot( nodeElm, dataPlotDef, {}, true )
-        dataplot_subscriptions[ generatedKey ].start()
+          var generatedKey = cu.makeKey();
+          nodeElm.setAttribute( 'plot-key', generatedKey );
+          dataplot_subscriptions[ generatedKey ] = new CmdrTimeSeriesDataplot( nodeElm, dataPlotDef, {}, true )
+          dataplot_subscriptions[ generatedKey ].start()
+        }
       }
     }
+  } else {
+    dataplot_subscriptions[ key ].Play();
   }
+}
 
+function PausePlots( elm ) {
+  var dpcontainer = elm.parentElement.nextSibling;
+  var apl = $( dpcontainer ).find( '.active-plot-list-content' );
+  var nodeElm = $( dpcontainer ).find( '[data-cdr]' )[ 0 ];
+  var dataPlotDef = apl.data( 'PlotDef' );
+  var key = nodeElm.getAttribute( 'plot-key' );
+  if ( key === undefined | key === null ) {
+    cu.logError( 'PausePlots | dataplot key undefined ' );
+  } else {
+    dataplot_subscriptions[ key ].Pause();
+  }
+}
 
+function ResyncPlots( elm ) {
+  var dpcontainer = elm.parentElement.nextSibling;
+  var apl = $( dpcontainer ).find( '.active-plot-list-content' );
+  var nodeElm = $( dpcontainer ).find( '[data-cdr]' )[ 0 ];
+  var dataPlotDef = apl.data( 'PlotDef' );
+  var key = nodeElm.getAttribute( 'plot-key' );
+  if ( key === undefined | key === null ) {
+    cu.logError( 'ResyncPlots | dataplot key undefined ' );
+  } else {
+    dataplot_subscriptions[ key ].Resync();
+  }
 }
 
 
@@ -521,63 +532,82 @@ function DisplayControlForQuerySelector( elm ) {
   var dispState = elm.parentNode.nextElementSibling.firstChild.style.display;
   if ( dispState == 'none' | dispState == '' ) {
     elm.parentNode.nextElementSibling.firstChild.style.display = 'flow-root';
-    elm.firstChild.setAttribute( 'class', 'fa fa-angle-up' )
+    elm.firstChild.setAttribute( 'class', 'fa fa-caret-square-o-up' )
   } else if ( dispState == 'flow-root' ) {
     elm.parentNode.nextElementSibling.firstChild.style.display = 'none';
-    elm.firstChild.setAttribute( 'class', 'fa fa-angle-down' )
+    elm.firstChild.setAttribute( 'class', 'fa fa-caret-square-o-down' )
   }
 }
 
 /**
- * Adds new line/path to plot
+ * Query's database and obtains msg macros and msg ID's
  */
-function AddPlot( elm ) {
-  var form = elm.parentNode.nextElementSibling.firstChild.firstChild;
-  var opsName = $( form ).find( '[type="text"]' )[ 0 ].value == '' ? $( form ).find( '[type="text"]' )[ 0 ].getAttribute( 'placeholder' ) : $( form ).find( '[type="text"]' )[ 0 ].value;
-  // var msgName = $( form ).find( '[type="text"]' )[ 1 ].value == '' ? $( form ).find( '[type="text"]' )[ 1 ].getAttribute( 'placeholder' ) : $( form ).find( '[type="text"]' )[ 1 ].value;
-  // var fieldName = $( form ).find( '[type="text"]' )[ 2 ].value == '' ? $( form ).find( '[type="text"]' )[ 2 ].getAttribute( 'placeholder' ) : $( form ).find( '[type="text"]' )[ 2 ].value;
-  // var opsName = '/' + appName + '/' + msgName + '/' + fieldName;
-  var nodeElm = elm.parentNode.nextElementSibling.lastChild.firstChild;
-  var dataPlotDef = {};
-  dataPlotDef[ 'data' ] = [];
-  dataPlotDef[ 'options' ] = {};
-  dataPlotDef[ 'data' ].push( {
-    tlm: {
-      name: opsName
-    },
-    color: 'yellow',
-    label: opsName,
-  } );
-
-
-  var generatedKey = cu.makeKey();
-  nodeElm.setAttribute( 'plot-key', generatedKey );
-  dataplot_subscriptions[ generatedKey ] = new CmdrTimeSeriesDataplot( nodeElm, dataPlotDef, {}, true )
-  dataplot_subscriptions[ generatedKey ].start()
-  // console.log( data );
-  //
-  // var plotKey = plot.getAttribute( 'plot-key' );
-  // dataplot_subscriptions[ plotKey ].addNewPath( data );
-  // dataplot_subscriptions[ plotKey ].UtilGraph.setupGrid();
-  // dataplot_subscriptions[ plotKey ].UtilGraph.draw();
-  // }, 20 );
-
-  // var plot = elm.parentNode.nextElementSibling.lastChild.firstChild;
-  // var data = $( plot ).data( 'cdr' )
-  // data.tlm.push( {
-  //   name: opsName
-  // } );
-  // data.label.push( fieldName );
-  // data.color.push( 'yellow' );
-  // $( plot ).data( 'cdr', data )
-  // console.log( plot );
-  // console.log( $( plot ) );
-  //
-  // var plotKey = plot.getAttribute( 'plot-key' );
-  // dataplot_subscriptions[ plotKey ].UtilGraph.shutdown();
-  // dataplot_subscriptions[ plotKey ].unsubscribeAll();
-  // delete dataplot_subscriptions[ plotKey ];
-  // $( plot ).empty();
-  // forceLoadTlm( elm.parentNode.nextElementSibling )
+function getMsgIdAndMacrosFromConfigDb( apl ) {
+  var dataPlotDef = apl.data( 'PlotDef' );
+  var opsPaths = [];
+  for ( var i in dataPlotDef.data ) {
+    opsPaths.push( dataPlotDef.data[ i ].label );
+  }
+  session.callPlugin( 'sch', 'getMessageIDsAndMacrosFromMsgName', {
+    opsPaths: opsPaths
+  }, function( msg ) {
+    var tcArticle = apl.closest( 'article' ).next();
+    var tcTbody = $( tcArticle ).find( '#cdr-dataplot-tc' );
+    var msgCount = tcTbody.data( 'msgcount' );
+    /* remove previously added msgs*/
+    if ( msgCount > 0 ) {
+      for ( var i = 0; i < msgCount; ++i ) {
+        tcTbody.children().last().remove();
+      }
+      msgCount = 0;
+    }
+    for ( var i in msg ) {
+      var each = msg[ i ];
+      var cmdAddMsgFlow = {
+        cmd: {
+          name: '/TO/TO_AddMessageFlowCmd_t',
+          argument: [ {
+            name: 'MsgID',
+            value: each.msgID
+          }, {
+            name: 'MsgLimit',
+            value: 1
+          }, {
+            name: 'ChannelIdx',
+            value: 0
+          } ]
+        },
+        indicator: 'cmd'
+      };
+      var cmdRemoveMsgFlow = {
+        cmd: {
+          name: '/TO/TO_RemoveMessageFlowCmd_t',
+          argument: [ {
+            name: 'MsgID',
+            value: each.msgID
+          }, {
+            name: 'ChannelIdx',
+            value: 0
+          } ]
+        },
+        indicator: 'cmd'
+      };
+      tcTbody.append(
+        '<tr><td>' + each.macro + '</td><td>' +
+        '<div class="btn-group">' +
+        '<div class="button btn cdr-outline-primary" data-cdr=' + JSON.stringify( cmdAddMsgFlow ) + '>' +
+        'Add' +
+        '</div>' +
+        '<div class="button btn cdr-outline-primary" data-cdr=' + JSON.stringify( cmdRemoveMsgFlow ) + '>' +
+        'Remove' +
+        '</div>' +
+        '</div>' +
+        '</td></tr>'
+      );
+      msgCount += 1;
+    }
+    tcTbody.data( 'msgcount', msgCount )
+    forceLoadCommands( tcTbody );
+  } )
 
 }
