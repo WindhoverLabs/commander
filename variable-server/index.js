@@ -38,6 +38,7 @@ var convict = require( 'convict' );
 var jp = require( 'jsonpath' );
 var config = require( './config.js' );
 const Sparkles = require( 'sparkles' );
+const uuidV1 = require('uuid/v1');
 
 /**
  * Event id's
@@ -51,6 +52,10 @@ var EventEnum = Object.freeze( {
   'CONFIG_ERROR': 3
 }, {
   'UNHANDLED_ERROR': 4
+}, {
+  'INVALID_UNSUBSCRIBE_REQUEST': 5
+}, {
+  'INVALID_REQUEST': 6
 } );
 
 var emit = Emitter.prototype.emit;
@@ -242,30 +247,23 @@ VariableServer.prototype.setInstanceEmitter = function( newInstanceEmitter ) {
           /* Now loop through all the subscribers, if any. */
           for ( var subscriber in variable.subscribers ) {
             /* First make sure this subscriber callback still exists. */
-            if ( typeof variable.subscribers[ subscriber ] !== 'function' ) {
-              /* It doesn't exist.  It must have been destroyed.  Delete
-               * the reference to this callback.
+            if ( subscribersToUpdate.hasOwnProperty( subscriber ) == false ) {
+              /* This is the first time in this function call that we've
+               * processed a variable for this particular subscriber.
+               * Create a new subscriber record in this temporary
+               * object.
                */
-              delete variable.subscribers[ subscriber ];
-            } else {
-              if ( subscribersToUpdate.hasOwnProperty( subscriber ) == false ) {
-                /* This is the first time in this function call that we've
-                 * processed a variable for this particular subscriber.
-                 * Create a new subscriber record in this temporary
-                 * object.
-                 */
-                subscribersToUpdate[ subscriber ] = {
-                  cb: variable.subscribers[ subscriber ],
-                  variables: {}
-                };
-              }
-
-              subscribersToUpdate[ subscriber ].variables[ itemID ] = {};
-
-              var updatedVariable = subscribersToUpdate[ subscriber ].variables[ itemID ];
-
-              updatedVariable[ 'sample' ] = [ variable.sample[ variable.sample.length - 1 ] ];
+              subscribersToUpdate[ subscriber ] = {
+                subscriber: variable.subscribers[ subscriber ],
+                variables: {}
+              };
             }
+
+            subscribersToUpdate[ subscriber ].variables[ itemID ] = {};
+
+            var updatedVariable = subscribersToUpdate[ subscriber ].variables[ itemID ];
+
+            updatedVariable[ 'sample' ] = [ variable.sample[ variable.sample.length - 1 ] ];
           }
         }
       }
@@ -274,11 +272,13 @@ VariableServer.prototype.setInstanceEmitter = function( newInstanceEmitter ) {
        * an array of updates.
        */
       for ( var subscriber in subscribersToUpdate ) {
-        var callback = subscribersToUpdate[ subscriber ].cb;
+        var callback = self.subscribers[subscribersToUpdate[ subscriber ].subscriber];
 
         /* Make sure this callback still exists. */
         if ( typeof callback === 'function' ) {
           callback( subscribersToUpdate[ subscriber ].variables );
+        } else {
+        	/* TODO:  Release this subscriber. */
         }
       }
     }
@@ -290,30 +290,38 @@ VariableServer.prototype.setInstanceEmitter = function( newInstanceEmitter ) {
   } );
 
   this.instanceEmitter.on( config.get( 'reqSubscribeStreamID' ), function( req, cb ) {
-    if ( req.cmd === 'subscribe' ) {
+    if ( req.cmd === 'addSubscription' ) {
       if ( typeof req.opsPath === 'string' || req.opsPath instanceof String ) {
-        self.SubscribeToVariable( req.opsPath, cb );
+        self.addSubscription( req.subscriberID, req.opsPath );
       } else if ( Array.isArray( req.opsPath ) ) {
         for ( var i = 0; i < req.opsPath.length; ++i ) {
           self.getTlmDefinitions( {
             name: req.opsPath[ i ]
           }, function( tlmDef ) {
-            self.SubscribeToVariable( req.opsPath[ i ], cb );
+            self.addSubscription( req.subscriberID, req.opsPath[ i ] );
           } );
         }
       } else {
         self.logErrorEvent( EventEnum.INVALID_SUBSCRIPTION_REQUEST, 'Subscription request invalid. \'' + req + '\'' );
       }
-    } else if ( req.cmd === 'unsubscribe' ) {
+    } else if ( req.cmd === 'removeSubscription' ) {
       if ( typeof req.opsPath === 'string' || req.opsPath instanceof String ) {
-        self.removeSubscriber( req, cb );
+        self.removeSubscription( req, cb );
       } else if ( Array.isArray( req.opsPath ) ) {
         for ( var i = 0; i < req.opsPath.length; ++i ) {
-          self.removeSubscriber( req.opsPath[ i ], cb );
+          self.removeSubscription( req.opsPath[ i ], cb );
         }
       } else {
-        self.logErrorEvent( EventEnum.INVALID_SUBSCRIPTION_REQUEST, 'Subscription request invalid. \'' + req + '\'' );
+        self.logErrorEvent( EventEnum.INVALID_UNSUBSCRIBE_REQUEST, 'Unsubscribe request invalid. \'' + req + '\'' );
       }
+    } else if ( req.cmd === 'addSubscriber' ) {
+      var id = uuidV1();
+      self.subscribers[id] = req.cb;
+      cb(id);
+    } else if ( req.cmd === 'removeSubscriber' ) {
+        delete self.subscribers[req.subscriberID];
+    } else {
+        self.logErrorEvent( EventEnum.INVALID_REQUEST, 'Request invalid. \'' + req + '\'' );
     }
   } );
 
@@ -344,19 +352,6 @@ VariableServer.prototype.setInstanceEmitter = function( newInstanceEmitter ) {
 //
 //   return outSample;
 // }
-
-
-/**
- * Subscribes to opsPath and calls callback function on it
- * @param  {object}   opsPath operation path
- * @param  {Function} cb      callback
- */
-VariableServer.prototype.SubscribeToVariable = function( opsPath, cb ) {
-  var subscription = {};
-  var self = this;
-
-  self.addSubscriber( opsPath, cb );
-}
 
 
 /**
@@ -452,7 +447,7 @@ VariableServer.prototype.getTlmDefinitions = function( req, cb ) {
  * @param  {String}   opsPath operation path
  * @param  {Function} cb      callback
  */
-VariableServer.prototype.addSubscriber = function( opsPath, cb ) {
+VariableServer.prototype.addSubscription = function( subscriberID, opsPath ) {
   if ( this.vars.hasOwnProperty( opsPath ) == false ) {
     /* We have not received this variable yet and it does
      * not already have a predefinition.  Create a new record. */
@@ -472,14 +467,14 @@ VariableServer.prototype.addSubscriber = function( opsPath, cb ) {
     /* Send all the persisted values of the value */
     outVar[ opsPath ].sample = variable.sample;
 
-    cb( outVar );
+    this.subscribers[subscriberID]( outVar );
   }
 
   if ( variable.hasOwnProperty( 'subscribers' ) == false ) {
-    variable[ 'subscribers' ] = {};
+    variable[ 'subscribers' ] = new Array();
   }
 
-  variable.subscribers[ cb ] = cb;
+  variable.subscribers.push( subscriberID );
 }
 
 
@@ -586,7 +581,7 @@ VariableServer.prototype.getVariableTimeout = function( opsPath ) {
  * @param  {string}   opsPath operation path
  * @param  {Function} cb      callback function
  */
-VariableServer.prototype.removeSubscriber = function( opsPath, cb ) {
+VariableServer.prototype.removeSubscription = function( opsPath, cb ) {
   if ( this.vars.hasOwnProperty( opsPath ) == true ) {
     /* We've already received this or have a predefinition. */
     var variable = this.vars[ opsPath ];

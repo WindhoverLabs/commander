@@ -136,8 +136,12 @@ function Commander( workspace, configFile ) {
   global.NODE_APP.io = io;
 
   io.on( 'connection', function( socket ) {
-    var address = socket.handshake.address;
-    var enabledStreams = {};
+    socket.enabledStreams = [];
+    //var address = socket.handshake.address;
+
+    self.subscribe( updateTelemetry, function( subscriberID ) {
+      socket.subscriberID = subscriberID;
+    } );
 
     // solig data plot connection for 60 minutes
     socket.conn.server.pingTimeout = 60 * 60 * 1000;
@@ -171,7 +175,10 @@ function Commander( workspace, configFile ) {
     } );
 
     socket.on( 'disconnect', function( err ) {
-      self.logInfoEvent( EventEnum.SOCKET_DISCONNECT, 'SocketIO: Socket disconnected error.  \'' + err + '\'.' );
+      self.logInfoEvent( EventEnum.SOCKET_DISCONNECT, 'SocketIO: Socket ' + socket.id + ' disconnected.' );
+      socket.removeAllListeners();
+      self.removeSubscriber( socket.subscriberID );
+      socket.disconnect( true );
     } );
 
     socket.on( 'ping', function() {
@@ -183,15 +190,15 @@ function Commander( workspace, configFile ) {
     } );
 
     socket.on( 'subscribe', function( opsPaths ) {
-      self.subscribe( opsPaths, updateTelemetry );
+      self.addSubscription( socket.subscriberID, opsPaths );
     } );
 
     socket.on( 'enable-stream', function( streamName ) {
-      enabledStreams[ streamName ] = true;
+      socket.enabledStreams[ streamName ] = true;
     } );
 
     socket.on( 'disable-stream', function( streamName ) {
-      enabledStreams[ streamName ] = false;
+      socket.enabledStreams[ streamName ] = false;
     } );
 
     socket.on( 'sendCmd', function( cmdObj ) {
@@ -223,7 +230,7 @@ function Commander( workspace, configFile ) {
     for ( var i in self.registeredStreams ) {
       var streamName = self.registeredStreams[ i ].streamName;
       self.defaultInstance.emitter.on( streamName, function( newData ) {
-        var stream = enabledStreams[ streamName ];
+        var stream = socket.enabledStreams[ streamName ];
         if ( typeof stream === 'boolean' ) {
           if ( stream === true ) {
             socket.volatile.emit( streamName, newData );
@@ -546,35 +553,69 @@ Commander.prototype.sendCmd = function( cmdName, args ) {
 
 
 /**
+ * Subscribe to telemetry server
+ * @param  {String}   varName telemetry name
+ * @param  {Function} cb      callback
+ */
+Commander.prototype.subscribe = function( updateCallback, cb ) {
+  var self = this;
+  this.defaultInstance.emit( config.get( 'reqSubscribeStreamID' ), {
+    cmd: 'addSubscriber',
+    cb: updateCallback
+  }, function( subscriberID ) {
+    cb( subscriberID );
+  } );
+}
+
+
+/**
  * Subscribe to telemetry
  * @param  {String}   varName telemetry name
  * @param  {Function} cb      callback
  */
-Commander.prototype.subscribe = function( varName, cb ) {
+Commander.prototype.addSubscription = function( subscriberID, varName ) {
   var self = this;
   if ( typeof varName == 'object' ) {
     this.defaultInstance.emit( config.get( 'reqSubscribeStreamID' ), {
-      cmd: 'subscribe',
+      cmd: 'addSubscription',
+      subscriberID: subscriberID,
       opsPath: varName
-    }, cb );
+    } );
   }
 }
 
 
 /**
- * Unsubscribe to telemetry
+ * Unsubscribe from telemetry
  * @param  {String}   varName telemetry name
  * @param  {Function} cb      callback
  */
-Commander.prototype.unsubscribe = function( varName, cb ) {
+Commander.prototype.removeSubscription = function( subscriberID, varName ) {
   var self = this;
   if ( typeof varName == 'object' ) {
     this.defaultInstance.emit( config.get( 'reqSubscribeStreamID' ), {
-      cmd: 'unsubscribe',
+      cmd: 'removeSubscription',
+      subscriberID: subscriberID,
       opsPath: varName
-    }, cb );
+    } );
   }
 }
+
+
+/**
+ * Unsubscribe from telemetry server
+ * @param  {String}   varName telemetry name
+ * @param  {Function} cb      callback
+ */
+Commander.prototype.removeSubscriber = function( subscriberID ) {
+  var self = this;
+  this.defaultInstance.emit( config.get( 'reqSubscribeStreamID' ), {
+    cmd: 'removeSubscriber',
+    subscriberID: subscriberID
+  } );
+}
+
+
 
 /**
  * Inherits from EventEmitter.

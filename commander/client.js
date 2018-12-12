@@ -483,10 +483,12 @@ CommanderClient.prototype.connect = function() {
   var self = this;
 
   this.socket = io( {
-    //'reconnection': true ,
-    'reconnectionDelay': 1000,
-    'reconnectDelayMax': 5000,
-    'timeout': 5000
+    reconnection: true,
+    reconnectionAttempts: Infinity,
+    reconnectionDelay: 1000,
+    reconnectDelayMax: 5000,
+    autoConnect: true,
+    timeout: 5000
   } );
 
   this.socket.on( 'connect', function() {
