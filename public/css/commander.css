@@ -347,7 +347,7 @@ h2 {
   width: 500px;
   height: 25px;
   box-shadow: inset 2px 2px 1px rgba(0, 0, 0, .05);
-  background: #7e798333;
+  background: #202020cc;
   border-radius: 4px;
   align-items: center;
 }
@@ -359,11 +359,13 @@ h2 {
 }
 
 .cdr-gadget {
-  background: blueviolet;
+  background-color: var(--th-bg-color);
+  border: 1px solid var(--td-border-color);
   border-radius: 5px;
   margin: 0px 3px;
   display: flex;
-  max-height: 25px;
+  max-height: 22px;
+  max-width: 300px;
   font-size: small;
   vertical-align: middle;
   overflow: auto;

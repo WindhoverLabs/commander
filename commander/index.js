@@ -198,6 +198,10 @@ function Commander( workspace, configFile ) {
       self.sendCmd( cmdObj );
     } );
 
+    socket.on( 'PING', function( startTime ) {
+      socket.emit( 'PONG', startTime );
+    } );
+
     socket.on( 'pluginFunction', function( pluginName, funcName, args, cb ) {
       for ( var i in self.registeredFunctions ) {
         if ( self.registeredFunctions[ i ].pluginName === pluginName ) {
@@ -571,8 +575,6 @@ Commander.prototype.unsubscribe = function( varName, cb ) {
     }, cb );
   }
 }
-
-
 
 /**
  * Inherits from EventEmitter.

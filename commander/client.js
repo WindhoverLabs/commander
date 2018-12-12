@@ -78,6 +78,23 @@ CommanderClient.prototype.isSocketConnected = function() {
 };
 
 /**
+ * Sends a ping to server
+ */
+CommanderClient.prototype.ping = function( startTime ) {
+  this.socket.emit( 'PING', startTime );
+};
+
+/**
+ * Acts on receiveing a pong
+ */
+CommanderClient.prototype.pong = function( cb ) {
+  this.socket.on( 'PONG', function( startTime ) {
+    cb( startTime );
+  } );
+
+};
+
+/**
  * Get a directory listing of layout or .lyt files
  * @param  {String}   path Starting path of directory
  * @param  {Function} cb   Callback
@@ -176,7 +193,7 @@ CommanderClient.prototype.enableVideoSteam = function( cb ) {
   var self = this;
   self.videoConnected = true;
 
-  this.socket.emit( 'enable-stream', 'video-stream');
+  this.socket.emit( 'enable-stream', 'video-stream' );
 
   this.socket.on( 'video-stream', function( msg ) {
     if ( self.videoConnected ) {

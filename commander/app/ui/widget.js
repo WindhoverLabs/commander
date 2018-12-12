@@ -198,16 +198,16 @@ Widget.prototype.plotIndicator = function() {
   } );
   wid.sparklines[ bp.id ].draw( [] );
 
-  if ( !( rouge_subscriptions.hasOwnProperty( opsPath ) ) || !( rouge_subscriptions[ opsPath ].hasOwnProperty( 'plot' ) ) ) {
+  if ( !( rogue_subscriptions.hasOwnProperty( opsPath ) ) || !( rogue_subscriptions[ opsPath ].hasOwnProperty( 'plot' ) ) ) {
     session.subscribe( [ {
       name: opsPath
     } ], ( param ) => {
       try {
         var sample = param.sample[ param.sample.length - 1 ];
         var value = sample.value;
-        if ( rouge_subscriptions.hasOwnProperty( opsPath ) ) {
-          if ( rouge_subscriptions[ opsPath ].hasOwnProperty( 'plot' ) ) {
-            rouge_subscriptions[ opsPath ][ 'plot' ].forEach( ( e ) => {
+        if ( rogue_subscriptions.hasOwnProperty( opsPath ) ) {
+          if ( rogue_subscriptions[ opsPath ].hasOwnProperty( 'plot' ) ) {
+            rogue_subscriptions[ opsPath ][ 'plot' ].forEach( ( e ) => {
               var gdgtObj = $( e );
               if ( gdgtObj.length != 0 ) {
                 gdgtObj.data( 'value' ).push( value );
@@ -225,19 +225,19 @@ Widget.prototype.plotIndicator = function() {
       }
     } );
     /* new entry */
-    if ( !( rouge_subscriptions.hasOwnProperty( opsPath ) ) ) {
-      rouge_subscriptions[ opsPath ] = {};
-      rouge_subscriptions[ opsPath ][ 'plot' ] = [ '.cdr-gadget-value[data-key=' + bp.id + ']' ];
+    if ( !( rogue_subscriptions.hasOwnProperty( opsPath ) ) ) {
+      rogue_subscriptions[ opsPath ] = {};
+      rogue_subscriptions[ opsPath ][ 'plot' ] = [ '.cdr-gadget-value[data-key=' + bp.id + ']' ];
     } else {
-      rouge_subscriptions[ opsPath ][ 'plot' ] = [ '.cdr-gadget-value[data-key=' + bp.id + ']' ];
+      rogue_subscriptions[ opsPath ][ 'plot' ] = [ '.cdr-gadget-value[data-key=' + bp.id + ']' ];
     }
 
   } else {
-    cu.assert( typeof rouge_subscriptions[ opsPath ] == 'object', 'createWidget | rouge_subscriptions[opsPath] is not an object' );
-    if ( !( rouge_subscriptions[ opsPath ].hasOwnProperty( 'plot' ) ) ) {
-      rouge_subscriptions[ opsPath ][ 'plot' ] = [ '.cdr-gadget-value[data-key=' + bp.id + ']' ];
+    cu.assert( typeof rogue_subscriptions[ opsPath ] == 'object', 'createWidget | rogue_subscriptions[opsPath] is not an object' );
+    if ( !( rogue_subscriptions[ opsPath ].hasOwnProperty( 'plot' ) ) ) {
+      rogue_subscriptions[ opsPath ][ 'plot' ] = [ '.cdr-gadget-value[data-key=' + bp.id + ']' ];
     } else {
-      rouge_subscriptions[ opsPath ][ 'plot' ].push( '.cdr-gadget-value[data-key=' + bp.id + ']' );
+      rogue_subscriptions[ opsPath ][ 'plot' ].push( '.cdr-gadget-value[data-key=' + bp.id + ']' );
     }
   }
 }
@@ -350,16 +350,16 @@ Widget.prototype.textIndicator = function() {
     '</div>' +
     '<div data-key=' + bp.id + ' class="cdr-gadget-value">' +
     '</div>' )
-  if ( !( rouge_subscriptions.hasOwnProperty( opsPath ) ) || !( rouge_subscriptions[ opsPath ].hasOwnProperty( 'text' ) ) ) {
+  if ( !( rogue_subscriptions.hasOwnProperty( opsPath ) ) || !( rogue_subscriptions[ opsPath ].hasOwnProperty( 'text' ) ) ) {
     session.subscribe( [ {
       name: opsPath
     } ], ( param ) => {
       try {
         var sample = param.sample[ param.sample.length - 1 ];
         var value = sample.value;
-        if ( rouge_subscriptions.hasOwnProperty( opsPath ) ) {
-          if ( rouge_subscriptions[ opsPath ].hasOwnProperty( 'text' ) ) {
-            var gdgtObj = $( rouge_subscriptions[ opsPath ][ 'text' ].join( ',' ) );
+        if ( rogue_subscriptions.hasOwnProperty( opsPath ) ) {
+          if ( rogue_subscriptions[ opsPath ].hasOwnProperty( 'text' ) ) {
+            var gdgtObj = $( rogue_subscriptions[ opsPath ][ 'text' ].join( ',' ) );
             gdgtObj.text( value );
           }
         }
@@ -368,18 +368,18 @@ Widget.prototype.textIndicator = function() {
       }
     } );
     /* new entry */
-    if ( !( rouge_subscriptions.hasOwnProperty( opsPath ) ) ) {
-      rouge_subscriptions[ opsPath ] = {};
-      rouge_subscriptions[ opsPath ][ 'text' ] = [ '.cdr-gadget-value[data-key=' + bp.id + ']' ];
+    if ( !( rogue_subscriptions.hasOwnProperty( opsPath ) ) ) {
+      rogue_subscriptions[ opsPath ] = {};
+      rogue_subscriptions[ opsPath ][ 'text' ] = [ '.cdr-gadget-value[data-key=' + bp.id + ']' ];
     } else {
-      rouge_subscriptions[ opsPath ][ 'text' ] = [ '.cdr-gadget-value[data-key=' + bp.id + ']' ];
+      rogue_subscriptions[ opsPath ][ 'text' ] = [ '.cdr-gadget-value[data-key=' + bp.id + ']' ];
     }
   } else {
-    cu.assert( typeof rouge_subscriptions[ opsPath ] == 'object', 'createWidget | rouge_subscriptions[opsPath] is not an object' );
-    if ( !( rouge_subscriptions[ opsPath ].hasOwnProperty( 'text' ) ) ) {
-      rouge_subscriptions[ opsPath ][ 'text' ] = [ '.cdr-gadget-value[data-key=' + bp.id + ']' ];
+    cu.assert( typeof rogue_subscriptions[ opsPath ] == 'object', 'createWidget | rogue_subscriptions[opsPath] is not an object' );
+    if ( !( rogue_subscriptions[ opsPath ].hasOwnProperty( 'text' ) ) ) {
+      rogue_subscriptions[ opsPath ][ 'text' ] = [ '.cdr-gadget-value[data-key=' + bp.id + ']' ];
     } else {
-      rouge_subscriptions[ opsPath ][ 'text' ].push( '.cdr-gadget-value[data-key=' + bp.id + ']' );
+      rogue_subscriptions[ opsPath ][ 'text' ].push( '.cdr-gadget-value[data-key=' + bp.id + ']' );
     }
   }
 }

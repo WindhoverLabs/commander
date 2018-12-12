@@ -584,7 +584,7 @@ CommanderDisplay.prototype.Subscriptions = function() {
 
   } );
 
-  /* Register subscriptions with rouge */
+  /* Register subscriptions with rogue */
   [ '/PE/PE_HkTlm_t/AltOrigin',
     '/PX4/PX4_VehicleGpsPositionMsg_t/Lat',
     '/PX4/PX4_VehicleGpsPositionMsg_t/Lon',
@@ -594,16 +594,16 @@ CommanderDisplay.prototype.Subscriptions = function() {
     '/PX4/PX4_VehicleAttitudeMsg_t/Q[2]',
     '/PX4/PX4_VehicleAttitudeMsg_t/Q[3]',
   ].forEach( ( opsPath ) => {
-    if ( !( rouge_subscriptions.hasOwnProperty( opsPath ) ) ) {
+    if ( !( rogue_subscriptions.hasOwnProperty( opsPath ) ) ) {
       /* new entry */
-      rouge_subscriptions[ opsPath ] = {};
-      rouge_subscriptions[ opsPath ][ 'text' ] = [ '#' + this.DisplayContainerIdentifier ];
+      rogue_subscriptions[ opsPath ] = {};
+      rogue_subscriptions[ opsPath ][ 'text' ] = [ '#' + this.DisplayContainerIdentifier ];
     } else {
-      cu.assert( typeof rouge_subscriptions[ opsPath ] == 'object', 'CommanderDisplay | Subscriptions | rouge_subscriptions[opsPath] is not an object' );
-      if ( !( rouge_subscriptions[ opsPath ].hasOwnProperty( 'text' ) ) ) {
-        rouge_subscriptions[ opsPath ][ 'text' ] = [ '#' + this.DisplayContainerIdentifier ];
+      cu.assert( typeof rogue_subscriptions[ opsPath ] == 'object', 'CommanderDisplay | Subscriptions | rogue_subscriptions[opsPath] is not an object' );
+      if ( !( rogue_subscriptions[ opsPath ].hasOwnProperty( 'text' ) ) ) {
+        rogue_subscriptions[ opsPath ][ 'text' ] = [ '#' + this.DisplayContainerIdentifier ];
       } else {
-        rouge_subscriptions[ opsPath ][ 'text' ].push( '#' + this.DisplayContainerIdentifier );
+        rogue_subscriptions[ opsPath ][ 'text' ].push( '#' + this.DisplayContainerIdentifier );
       }
     }
   } );

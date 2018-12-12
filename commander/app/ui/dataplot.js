@@ -242,15 +242,15 @@ CmdrTimeSeriesDataplot.prototype.start = function() {
       } );
 
     } catch ( e ) {
-      cu.logError( "RougeSubscribe | unable to process response. error= ", e.message )
+      cu.logError( "RogueSubscribe | unable to process response. error= ", e.message )
     }
   } );
 
   var key = this.UtilGraph.getCanvas().parentElement.getAttribute( 'plot-key' )
 
   for ( var i in self.objTlm ) {
-    if ( !( self.objTlm[ i ].name in Object.keys( rouge_subscriptions ) ) ) {
-      setRougeSubsc( self.objTlm[ i ].name, 'plot', '[plot-key=' + key + ']' );
+    if ( !( self.objTlm[ i ].name in Object.keys( rogue_subscriptions ) ) ) {
+      setRogueSubsc( self.objTlm[ i ].name, 'plot', '[plot-key=' + key + ']' );
     }
   }
 }
@@ -303,7 +303,7 @@ CmdrTimeSeriesDataplot.prototype.addNewPath = function( pathOps ) {
     this.values[ i ] = [];
   }
 
-  if ( !( pathOps.tlm.name in Object.keys( rouge_subscriptions ) ) ) {
+  if ( !( pathOps.tlm.name in Object.keys( rogue_subscriptions ) ) ) {
     session.subscribe( [ {
       name: pathOps.tlm.name
     } ], ( paramArr ) => {
@@ -311,11 +311,11 @@ CmdrTimeSeriesDataplot.prototype.addNewPath = function( pathOps ) {
         // console.log( paramArr );
         this.addData( paramArr[ 0 ] )
       } catch ( e ) {
-        cu.logDebug( "RougeSubscribe | unable to process response. error= ", e.message )
+        cu.logDebug( "RogueSubscribe | unable to process response. error= ", e.message )
       }
     } );
     var key = this.UtilGraph.getCanvas().parentElement.getAttribute( 'plot-key' )
-    setRougeSubsc( pathOps.tlm.name, 'plot', '[plot-key=' + key + ']' );
+    setRogueSubsc( pathOps.tlm.name, 'plot', '[plot-key=' + key + ']' );
   }
 
 }

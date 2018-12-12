@@ -8,7 +8,7 @@
    * dependant DOM elements for freestyle(rogue) subscriptions.
    * @type {Object}
    */
-  var rouge_subscriptions = {};
+  var rogue_subscriptions = {};
   /**
    * Similar to subscription stores (k,v) pairs of opsPath and a array of
    * dependant flot.js plot element from DOM.
@@ -20,62 +20,62 @@
    * is set to a default value of 10 seconds
    * @type {Number}
    */
-  var rougeCleanUpInterval = 10000;
+  var rogueCleanUpInterval = 10000;
 
   /**
-   * Savely add rogue subscriptions to rouge_subscriptions
+   * Savely add rogue subscriptions to rogue_subscriptions
    * @param {String} key  operation path
    * @param {String} type type of subscription
    * @param {String} cls  class name
    */
-  function setRougeSubsc( key, type, cls ) {
-    if ( key in rouge_subscriptions ) {
-      if ( type in rouge_subscriptions[ key ] ) {
-        rouge_subscriptions[ key ][ type ].push( cls );
+  function setRogueSubsc( key, type, cls ) {
+    if ( key in rogue_subscriptions ) {
+      if ( type in rogue_subscriptions[ key ] ) {
+        rogue_subscriptions[ key ][ type ].push( cls );
       } else {
-        rouge_subscriptions[ key ][ type ] = [ cls ];
+        rogue_subscriptions[ key ][ type ] = [ cls ];
       }
     } else {
-      rouge_subscriptions[ key ] = {}
-      rouge_subscriptions[ key ][ type ] = [ cls ];
+      rogue_subscriptions[ key ] = {}
+      rogue_subscriptions[ key ][ type ] = [ cls ];
     }
   }
 
   /**
-   * Regularly checks the DOM for rouge subscriptions or
+   * Regularly checks the DOM for rogue subscriptions or
    * the subscriptions made inside javascript rather than
    * invoking by markup, and unsubscribes the inactive ones.
    */
   setInterval( () => {
-    for ( var e in rouge_subscriptions ) {
-      var rougeClassesCollection = [];
-      if ( rouge_subscriptions[ e ].hasOwnProperty( 'text' ) ) {
-        for ( var i in rouge_subscriptions[ e ][ 'text' ] ) {
-          rougeClassesCollection.push( {
-            cls: rouge_subscriptions[ e ][ 'text' ][ i ],
+    for ( var e in rogue_subscriptions ) {
+      var rogueClassesCollection = [];
+      if ( rogue_subscriptions[ e ].hasOwnProperty( 'text' ) ) {
+        for ( var i in rogue_subscriptions[ e ][ 'text' ] ) {
+          rogueClassesCollection.push( {
+            cls: rogue_subscriptions[ e ][ 'text' ][ i ],
             ind: 'text'
           } );
         }
       }
-      if ( rouge_subscriptions[ e ].hasOwnProperty( 'plot' ) ) {
-        for ( var i in rouge_subscriptions[ e ][ 'plot' ] ) {
-          rougeClassesCollection.push( {
-            cls: rouge_subscriptions[ e ][ 'plot' ][ i ],
+      if ( rogue_subscriptions[ e ].hasOwnProperty( 'plot' ) ) {
+        for ( var i in rogue_subscriptions[ e ][ 'plot' ] ) {
+          rogueClassesCollection.push( {
+            cls: rogue_subscriptions[ e ][ 'plot' ][ i ],
             ind: 'plot'
           } );
         }
       }
-      for ( var i in rougeClassesCollection ) {
-        var rougeClasses = rougeClassesCollection[ i ];
-        if ( $( rougeClasses.cls ).length == 0 ) {
+      for ( var i in rogueClassesCollection ) {
+        var rogueClasses = rogueClassesCollection[ i ];
+        if ( $( rogueClasses.cls ).length == 0 ) {
           /* Delete the record of that rogue class */
-          var index = rouge_subscriptions[ e ][ rougeClasses.ind ].indexOf( rougeClasses.cls );
-          rouge_subscriptions[ e ][ rougeClasses.ind ].splice( index, 1 );
+          var index = rogue_subscriptions[ e ][ rogueClasses.ind ].indexOf( rogueClasses.cls );
+          rogue_subscriptions[ e ][ rogueClasses.ind ].splice( index, 1 );
         }
       }
       /* delete record */
-      if ( rougeClassesCollection.length == 0 ) {
-        delete rouge_subscriptions[ e ]
+      if ( rogueClassesCollection.length == 0 ) {
+        delete rogue_subscriptions[ e ]
         /*
          * has no DOM listeners or users
          */
@@ -87,11 +87,11 @@
           session.unsubscribe( [ {
             name: e
           } ] );
-          cu.logInfo( 'RougeUnsubscribe | ', e, ' tlm unsubscribed' );
+          cu.logInfo( 'RogueUnsubscribe | ', e, ' tlm unsubscribed' );
         }
       }
     }
-  }, rougeCleanUpInterval );
+  }, rogueCleanUpInterval );
 
   /**
    * processTelemetryUpdate is a call back function, on new data from subscribe
@@ -836,7 +836,7 @@
 
                   delete subscriptions[ opsPath ];
                   /* Unsubscribe */
-                  if ( !( opsPath in rouge_subscriptions ) ) {
+                  if ( !( opsPath in rogue_subscriptions ) ) {
                     session.unsubscribe( [ {
                       name: opsPath
                     } ] );
