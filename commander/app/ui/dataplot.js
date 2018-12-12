@@ -220,6 +220,8 @@ CmdrTimeSeriesDataplot.prototype.start = function() {
     this.values[ i ] = [];
   }
 
+  this.UtilGraph.setupGrid();
+
   var self = this;
   session.subscribe( self.objTlm, ( paramArr ) => {
     try {
