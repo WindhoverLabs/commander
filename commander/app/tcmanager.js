@@ -297,7 +297,7 @@
               try {
                 dataplot_subscriptions[ nodeElm.getAttribute( 'plot-key' ) ].addData( param );
               } catch ( e ) {
-                console.log( 'uncaught', e.message );
+                cu.logError( 'ProcessTelemetryUpdate | unable to add data points to dataplot ', e.message );
               }
             }
           }
@@ -791,6 +791,7 @@
                 break;
               }
           }
+          $( this ).attr( 'bind-status', true );
         } );
         InitScrollBar();
         if ( this.panelElm.config.title == 'Dataplot' ) {
@@ -826,7 +827,6 @@
                 /* delete tlm and dataplot entry*/
                 var index = subscriptions[ opsPath ].elms.indexOf( nodeElm )
                 if ( index != -1 ) {
-                  delete dataplot_subscriptions[ nodeElm.getAttribute( 'plot-key' ) ]
                   subscriptions[ opsPath ].elms.splice( index, 1 );
                   cu.logDebug( 'Panel | ', opsPath, ' removed' );
                 } else {
@@ -848,6 +848,15 @@
               }
             }
           }
+          /* clear dataplots */
+          var dp_key = $( it.origin.element ).find( '.widget-graph' ).children().last().attr( 'plot-key' );
+          if ( dp_key != undefined | dp_key != null ) {
+            $( it.origin.element ).find( '.widget-graph' ).children().last().removeAttr( 'plot-key' );
+            $( it.origin.element ).find( '.widget-graph' ).children().last().empty();
+            dataplot_subscriptions[ dp_key ].UtilGraph.destroy();
+            delete dataplot_subscriptions[ dp_key ];
+          }
+
           /* clear local data */
           this.tlm = [];
           this.panelElm[ 'instantiated' ] = false;
@@ -890,7 +899,6 @@
   }
 
   function forceLoadTlm( selector ) {
-    console.log( $( selector ) );
     $( selector ).find( '[data-cdr]' ).each( function() {
       var dataObj = cu.parseJSON( $( this ).data( 'cdr' ) );
       var self = this;
@@ -918,7 +926,6 @@
       cu.assert( typeof t.contentItem === 'object', 'Tab | contentItem is not of type object' );
       cu.assert( t.contentItem.hasOwnProperty( 'type' ), 'Tab | has no property type' );
       cu.assert( typeof t.contentItem.type === 'string', 'Tab | type is not of type string' );
-      // console.log(t)
       if ( t.contentItem.type == 'component' ) {
         if ( !t.contentItem.instantiated ) {
           var panel = new Panel( t.contentItem );
@@ -930,15 +937,21 @@
       }
     } );
 
-    myLayout.on( "stateChanged", ( i ) => {
-      setTimeout( () => {
+    myLayout.on( 'stateChanged', ( i ) => {
+      try {
         /* Handle dataplot overflow when layout resize happens */
         for ( var key in dataplot_subscriptions ) {
           if ( dataplot_subscriptions.hasOwnProperty( key ) ) {
             var ug = dataplot_subscriptions[ key ].getUtilGraph();
-            ug.resize();
-            ug.setupGrid();
-            ug.draw();
+            try {
+              ug.resize();
+              ug.setupGrid();
+              ug.draw();
+            } catch ( e ) {
+              cu.logError( 'stateChanged | Resize of graph with key ', key, ' failed | error=', e.message );
+
+            }
+
           }
         }
         /* ADI resize handle */
@@ -948,7 +961,10 @@
             drawHUD( 'cdr-guages-' + i );
           }
         }
-      }, 500 );
+      } catch ( e ) {
+        cu.logError( 'stateChanged | layout state change cannot be handled properly | error=', e.message );
+      }
+
     } );
 
   } );

@@ -194,11 +194,11 @@ function Commander( workspace, configFile ) {
     } );
 
     socket.on( 'enable-stream', function( streamName ) {
-      socket.enabledStreams[streamName] = true;
+      socket.enabledStreams[ streamName ] = true;
     } );
 
     socket.on( 'disable-stream', function( streamName ) {
-      socket.enabledStreams[streamName] = false;
+      socket.enabledStreams[ streamName ] = false;
     } );
 
     socket.on( 'sendCmd', function( cmdObj ) {
@@ -218,23 +218,15 @@ function Commander( workspace, configFile ) {
         }
       }
     } );
-    
+
     function updateTelemetry( update ) {
-      if(socket.connected == false) {
-    	var opsNames = [];
-    	for(var param in update) {
-    	  opsNames.push(param);	
-    	}
-    	//self.unsubscribe()
-      } else { 
-        socket.volatile.emit( 'telemetry-update', update );
-      }
+      socket.volatile.emit( 'telemetry-update', update );
     }
-    
+
     for ( var i in self.registeredStreams ) {
-      var streamName = self.registeredStreams[i].streamName;
+      var streamName = self.registeredStreams[ i ].streamName;
       self.defaultInstance.emitter.on( streamName, function( newData ) {
-    	var stream = socket.enabledStreams[streamName];
+    	var stream = socket.enabledStreams[ streamName ];
     	if(typeof stream === 'boolean') {
     	  if(stream === true) {
     	    socket.volatile.emit( streamName, newData );
@@ -268,12 +260,12 @@ function Commander( workspace, configFile ) {
 Commander.prototype.setDefaultInstance = function( instance ) {
   var self = this;
   this.defaultInstance = instance;
-  
-  this.defaultInstance.emitter.on('advertise-stream', function( streamName ) {
-	  self.registeredStreams.push( {
-		streamName: streamName
-	  } );
-  });
+
+  this.defaultInstance.emitter.on( 'advertise-stream', function( streamName ) {
+    self.registeredStreams.push( {
+      streamName: streamName
+    } );
+  } );
 }
 
 /**

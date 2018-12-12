@@ -32,6 +32,9 @@
  *****************************************************************************/
 
 'use strict';
+
+var widgetIntervalCollection = [];
+var sparklineIndex = [];
 /**
  * Modal Object
  * @type {Object}
