@@ -726,6 +726,13 @@ header>.widget-icon {
 
 }
 
+.cdr-dataplot-legend{
+    opacity: 0.3;
+}
+
+.cdr-dataplot-legend:hover{
+    opacity: 1;
+}
 
 .active-plot-list{
   width:100%;
@@ -813,6 +820,7 @@ header>button {
 }
 
 .cdr-outline-primary:hover {
+  color: var(--btn-text-color2);
   background-color: var(--btn-primary-background-color);
   border: 1px solid var(--btn-primary-border-color);
 }

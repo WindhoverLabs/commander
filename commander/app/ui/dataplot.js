@@ -48,7 +48,7 @@ function CmdrTimeSeriesDataplot( domObject, objData, params, flag = false ) {
   this.pause = false;
 
   function legendFormatter( label, series ) {
-    return '<div ' +
+    return '<div class="cdr-dataplot-legend"' +
       'style="color:white;font-size:8pt;text-align:left;padding:4px;padding-left:10px">' +
       label + '</div>';
   };
@@ -366,13 +366,17 @@ CmdrTimeSeriesDataplot.prototype.addData = function( params ) {
       self.UtilGraph.setData( dataArray );
       // since the axes don't change, we don't need to call plot.setupGrid()
       self.UtilGraph.setupGrid();
-      // console.log('start')
-      if ( !self.pause ) {
 
-        self.UtilGraph.draw();
+      // draw function is blocking intervals in the client, so having a timeout
+      // will allow for such intervals to take priority over draw
+      setTimeout( () => {
+        if ( !self.pause ) {
 
-      }
-      // console.log('done')
+          self.UtilGraph.draw();
+
+        }
+      }, 1 );
+
     } catch ( e ) {
       cu.logDebug( 'update | util graph cannot set data' )
     }

@@ -81,6 +81,22 @@ var config = [ {
     "dtype": "text"
   }
 ]
+
+
+setInterval( () => {
+  for ( var i in widgetIntervalCollection ) {
+    var widgetInterval = widgetIntervalCollection[ i ];
+    var bindClassStr = widgetInterval.bindclass;
+    if ( $( '.' + bindClassStr ).length == 0 ) {
+      clearInterval( widgetInterval.interval );
+      widgetIntervalCollection.splice( i, 1 );
+      cu.logInfo( 'WidgetIntervalCleanup | interval bound to class ' + bindClassStr + ' is cleared.' );
+    }
+  }
+}, 10000 );
+
+
+
 /* mut modal configuration in modal object */
 builder.data( 'custom', config )
 /**
