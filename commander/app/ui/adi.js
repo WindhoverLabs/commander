@@ -18,6 +18,10 @@ var Attitude = {
 };
 var HUDCount = 0;
 var HUDStarted = false;
+/**
+ * Will hold draw object, responsible for drawing shapes on the screen
+ * @type {Object}
+ */
 var draw;
 /**
  * HUD opacity
@@ -32,8 +36,18 @@ var textHeading;
 var hdTicks;
 var hdTicksMask;
 var hdWidth;
+
+/**
+ * HUD height
+ * @type {Number}
+ */
 var hudHeight;
+/**
+ * HUD Width
+ * @type {Number}
+ */
 var hudWidth;
+
 var pxPer15Degrees;
 var pxPerDegree;
 var adiState;
@@ -42,7 +56,7 @@ var adiState;
  * @type {Number}
  */
 var degPerPitchLine = 15;
-var posPitchLineOnScreen = 3.5;
+var posPitchLineOnScreen = 5;
 var pxPerPitchLine;
 var pxPerDegreePitch;
 var pitchIndicator;
@@ -82,15 +96,7 @@ var toggle = 0;
  * @type {String}
  */
 var text_color = '#0f0';
-/**
- * Get Time
- * @return {Number}
- */
-var GetTime = function() {
-  var d = new Date();
-  var seconds = d.getTime() / 1000;
-  return seconds;
-}
+
 /**
  * Update HUD heading
  * @param  {Number} newHeading
@@ -111,9 +117,9 @@ function updateHUDHeading( newHeading ) {
  */
 function updateHUDPitch( newPitch ) {
   OffsetY = newPitch * pxPerDegreePitch;
-  //pitchIndicator.rotate(0);
-  //pitchIndicator.y(0);
-  //pitchIndicator.animate(10, '-', 0).y(OffsetY).rotate(rotation);
+  // pitchIndicator.rotate( 0 );
+  // pitchIndicator.y( 0 );
+  // pitchIndicator.animate( 10, '-', 0 ).y( OffsetY ).rotate( rotation );
 }
 /**
  * Update HUD roll
@@ -122,34 +128,42 @@ function updateHUDPitch( newPitch ) {
  */
 function updateHUDRoll( newRoll ) {
   rotation = newRoll;
+  // console.log( rotation );
   pitchIndicator.rotate( 0 );
   pitchIndicator.y( 0 );
   pitchIndicator.y( OffsetY ).rotate( rotation );
 }
 /**
- * Draws HUD
- * @param  {Number} id
+ * Draws HUD on given element
+ * @param  {String} dom indentifier
  * @return {undefined}
  */
 function drawHUD( id ) {
+
   var aspectRatio = 320.0 / 180.0;
+
   hudWidth = $( '#' + id ).width();
   hudHeight = $( '#' + id ).height();
+
+  /* define size for tthe svg */
   draw = SVG( id ).size( '100%', hudHeight );
 
   if ( SVG.supported == false ) {
-    alert( 'SVG not supported with ths browser.' );
+
+    cu.logError( 'drawHUD | SVG not supported with ths browser.' );
+
   } else {
+
     draw.attr( 'preserveAspectRatio', 'x320Y180 meet' );
-    var rollIndicator = draw.group();
 
     /* -------------------------
      Draw altimeter
      ------------------------- */
     var altWidth = 50;
     var altHeight = hudHeight - 10;
-    var altHeight = hudHeight - 10;
+
     altPxPerMeter = altHeight / altPosMetersOnScreen;
+
     var altPxPerDecimeter = altPxPerMeter / 10.0;
     var altPxPerCentimeter = altPxPerMeter / 100.0;
     var altPxPerMillimeter = altPxPerMeter / 1000.0;
@@ -161,34 +175,13 @@ function drawHUD( id ) {
     var altCenter = altimeter.group();
     var altCenterHeight = 30;
     var altTicksMask = altimeter.mask();
-    altTicksMask.rect( hudWidth, hudHeight ).attr( {
-      fill: '#000000'
-    } );
-    altTicksMask.rect( altWidth, altHeight ).attr( {
-      x: hudWidth - altWidth - 5,
-      y: 5,
-      fill: '#ffffff',
-      'stroke-width': '3px',
-      rx: 5,
-      ry: 5
-    } );
-    altTicksMask.polyline( [
-      [ hudWidth - altWidth - 5, hudHeight / 2 ],
-      [ hudWidth - altWidth + 15, ( hudHeight - altCenterHeight ) / 2 ],
-      [ hudWidth - 5, ( hudHeight - altCenterHeight ) / 2 ],
-      [ hudWidth - 5, ( hudHeight + altCenterHeight ) / 2 ],
-      [ hudWidth - altWidth + 15, ( hudHeight + altCenterHeight ) / 2 ],
-      [ hudWidth - altWidth - 5, hudHeight / 2 ]
-    ] ).attr( {
-      fill: '#00ff00'
-    } );
-    altTicksArea.maskWith( altTicksMask );
+
 
     /* -------------------------
      Draw Heading
      ------------------------- */
     var hdHeight = 50;
-    hdWidth = hudWidth - 40;
+    hdWidth = hudWidth; //- 40;
     pxPer15Degrees = ( hdWidth / 2 ) / 5;
     pxPerDegree = pxPer15Degrees / 15.0;
     var heading = draw.group();
@@ -197,25 +190,32 @@ function drawHUD( id ) {
     var hdRec1 = headingBorder.rect( hdWidth, hdHeight ).attr( {
       x: ( hudWidth - hdWidth ) / 2,
       y: hudHeight - hdHeight - 7,
-      rx: 5,
-      ry: 5,
+      rx: 0,
+      ry: 0,
       'fill-opacity': bgOpacity
     } );
     hdTicksArea = heading.group();
     hdTicks = hdTicksArea.group();
     for ( i = 0; i < ( 360 + 90 ); i++ ) {
       if ( i % 5 == 0 ) {
+
         x = ( ( hudWidth ) / 2 ) + ( pxPerDegree * i );
+
         hdTicks.line( x, hudHeight - hdHeight - 3, x, hudHeight - hdHeight + 10 ).attr( {
           width: 1,
           stroke: text_color
         } );
 
         var fixedHeading = i;
+
         if ( i < 0 ) {
+
           fixedHeading = 360 + i;
+
         } else if ( i >= 360 ) {
+
           fixedHeading = i - 360;
+
         }
 
         var textHeadingTick = hdTicks.text( fixedHeading.toString() ).move( x, hudHeight - hdHeight + 13 );
@@ -228,17 +228,24 @@ function drawHUD( id ) {
     }
     for ( i = 0; i > ( -360 - 90 ); i-- ) {
       if ( i % 5 == 0 ) {
+
         x = ( ( hudWidth ) / 2 ) + ( pxPerDegree * i );
+
         hdTicks.line( x, hudHeight - hdHeight - 3, x, hudHeight - hdHeight + 10 ).attr( {
           width: 1,
           stroke: text_color
         } );
 
         var fixedHeading = i;
+
         if ( i < 0 ) {
+
           fixedHeading = 360 + i;
+
         } else if ( i >= 360 ) {
+
           fixedHeading = i - 360;
+
         }
 
         var textHeadingTick = hdTicks.text( fixedHeading.toString() ).move( x, hudHeight - hdHeight + 13 );
@@ -247,33 +254,38 @@ function drawHUD( id ) {
           anchor: 'middle',
           size: 13
         } );
+
       }
     }
+
     /* Draw center heading indicator. */
     var hdCenter = heading.group();
+
     var hdCenterWidth = 60;
+
     hdCenter.polyline( [
       [ ( hudWidth + 20 ) / 2, hudHeight - hdHeight - 18 ],
       [ hudWidth / 2, hudHeight - hdHeight - 8 ],
       [ ( hudWidth - 20 ) / 2, hudHeight - hdHeight - 18 ]
     ] ).attr( {
-      // stroke: '#000',
-      // 'stroke-width': 2,
       'fill': '#000',
       'fill-opacity': bgOpacity
     } );
-    textHeading = draw.text( '0' ).move( ( hudWidth / 2 ), hudHeight - hdHeight - 45 );
+
+    textHeading = draw.text( '0' ).move( ( hudWidth / 2 ), hudHeight - hdHeight - 50 );
     textHeading.font( {
       fill: text_color,
       anchor: 'middle',
-      size: 23
+      size: 20
     } );
+
     /* -------------------------
      Draw horizon
      ------------------------- */
-    hrzWidth = ( hudWidth - altWidth ) * 0.3;
+    hrzWidth = ( hudWidth ) * 0.15;
     var hrzInterval;
     var horizonArea = draw.group();
+
     pxPerPitchLine = ( ( hudWidth / 2 ) / posPitchLineOnScreen );
     pxPerDegreePitch = pxPerPitchLine / degPerPitchLine;
     pitchIndicator = horizonArea.group();

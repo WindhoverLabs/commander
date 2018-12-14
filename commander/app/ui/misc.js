@@ -611,3 +611,85 @@ function getMsgIdAndMacrosFromConfigDb( apl ) {
   } )
 
 }
+
+
+/**
+ * Save event log to file as CSV
+ */
+function exportToCsv() {
+  var outCSV = [];
+
+  if ( window.EventLog != undefined ) {
+
+    var headers = Object.keys( window.EventLog[ 0 ] );
+    outCSV.push( headers.join( ',' ) );
+    /* sort eventlog in ascending order */
+    window.EventLog.sort( ( a, b ) => {
+      var dateA = new Date( a.GRNDTIME ),
+        dateB = new Date( b.GRNDTIME );
+      /* sort by date ascending */
+      return dateA - dateB
+    } );
+
+    while ( window.EventLog.length != 0 ) {
+      var csvRow = [];
+      var row = window.EventLog.pop();
+      for ( var i in headers ) {
+        var key = headers[ i ];
+        csvRow.push( String( row[ key ] ).replace( ',', ';' ) );
+      }
+      outCSV.push( csvRow.join( ',' ) );
+    }
+
+  }
+  // CSV file
+  var csvBlob = new Blob( [ outCSV.join( '\n' ) ], {
+    type: "text/csv"
+  } );
+
+  saveAs( csvBlob, 'CDR_EVENT_LOG.csv' );
+
+  cu.logInfo( 'exportToCsv | csv exported' );
+}
+
+/**
+ * Save event log to file as JSON
+ */
+function exportToJSON() {
+  var outStr;
+
+  if ( window.EventLog != undefined ) {
+
+    /* sort eventlog in ascending order */
+    window.EventLog.sort( ( a, b ) => {
+      var dateA = new Date( a.GRNDTIME ),
+        dateB = new Date( b.GRNDTIME );
+      /* sort by date ascending */
+      return dateA - dateB
+    } );
+
+    outStr = JSON.stringify( window.EventLog, null, ' ' )
+    window.EventLog = [];
+  }
+  // JSON file
+  var jsonBlob = new Blob( [ outStr ], {
+    type: "text/json;charset=utf-8"
+  } );
+
+  saveAs( jsonBlob, 'CDR_EVENT_LOG.json' );
+
+  cu.logInfo( 'exportToJSON | json exported' );
+}
+
+/**
+ * Automatic Save every 30 mins
+ */
+setInterval( function() {
+
+  if ( window.EventLog != undefined ) {
+    if ( window.EventLog.length > 5000 ) {
+      exportToCsv();
+    }
+  }
+
+}, 30 * 60 * 1000 );
