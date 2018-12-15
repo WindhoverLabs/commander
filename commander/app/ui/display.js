@@ -1,99 +1,99 @@
 /**
- * Display controller sotre
+ * Cesium Access token
+ * @type {String}
+ */
+Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI3YjJkYmYwOS02NGU2LTQyZGEtOGRiZC01Yjg3ZTllODBiYTAiLCJpZCI6MTU1NSwiaWF0IjoxNTI4OTE4MTQzfQ.E3pqNt_MGy9rAjE4T4dnPY3vOKjdctpXOjmh0ZPPloE';
+/**
+ * This object stores distinct displays and the controllers.
  * @type {Object}
  */
 var display_controllers = {};
 /**
- * Display controller clean up interval
+ * The time to wait before displays which are not bound to DOM are cleaned up
  * @type {Number}
  */
-var DISPLAY_CLEANUP_INTERVAL = 100000;
-
-var DISPLAY_GRND_ELEVATION_INTERVAL_OBJ = undefined;
-
-Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI3YjJkYmYwOS02NGU2LTQyZGEtOGRiZC01Yjg3ZTllODBiYTAiLCJpZCI6MTU1NSwiaWF0IjoxNTI4OTE4MTQzfQ.E3pqNt_MGy9rAjE4T4dnPY3vOKjdctpXOjmh0ZPPloE';
-
+var displayCleanUpInterval = 100000;
 
 /**
- * Cleans up inactve display_controllers
+ * Cleans up inactve display_controllers empyt's the dom and clears any pending intervals
  */
-setInterval( function() {
+var displayCleanUpIntervalId = setInterval( function() {
+
   var keys = Object.keys( display_controllers );
+
   keys.forEach( ( e ) => {
     if ( $( '#' + e ).length == 0 ) {
-      $( '#' + e ).empty();
-      clearInterval( display_controllers[ e ].DISPLAY_GRND_ELEVATION_INTERVAL_OBJ );
-      delete display_controllers[ e ];
+      /* this display doesnot exist any more */
+      if ( display_controllers[ e ].hasOwnProperty( 'groundElevationIntervalId' ) ) {
+        /* clear intervals associated with this display */
+        clearInterval( display_controllers[ e ].groundElevationIntervalId );
+        delete display_controllers[ e ];
+      }
     }
   } );
-}, DISPLAY_CLEANUP_INTERVAL );
+
+}, displayCleanUpInterval );
 
 /**
- * Set Display state for pfd display
+ * This function is bound to onclick functions of all buttons in display, it later
+ * calls commander display object's updateDisplayState function wich will take Care
+ * of generating view.
  * @param {Object} e HTMLelement
  */
 function setDisplayState( e ) {
+
   var controlInfo = $( e ).data( 'info' );
   var dispCtlIdentifier = $( e ).data( 'key' );
   var key = controlInfo[ 0 ];
   var value = controlInfo[ 1 ];
   display_controllers[ dispCtlIdentifier ].updateDisplayState( key, value );
+
 }
 
-/* CommanderDisplay */
+/* Commander Display Class or Object unique to each display */
 var CommanderDisplay = CommanderDisplay || {};
 
 /**
- * Constructor for PFD display
+ * Constructor for PFD display's Commander Display Class
  * @param       {Object} elm HTMLelement
  * @constructor
  */
 function CommanderDisplay( elm ) {
 
+  /* Stores a cesium viewer */
   this.CesiumViewer = undefined;
   this.CesiumInitialized = false;
+  /* dom element where different screens(video, ground track) are rendered */
   this.DisplayContainer = elm;
+  /* unique key assigned to each display*/
   this.DisplayContainerIdentifier = elm.attr( 'id' )
-  this.DefaultHomeLocation = Cesium.Cartesian3.fromDegrees( -95.3698, 29.7604, 130000.0 ); /* Houston */
+  /* a default home position for camera wich is looking at Webster TX */
+  this.DefaultHomeLocation = Cesium.Cartesian3.fromDegrees( -95.3698, 29.7604, 13000.0 ); /* Houston */
 
+  /* Stores vehicle entity */
   this.MyVehicleEntity = undefined;
-  this.MyVehicleGroundTrack = undefined;
-  this.MyVehicleGroundTrackPoints = [];
 
-
-  this.VideoController = {};
-  this.VideoController.frameCounter = 0;
-  this.VideoController.lastTimestamp = 0;
-
-  /* Default Display metadata */
+  /* Display state's metadata */
   this.DISP_META = {
     'DISPLAY_CHANNELS': {
       0: 'NO_DISPLAY',
-      /* Display winhoverlabs logo */
       1: 'VIDEO_STREAM',
-      /* Streams video from vehicle */
       2: 'GROUND_TRACK',
-      /* Display cesiums maps and terrains */
-      3: 'FPV'
-      /* First Person View */
+      3: 'FPV' /* First Person View */
     },
     'ADDITIONAL_CTL': [
-      'CA_LOCK',
-      /* Apply camera attitude lock */
-      'ADI',
-      /* apply Attitude Director Indicator */
+      'CA_LOCK', /* Apply camera attitude lock */
+      'ADI', /* Apply Attitude Director Indicator */
       'ADSB' /* ADSB layer adds multiple aircrafts and thier trajectory to cesium maps */
     ],
     'MAP_TYPES': {
       0: 'DEFAULT_MAP',
       /* Basic cesium street map */
       1: 'SATELLITE_MAP',
-      /* Satellite map */
     },
     'TERRAIN_TYPES': {
       0: '2D_TERRAIN',
-      /* Basic cesium street map with terrain */
-      1: '3D_TERRAIN' /* Satellite map with terrain */
+      1: '3D_TERRAIN'
     },
   };
 
@@ -101,11 +101,13 @@ function CommanderDisplay( elm ) {
   this.DISP_STATE = {
     'DISPLAY_CHANNELS': 0,
     'ADDITIONAL_CTL': [ 0, 0, 0 ],
-    /* All additional control turned off at start*/
     'MAP_TYPES': 0,
     'TERRAIN_TYPES': 0
   };
+
+  /* copy default state into prevState */
   this.prevState = JSON.parse( JSON.stringify( this.DISP_STATE ) );
+
   this.updateIndicators();
   this.updateDisplay();
 
@@ -117,10 +119,15 @@ function CommanderDisplay( elm ) {
 CommanderDisplay.prototype.updateIndicators = function() {
 
   var btnGroup = this.DisplayContainer.find( 'button[data-info]' );
+  /* Deactivate all buttons */
   btnGroup.removeClass( 'active' );
+
   btnGroup.each( ( btn ) => {
+
     var key = $( btnGroup[ btn ] ).data( 'info' )[ 0 ];
     var value = $( btnGroup[ btn ] ).data( 'info' )[ 1 ];
+
+    /* match the view to reflect current state */
     if ( key == 'ADDITIONAL_CTL' ) {
       if ( this.DISP_STATE[ 'ADDITIONAL_CTL' ][ value ] ) {
         $( btnGroup[ btn ] ).addClass( 'active' );
@@ -132,14 +139,17 @@ CommanderDisplay.prototype.updateIndicators = function() {
         $( btnGroup[ btn ] ).addClass( 'active' );
       }
     }
+
   } );
 }
 
 /**
- * Inititalizes viewer
+ * Inititalizes cesium viewer
  */
 CommanderDisplay.prototype.InitViewer = function() {
+
   this.DisplayContainer.find( '#cdr-cesium-' + this.DisplayContainerIdentifier ).css( 'display', 'block' );
+
   var viewer = new Cesium.Viewer( 'cdr-cesium-' + this.DisplayContainerIdentifier, {
     animation: false,
     fullscreenButton: false,
@@ -156,14 +166,20 @@ CommanderDisplay.prototype.InitViewer = function() {
     scene3DOnly: false,
     shouldAnimate: true,
   } );
+
   viewer.camera.setView( {
     destination: this.DefaultHomeLocation,
   } );
+
   try {
+
     this.CesiumViewer = viewer;
     this.CesiumInitialized = true;
+
   } catch ( e ) {
+
     cu.logError( 'Commander Display | InitViewer | Unknown assignment error :', e.message );
+
   }
 };
 
@@ -180,7 +196,9 @@ CommanderDisplay.prototype.getViewer = function() {
  */
 CommanderDisplay.prototype.DestroyViewer = function() {
   if ( this.CesiumViewer != undefined ) {
+
     try {
+
       this.CesiumViewer.destroy();
       this.CesiumViewer = undefined;
       this.MyVehicleEntity = undefined;
@@ -188,55 +206,55 @@ CommanderDisplay.prototype.DestroyViewer = function() {
       this.CesiumInitialized = false;
 
     } catch ( e ) {
+
       cu.logError( 'Commander Display | DestroyViewer | Error destroying viewer :', e.message );
+
     }
 
     cu.logInfo( 'Commander Display | DestroyViewer | Viewer Destroyed' );
+
   }
+
   $( '#cdr-cesium-' + this.DisplayContainerIdentifier ).css( 'display', 'none' );
+
   cu.logDebug( 'Commander Display | DestroyViewer | viewer css property, display set to none' );
+
 };
 
 /**
  * Destroy Video Stream
  */
 CommanderDisplay.prototype.DestroyVideoStream = function() {
+
   $( '#cdr-video-' + this.DisplayContainerIdentifier ).empty()
   $( '#cdr-video-' + this.DisplayContainerIdentifier ).css( 'display', 'none' );
   session.disableVideoStream();
+
 };
 
 /**
  * Inititalizes Video Stream
  */
 CommanderDisplay.prototype.InitVideoStream = function() {
-  $( '#cdr-video-' + this.DisplayContainerIdentifier ).css( 'display', 'block' );
-  session.enableVideoSteam( ( image ) => {
-    // console.log( 'endtest -->  ', image );
-    /* Calculate FPS */
-    // if ( this.VideoController.frameCounter == 0 ) {
-    //   /* in seconds */
-    //   this.VideoController.lastTimestamp = new Date().getTime() / 1000;
-    // }
 
-    // if ( this.VideoController.frameCounter > 0 && this.VideoController.frameCounter % 1000 == 0 ) {
-    //   var currentTimestamp = new Date().getTime() / 1000;
-    //   var delta = currentTimestamp - this.VideoController.lastTimestamp;
-    //   var fps = Math.round( 1000 / delta );
-    //   this.VideoController.currentFPS = fps;
-    // }
+  $( '#cdr-video-' + this.DisplayContainerIdentifier ).css( 'display', 'block' );
+
+  session.enableVideoSteam( ( image ) => {
     /* render image */
     $( '#cdr-video-' + this.DisplayContainerIdentifier ).attr( 'src', 'data:image/jpeg;base64,' + image.buffer );
   } );
+
 };
 
 /**
  * Updates Display
+ * @param  {String} thisChanged changed item
  */
 CommanderDisplay.prototype.updateDisplay = function( thisChanged ) {
 
   var displayUpdated = true;
 
+  /* read current display state */
   var channel = this.DISP_META.DISPLAY_CHANNELS[ this.DISP_STATE.DISPLAY_CHANNELS ];
   var map = this.DISP_META.MAP_TYPES[ this.DISP_STATE.MAP_TYPES ];
   var terrain = this.DISP_META.TERRAIN_TYPES[ this.DISP_STATE.TERRAIN_TYPES ];
@@ -248,28 +266,36 @@ CommanderDisplay.prototype.updateDisplay = function( thisChanged ) {
   if ( thisChanged == 'ADDITIONAL_CTL' ) {
 
     if ( this.DISP_STATE.ADDITIONAL_CTL[ this.DISP_META.ADDITIONAL_CTL.indexOf( 'ADI' ) ] ) {
+
       /* initialize adi */
       if ( !HUDStarted ) {
+
         drawHUD( 'cdr-guages-' + this.DisplayContainerIdentifier );
         HUDStarted = true;
+
       }
     } else {
+
       /* deinitialize adi */
       $( '#cdr-guages-' + this.DisplayContainerIdentifier ).empty();
       HUDStarted = false;
+
     }
 
     if ( this.DISP_STATE.ADDITIONAL_CTL[ this.DISP_META.ADDITIONAL_CTL.indexOf( 'ADSB' ) ] ) {
+
       /* initialize adsb */
       var self = this;
       if ( !this.CesiumInitialized ) {
         return false;
       }
+
       session.getADSBJson( 2000, ( data ) => {
         ADSBUpdate( data, self );
       } );
 
     } else {
+
       /* deinitialize adbsb*/
       AIRCRAFTS = {};
       HISTORY = {};
@@ -277,10 +303,12 @@ CommanderDisplay.prototype.updateDisplay = function( thisChanged ) {
     }
 
     if ( this.DISP_STATE.ADDITIONAL_CTL[ this.DISP_META.ADDITIONAL_CTL.indexOf( 'CA_LOCK' ) ] ) {
+
       /* Do nothing */
       if ( !this.CesiumInitialized ) {
         return false;
       }
+
     } else {
       /* Do nothing */
     }
@@ -304,6 +332,7 @@ CommanderDisplay.prototype.updateDisplay = function( thisChanged ) {
     case 'GROUND_TRACK':
       /* fall through */
     case 'FPV':
+
       if ( preChannel == 'VIDEO_STREAM' ) {
         this.DestroyVideoStream();
       }
@@ -316,17 +345,9 @@ CommanderDisplay.prototype.updateDisplay = function( thisChanged ) {
       if ( ( preChannel == 'FPV' | preChannel == 'GROUND_TRACK' ) & channel == 'VIDEO_STREAM' ) {
         this.DestroyViewer();
       }
-
-
-
       if ( !this.CesiumInitialized ) {
-
         this.InitViewer();
-
-
       }
-
-
 
       switch ( map ) {
 
@@ -369,13 +390,13 @@ CommanderDisplay.prototype.updateDisplay = function( thisChanged ) {
 
       if ( ( [ 'GROUND_TRACK', 'FPV' ].indexOf( channel ) != -1 ) & ( channel != preChannel ) ) {
         switch ( channel ) {
+
           case 'GROUND_TRACK':
+
             /* Fly camera to location */
             this.CesiumViewer.camera.flyTo( {
               destination: Cesium.Cartesian3.fromDegrees( Position.Lon, Position.Lat, 800 )
             } )
-            /* Clear Map */
-            // this.CesiumViewer.entities.removeAll();
 
             /* Add vehile to map */
             var currentAlt = Math.abs( Position.Alt - groundElevation ) + cesiumGroundElevation + altPadding
@@ -442,11 +463,16 @@ CommanderDisplay.prototype.updateDisplay = function( thisChanged ) {
 
   return displayUpdated;
 }
-
+/**
+ * A cyclic fucntion whihc sets the location and orientation of the camera view in the cesium viewer.
+ * @param  {Object} e commander display instance
+ */
 CommanderDisplay.prototype.FPVUpdateFunction = function( e ) {
   var self = e.onTick._scopes[ 2 ];
-  var currentAlt = Math.abs( Position.Alt - groundElevation ) + cesiumGroundElevation + altPadding
-  var location = Cesium.Cartesian3.fromDegrees( Position.Lon, Position.Lat, currentAlt )
+
+  var currentAlt = Math.abs( Position.Alt - groundElevation ) + cesiumGroundElevation + altPadding;
+  var location = Cesium.Cartesian3.fromDegrees( Position.Lon, Position.Lat, currentAlt );
+
   /* Camera Attitude Lock Control */
   if ( self.DISP_STATE[ 'ADDITIONAL_CTL' ][ 0 ] ) {
     camPitch = Attitude.Pitch;
@@ -464,11 +490,17 @@ CommanderDisplay.prototype.FPVUpdateFunction = function( e ) {
       roll: camRoll
     }
   } );
+
 }
 
-
+/**
+ * A cyclic fucntion whihc sets the location and orientation of the a aircraft model in the cesium viewer.
+ * @param  {Object} e commander display instance
+ */
 CommanderDisplay.prototype.GroundTrackUpdateFunction = function( e ) {
+
   var self = e.onTick._scopes[ 2 ];
+
   if ( self.MyVehicleEntity != undefined ) {
     var currentAlt = Math.abs( Position.Alt - groundElevation ) + cesiumGroundElevation + altPadding
     var position = Cesium.Cartesian3.fromDegrees( Position.Lon, Position.Lat, currentAlt );
@@ -482,10 +514,14 @@ CommanderDisplay.prototype.GroundTrackUpdateFunction = function( e ) {
     self.MyVehicleEntity.orientation = orientation;
     self.MyVehiclePathEntity.position = this.positions;
   }
+
 }
 
-
+/**
+ * Maked necessary subscriptions required by display
+ */
 CommanderDisplay.prototype.Subscriptions = function() {
+
   /* Origin Altitude */
   session.subscribe( [ {
     'name': '/PE/PE_HkTlm_t/AltOrigin'
@@ -579,7 +615,9 @@ CommanderDisplay.prototype.Subscriptions = function() {
       this.ADIUpdate();
 
     } catch ( e ) {
-      cu.logError( "CommanderDisplay | Subscriptions | unable to process response. error= ", e.message )
+
+      cu.logError( "CommanderDisplay | Subscriptions | unable to process response. error= ", e.message );
+
     }
 
   } );
@@ -594,33 +632,49 @@ CommanderDisplay.prototype.Subscriptions = function() {
     '/PX4/PX4_VehicleAttitudeMsg_t/Q[2]',
     '/PX4/PX4_VehicleAttitudeMsg_t/Q[3]',
   ].forEach( ( opsPath ) => {
+
     if ( !( rogue_subscriptions.hasOwnProperty( opsPath ) ) ) {
+
       /* new entry */
       rogue_subscriptions[ opsPath ] = {};
       rogue_subscriptions[ opsPath ][ 'text' ] = [ '#' + this.DisplayContainerIdentifier ];
     } else {
+
       cu.assert( typeof rogue_subscriptions[ opsPath ] == 'object', 'CommanderDisplay | Subscriptions | rogue_subscriptions[opsPath] is not an object' );
+
       if ( !( rogue_subscriptions[ opsPath ].hasOwnProperty( 'text' ) ) ) {
+
         rogue_subscriptions[ opsPath ][ 'text' ] = [ '#' + this.DisplayContainerIdentifier ];
+
       } else {
+
         rogue_subscriptions[ opsPath ][ 'text' ].push( '#' + this.DisplayContainerIdentifier );
+
       }
     }
   } );
 
 }
 
+/**
+ * Update ADI
+ */
 CommanderDisplay.prototype.ADIUpdate = function() {
+
   if ( HUDStarted == true ) {
     updateHUDHeading( Attitude.Yaw * 57.2958 );
     updateHUDPitch( Attitude.Pitch * 57.2958 );
     updateHUDRoll( Attitude.Roll * 57.2958 );
   }
+
 }
 
-
+/**
+ * Cyclicly update actual ground elevation given lat,lon
+ */
 CommanderDisplay.prototype.updateCesiumGroundHeight = function() {
-  this.DISPLAY_GRND_ELEVATION_INTERVAL_OBJ = setInterval( () => {
+
+  this.groundElevationIntervalId = setInterval( () => {
     if ( this.CesiumViewer != undefined ) {
       var positions = [ Cesium.Cartographic.fromDegrees( Position.Lon, Position.Lat ) ];
       var promise = Cesium.sampleTerrainMostDetailed( this.CesiumViewer.scene.terrainProvider, positions );
@@ -629,10 +683,12 @@ CommanderDisplay.prototype.updateCesiumGroundHeight = function() {
       } );
     }
   }, 1000 );
+
 }
 
 /**
- * Update display state
+ * Update display state - Another layer of abstraction ( keeps track of prev
+ * state and reverts back on error)
  * @param  {String} key   key
  * @param  {Object} value value
  */

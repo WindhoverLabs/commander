@@ -103,10 +103,11 @@ var text_color = '#0f0';
  * @return {undefined}
  */
 function updateHUDHeading( newHeading ) {
+
   if ( newHeading < 0 ) {
     newHeading = newHeading + 360;
   }
-  //console.log('YAW',newHeading);
+
   textHeading.text( newHeading.toFixed( 0 ).toString() );
   hdTicks.x( -newHeading * pxPerDegree );
 }
@@ -117,9 +118,6 @@ function updateHUDHeading( newHeading ) {
  */
 function updateHUDPitch( newPitch ) {
   OffsetY = newPitch * pxPerDegreePitch;
-  // pitchIndicator.rotate( 0 );
-  // pitchIndicator.y( 0 );
-  // pitchIndicator.animate( 10, '-', 0 ).y( OffsetY ).rotate( rotation );
 }
 /**
  * Update HUD roll
@@ -128,7 +126,6 @@ function updateHUDPitch( newPitch ) {
  */
 function updateHUDRoll( newRoll ) {
   rotation = newRoll;
-  // console.log( rotation );
   pitchIndicator.rotate( 0 );
   pitchIndicator.y( 0 );
   pitchIndicator.y( OffsetY ).rotate( rotation );
@@ -181,7 +178,7 @@ function drawHUD( id ) {
      Draw Heading
      ------------------------- */
     var hdHeight = 50;
-    hdWidth = hudWidth; //- 40;
+    hdWidth = hudWidth - 40;
     pxPer15Degrees = ( hdWidth / 2 ) / 5;
     pxPerDegree = pxPer15Degrees / 15.0;
     var heading = draw.group();
@@ -190,10 +187,12 @@ function drawHUD( id ) {
     var hdRec1 = headingBorder.rect( hdWidth, hdHeight ).attr( {
       x: ( hudWidth - hdWidth ) / 2,
       y: hudHeight - hdHeight - 7,
-      rx: 0,
-      ry: 0,
+      rx: 5,
+      ry: 5,
       'fill-opacity': bgOpacity
     } );
+
+    /* draw ticks */
     hdTicksArea = heading.group();
     hdTicks = hdTicksArea.group();
     for ( i = 0; i < ( 360 + 90 ); i++ ) {
@@ -258,25 +257,39 @@ function drawHUD( id ) {
       }
     }
 
+    /* draw a mask for preventing ticks from overflow */
+    var headingMask = hdTicks.mask();
+
+    headingMask.rect( hdWidth, hdHeight ).attr( {
+      fill: '#ffffff',
+      x: ( hudWidth - hdWidth ) / 2,
+      y: hudHeight - hdHeight - 7,
+      rx: 5,
+      ry: 5,
+    } );
+
+    hdTicksArea.maskWith( headingMask );
+
     /* Draw center heading indicator. */
     var hdCenter = heading.group();
 
-    var hdCenterWidth = 60;
-
     hdCenter.polyline( [
+      [ ( ( hudWidth + 20 ) / 2 ) + 10, hudHeight - hdHeight - 48 ],
+      [ ( ( hudWidth + 20 ) / 2 ) + 10, hudHeight - hdHeight - 18 ],
       [ ( hudWidth + 20 ) / 2, hudHeight - hdHeight - 18 ],
       [ hudWidth / 2, hudHeight - hdHeight - 8 ],
-      [ ( hudWidth - 20 ) / 2, hudHeight - hdHeight - 18 ]
+      [ ( hudWidth - 20 ) / 2, hudHeight - hdHeight - 18 ],
+      [ ( ( hudWidth - 20 ) / 2 ) - 10, hudHeight - hdHeight - 18 ],
+      [ ( ( hudWidth - 20 ) / 2 ) - 10, hudHeight - hdHeight - 48 ]
     ] ).attr( {
       'fill': '#000',
       'fill-opacity': bgOpacity
     } );
-
-    textHeading = draw.text( '0' ).move( ( hudWidth / 2 ), hudHeight - hdHeight - 50 );
+    textHeading = draw.text( '0' ).move( ( hudWidth / 2 ), hudHeight - hdHeight - 43 );
     textHeading.font( {
       fill: text_color,
       anchor: 'middle',
-      size: 20
+      size: 16
     } );
 
     /* -------------------------
@@ -290,6 +303,7 @@ function drawHUD( id ) {
     pxPerDegreePitch = pxPerPitchLine / degPerPitchLine;
     pitchIndicator = horizonArea.group();
 
+    /* draw top half or pitch indicators */
     for ( i = 0; i <= 90; i++ ) {
       if ( i % degPerPitchLine == 0 ) {
         y = ( ( hudHeight ) / 2 ) - ( pxPerDegreePitch * i );
@@ -360,7 +374,7 @@ function drawHUD( id ) {
         }
       }
     }
-
+    /* draw bottom half or pitch indicators */
     for ( i = 0; i >= -90; i-- ) {
       if ( i % degPerPitchLine == 0 ) {
         y = ( ( hudHeight ) / 2 ) - ( pxPerDegreePitch * i );
@@ -423,6 +437,7 @@ function drawHUD( id ) {
       }
     }
 
+    /* mask to avoid occlusion with heading indicator */
     hrzMask = pitchIndicator.mask();
     hrzMask.rect( hudWidth, hudHeight ).attr( {
       fill: '#000000'

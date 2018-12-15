@@ -1,9 +1,4 @@
 /**
- * My vehicle tail size
- * @type {Number}
- */
-var myVehicleTailSize = 60
-/**
  * Regular vehicle tail size
  * @type {Number}
  */
@@ -12,34 +7,32 @@ var tailSize = 30;
  * Aircraft timeout in seconds
  * @type {Number}
  */
-var outdated_seconds = 5;
+var aircraftOutdateSeconds = 5;
 /**
- * Minimun distance to maintain from any aircraft in meters
+ * Minimun distance range the adsb will scan also called critical range
  * @type {Number}
  */
-var minimum_aircraft_safety_distance = 50000;
+var minAircraftLookoutRange = 50000;
 /**
- * if true the adsb code starts executing
- * @type {Boolean}
+ * A Structure to store live aircraft information
+ * @type {Object}
  */
-var adsbState = false;
-var myVehicleDataPoints = [];
-var myVehicleLine = null;
-var myVehiclePrevLine = null;
-var myVehicleCurrentPoint = null;
-var myVehicleZoomOnce = false;
 var AIRCRAFTS = {};
-var HISTORY = {};
-var ALLMYLINES = [];
-var adsbState = false;
-var seaLevelElevation = 0.0;
+/**
+ * Elevation from ground
+ * @type {Number}
+ */
 var groundElevation = 0.0;
+/**
+ * Elevation of the ground
+ * @type {Number}
+ */
 var cesiumGroundElevation = 0.0;
-var altPadding = 5.0; //to get a good view of mapsaround us
-
-var _close_adsb_subscription = false;
-var probeHex = '';
-
+/**
+ * Additional padding to keep the aircraft above ground
+ * @type {Number}
+ */
+var altPadding = 5.0;
 
 /**
  * Calculate distance
@@ -53,24 +46,29 @@ function distance( p1, p2 ) {
 
 
 /**
- * Draw my vehicle
+ * Draw Aircrafts
  */
 function ADSBUpdate( adsb, self ) {
-  //Create common timestamp
+
+  /* Create common timestamp */
   var timestamp = Math.floor( Date.now() );
-  //Loop over response
+
+  /* Loop over aircrafts */
   for ( i = 0; i < adsb.length; i++ ) {
+
     var vehicle = adsb[ i ];
-    // Full information needed to plot not available
+
+    /* check if all necessary inforamtion is avaiable to plot */
     if ( isNaN( vehicle.lat ) || isNaN( vehicle.lon ) || isNaN( vehicle.altitude ) || vehicle.lat == 0 || vehicle.lon == 0 || vehicle.altitude == 0 ) {
       continue;
     } else {
 
-      //calculate distance of an aircraft from vehicle_debug
+      /*calculate distance of an aircraft from vehicle_debug */
       var d = distance( new Cesium.Cartesian3( Position.Lon, Position.Lat, Math.abs( Position.Alt - groundElevation ) + altPadding ), new Cesium.Cartesian3( vehicle.lon, vehicle.lat, vehicle.altitude ) );
 
-      // vehicle in software defined range
-      if ( d <= minimum_aircraft_safety_distance ) {
+      /* vehicle in critical range */
+      if ( d <= minAircraftLookoutRange ) {
+
         lat = vehicle.lat;
         lon = vehicle.lon;
         alt = vehicle.altitude;
@@ -82,12 +80,15 @@ function ADSBUpdate( adsb, self ) {
         var stop = Cesium.JulianDate.addSeconds( start, 360, new Cesium.JulianDate() );
 
         if ( !( hex in AIRCRAFTS ) ) {
+
           try {
+            /* define initial positiion and orientation */
             var hpr = new Cesium.HeadingPitchRoll( 0, 0, 0 );
             var orientation = Cesium.Transforms.headingPitchRollQuaternion( position, hpr );
             var positions = new Cesium.SampledPositionProperty();
             positions.addSample( Cesium.JulianDate.now(), position );
 
+            /* draw aircraft and trailing path */
             var aircraft = self.CesiumViewer.entities.add( {
               position: positions,
               orientation: new Cesium.VelocityOrientationProperty( positions ),
@@ -100,54 +101,47 @@ function ADSBUpdate( adsb, self ) {
               },
               path: {
                 leadTime: 0,
-                trailTime: 100,
+                trailTime: tailSize,
                 width: 1,
                 resolution: 1,
                 material: Cesium.Color.CRIMSON
               }
             } );
-          } catch ( e ) {
-            cu.logError( 'ADSB Vehicle registration error ' + hex + ' - ' + e );
-          }
-          AIRCRAFTS[ hex ] = {
-            t: tme,
-            key: aircraft.id,
-            ent: aircraft,
-            spp: positions,
-            // path: path,
-            // pathkey: path.id,
-            prevPos: [ lat, lon, alt ]
-          };
-        } else {
-          var AIRCRAFT = AIRCRAFTS[ hex ];
 
-          var aircraft = AIRCRAFT.ent
-          var spp = AIRCRAFT.spp
-          if ( probeHex == hex ) {
-            console.log( AIRCRAFT.prevPos );
-            console.log( [ lat, lon, alt ] );
-            console.log( [ AIRCRAFT ] );
-            console.log( AIRCRAFT.prevPos[ 0 ] == lat & AIRCRAFT.prevPos[ 1 ] == lon & AIRCRAFT.prevPos[ 2 ] == alt );
-            console.log( Math.abs( tme - AIRCRAFT.t ) );
-            console.log( Math.abs( tme - AIRCRAFT.t ) > ( outdated_seconds * 1000 ) );
-            probeHex = '';
+            /* store initialized aircraft info in a global space */
+            AIRCRAFTS[ hex ] = {
+              t: tme,
+              key: aircraft.id,
+              ent: aircraft,
+              spp: positions,
+              prevPos: [ lat, lon, alt ]
+            }
+
+          } catch ( e ) {
+
+            cu.logError( 'ADSB Vehicle registration error ' + hex + ' - ' + e.message );
+
           }
+        } else {
+          /* Aircraft is already being tracked */
+          var AIRCRAFT = AIRCRAFTS[ hex ];
+          var aircraft = AIRCRAFT.ent;
+          var spp = AIRCRAFT.spp;
 
           if ( AIRCRAFT.prevPos[ 0 ] == lat & AIRCRAFT.prevPos[ 1 ] == lon & AIRCRAFT.prevPos[ 2 ] == alt ) {
-            if ( Math.abs( tme - AIRCRAFT.t ) > ( outdated_seconds * 1000 ) ) {
+            /* remove stalling aircrafts after a cetain time */
+            if ( Math.abs( tme - AIRCRAFT.t ) > ( aircraftOutdateSeconds * 1000 ) ) {
               self.CesiumViewer.entities.removeById( AIRCRAFT.key )
             }
 
           } else {
+            /* update position and orientation will update automatically */
             spp.addSample( Cesium.JulianDate.now(), position );
             AIRCRAFT.prevPos[ 0 ] = lat;
             AIRCRAFT.prevPos[ 1 ] = lon;
             AIRCRAFT.prevPos[ 2 ] = alt;
             AIRCRAFT.t = tme;
           }
-
-
-
         }
       }
     }

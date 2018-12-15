@@ -558,7 +558,7 @@ path {
 }
 
 .cdr-tooltip-row>span {
-  color: var(--td-border-color);
+  color: #fff;
 }
 
 /******************************************

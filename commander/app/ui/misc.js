@@ -4,7 +4,7 @@
  * Sidebar visibitly status indicator, currenty not open
  * @type {Boolean}
  */
-var _sidebar_open = false;
+var isSidebarOpen = false;
 
 /**
  * Add the ability to toggle sidebar to menu toggle button
@@ -13,12 +13,12 @@ var _sidebar_open = false;
  */
 function InitSidebar() {
   $( "#cdr-app-menu-toggle" ).on( "click", () => {
-    if ( _sidebar_open ) {
+    if ( isSidebarOpen ) {
       $( "#cdr-app-menu" ).css( "transform", "translateX(-100%)" )
       $( "#cdr-layout-container" ).css( "margin-left", "0%" )
       $( "#cdr-layout-container" ).css( "width", "100%" )
       myLayout.updateSize();
-      _sidebar_open = false;
+      isSidebarOpen = false;
       $( "#cdr-panel-layout-switch" ).css( "display", "none" );
     } else {
       $( "#cdr-app-menu" ).css( "transform", "translateX(0%)" )
@@ -26,7 +26,7 @@ function InitSidebar() {
       $( "#cdr-layout-container" ).css( "width", "calc(100% - 250px)" )
       $( "#cdr-panel-layout-switch" ).css( "display", "flex" );
       myLayout.updateSize();
-      _sidebar_open = true;
+      isSidebarOpen = true;
     }
   } );
 }
@@ -287,10 +287,12 @@ function InitScrollBar() {
  * @constructor
  */
 function InitResizeCtl() {
+
   $( window ).resize( () => {
     cu.logDebug( 'Layout | resize event occured' );
     myLayout.updateSize();
-  } )
+  } );
+
 }
 /**
  * Opens built documentations in new window
@@ -304,28 +306,47 @@ function showDocumentation() {
  * Loads preset widgets from server on page load
  */
 function InitWidgets() {
+
   session.loadWidgets( ( state ) => {
+
     window.widgetState = state;
+
     Object.keys( widgetState ).forEach( ( well ) => {
+
       var urls = widgetState[ well ];
+
       if ( urls.length > 0 ) {
+
         urls.forEach( ( url ) => {
+
           var uniqueID = cu.makeKey();
           var uniqueGadgetID = 'cdr-gadget-' + uniqueID
+
           var gadgetHtml = '<div id=' + uniqueGadgetID + ' data-url=' + url + ' class="cdr-gadget" ' +
             'onmouseover=gadgetHoverHandle(this,"onmouseover") onmouseleave=gadgetHoverHandle(this,"onmouseleave")>' +
             '<div data-key=' + uniqueID + ' class="cdr-gadget-close" onclick=gadgetCloseHandle(this)>x' +
             '</div>' +
             '<div data-key=' + uniqueID + ' class="cdr-gadget-content">' +
             '</div></div>';
+
           $( '#' + well ).append( gadgetHtml );
           $( '#' + well ).find( '.cdr-gadget-content[data-key=' + uniqueID + ']' ).load( url );
-        } )
-      }
-    } );
-  } );
-}
 
+        } )
+
+      }
+
+    } );
+
+  } );
+
+}
+/**
+ * Given a color will return best component color
+ * @param  {String}  hex       base color
+ * @param  {Boolean} [bw=true] black or white flag
+ * @return {String}            component color
+ */
 function invertColor( hex, bw = true ) {
   if ( hex.indexOf( '#' ) === 0 ) {
     hex = hex.slice( 1 );
@@ -354,6 +375,10 @@ function invertColor( hex, bw = true ) {
   return "#" + padZero( r ) + padZero( g ) + padZero( b );
 }
 
+/**
+ * Adds a data item to staging area of dataplots
+ * @param {Object} elm current dataplot element
+ */
 function addDpItem( elm ) {
   var apl = $( elm.parentNode.parentNode.lastChild.firstChild ).find( '.active-plot-list-content' )[ 0 ];
   var form = elm.parentNode.parentNode.parentNode;
@@ -393,6 +418,10 @@ function addDpItem( elm ) {
   }
 }
 
+/**
+ * Renders added data items and their color representations in visual staging area
+ * @param {Object} jqElm current dataplot staging area element
+ */
 function renderAplPanel( jqElm ) {
   jqElm.empty();
   try {
@@ -413,7 +442,11 @@ function renderAplPanel( jqElm ) {
 
 }
 
-function aplStateToggle( elm, color ) {
+/**
+ * Show or Hide configuration area of dataplot
+ * @param {Object} elm current dataplot element
+ */
+function aplStateToggle( elm ) {
   var state = $( elm ).data( 'active' );
   if ( state ) {
     $( elm ).attr( 'class', 'data-plot-defs' );
@@ -424,6 +457,10 @@ function aplStateToggle( elm, color ) {
   }
 }
 
+/**
+ * Removes a data item from staging area of dataplots
+ * @param {Object} elm current dataplot element
+ */
 function removeDpItem( elm ) {
   var apl = $( elm.parentNode.parentNode.lastChild.firstChild ).find( '.active-plot-list-content' )[ 0 ];
   var form = elm.parentNode.parentNode.parentNode;
@@ -458,6 +495,10 @@ function removeDpItem( elm ) {
   }
 }
 
+/**
+ * Clear and removes dataplot
+ * @param {Object} elm current dataplot element
+ */
 function ClearPlots( elm ) {
   try {
     var dpcontainer = elm.parentElement.nextSibling;
@@ -473,6 +514,10 @@ function ClearPlots( elm ) {
   }
 }
 
+/**
+ * Plays dataplot
+ * @param {Object} elm current dataplot element
+ */
 function PlayPlots( elm ) {
 
   var dpcontainer = elm.parentElement.nextSibling;
@@ -498,6 +543,10 @@ function PlayPlots( elm ) {
   }
 }
 
+/**
+ * Pauses dataplot
+ * @param {Object} elm current dataplot element
+ */
 function PausePlots( elm ) {
   var dpcontainer = elm.parentElement.nextSibling;
   var apl = $( dpcontainer ).find( '.active-plot-list-content' );
@@ -511,6 +560,10 @@ function PausePlots( elm ) {
   }
 }
 
+/**
+ * Resynchronizes the dataplot
+ * @param {Object} elm current dataplot element
+ */
 function ResyncPlots( elm ) {
   var dpcontainer = elm.parentElement.nextSibling;
   var apl = $( dpcontainer ).find( '.active-plot-list-content' );
@@ -523,7 +576,6 @@ function ResyncPlots( elm ) {
     dataplot_subscriptions[ key ].Resync();
   }
 }
-
 
 /**
  * Display/Hide query selector for dataplot
@@ -612,7 +664,6 @@ function getMsgIdAndMacrosFromConfigDb( apl ) {
 
 }
 
-
 /**
  * Save event log to file as CSV
  */
@@ -684,7 +735,7 @@ function exportToJSON() {
 /**
  * Automatic Save every 30 mins
  */
-setInterval( function() {
+var autoEventLogSaveIntervalID = setInterval( function() {
 
   if ( window.EventLog != undefined ) {
     if ( window.EventLog.length > 5000 ) {

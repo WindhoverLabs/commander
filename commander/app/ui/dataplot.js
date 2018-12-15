@@ -117,7 +117,6 @@ function CmdrTimeSeriesDataplot( domObject, objData, params, flag = false ) {
 
   this.UtilGraph = $.plot( domObject, [], this.objMergedData.options );
 
-  // var objTlm = [];
   for ( var i = 0; i < this.objMergedData.data.length; ++i ) {
     if ( this.objMergedData.data[ i ].tlm !== undefined ) {
       this.objTlm.push( this.objMergedData.data[ i ].tlm );
@@ -167,7 +166,6 @@ function CmdrTimeSeriesDataplot( domObject, objData, params, flag = false ) {
           label: self.objMergedData.data[ i ].label,
           color: self.objMergedData.data[ i ].color,
         };
-        // console.log( entry );
         dataArray.push( entry );
       }
 
@@ -226,15 +224,11 @@ CmdrTimeSeriesDataplot.prototype.start = function() {
   session.subscribe( self.objTlm, ( paramArr ) => {
     try {
       paramArr.forEach( ( param ) => {
-        // console.log(new Date(),param);
         var opsPath = param.opsPath;
         for ( var key in dataplot_subscriptions ) {
           var dpObj = dataplot_subscriptions[ key ].objTlm;
           for ( each in dpObj ) {
             if ( dpObj[ each ].name == opsPath ) {
-              // setTimeout(()=>{
-              //   dataplot_subscriptions[ key ].addData( param );
-              // },0)
               dataplot_subscriptions[ key ].addData( param );
             }
           }
@@ -254,6 +248,7 @@ CmdrTimeSeriesDataplot.prototype.start = function() {
     }
   }
 }
+
 /**
  * Sets pause flag
  */
@@ -308,7 +303,6 @@ CmdrTimeSeriesDataplot.prototype.addNewPath = function( pathOps ) {
       name: pathOps.tlm.name
     } ], ( paramArr ) => {
       try {
-        // console.log( paramArr );
         this.addData( paramArr[ 0 ] )
       } catch ( e ) {
         cu.logDebug( "RogueSubscribe | unable to process response. error= ", e.message )
@@ -335,16 +329,16 @@ CmdrTimeSeriesDataplot.prototype.addData = function( params ) {
   if ( this.objMergedData.ignore_count > 0 ) {
     self.objMergedData.ignore_count = self.objMergedData.ignore_count - 1;
   } else {
-    // var timeStamp = new Date(params[0].acquisitionTime);
+
     for ( var i = 0; i < self.objMergedData.data.length; ++i ) {
       if ( self.values[ i ].length >= self.objMergedData.maxcount ) {
         self.values[ i ] = self.values[ i ].slice( 1 );
       }
 
-      // var value = params[i].engValue.floatValue;
       if ( self.objTlm[ i ].name == params.opsPath ) {
         self.values[ i ].push( [ new Date( sample.gndTime ), value ] );
       }
+
     }
   }
 
@@ -380,10 +374,6 @@ CmdrTimeSeriesDataplot.prototype.addData = function( params ) {
     } catch ( e ) {
       cu.logDebug( 'update | util graph cannot set data' )
     }
-
-
-
-
 
     if ( self.objMergedData.update_interval > 0 ) {
       setTimeout( update, self.objMergedData.update_interval );

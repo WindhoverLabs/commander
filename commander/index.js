@@ -444,6 +444,8 @@ Commander.prototype.getADSBJson = function( cb ) {
     resp.on( 'end', () => {
       cb( JSON.parse( data ) );
     } );
+  } ).on( 'error', ( e ) => {
+    this.logErrorEvent( EventEnum.UNHANDLED_EXCEPTION, `${e.message}` );
   } );
 }
 
