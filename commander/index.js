@@ -137,14 +137,11 @@ function Commander( workspace, configFile ) {
 
   io.on( 'connection', function( socket ) {
     socket.enabledStreams = [];
-    //var address = socket.handshake.address;
 
     self.subscribe( updateTelemetry, function( subscriberID ) {
       socket.subscriberID = subscriberID;
     } );
 
-    // solig data plot connection for 60 minutes
-    socket.conn.server.pingTimeout = 60 * 60 * 1000;
 
     socket.on( 'connect_error', function( err ) {
       self.logErrorEvent( EventEnum.SOCKET_CONNECT_ERROR, 'SocketIO: Socket connect error.  \'' + err + '\'' );

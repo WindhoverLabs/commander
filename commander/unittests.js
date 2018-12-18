@@ -52,6 +52,8 @@ describe( 'Commander', () => {
     this.cdr = new Commander( workspace, configFile );
     Config.loadFile( configFile );
     this.emitter = new Emitter();
+    this.emitter.emitter = {};
+    this.emitter.emitter.on = function() {};
     this.cdr.setDefaultInstance( this.emitter );
 
 
@@ -62,7 +64,7 @@ describe( 'Commander', () => {
     spyOn( this.cdr, 'logInfoEvent' );
     spyOn( this.cdr, 'logErrorEvent' );
     spyOn( this.cdr, 'logDebugEvent' );
-    spyOn( this.cdr, 'subscribe' );
+    spyOn( this.cdr, 'addSubscription' );
     spyOn( this.cdr, 'sendCmd' );
 
     var self = this;
@@ -71,12 +73,13 @@ describe( 'Commander', () => {
       this.handshake.address = 'localhost';
     };
     sock.prototype.__proto__ = Emitter.prototype;
+    sock.prototype.disconnect = function() {};
     sock.prototype.on = function( str, cb ) {
 
       self.cdr.logInfoEvent.calls.reset();
       self.cdr.logErrorEvent.calls.reset();
       self.cdr.logDebugEvent.calls.reset();
-      self.cdr.subscribe.calls.reset();
+      self.cdr.addSubscription.calls.reset();
       self.cdr.sendCmd.calls.reset();
 
       switch ( str ) {
@@ -122,7 +125,7 @@ describe( 'Commander', () => {
           break;
         case 'subscribe':
           cb( [] );
-          expect( self.cdr.subscribe ).toHaveBeenCalledTimes( 1 );
+          expect( self.cdr.addSubscription ).toHaveBeenCalledTimes( 1 );
           break;
         case 'sendCmd':
           cb( {} );
@@ -485,7 +488,7 @@ describe( 'Commander', () => {
 
   } );
 
-  describe( 'subscribe', () => {
+  describe( 'addSubscription', () => {
 
     beforeAll( () => {
 
@@ -500,25 +503,25 @@ describe( 'Commander', () => {
 
     it( 'Should allow valid telemetry subscription request and pass on to emit', () => {
       this.cdr.defaultInstance.emit.calls.reset();
-      this.cdr.subscribe( this.valid_testcase, jasmine.any( Function ) );
+      this.cdr.addSubscription( 'test123', this.valid_testcase );
       expect( this.cdr.defaultInstance.emit ).toHaveBeenCalledTimes( 1 );
       expect( this.cdr.defaultInstance.emit.calls.argsFor( 0 )[ 1 ].opsPath ).toEqual( this.valid_testcase );
 
-      this.cdr.subscribe( this.valid_testcase1, jasmine.any( Function ) );
+      this.cdr.addSubscription( 'test123', this.valid_testcase1 );
       expect( this.cdr.defaultInstance.emit ).toHaveBeenCalledTimes( 2 );
       expect( this.cdr.defaultInstance.emit.calls.argsFor( 1 )[ 1 ].opsPath ).toEqual( this.valid_testcase1 );
 
-      this.cdr.subscribe( this.valid_testcase2, jasmine.any( Function ) );
+      this.cdr.addSubscription( 'test123', this.valid_testcase2 );
       expect( this.cdr.defaultInstance.emit ).toHaveBeenCalledTimes( 3 );
       expect( this.cdr.defaultInstance.emit.calls.argsFor( 2 )[ 1 ].opsPath ).toEqual( this.valid_testcase2 );
     } );
 
     it( 'Should allow invalid telemetry subscription requests', () => {
       this.cdr.defaultInstance.emit.calls.reset();
-      this.cdr.subscribe( this.invalid_testcase, jasmine.any( Function ) );
+      this.cdr.addSubscription( 'test123', this.invalid_testcase );
       expect( this.cdr.defaultInstance.emit ).toHaveBeenCalledTimes( 0 );
 
-      this.cdr.subscribe( this.invalid_testcase1, jasmine.any( Function ) );
+      this.cdr.addSubscription( 'test123', this.invalid_testcase1 );
       expect( this.cdr.defaultInstance.emit ).toHaveBeenCalledTimes( 0 );
 
     } );
@@ -528,7 +531,7 @@ describe( 'Commander', () => {
 
   } );
 
-  describe( 'unsubscribe', () => {
+  describe( 'removeSubscription', () => {
 
     beforeAll( () => {
 
@@ -543,25 +546,25 @@ describe( 'Commander', () => {
 
     it( 'Should allow valid telemetry unsubscribe request and pass on to emit', () => {
       this.cdr.defaultInstance.emit.calls.reset();
-      this.cdr.unsubscribe( this.valid_testcase, jasmine.any( Function ) );
+      this.cdr.removeSubscription( 'test123', this.valid_testcase );
       expect( this.cdr.defaultInstance.emit ).toHaveBeenCalledTimes( 1 );
       expect( this.cdr.defaultInstance.emit.calls.argsFor( 0 )[ 1 ].opsPath ).toEqual( this.valid_testcase );
 
-      this.cdr.unsubscribe( this.valid_testcase1, jasmine.any( Function ) );
+      this.cdr.removeSubscription( 'test123', this.valid_testcase1 );
       expect( this.cdr.defaultInstance.emit ).toHaveBeenCalledTimes( 2 );
       expect( this.cdr.defaultInstance.emit.calls.argsFor( 1 )[ 1 ].opsPath ).toEqual( this.valid_testcase1 );
 
-      this.cdr.unsubscribe( this.valid_testcase2, jasmine.any( Function ) );
+      this.cdr.removeSubscription( 'test123', this.valid_testcase2 );
       expect( this.cdr.defaultInstance.emit ).toHaveBeenCalledTimes( 3 );
       expect( this.cdr.defaultInstance.emit.calls.argsFor( 2 )[ 1 ].opsPath ).toEqual( this.valid_testcase2 );
     } );
 
     it( 'Should allow invalid telemetry unsubscribe requests', () => {
       this.cdr.defaultInstance.emit.calls.reset();
-      this.cdr.unsubscribe( this.invalid_testcase, jasmine.any( Function ) );
+      this.cdr.removeSubscription( 'test123', this.invalid_testcase );
       expect( this.cdr.defaultInstance.emit ).toHaveBeenCalledTimes( 0 );
 
-      this.cdr.unsubscribe( this.invalid_testcase1, jasmine.any( Function ) );
+      this.cdr.removeSubscription( 'test123', this.invalid_testcase1 );
       expect( this.cdr.defaultInstance.emit ).toHaveBeenCalledTimes( 0 );
 
     } );

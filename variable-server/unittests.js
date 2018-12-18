@@ -266,66 +266,72 @@ describe( 'VariableServer', () => {
 
     } );
 
-    it( 'Should react to emit on subscribe-request', () => {
+    it( 'Should react to emit on reqSubscribeStreamID', () => {
 
-      var someFunc = jasmine.any( Function );
-      var someObj = jasmine.any( Object );
-      spyOn( this.vs, 'SubscribeToVariable' ).and.callFake( () => {} );
-      spyOn( this.vs, 'getTlmDefinitions' ).and.callFake( ( someObj, someFunc ) => {} );
+      /* spies */
+      spyOn( this.vs, 'addSubscription' );
+      spyOn( this.vs, 'removeSubscription' );
+      spyOn( this.vs, 'getTlmDefinitions' );
+
+
+      /* add subscriber */
+      var someFunc = function() {};
+      var self = this;
+      var thisSessionID = undefined;
       this.vs.instanceEmitter.emit( Config.get( 'reqSubscribeStreamID' ), {
-        cmd: 'subscribe',
-        opsPath: '/CFE/CFE_ES_HkPacket_t/Payload.CmdCounter'
-      }, someFunc );
-      expect( this.vs.SubscribeToVariable ).toHaveBeenCalledTimes( 1 );
+        cmd: 'addSubscriber',
+        cb: someFunc
+      }, function( id ) {
+        thisSessionID = id;
+        expect( self.vs.subscribers[ id ] == someFunc ).toBe( true );
+      } );
+
+      /* add subscription */
       this.vs.instanceEmitter.emit( Config.get( 'reqSubscribeStreamID' ), {
-        cmd: 'subscribe',
-        opsPath: [ '/CFE/CFE_ES_HkPacket_t/Payload.CmdCounter' ]
-      }, someFunc );
+        cmd: 'addSubscription',
+        opsPath: 'test'
+      }, jasmine.any( Function ) );
+
+      expect( this.vs.addSubscription ).toHaveBeenCalledTimes( 1 );
+
+      this.vs.instanceEmitter.emit( Config.get( 'reqSubscribeStreamID' ), {
+        cmd: 'addSubscription',
+        opsPath: [ 'test' ]
+      }, jasmine.any( Function ) );
+
       expect( this.vs.getTlmDefinitions ).toHaveBeenCalledTimes( 1 );
-      this.vs.logErrorEvent.calls.reset();
+
+      /* remove subscription */
       this.vs.instanceEmitter.emit( Config.get( 'reqSubscribeStreamID' ), {
-        cmd: 'subscribe',
-        opsPath: 9
-      }, someFunc );
-      expect( this.vs.logErrorEvent ).toHaveBeenCalledTimes( 1 );
+        cmd: 'removeSubscription',
+        opsPath: 'test'
+      }, jasmine.any( Function ) );
+
+      expect( this.vs.removeSubscription ).toHaveBeenCalledTimes( 1 );
+
+      this.vs.instanceEmitter.emit( Config.get( 'reqSubscribeStreamID' ), {
+        cmd: 'removeSubscription',
+        opsPath: [ 'test' ]
+      }, jasmine.any( Function ) );
+
+      expect( this.vs.removeSubscription ).toHaveBeenCalledTimes( 2 );
+
+
+      if ( thisSessionID != undefined ) {
+        /* remove subscriber */
+        var someFunc = function() {};
+        var self = this;
+        this.vs.instanceEmitter.emit( Config.get( 'reqSubscribeStreamID' ), {
+          cmd: 'removeSubscriber',
+          subscriberID: thisSessionID
+        } );
+        expect( Object.keys( this.vs.subscribers ).indexOf( thisSessionID ) == -1 ).toBe( true );
+
+      }
+
 
     } );
 
-    it( 'Should react to emit on unsubscribe-request', () => {
-      var someFunc = jasmine.any( Function );
-      var someObj = jasmine.any( Object );
-      spyOn( this.vs, 'removeSubscriber' ).and.callFake( () => {} );
-      this.vs.instanceEmitter.emit( Config.get( 'reqSubscribeStreamID' ), {
-        cmd: 'unsubscribe',
-        opsPath: '/CFE/CFE_ES_HkPacket_t/Payload.CmdCounter'
-      }, someFunc );
-      expect( this.vs.removeSubscriber ).toHaveBeenCalledTimes( 1 );
-      this.vs.instanceEmitter.emit( Config.get( 'reqSubscribeStreamID' ), {
-        cmd: 'unsubscribe',
-        opsPath: [ '/CFE/CFE_ES_HkPacket_t/Payload.CmdCounter' ]
-      }, someFunc );
-      expect( this.vs.removeSubscriber ).toHaveBeenCalledTimes( 2 );
-      this.vs.logErrorEvent.calls.reset();
-      this.vs.instanceEmitter.emit( Config.get( 'reqSubscribeStreamID' ), {
-        cmd: 'unsubscribe',
-        opsPath: 9
-      }, someFunc );
-      expect( this.vs.logErrorEvent ).toHaveBeenCalledTimes( 1 );
-
-    } );
-
-  } );
-
-  describe( 'SubscribeToVariable', () => {
-
-    beforeAll( () => {
-      spyOn( this.vs, 'addSubscriber' );
-    } );
-
-    it( 'Should call addSubscriber function', () => {
-      this.vs.SubscribeToVariable( jasmine.any( String ), jasmine.any( Function ) );
-      expect( this.vs.addSubscriber ).toHaveBeenCalledTimes( 1 );
-    } );
 
   } );
 
@@ -413,7 +419,7 @@ describe( 'VariableServer', () => {
 
   } );
 
-  describe( 'addSubscriber', () => {
+  describe( 'addSubscription', () => {
 
     beforeAll( () => {
       delete this.vs.vars[ 'test' ];
@@ -421,7 +427,7 @@ describe( 'VariableServer', () => {
 
     it( 'Should add subscribers to this.vars when a new subscribe request is received', () => {
       delete this.vs.vars[ 'test' ];
-      this.vs.addSubscriber( 'test', jasmine.any( Function ) );
+      this.vs.addSubscription( 'uniqueid', 'test' );
       expect( this.vs.vars[ 'test' ] ).not.toEqual( undefined );
       expect( this.vs.vars[ 'test' ].hasOwnProperty( 'opsPath' ) ).toBe( true );
       expect( this.vs.vars[ 'test' ].hasOwnProperty( 'arrayIndices' ) ).toBe( true );
@@ -432,10 +438,11 @@ describe( 'VariableServer', () => {
         expect( outVar[ 'test' ].hasOwnProperty( 'sample' ) ).toBe( true );
       }
       delete this.vs.vars[ 'test' ];
-      this.vs.addSubscriber( 'test', jasmine.any( Function ) );
-      this.vs.addSubscriber( 'test', cb );
+      this.vs.addSubscription( 'uniqueid', 'test' );
+      this.vs.subscribers[ 'uniqueid' ] = cb
+      this.vs.addSubscription( 'uniqueid', 'test' );
       expect( this.vs.vars[ 'test' ].hasOwnProperty( 'subscribers' ) ).toBe( true );
-      expect( this.vs.vars[ 'test' ][ 'subscribers' ][ cb ] ).toEqual( cb );
+      expect( this.vs.vars[ 'test' ][ 'subscribers' ].indexOf( 'uniqueid' ) != -1 ).toBe( true );
     } );
 
   } );
@@ -465,7 +472,7 @@ describe( 'VariableServer', () => {
     it( 'Should return 1 when the variable name is not pre-defined', () => {
       delete this.vs.vars[ 'test' ];
       expect( this.vs.getVariablePersistence( 'test' ) ).toBe( 1 );
-      this.vs.addSubscriber( 'test', jasmine.any( Function ) );
+      this.vs.addSubscription( 'uniqueid', 'test' );
       expect( this.vs.getVariablePersistence( 'test' ) ).toBe( 1 );
     } );
 
@@ -502,7 +509,7 @@ describe( 'VariableServer', () => {
     it( 'Should return 0 when the variable name is not pre-defined', () => {
       delete this.vs.vars[ 'test' ];
       expect( this.vs.getVariableTimeout( 'test' ) ).toBe( 0 );
-      this.vs.addSubscriber( 'test', jasmine.any( Function ) );
+      this.vs.addSubscription( 'uniqueid', 'test' );
       expect( this.vs.getVariableTimeout( 'test' ) ).toBe( 0 );
     } );
 
@@ -520,12 +527,11 @@ describe( 'VariableServer', () => {
       var cb = function( outVar ) {
         expect( outVar[ 'test' ].hasOwnProperty( 'sample' ) ).toBe( true );
       }
-      this.vs.addSubscriber( 'test', cb );
+      this.vs.addSubscription( 'uniqueid', 'test' );
       this.vs.setVariableTimeout( 'test', 1 );
       this.vs.setVariableTimeout( 'test', 2 );
-      expect( this.vs.vars[ 'test' ][ 'subscribers' ][ cb ] ).toEqual( cb );
-      this.vs.removeSubscriber( 'test', cb );
-      expect( this.vs.vars[ 'test' ][ 'subscribers' ][ cb ] ).toEqual( {} );
+      this.vs.removeSubscription( 'test', cb );
+      expect( this.vs.vars[ 'test' ][ 'subscribers' ] ).toEqual( [] );
 
     } );
 

@@ -38,7 +38,7 @@ var convict = require( 'convict' );
 var jp = require( 'jsonpath' );
 var config = require( './config.js' );
 const Sparkles = require( 'sparkles' );
-const uuidV1 = require('uuid/v1');
+const uuidV1 = require( 'uuid/v1' );
 
 /**
  * Event id's
@@ -272,13 +272,13 @@ VariableServer.prototype.setInstanceEmitter = function( newInstanceEmitter ) {
        * an array of updates.
        */
       for ( var subscriber in subscribersToUpdate ) {
-        var callback = self.subscribers[subscribersToUpdate[ subscriber ].subscriber];
+        var callback = self.subscribers[ subscribersToUpdate[ subscriber ].subscriber ];
 
         /* Make sure this callback still exists. */
         if ( typeof callback === 'function' ) {
           callback( subscribersToUpdate[ subscriber ].variables );
         } else {
-        	/* TODO:  Release this subscriber. */
+          /* TODO:  Release this subscriber. */
         }
       }
     }
@@ -316,12 +316,12 @@ VariableServer.prototype.setInstanceEmitter = function( newInstanceEmitter ) {
       }
     } else if ( req.cmd === 'addSubscriber' ) {
       var id = uuidV1();
-      self.subscribers[id] = req.cb;
-      cb(id);
+      self.subscribers[ id ] = req.cb;
+      cb( id );
     } else if ( req.cmd === 'removeSubscriber' ) {
-        delete self.subscribers[req.subscriberID];
+      delete self.subscribers[ req.subscriberID ];
     } else {
-        self.logErrorEvent( EventEnum.INVALID_REQUEST, 'Request invalid. \'' + req + '\'' );
+      self.logErrorEvent( EventEnum.INVALID_REQUEST, 'Request invalid. \'' + req + '\'' );
     }
   } );
 
@@ -336,23 +336,6 @@ VariableServer.prototype.setInstanceEmitter = function( newInstanceEmitter ) {
 
   this.logInfoEvent( EventEnum.INITIALIZED, 'Initialized' );
 }
-
-// DEBUG: This function is not being used any where in the commander directory
-// VariableServer.prototype.getSampleByArrayIndex = function( variable, sampleID, arrayIndex ) {
-//   var newValue = variable.sample[ variable.sample.length - 1 ].value[ arrayIndex ];
-//
-//   var outSample = {};
-//   for ( var sampleItemID in variable.sample[ sampleID ] ) {
-//     if ( sampleItemID === 'value' ) {
-//       outSample.value = variable.sample[ sampleID ].value[ arrayIndex ];
-//     } else {
-//       outSample[ sampleItemID ] = variable.sample[ sampleID ][ sampleItemID ];
-//     }
-//   }
-//
-//   return outSample;
-// }
-
 
 /**
  * Checks if varName is an array
@@ -373,39 +356,6 @@ VariableServer.prototype.isVarNameAnArray = function( varName ) {
   }
   return false;
 }
-
-
-// DEBUG: this function might not be used anywhere
-// VariableServer.prototype.stripArrayIdentifier = function( varName ) {
-//   if ( this.isVarNameAnArray( varName ) == true ) {
-//     var start = 0;
-//     var end = varName.indexOf( '[' );
-//
-//     if ( end > 0 ) {
-//       var outString = varName.substring( start, end );
-//
-//       return outString;
-//     }
-//   }
-//   return varName;
-// }
-
-
-// DEBUG: this function might not be used anywhere
-// VariableServer.prototype.getArrayIndex = function( varName ) {
-//   if ( this.isVarNameAnArray( varName ) == true ) {
-//     var start = varName.indexOf( '[' ) + 1;
-//     var end = varName.indexOf( ']' );
-//
-//     if ( end > start ) {
-//       var value = parseInt( varName.substring( start, end ) );
-//
-//       return value;
-//     }
-//   }
-//   return -1;
-// }
-
 
 /**
  * Gets telemetry definitions and calls callback function on it
@@ -467,7 +417,7 @@ VariableServer.prototype.addSubscription = function( subscriberID, opsPath ) {
     /* Send all the persisted values of the value */
     outVar[ opsPath ].sample = variable.sample;
 
-    this.subscribers[subscriberID]( outVar );
+    this.subscribers[ subscriberID ]( outVar );
   }
 
   if ( variable.hasOwnProperty( 'subscribers' ) == false ) {
@@ -587,7 +537,7 @@ VariableServer.prototype.removeSubscription = function( opsPath, cb ) {
     var variable = this.vars[ opsPath ];
 
     if ( variable.hasOwnProperty( 'subscribers' ) == true ) {
-      variable.subscribers[ cb ] = {};
+      variable.subscribers = [];
     }
   }
 }
