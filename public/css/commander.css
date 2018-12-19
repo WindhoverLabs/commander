@@ -47,6 +47,16 @@ h2 {
   margin: 5px 5px;
 }
 
+#cdr-voice-cmd{
+  padding: 0.25rem 0.25rem;
+  margin: 5px 5px;
+  transition: color 0.5s, opacity 0.5s;
+}
+
+#cdr-voice-cmd:hover{
+  opacity: 0.5;
+}
+
 .cdr-nav-btn {
   margin-bottom: unset;
   margin-left: 5px;
@@ -505,6 +515,48 @@ h2 {
   background: linear-gradient(to right, #ffe066, #ffcc00) !important;
   /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
 }
+
+.cdr-txt-green {
+  color: #56ab2f !important;
+  /* fallback for old browsers */
+  color: -webkit-linear-gradient(to right, #a8e063, #56ab2f) !important;
+  /* Chrome 10-25, Safari 5.1-6 */
+  color: linear-gradient(to right, #a8e063, #56ab2f) !important;
+  /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
+}
+
+.cdr-txt-red {
+  color: #ED213A !important;
+  /* fallback for old browsers */
+  color: -webkit-linear-gradient(to right, #93291E, #ED213A) !important;
+  /* Chrome 10-25, Safari 5.1-6 */
+  color: linear-gradient(to right, #93291E, #ED213A) !important;
+  /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
+}
+
+.cdr-txt-blue {
+  color: #33ccff !important;
+  /* fallback for old browsers */
+  color: -webkit-linear-gradient(to right, #80dfff, #33ccff) !important;
+  /* Chrome 10-25, Safari 5.1-6 */
+  color: linear-gradient(to right, #80dfff, #33ccff) !important;
+  /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
+}
+
+.cdr-txt-yellow {
+  color: #ffcc00 !important;
+  /* fallback for old browsers */
+  color: -webkit-linear-gradient(to right, #ffe066, #ffcc00) !important;
+  /* Chrome 10-25, Safari 5.1-6 */
+  color: linear-gradient(to right, #ffe066, #ffcc00) !important;
+  /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
+}
+
+.cdr-txt-none {
+  color: #343a40 !important;
+  opacity:  0 !important;
+}
+
 
 path {
   stroke: #5f8e9e;

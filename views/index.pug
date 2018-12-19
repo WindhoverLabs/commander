@@ -46,7 +46,7 @@ cdr-nav-iconshtml(lang='en-us')
     link(type="text/css" rel="stylesheet" href="/css/goldenlayout-dark-theme.css")  
     link(type="text/css" rel="stylesheet" href="/scripts/cesium/Source/Widgets/widgets.css")
     link(type="text/css" rel="stylesheet" href="/scripts/jquery-contextmenu/dist/jquery.contextMenu.min.css")  
-  body
+  body(onload='checkCompatability()')
     <!-- Generic Modal Template -->
     div#genericInputModal.modal.fade(tabindex="-1" role="dialog" aria-labelledby="genericInputModal" aria-hidden="true")
       div.modal-dialog(role="document")
@@ -71,8 +71,7 @@ cdr-nav-iconshtml(lang='en-us')
           button#cdr-app-menu-toggle.btn.btn-outline-primary(data-tooltip='true' title='Open/Close Menus')
             i.cdr-nav-icons.fa.fa-bars
         ul.navbar-nav.cdr-nav-btn
-        <!--  button.btn.btn-outline-primary#cdr-widget( data-tooltip='true' title='Widget Selector' data-toggle="modal" data-target="#genericInputModal" data-title="Generate a Widget" data-submit="MakeWidget" data-custom="")  -->
-        <!--    i.cdr-nav-icons.fa.fa-plus  -->
+          i#cdr-voice-cmd.cdr-nav-icons.fa.fa-microphone
         ul#cdr-well-top-left.navbar-nav.cdr-well
         ul.navbar-nav.ml-auto
       a.cdr-nav-top-brand.navbar-brand(href="#")

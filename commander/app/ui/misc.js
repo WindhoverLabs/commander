@@ -744,3 +744,302 @@ var autoEventLogSaveIntervalID = setInterval( function() {
   }
 
 }, 30 * 60 * 1000 );
+
+
+/**
+ * Check Voice command compatability
+ */
+function checkCompatability() {
+
+  $( '#cdr-voice-cmd' ).data( 'state', 'inactive' );
+
+  /* Firefox check */
+  if (
+    navigator.userAgent.indexOf( 'Firefox' ) != -1 &&
+    window.SpeechRecognition != undefined
+  ) {
+    $( '#cdr-voice-cmd' ).data( 'state', 'active' );
+  }
+
+  /* Chrome check */
+  if (
+    navigator.userAgent.indexOf( 'Chrome' ) != -1 &&
+    window.webkitSpeechRecognition != undefined
+  ) {
+    $( '#cdr-voice-cmd' ).data( 'state', 'active' );
+  }
+
+  updateSpeechRecogUI();
+
+  if ( $( '#cdr-voice-cmd' ).data( 'state' ) == 'inactive' ) {
+    cu.logError( 'VoiceCommanding | browser not compatible.' );
+    return;
+  }
+
+  window.SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  window.SpeechGrammarList = window.SpeechGrammarList || window.webkitSpeechGrammarList;
+  window.SpeechRecognitionEvent = window.SpeechRecognitionEvent || window.webkitSpeechRecognitionEvent;
+  window.recognition = new SpeechRecognition();
+  window.speechRecognitionList = new SpeechGrammarList();
+  window.recognition.continuous = false;
+  window.recognition.lang = 'en-US';
+  window.recognition.interimResults = false;
+  window.recognition.maxAlternatives = 1;
+
+  initSpeechListener();
+
+  /* speech synthesis */
+  window.speechSynth = window.speechSynthesis;
+  window.googleEnglishVoiceIndex = window.speechSynth.getVoices()[ 1 ];
+  window.googleUKEnglishFemaleVoiceIndex = window.speechSynth.getVoices()[ 2 ];
+
+
+  $( '#cdr-voice-cmd' ).on( {
+    click: function() {
+      var speechRecogState = $( '#cdr-voice-cmd' ).data( 'state' );
+
+      if ( speechRecogState == 'active' ) {
+        $( '#cdr-voice-cmd' ).data( 'state', 'listening' );
+        speechListen();
+      }
+
+      if ( speechRecogState == 'listening' ) {
+        $( '#cdr-voice-cmd' ).data( 'state', 'active' );
+        speechUnListen();
+      }
+
+      updateSpeechRecogUI();
+    }
+  } );
+
+}
+
+
+function updateSpeechRecogUI() {
+
+  var speechRecogState = $( '#cdr-voice-cmd' ).data( 'state' );
+
+  $( '#cdr-voice-cmd' ).removeClass( 'fa-microphone' );
+  $( '#cdr-voice-cmd' ).removeClass( 'fa-microphone-slash' );
+  $( '#cdr-voice-cmd' ).removeClass( 'cdr-txt-green' );
+  $( '#cdr-voice-cmd' ).removeClass( 'cdr-txt-red' );
+  $( '#cdr-voice-cmd' ).removeClass( 'cdr-txt-blue' );
+  $( '#cdr-voice-cmd' ).removeClass( 'cdr-txt-none' );
+
+  if ( typeof $( '#cdr-voice-cmd' ).data( 'blinkInterval' ) == 'number' ) {
+    clearInterval( $( '#cdr-voice-cmd' ).data( 'blinkInterval' ) )
+  }
+
+  if ( speechRecogState == 'active' ) {
+    $( '#cdr-voice-cmd' ).addClass( "fa-microphone cdr-txt-green" )
+  }
+
+  if ( speechRecogState == 'inactive' ) {
+    $( '#cdr-voice-cmd' ).addClass( "fa-microphone-slash cdr-txt-red" )
+  }
+
+  if ( speechRecogState == 'listening' ) {
+
+    $( '#cdr-voice-cmd' ).addClass( "fa-microphone cdr-txt-blue" )
+
+    var blinkIntervalId = setInterval( () => {
+      $( '#cdr-voice-cmd' ).toggleClass( "cdr-txt-blue cdr-txt-none" )
+    }, 500 );
+
+    $( '#cdr-voice-cmd' ).data( 'blinkInterval', blinkIntervalId );
+
+  }
+
+}
+
+
+/**
+ * listen to commands
+ */
+function initSpeechListener() {
+
+  window.VoiceCommandingQueue = [];
+  window.yesNoExpectation = false;
+
+  window.recognition.onresult = function( event ) {
+
+    var text = event.results[ 0 ][ 0 ].transcript.toLowerCase();
+    var confidence = event.results[ 0 ][ 0 ].confidence;
+
+    cu.logInfo( 'VoiceCommanding | You have said [' + text + '] | Recognition confidence = ' + confidence.toFixed( 2 ) );
+
+
+    if ( !window.yesNoExpectation ) {
+
+      if ( text.split( ' ' )[ 0 ] == 'commander' ) {
+        var utterThis = new SpeechSynthesisUtterance( 'You\'ve said ' + text + ', is that right?' );
+        utterThis.voice = window.googleEnglishVoice
+        window.speechSynth.speak( utterThis );
+        window.VoiceCommandingQueue.push( text );
+        window.yesNoExpectation = true;
+
+        utterThis.onend = function() {
+          cu.logDebug( 'VoiceCommanding | Syth Speaking Ended.' );
+          speechUnListen()
+        }
+
+      } else {
+        window.yesNoExpectation = false;
+      }
+
+
+
+    } else {
+
+      if ( text == 'yes' ) {
+        cu.logDebug( 'VoiceCommanding | Applying voice command' );
+        var utterThis = new SpeechSynthesisUtterance( 'applying command' );
+        utterThis.voice = window.googleEnglishVoice
+        window.speechSynth.speak( utterThis );
+
+        commandHandling( window.VoiceCommandingQueue.pop() );
+        utterThis.onend = function() {
+          cu.logDebug( 'VoiceCommanding | Syth Speaking Ended.' );
+          speechUnListen()
+        }
+
+      } else {
+
+        cu.logError( 'VoiceCommanding | Rejecting voice command' );
+        var utterThis = new SpeechSynthesisUtterance( 'unknown command rejected' );
+        utterThis.voice = window.googleEnglishVoice
+        window.VoiceCommandingQueue.pop()
+        window.speechSynth.speak( utterThis );
+        utterThis.onend = function() {
+          cu.logDebug( 'VoiceCommanding | Syth Speaking Ended.' );
+          speechUnListen()
+        }
+
+      }
+
+      window.yesNoExpectation = false;
+    }
+  }
+
+  window.recognition.onspeechend = function() {
+    cu.logDebug( 'VoiceCommanding | User Speaking Ended.' );
+  }
+
+  window.recognition.onerror = function( event ) {
+    cu.logError( 'VoiceCommanding | Error occurred in recognition: ', event.error );
+    if ( event.error == 'no-speech' ) {
+      speechUnListen()
+    } else {
+      $( '#cdr-voice-cmd' ).data( 'state', 'inactive' );
+      updateSpeechRecogUI();
+    }
+
+  }
+  window.recognition.onstart = function( event ) {
+    cu.logInfo( 'VoiceCommanding | Listening ...' );
+  }
+  window.recognition.onspeechstart = function( event ) {
+    cu.logInfo( 'VoiceCommanding | User Speaking ...' );
+  }
+  window.recognition.onend = function( event ) {
+    cu.logInfo( 'VoiceCommanding | Listening Ended' );
+    if ( $( '#cdr-voice-cmd' ).data( 'state' ) == 'listening' ) {
+      window.recognition.start();
+    }
+  }
+
+}
+
+function speechListen() {
+  window.recognition.start();
+}
+
+function speechUnListen() {
+  window.recognition.stop();
+}
+
+function recoverListener() {
+
+  window.recognition.stop();
+  window.recognition.start();
+
+}
+
+
+function commandHandling( query ) {
+
+  if ( query == 'commander test' ) {
+    session.sendCommand( {
+      ops_path: '/VM/Noop',
+      args: {}
+    } );
+  }
+
+  if ( query == 'commander arm' ) {
+    session.sendCommand( {
+      ops_path: '/VM/Arm',
+      args: {}
+    } );
+  }
+
+  if ( query == 'commander disarm' ) {
+    session.sendCommand( {
+      ops_path: '/VM/Disarm',
+      args: {}
+    } );
+  }
+
+  if ( query == 'commander take off' ) {
+    session.sendCommand( {
+      ops_path: '/VM/Arm',
+      args: {}
+    } );
+    session.sendCommand( {
+      ops_path: '/VM/AutoTakeOff',
+      args: {}
+    } );
+  }
+
+  if ( query == 'commander loiter' ) {
+    session.sendCommand( {
+      ops_path: '/VM/AutoLoiter',
+      args: {}
+    } );
+  }
+
+  if ( query == 'commander land' ) {
+    session.sendCommand( {
+      ops_path: '/VM/AutoLand',
+      args: {}
+    } );
+  }
+
+  if ( query == 'commander switch to position control mode' ) {
+    session.sendCommand( {
+      ops_path: '/VM/PosCtl',
+      args: {}
+    } );
+  }
+
+  if ( query == 'commander switch to manual control mode' ) {
+    session.sendCommand( {
+      ops_path: '/VM/Manual',
+      args: {}
+    } );
+  }
+
+  if ( query == 'commander switch to altitude control mode' ) {
+    session.sendCommand( {
+      ops_path: '/VM/AltCtl',
+      args: {}
+    } );
+  }
+
+  if ( query == 'commander return home' ) {
+    session.sendCommand( {
+      ops_path: '/VM/AutoRtl',
+      args: {}
+    } );
+  }
+
+}
