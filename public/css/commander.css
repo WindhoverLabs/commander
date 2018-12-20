@@ -610,7 +610,7 @@ path {
 }
 
 .cdr-tooltip-row>span {
-  color: #fff;
+  color: var(--btn-ssb-txt-inactive-color);
 }
 
 /******************************************
