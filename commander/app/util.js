@@ -518,7 +518,7 @@ CommanderUtilities.prototype = {
    * @return {Boolean}   success if true, fail if false
    */
   disposeKey: function( k ) {
-    if ( !this.generator.disposeColor( k ) ) {
+    if ( !this.generator.disposeKey( k ) ) {
       this.logError( ' Unable to dispose key ', k );
     }
   },
@@ -623,7 +623,7 @@ CommanderUtilities.prototype = {
   getValue: function( key ) {
     var val = undefined;
     if ( this.database.getDatabase().hasOwnProperty( key ) ) {
-      val = this.database.getValue();
+      val = this.database.getValue( key );
     } else {
       this.logDebug( 'Utilities | key not available in database, cannot retrieve value.' );
     }
