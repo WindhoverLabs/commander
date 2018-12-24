@@ -9,8 +9,8 @@ html {
 }
 
 body {
-  background-color: #353535;
-  color: #ffffff;
+  background-color: var(--body-bg-color);
+  color: var(--body-color);
   max-height: calc(100%) !important;
   height: calc(100%) !important;
   overflow: hidden;
@@ -18,7 +18,7 @@ body {
 
 h2 {
   font: 14px Arial, sans-serif;
-  color: #fff;
+  color: var(--h2-color);
   padding: 10px;
   text-align: center;
 }
@@ -27,14 +27,14 @@ h2 {
   Commander Layout Level CSS
 *******************************************/
 .cdr-nav-top {
-  box-shadow: 0px 2px 25px #000;
+  box-shadow: 0px 2px 25px var(--nav-top-box-shadow);
   padding: 0.25em 0em;
   max-height: 38px;
   height: 38px;
 }
 
 #cdr-nav-btm {
-  box-shadow: 0px -4px 15px #000;
+  box-shadow: 0px -4px 15px var(--nav-bottom-box-shadow);
   padding: 0.25em 0em;
   max-height: 38px;
   height: 38px;
@@ -47,13 +47,13 @@ h2 {
   margin: 5px 5px;
 }
 
-#cdr-voice-cmd{
+#cdr-voice-cmd {
   padding: 0.25rem 0.25rem;
   margin: 5px 5px;
   transition: color 0.5s, opacity 0.5s;
 }
 
-#cdr-voice-cmd:hover{
+#cdr-voice-cmd:hover {
   opacity: 0.5;
 }
 
@@ -76,7 +76,7 @@ h2 {
 
   #cdr-nav-top-left-content,
   #cdr-nav-top-right-content {
-    background-color: #000000b3;
+    background-color: var(--nav-top-content-mobile);
     position: relative;
     width: 100%;
   }
@@ -97,17 +97,18 @@ h2 {
   a.cdr-nav-top-brand.navbar-brand {
     display: none;
   }
+
   #cdr-well-top-left.navbar-nav.cdr-well,
-  #cdr-well-top-right.navbar-nav.cdr-well{
+  #cdr-well-top-right.navbar-nav.cdr-well {
     width: 100%;
   }
-
 }
+
 /******************************************
   Generic Modal
 *******************************************/
 .modal-content {
-  background: #343a40;
+  background: var(--modal-content);
 }
 
 .modal-header {
@@ -126,7 +127,7 @@ h2 {
   margin-bottom: 38px;
   width: 100%;
   height: calc(100% - 76px);
-  background-color: #353535;
+  background-color: var(--layout-container-bg);
   padding-left: 0px !important;
   padding-right: 0px !important;
   max-width: 100% !important;
@@ -146,12 +147,12 @@ h2 {
   position: absolute;
   top: 0;
   left: 0;
-  box-shadow: -3px 0px 9px 0px rgba(0, 0, 0, 0.4);
+  box-shadow: -3px 0px 9px 0px var(--layout-container-box-shadow);
   padding: 7px;
 }
 
 #cdr-app-menu {
-  background-color: #343a40;
+  background-color: var(--app-menu-bg);
   position: absolute;
   width: 250px;
   height: calc(100% - 5px);
@@ -160,7 +161,7 @@ h2 {
   padding: 10px 0px;
   top: 3px;
   border-radius: 0px 5px 5px 0px;
-  box-shadow: 0px 0px 15px #000;
+  box-shadow: 0px 0px 15px var(--app-menu-box-shadow);
   overflow-x: hidden;
   overflow-y: scroll;
   -webkit-transition: transform 0.1s ease-out;
@@ -187,12 +188,13 @@ h2 {
 #cdr-layout-menu-toggle.active {
   background-color: var(--btn-primary-background-hover-color);
 }
+
 #cdr-widget-menu-toggle.active {
   background-color: var(--btn-primary-background-hover-color);
 }
 
 .cdr-menu-container {
-  background: #FFF0;
+  background: var(--app-menu-container-bg);
   border: unset !important;
   width: 250px;
   display: none;
@@ -208,20 +210,20 @@ h2 {
 }
 
 .cdr-menu-container li:hover {
-  color: #343a40;
+  color: var(--app-menu-container-list-item-hover-txt);
 }
 
 .cdr-dropdown-list-item {
   font-size: 12px;
   text-align: center;
-  border: 1px solid #222;
+  border: 1px solid var(--app-dropdown-list-item-boder);
   margin: 3px;
   pointer-events: auto;
 }
 
 .cdr-dropdown-list-item:hover {
-  color: #fff;
-  background-color: #222;
+  color: var(--app-dropdown-list-item-hover-txt);
+  background-color: var(--app-dropdown-list-item-hover-bg);
 }
 
 /******************************************
@@ -231,11 +233,11 @@ h2 {
   height: 85%;
   position: relative;
   min-height: 300px;
-  background-color: #6f6f6f;
-  border: 3px solid #6c6c6c;
+  background-color: var(--pfd-display-container-bg);
+  border: 3px solid var(--pfd-display-container-border);
   border-radius: 4px;
-  -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, .05);
-  box-shadow: inset 0 1px 1px rgba(254, 250, 250, 0.1);
+  -webkit-box-shadow: inset 0 1px 1px var(--pfd-display-container-box-shadow);
+  box-shadow: inset 0 1px 1px var(--pfd-display-container-box-shadow);
 }
 
 .cdr-guages {
@@ -245,7 +247,6 @@ h2 {
 
 .cdr-video {
   height: 100%;
-  /* background-color: #074486; */
   z-index: 3;
 }
 
@@ -255,7 +256,6 @@ h2 {
 }
 
 .cdr-image {
-  /* border: 1px solid #FFF; */
   height: 100%;
   background-image: url("/img/Windhover-Mark-White.png");
   background-repeat: no-repeat, repeat;
@@ -267,7 +267,7 @@ h2 {
 
 .cdr-empty {
   height: 100%;
-  background-color: #2d2d2d;
+  background-color: var(--pfd-empty-display-bg);
   z-index: 0;
 }
 
@@ -284,11 +284,10 @@ h2 {
 *******************************************/
 #cdr-btm-nav-utility {
   text-align: left;
-  background-image: linear-gradient(90deg, #343a40 30%, #343a40 50%, #00000000 75%);
+  background-image: linear-gradient(90deg, var(--nav-bottom-docs-bg-a) 30%, var(--nav-bottom-docs-bg-b) 50%, var(--nav-bottom-docs-bg-c) 75%);
   z-index: 5;
   min-height: 18px;
   max-height: 18px;
-  /* display: block; */
 }
 
 #cdr-docs-container {
@@ -345,7 +344,6 @@ h2 {
 #cdr-gadget-parent {
   position: absolute;
   right: 0px;
-  /* overflow-x: hidden; */
   transform: translateX(0px);
   -webkit-transition: transform 0.8s ease-out;
   -moz-transition: transform 0.8s ease-out;
@@ -356,8 +354,8 @@ h2 {
 .cdr-well {
   width: 500px;
   height: 25px;
-  box-shadow: inset 2px 2px 1px rgba(0, 0, 0, .05);
-  background: #202020cc;
+  box-shadow: inset 2px 2px 1px var(--well-shadow);
+  background: var(--well-bg);
   border-radius: 4px;
   align-items: center;
 }
@@ -403,8 +401,8 @@ h2 {
 
 .cdr-gadget-value {
   font-size: small;
-  color: black;
-  background: white;
+  color: var(--wdg-val-txt);
+  background: var(--wdg-val-txt);
   border-radius: 5px;
   padding: 0px 10px;
   font-weight: bold;
@@ -412,8 +410,8 @@ h2 {
 
 .cdr-gadget-close {
   font-size: 12px;
-  color: black;
-  background: #b1b1b1;
+  color: var(--wdg-close-txt);
+  background: var(--wdg-close-bg);
   border-radius: 2px;
   position: relative;
   padding: 2px;
@@ -459,7 +457,7 @@ h2 {
 }
 
 .stale {
-  color: #e06277;
+  color: var(--tlm-stale);
   -webkit-transition: color 1s ease-out;
   -moz-transition: color 1s ease-out;
   -o-transition: color 1s ease-out;
@@ -553,13 +551,12 @@ h2 {
 }
 
 .cdr-txt-none {
-  color: #343a40 !important;
-  opacity:  0 !important;
+  color: var(--cdr-text-none) !important;
+  opacity: 0 !important;
 }
 
-
 path {
-  stroke: #5f8e9e;
+  stroke: var(--dp-path);
   stroke-width: 2;
   fill: none;
 }
@@ -567,13 +564,13 @@ path {
 .axis path,
 .axis line {
   fill: none;
-  stroke: #5f8e9e;
+  stroke: var(--dp-line-stroke);
   stroke-width: 1;
   shape-rendering: crispEdges;
 }
 
 .axis .tick {
-  color: #5f8e9e;
+  color: var(--dp-tick-color);
 }
 
 .rotate-right-left {
@@ -601,8 +598,8 @@ path {
 
 .tooltip-inner {
   max-width: 400px;
-  color: var(--header-bg-color);
-  background-color: #000000e6;
+  color: var(--tt-txt);
+  background-color: var(--tt-bg);
 }
 
 .cdr-tooltip-row {
@@ -617,81 +614,7 @@ path {
   Golden Layout Fixes
 *******************************************/
 .lm_goldenlayout {
-  background: #353535 !important;
-}
-
-/******************************************
-  Color Variables
-*******************************************/
-:root {
-  /******************************************
-      Primary Button
-    *******************************************/
-  /* yellow */
-  --btn-primary-background-color: #ffae00;
-  /* gold */
-  --btn-primary-background-hover-color: #b78509;
-  /* gold */
-  --btn-primary-border-color: #b78509;
-  /******************************************
-      Important Button
-    *******************************************/
-  /* yellow */
-  --btn-important-background-color: #dc3545;
-  /* gold */
-  --btn-important-background-hover-color: #95111d;
-  ;
-  /* gold */
-  --btn-important-border-color: #95111d;
-  /******************************************
-      General Button
-    *******************************************/
-  /* white */
-  --btn-text-color: #fff;
-  --btn-text-color2: #000;
-  /* Transperant */
-  --btn-trasperant-color: #00008000;
-  /* yellow*/
-  --btn-bg-color: #ffae00;
-  /* Dark grey */
-  --btn-font-color-drk: #343a40;
-  /* white */
-  --btn-font-color-lte: #fff;
-  /* gold */
-  --btn-bg-hvr-color: #b78509;
-  /******************************************
-    Special Skeleton Button
-  *******************************************/
-  /* Light grey */
-  --btn-ssb-txt-inactive-color: #656566;
-  /* green */
-  --btn-ssb-border-inactive-color: #0d6c0d;
-  /* lime */
-  --btn-ssb-border-hover-active-color: lime;
-  /* green */
-  --btn-ssb-text-hover-color: #0d6c0d;
-  /* lime */
-  --btn-ssb-text-active-color: lime;
-  /******************************************
-      Layout
-    *******************************************/
-  /* Dark grey */
-  --layout-drk: #343a40;
-  /* Light grey */
-  --layout-lte: #25518080;
-  /******************************************
-      Panels
-    *******************************************/
-  /* Golden Yellow */
-  --header-bg-color: #a06d02;
-  /* Deep Blue */
-  --content-bg-color: #25518080;
-  /* Light Blue */
-  --th-bg-color: #25518080;
-  /* Dark Blue */
-  --td-border-color: #074486;
-  /* Blue */
-  --td-bg-color: #2551804d;
+  background: var(--layout-container-bg) !important;
 }
 
 /******************************************
@@ -707,14 +630,15 @@ header {
   overflow: hidden;
   height: fit-content;
 }
+
 header>h2 {
   height: 100%;
-  margin: auto 10px ;
+  margin: auto 10px;
 }
 
 header>.widget-icon {
   height: 100%;
-  margin: auto 10px ;
+  margin: auto 10px;
 }
 
 .row {
@@ -746,10 +670,9 @@ header>.widget-icon {
   vertical-align: middle;
 }
 
-.table-responsive{
+.table-responsive {
   overflow-x: unset !important;
 }
-
 
 .widget-graph>div {
   background-color: var(--content-bg-color);
@@ -760,48 +683,48 @@ header>.widget-icon {
   min-height: 300px;
 }
 
-.query-block{
+.query-block {
   width: 100%;
   background-color: var(--content-bg-color);
   margin: -5px 0px 5px 0px;
   border-radius: 5px;
-  padding:5px;
+  padding: 5px;
   display: none;
 }
 
-.query-block>form>div{
-  margin:5px 3px;
-  padding:2px 3px;
-}
-.query-block>form>div>div{
-  margin:3px;
-
+.query-block>form>div {
+  margin: 5px 3px;
+  padding: 2px 3px;
 }
 
-.cdr-dataplot-legend{
-    opacity: 0.3;
+.query-block>form>div>div {
+  margin: 3px;
 }
 
-.cdr-dataplot-legend:hover{
-    opacity: 1;
+.cdr-dataplot-legend {
+  opacity: 0.3;
 }
 
-.active-plot-list{
-  width:100%;
+.cdr-dataplot-legend:hover {
+  opacity: 1;
+}
+
+.active-plot-list {
+  width: 100%;
   height: inherit;
-  box-shadow: inset 2px 2px 1px rgba(0, 0, 0, .05);
-  background: #7e798333;
+  box-shadow: inset 2px 2px 1px var(--dp-apl-shadow);
+  background: var(--dp-apl-bg);
   border-radius: 4px;
   align-items: center;
   display: table;
 }
 
-.active-plot-list-content{
+.active-plot-list-content {
   height: inherit;
   width: inherit;
 }
 
-.data-plot-defs{
+.data-plot-defs {
   border-radius: 5px;
   padding: 5px;
   margin: 5px;
@@ -809,22 +732,22 @@ header>.widget-icon {
   background: none;
 }
 
-.data-plot-defs.active{
+.data-plot-defs.active {
   border-width: 2px !important;
-  font-weight: bolder !important ;
+  font-weight: bolder !important;
 }
 
-.cdr-clr-picker{
+.cdr-clr-picker {
   width: 100px;
   /* height:50%; */
-  color:white;
+  color: var(--dp-clr-picker-txt);
   font-weight: bold;
-  background-color: #000;
+  background-color: var(--dp-clr-picker-bg);
 }
 
 /* color picker bug fix suggested by colorpicker */
 .colorpicker.colorpicker-popup {
-    -moz-user-select: none;
+  -moz-user-select: none;
 }
 
 footer>button {
@@ -834,7 +757,7 @@ footer>button {
 }
 
 footer>.btn-primary {
-  background-color: #fff0;
+  background-color: var(--btn-primary-footer-bg);
 }
 
 footer {
@@ -853,7 +776,7 @@ header>button {
 .cdr-primary {
   padding: 0px 3px;
   font-size: 14px;
-  color: var(--btn-text-color2);
+  color: var(--btn-text-color-contrasting);
   background-color: var(--btn-primary-background-color);
   border: 1px solid var(--btn-primary-border-color);
 }
@@ -872,7 +795,7 @@ header>button {
 }
 
 .cdr-outline-primary:hover {
-  color: var(--btn-text-color2);
+  color: var(--btn-text-color-contrasting);
   background-color: var(--btn-primary-background-color);
   border: 1px solid var(--btn-primary-border-color);
 }
@@ -985,96 +908,200 @@ header>button {
 }
 
 .white-text {
-  color: #ffffff;
+  color: var(--white);
 }
 
 /**
  * Sch plugin css
  */
- #app-sch-content{
-   margin: 5px 0px;
- }
-
+#app-sch-content {
+  margin: 5px 0px;
+}
 
 /**
  * scroll bar grey rectangle theme
  */
- /*
+/*
  os-theme-dark
  */
+.os-theme-dark>.os-scrollbar {
+  padding: 0px;
+}
 
- .os-theme-dark > .os-scrollbar {
-     padding: 0px;
- }
- .os-theme-dark > .os-scrollbar-horizontal {
-     right: 16px;
-     height: 16px;
- }
- .os-theme-dark > .os-scrollbar-vertical {
-     bottom: 16px;
-     width: 16px;
- }
- .os-theme-dark.os-host-rtl > .os-scrollbar-horizontal {
-     left: 16px;
-     right: 0;
- }
- .os-theme-dark > .os-scrollbar-corner {
-     height: 16px;
-     width: 16px;
-     background-color: transparent;
- }
- .os-theme-dark > .os-scrollbar > .os-scrollbar-track,
- .os-theme-dark > .os-scrollbar > .os-scrollbar-track > .os-scrollbar-handle {
-     background: transparent;
- }
- .os-theme-dark > .os-scrollbar > .os-scrollbar-track > .os-scrollbar-handle:before {
-     content: '';
-     display: block;
-     position: absolute;
-     width: 100%;
-     height: 100%;
-     left: 0;
-     top: 0;
-     background: #fff;
-     opacity: 0.48;
- }
- .os-theme-dark > .os-scrollbar > .os-scrollbar-track > .os-scrollbar-handle:hover:before {
-     opacity: 0.68;
- }
- .os-theme-dark > .os-scrollbar > .os-scrollbar-track > .os-scrollbar-handle.active:before {
-     opacity: 0.7;
- }
- .os-theme-dark > .os-scrollbar-horizontal > .os-scrollbar-track > .os-scrollbar-handle {
-     min-width: 15px;
- }
- .os-theme-dark > .os-scrollbar-vertical > .os-scrollbar-track > .os-scrollbar-handle {
-     min-height: 15px;
- }
- .os-theme-dark > .os-scrollbar-horizontal > .os-scrollbar-track > .os-scrollbar-handle:before {
-     height: 6px;
-     bottom: 0;
-     top: auto;
- }
- .os-theme-dark > .os-scrollbar-vertical > .os-scrollbar-track > .os-scrollbar-handle:before {
-     width: 6px;
-     right: 0;
-     left: auto;
- }
- .os-theme-dark.os-host-rtl > .os-scrollbar-vertical > .os-scrollbar-track > .os-scrollbar-handle:before {
-     left: 0;
-     right: auto;
- }
- .os-theme-dark > .os-scrollbar-horizontal > .os-scrollbar-track > .os-scrollbar-handle:hover:before,
- .os-theme-dark > .os-scrollbar-horizontal > .os-scrollbar-track > .os-scrollbar-handle.active:before {
-     height: 100%;
- }
- .os-theme-dark > .os-scrollbar-vertical > .os-scrollbar-track > .os-scrollbar-handle:hover:before,
- .os-theme-dark > .os-scrollbar-vertical > .os-scrollbar-track > .os-scrollbar-handle.active:before {
-     width: 100%;
- }
- .os-theme-dark.os-host-transition > .os-scrollbar-horizontal > .os-scrollbar-track > .os-scrollbar-handle:before {
-     transition: opacity 0.3s, height 0.3s;
- }
- .os-theme-dark.os-host-transition > .os-scrollbar-vertical > .os-scrollbar-track > .os-scrollbar-handle:before {
-     transition: opacity 0.3s, width 0.3s;
- }
+.os-theme-dark>.os-scrollbar-horizontal {
+  right: 16px;
+  height: 16px;
+}
+
+.os-theme-dark>.os-scrollbar-vertical {
+  bottom: 16px;
+  width: 16px;
+}
+
+.os-theme-dark.os-host-rtl>.os-scrollbar-horizontal {
+  left: 16px;
+  right: 0;
+}
+
+.os-theme-dark>.os-scrollbar-corner {
+  height: 16px;
+  width: 16px;
+  background-color: transparent;
+}
+
+.os-theme-dark>.os-scrollbar>.os-scrollbar-track,
+.os-theme-dark>.os-scrollbar>.os-scrollbar-track>.os-scrollbar-handle {
+  background: transparent;
+}
+
+.os-theme-dark>.os-scrollbar>.os-scrollbar-track>.os-scrollbar-handle:before {
+  content: '';
+  display: block;
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  left: 0;
+  top: 0;
+  background: var(--white);
+  opacity: 0.48;
+}
+
+.os-theme-dark>.os-scrollbar>.os-scrollbar-track>.os-scrollbar-handle:hover:before {
+  opacity: 0.68;
+}
+
+.os-theme-dark>.os-scrollbar>.os-scrollbar-track>.os-scrollbar-handle.active:before {
+  opacity: 0.7;
+}
+
+.os-theme-dark>.os-scrollbar-horizontal>.os-scrollbar-track>.os-scrollbar-handle {
+  min-width: 15px;
+}
+
+.os-theme-dark>.os-scrollbar-vertical>.os-scrollbar-track>.os-scrollbar-handle {
+  min-height: 15px;
+}
+
+.os-theme-dark>.os-scrollbar-horizontal>.os-scrollbar-track>.os-scrollbar-handle:before {
+  height: 6px;
+  bottom: 0;
+  top: auto;
+}
+
+.os-theme-dark>.os-scrollbar-vertical>.os-scrollbar-track>.os-scrollbar-handle:before {
+  width: 6px;
+  right: 0;
+  left: auto;
+}
+
+.os-theme-dark.os-host-rtl>.os-scrollbar-vertical>.os-scrollbar-track>.os-scrollbar-handle:before {
+  left: 0;
+  right: auto;
+}
+
+.os-theme-dark>.os-scrollbar-horizontal>.os-scrollbar-track>.os-scrollbar-handle:hover:before,
+.os-theme-dark>.os-scrollbar-horizontal>.os-scrollbar-track>.os-scrollbar-handle.active:before {
+  height: 100%;
+}
+
+.os-theme-dark>.os-scrollbar-vertical>.os-scrollbar-track>.os-scrollbar-handle:hover:before,
+.os-theme-dark>.os-scrollbar-vertical>.os-scrollbar-track>.os-scrollbar-handle.active:before {
+  width: 100%;
+}
+
+.os-theme-dark.os-host-transition>.os-scrollbar-horizontal>.os-scrollbar-track>.os-scrollbar-handle:before {
+  transition: opacity 0.3s, height 0.3s;
+}
+
+.os-theme-dark.os-host-transition>.os-scrollbar-vertical>.os-scrollbar-track>.os-scrollbar-handle:before {
+  transition: opacity 0.3s, width 0.3s;
+}
+
+/******************************************
+  Color Variables
+*******************************************/
+:root {
+  --body-color: #fff;
+  --body-bg-color: #353535;
+  --h2-color: #fff;
+  --white:#fff;
+  /*** Navigation ***/
+  --nav-top-box-shadow: #000;
+  --nav-bottom-box-shadow: #000;
+  --nav-top-content-mobile: #000000b3;
+  --nav-bottom-docs-bg-a: #343a40;
+  --nav-bottom-docs-bg-b: #343a40;
+  --nav-bottom-docs-bg-c: #00000000;
+  /*** well ***/
+  --well-shadow: #00000064;
+  --well-bg: #202020cc;
+  /*** Modal ***/
+  --modal-content: #343a40;
+  /*** Golden Layout ***/
+  --layout-container-bg: #353535;
+  --layout-container-box-shadow: #00000064;
+  --layout-drk: #343a40;
+  --layout-lte: #25518080;
+  /*** App Menu ***/
+  --app-menu-bg: #343a40;
+  --app-menu-box-shadow: #000;
+  --app-menu-container-bg: #FFF0;
+  --app-menu-container-list-item-hove-txt: #343a40;
+  --app-dropdown-list-item-boder: #222;
+  --app-dropdown-list-item-hover-txt: #fff;
+  --app-dropdown-list-item-hover-bg: #222;
+  /*** ToolTips ***/
+  --tt-txt:#a06d02;
+  --tt-bg:#000000e6;
+  /*** Button ***/
+  --btn-trasperant-color: #00008000;
+  --btn-bg-color: #ffae00;
+  --btn-bg-hvr-color: #b78509;
+  /*** Primary Button ***/
+  --btn-primary-background-color: #ffae00;
+  --btn-primary-background-hover-color: #b78509;
+  --btn-primary-border-color: #b78509;
+  --btn-primary-footer-bg:#fff0;
+  /*** Important Button ***/
+  --btn-important-background-color: #dc3545;
+  --btn-important-background-hover-color: #95111d;
+  --btn-important-border-color: #95111d;
+  /*** Spl Outline Button ***/
+  --btn-ssb-txt-inactive-color: #656566;
+  --btn-ssb-border-inactive-color: #0d6c0d;
+  --btn-ssb-border-hover-active-color: lime;
+  --btn-ssb-text-hover-color: #0d6c0d;
+  --btn-ssb-text-active-color: lime;
+  /*** Text ***/
+  --btn-text-color: #fff;
+  --btn-text-color-contrasting: #000;
+  --btn-font-color-drk: #343a40;
+  --btn-font-color-lte: #fff;
+  --cdr-text-none:#343a40;
+  /***  displays ***/
+  --header-bg-color: #a06d02;
+  --content-bg-color: #25518080;
+  --th-bg-color: #25518080;
+  --td-border-color: #074486;
+  --td-bg-color: #2551804d;
+  --tlm-stale: #e06277;
+  /*** pfd ***/
+  --pfd-display-container-bg: #6f6f6f;
+  --pfd-display-container-border: #6c6c6c;
+  --pfd-display-container-box-shadow: #00000064;
+  --pfd-empty-display-bg: #2d2d2d;
+  /*** widget **/
+  --wdg-close-txt: black;
+  --wdg-close-bg: #b1b1b1;
+  --wdg-val-txt: black;
+  --wdg-val-bg: white;
+  /*** dataplot ***/
+  --dp-path:#5f8e9e;
+  --dp-line-stroke:#5f8e9e;
+  --dp-tick-color:#5f8e9e;
+  --dp-apl-shadow:#00000064;
+  --dp-apl-bg:#7e798333;
+  --dp-clr-picker-txt:white;
+  --dp-clr-picker-bg:#000;
+
+}
