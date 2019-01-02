@@ -421,6 +421,10 @@ CommanderDisplay.prototype.updateDisplay = function( thisChanged ) {
               orientation: orientation,
 
               model: {
+                /* The model was created by @SeattleTroy, a sketchfab contributer.
+                   Link : https://sketchfab.com/SeattleTroy
+                   Changes: the orientation was inverted to fit our reference frame.
+                 */
                 uri: '/img/plane_v3.gltf',
                 minimumPixelSize: 4,
                 maximumScale: 20000,

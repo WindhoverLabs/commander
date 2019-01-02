@@ -93,6 +93,10 @@ function ADSBUpdate( adsb, self ) {
               position: positions,
               orientation: new Cesium.VelocityOrientationProperty( positions ),
               model: {
+                /* The model was created by @elbert.nathanaeltkg, a sketchfab contributer.
+                   Link : https://sketchfab.com/elbert.nathanaeltkg
+                   Changes: the skin was removed and orientation was inverted to fit our reference frame.
+                 */
                 uri: '/img/genplane.gltf',
                 minimumPixelSize: 100,
                 maximumScale: 9000,
