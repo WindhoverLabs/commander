@@ -219,6 +219,7 @@ CmdrTimeSeriesDataplot.prototype.start = function() {
   }
 
   this.UtilGraph.setupGrid();
+  this.UtilGraph.draw();
 
   var self = this;
   session.subscribe( self.objTlm, ( paramArr ) => {
@@ -365,8 +366,14 @@ CmdrTimeSeriesDataplot.prototype.addData = function( params ) {
       // will allow for such intervals to take priority over draw
       setTimeout( () => {
         if ( !self.pause ) {
+          try {
 
-          self.UtilGraph.draw();
+            self.UtilGraph.draw();
+
+          } catch ( e ) {
+            cu.logDebug( 'update | util graph cannot draw error=', e.message );
+          }
+
 
         }
       }, 1 );
