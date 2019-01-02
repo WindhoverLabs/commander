@@ -1,0 +1,25 @@
+// an example configuration file
+{
+    instances: [
+        {
+            name: 'airliner',
+            apps: [
+                {
+                    name: 'udp-adapter',
+                    require: 'udp-adapter',
+                    config: {
+                        input: {
+                            port: 5010
+                        },
+                        output: {
+                            port: 5011
+                        }
+                    }
+                }
+            ]
+        }
+    ],
+    apps: [
+    ]
+}
+        

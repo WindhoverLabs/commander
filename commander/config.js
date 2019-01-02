@@ -31,49 +31,80 @@
  *
  *****************************************************************************/
 
-var createError = require( 'http-errors' );
-var express = require( 'express' );
-var path = require( 'path' );
-var cookieParser = require( 'cookie-parser' );
-var logger = require( 'morgan' );
-var socket_io = require( 'socket.io' );
-var fs = require( 'fs' );
+var convict = require( 'convict' );
 
-var indexRouter = require( './routes/index' );
+/**
+ * Define binary-encoder schema
+ * @type {Object}
+ */
+var config = convict( {
+  env: {
+    doc: 'The application environment.',
+    format: [ 'production', 'development', 'test' ],
+    default: 'development',
+    env: 'NODE_ENV'
+  },
+  varServerEventsStreamID: {
+    doc: 'Variable Server events stream.',
+    format: String,
+    default: ''
+  },
+  varDefReqStreamID: {
+    doc: 'Variable definition request',
+    format: String,
+    default: ''
+  },
+  cmdDefReqStreamID: {
+    doc: 'Command definition request',
+    format: String,
+    default: ''
+  },
+  cmdSendStreamID: {
+    doc: 'Command send',
+    format: String,
+    default: ''
+  },
+  reqSubscribeStreamID: {
+    doc: 'Stream ID for subscription requests.',
+    format: String,
+    default: ''
+  },
+  queryConfigStreamID: {
+    doc: 'Stream ID for configuration database queries.',
+    format: String,
+    default: ''
+  },
+  instances: [ {
+    name: {
+      doc: 'Commander instance name.',
+      format: 'String',
+      default: ''
+    },
+    plugins: [ {
+      name: {
+        doc: 'The name of the application.',
+        format: 'String',
+        default: ''
+      },
+      require: {
+        doc: "The directory to 'require'.",
+        format: "String",
+        default: ''
+      },
+      config: {
+        doc: "The directory to 'require'.",
+        format: "Object",
+        default: {}
+      },
+    } ]
+  } ],
+  apps: [ {
+    name: {
+      doc: 'The name of the application.',
+      format: 'String',
+      default: ''
+    }
+  } ]
+} );
 
-
-const util = require( 'util' );
-
-global.CDR_WORKSPACE = process.env.CDR_WORKSPACE || path.join( __dirname, '/workspace' );
-global.CDR_INSTALL_DIR = __dirname;
-
-global.NODE_APP = express();
-
-/* View engine setup */
-global.NODE_APP.set( 'views', [ path.join( __dirname, 'workspace' ), path.join( __dirname, 'views' ) ] );
-global.NODE_APP.set( 'view engine', 'pug' );
-
-global.NODE_APP.use( logger( 'dev' ) );
-global.NODE_APP.use( express.json() );
-global.NODE_APP.use( express.urlencoded( {
-  extended: false
-} ) );
-global.NODE_APP.use( cookieParser() );
-global.NODE_APP.use( express.static( path.join( __dirname, 'public' ) ) );
-global.NODE_APP.use( '/scripts', express.static( __dirname + '/node_modules/' ) );
-global.NODE_APP.use( '/js', express.static( __dirname + '/public/js/' ) );
-global.NODE_APP.use( '/sage', express.static( path.join( __dirname, 'sage' ) ) );
-global.NODE_APP.use( '/commander', express.static( path.join( __dirname, 'commander' ) ) );
-/* jsdoc */
-global.NODE_APP.use( '/client-docs', express.static( __dirname + '/documents/jsdoc/client-docs/' ) );
-global.NODE_APP.use( '/server-docs', express.static( __dirname + '/documents/jsdoc/server-docs/' ) );
-
-global.NODE_APP.use( '/', indexRouter );
-
-global.PANELS_TREE = [];
-global.LAYOUTS_TREE = [];
-global.CONTENT_TREE = {};
-
-var commander = require( CDR_WORKSPACE );
-
-module.exports = global.NODE_APP;
+module.exports = config;

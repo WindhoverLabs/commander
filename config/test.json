@@ -1,0 +1,35 @@
+{
+  "CommanderConfig":{
+    "configFile" : "/etc/commander-config.json"
+  },
+  "UdpStdProvider":{
+    "configFile" : "/etc/udpstdprovider-config.json"
+  },
+  "VariableServer":{
+    "configFile":"/etc/variable-server-config.json"
+  },
+  "BinaryDecoder":{
+    "configFile":"/etc/binary-decoder-config.json"
+  },
+  "BinaryEncoder":{
+    "configFile":"/etc/binary-encoder-config.json"
+  },
+  "ProtobufDecoder":{
+    "configFile":"/etc/protobuf-decoder-config.json"
+  },
+  "ProtobufEncoder":{
+    "configFile":"/etc/protobuf-encoder-config.json"
+  },
+  "ConfigDatabase":{
+    "configFile":"/etc/config-database-config.json"
+  },
+  "ClientConnector":{
+    "configFile":"/etc/client-connector-config.json"
+  },
+  "PylinerConnector":{
+    "configFile":"/etc/pyliner-connector-config.json"
+  },
+  "VehicleConnector":{
+    "configFile":"/etc/vehicle-connector-config.json"
+  }
+}

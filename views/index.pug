@@ -1,87 +1,124 @@
-html(lang='en-us')
+cdr-nav-iconshtml(lang='en-us')
   head
     meta(charset='utf-8')
     meta(http-equiv="X-UA-Compatible" content="IE=edge,chrome=1")
     meta(name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0")
-
     title Commander
-
-    link(rel="stylesheet" type="text/css" href="/scripts/semantic-ui/dist/components/reset.css")
-    link(rel="stylesheet" type="text/css" href="/scripts/semantic-ui/dist/components/site.css")
-
-    link(rel="stylesheet" type="text/css" href="/scripts/semantic-ui/dist/components/container.css")
-    link(rel="stylesheet" type="text/css" href="/scripts/semantic-ui/dist/components/grid.css")
-    link(rel="stylesheet" type="text/css" href="/scripts/semantic-ui/dist/components/header.css")
-    link(rel="stylesheet" type="text/css" href="/scripts/semantic-ui/dist/components/image.css")
-    link(rel="stylesheet" type="text/css" href="/scripts/semantic-ui/dist/components/menu.css")
-
-    link(rel="stylesheet" type="text/css" href="/scripts/semantic-ui/dist/components/divider.css")
-    link(rel="stylesheet" type="text/css" href="/scripts/semantic-ui/dist/components/list.css")
-    link(rel="stylesheet" type="text/css" href="/scripts/semantic-ui/dist/components/segment.css")
-    link(rel="stylesheet" type="text/css" href="/scripts/semantic-ui/dist/components/dropdown.css")
-    link(rel="stylesheet" type="text/css" href="/scripts/semantic-ui/dist/components/icon.css")
-
+    <!-- JS Libraries -->
+    script(type="text/javascript" src="/scripts/popper.js/dist/umd/popper.min.js")
+    script(type="text/javascript" src="/scripts/jquery/dist/jquery.js")
+    script(type="text/javascript" src="/scripts/jquery-ui-dist/jquery-ui.min.js")
+    script(type="text/javascript" src="/scripts/bootstrap/dist/js/bootstrap.min.js")
+    script(type="text/javascript" src="/scripts/bootstrap-colorpicker/dist/js/bootstrap-colorpicker.min.js")
+    script(type="text/javascript" src="/scripts/patternfly-bootstrap-treeview/dist/bootstrap-treeview.min.js")
+    script(type="text/javascript" src="/scripts/svg.js/dist/svg.js")
+    script(type="text/javascript" src='/scripts/wolfy87-eventemitter/EventEmitter.js')
+    <!-- script(type="text/javascript" src='/scripts/socket.io-client/dist/socket.io.js') -->
+    <!-- Backup socket io path -->
+    script(type="text/javascript" src='/scripts/socket.io/node_modules/socket.io-client/dist/socket.io.js')
+    script(type="text/javascript" src='/scripts/golden-layout/dist/goldenlayout.min.js')
+    script(type="text/javascript" src="/scripts/overlayscrollbars/js/jquery.overlayScrollbars.min.js")
+    script(type="text/javascript" src="/scripts/jquery.flot/excanvas.min.js")
+    script(type="text/javascript" src="/scripts/jquery.flot/jquery.colorhelpers.js")
+    script(type="text/javascript" src="/scripts/jquery.flot/jquery.flot.js")
+    script(type="text/javascript" src="/scripts/jquery.flot/jquery.flot.time.js")
+    script(type="text/javascript" src="/scripts/jquery.flot/jquery.flot.resize.js")
+    script(type="text/javascript" src='/scripts/cesium/Build/CesiumUnminified/Cesium.js')
+    script(type="text/javascript" src="/scripts/file-saver/FileSaver.min.js")
+    script(type="text/javascript" src="/scripts/sprintf-js/dist/sprintf.min.js")
+    script(type="text/javascript" src="/scripts/sparklines/source/sparkline.js")
+    script(type="text/javascript" src="/scripts/jquery-contextmenu/dist/jquery.contextMenu.min.js")
+    script(type="text/javascript" src="/scripts/handlebars/dist/handlebars.min.js")
+    script(type="text/javascript" src="/scripts/d3/dist/d3.min.js")
+    
+    <!-- script(type="text/javascript" src="http://d3js.org/d3.v3.js") -->
+    <!-- script(type="text/javascript" src="/scripts/radar-chart-d3/src/radar-chart.js") -->
+    
+    <!-- CSS Libraries -->
+    link(rel="stylesheet" type="text/css" href="/scripts/jquery-ui-dist/jquery-ui.min.css")
+    link(rel="stylesheet" type="text/css" href="/scripts/overlayscrollbars/css/OverlayScrollbars.min.css")
+    link(rel="stylesheet" type="text/css" href="/scripts/patternfly-bootstrap-treeview/dist/bootstrap-treeview.min.css")
+    link(rel="stylesheet" type="text/css" href="/scripts/bootstrap/dist/css/bootstrap.min.css")
+    link(rel="stylesheet" type="text/css" href="/scripts/bootstrap-colorpicker/dist/css/bootstrap-colorpicker.min.css")
     link(rel="stylesheet" type="text/css" href="/css/commander.css")
+    link(rel="stylesheet" type="text/css" href="/scripts/font-awesome/css/font-awesome.min.css")
+    link(type="text/css" rel="stylesheet" href="/css/goldenlayout-base.css")
+    link(type="text/css" rel="stylesheet" href="/css/goldenlayout-dark-theme.css")  
+    link(type="text/css" rel="stylesheet" href="/scripts/cesium/Source/Widgets/widgets.css")
+    link(type="text/css" rel="stylesheet" href="/scripts/jquery-contextmenu/dist/jquery.contextMenu.min.css")  
+  body(onload='checkCompatability()')
+    <!-- Generic Modal Template -->
+    div#genericInputModal.modal.fade(tabindex="-1" role="dialog" aria-labelledby="genericInputModal" aria-hidden="true")
+      div.modal-dialog(role="document")
+        div.modal-content
+          div.modal-header
+            h5.modal-title#modalTitle Title Placeholder
+            button(type="button" class="close" data-dismiss="modal" aria-label="Close" style="color:white")
+              span(aria-hidden="true") &times;
+          div.modal-body
+            form#modalForm
+          div.modal-footer
+            button#modalSubmit.btn.btn-outline-primary(type="submit" data-dismiss="modal") OK
+            button.btn.btn-outline-secondary(type="button" data-dismiss="modal") Close    
+    <!-- Top Navigation Bar -->
+    nav.cdr-nav-top.navbar.fixed-top.navbar-expand-lg.navbar-dark.bg-dark
+      button.cdr-xs-nav-toggle.navbar-toggler(type="button" data-toggle="collapse" data-target="#cdr-nav-top-left-content" aria-controls="cdr-nav-top-left-content" aria-expanded="false" aria-label="Toggle navigation")
+        span.navbar-toggler-icon
+      button.cdr-xs-nav-toggle.navbar-toggler(type="button" data-toggle="collapse" data-target="#cdr-nav-top-right-content" aria-controls="cdr-nav-top-right-content" aria-expanded="false" aria-label="Toggle navigation")
+        span.navbar-toggler-icon
+      #cdr-nav-top-left-content.collapse.navbar-collapse
+        ul.navbar-nav.cdr-nav-btn
+          button#cdr-app-menu-toggle.btn.btn-outline-primary(data-tooltip='true' title='Open/Close Menus')
+            i.cdr-nav-icons.fa.fa-bars
+        ul.navbar-nav.cdr-nav-btn
+          i#cdr-voice-cmd.cdr-nav-icons.fa.fa-microphone
+        ul#cdr-well-top-left.navbar-nav.cdr-well
+        ul.navbar-nav.ml-auto
+      a.cdr-nav-top-brand.navbar-brand(href="#")
+        img(src="/img/Windhover-Mark-White.png" width="50" class="d-inline-block align-top" alt="")
+      #cdr-nav-top-right-content.collapse.navbar-collapse
+        ul.navbar-nav.ml-auto
+        ul#cdr-well-top-right.navbar-nav.cdr-well
+        ul.navbar-nav.cdr-nav-btn(data-tooltip='true' title='Load Layout')
+          button.btn.btn-outline-primary( data-toggle="modal" data-target="#genericInputModal" data-title="Load Layout" data-submit="LoadLayout" data-custom='[{"label":"Select Layout", "type":"browse", "dtype":"none", "getItem":"GetStoredLayoutList"}]') 
+            i.cdr-nav-icons.fa.fa-download
+        ul.navbar-nav.cdr-nav-btn(data-tooltip='true' title='Save Layout')
+          button.btn.btn-outline-primary(data-toggle="modal" data-target="#genericInputModal" data-title="Save Layout" data-submit="SaveLayout" data-custom='[{"label":"Enter Layout Name ", "type":"field", "dtype":"text"}]') 
+            i.cdr-nav-icons.fa.fa-save
+        <!--ul.navbar-nav.cdr-nav-btn#noop-test -->
+        <!--  button.btn.btn-outline-primary(data-cdr={cmd:{name:'/CFE/CFE_ES_NoopCmd'},indicator:'cmd'}) -->
+        <!--    i.cdr-nav-icons No-Op -->
 
-  body
-    .ui.fixed.inverted.menu
-      #top-menu-bar.ui.container
-        a.header.item(href="#")
-          img#logo(src='/img/Commander-Mark-White.png')
-          | Commander
-
-        div.ui.simple.dropdown.item
-          | Views
-          i.dropdown.icon
-          div.menu
-            a.item(href="#") Heads Up Display
-            a.item(href="#") Mission Planner
-            div.item
-              i.dropdown.icon
-              | User Created
-              div.menu
-                a.item(href="#") Karthik's
-                a.item(href="#") Matt's
-
-
-        div.ui.simple.dropdown.item
-          | Widgets 
-          i.dropdown.icon
-          div.menu
-            div.item Widget 1
-            div.item Widget 2
-            div.item Widget 3
-            div.item
-              i.dropdown.icon
-              | Core Services
-              div.menu
-                div.item Widget 1
-                div.item Widget 2
-                div.item Widget 3
-                div.item Widget 4
-                div.item Widget 5
-            div.item
-              i.dropdown.icon
-              | Applications
-              div.menu
-                div.item Actuator Motor Control
-                div.item Battery
-                div.item Checksum
-                div.item Position Estimator
-                div.item
-                  i.dropdown.icon
-                  | Applications
-                  div.menu
-                    div.item Widget 1
-                    div.item Widget 2
-
-
-    .ui.main.text.container
-      p Put Content Here
-
-
-    div.ui.inverted.vertical.footer.segment
-      div.ui.center.aligned.container
-        img.ui.centered.mini.image(src="/img/Windhover-Mark-White.png")
-        | Windhover Labs
-        div.ui.inverted.section.divider
+    <!-- Central Content Area -->
+    div.cdr-container.ui.main.text
+      div.cdr-content-wrapper
+        div#cdr-layout-container
+        div#cdr-app-menu 
+          div#cdr-panel-layout-switch.cdr-center-btn-group.btn-group(role="group" aria-label="Toggle Menus")
+            button#cdr-layout-menu-toggle.btn.cdr-outline-primary.active(data-tooltip='true' title='A layout(collection of webpages) directory') Layout
+            button#cdr-panel-menu-toggle.btn.cdr-outline-primary(data-tooltip='true' title='A webpage directory') Panels
+            button#cdr-widget-menu-toggle.btn.cdr-outline-primary(data-tooltip='true' title='A widget directory') Widgets
+          div#cdr-panel-menu-container.cdr-menu-container(data-open="false")
+          div#cdr-layout-menu-container.cdr-menu-container.menuShow(data-open="true")
+          div#cdr-widget-menu-container.cdr-menu-container(data-open="false")
+    <!-- Bottom Navigation Bar -->
+    nav#cdr-nav-btm.navbar.fixed-bottom.navbar-expand-lg.navbar-dark.bg-dark
+      ul.navbar-nav#cdr-btm-nav-utility
+        a#cdr-docs-container(onclick='showDocumentation()')
+          i.fa.fa-file
+      ul.navbar-nav.mr-auto
+      ul#cdr-well-top-bottom.navbar-nav.cdr-well
+    <!-- Custom Scripts -->
+    script(type="text/javascript" src='/commander/app/util.js') 
+    script(type="text/javascript" src='/commander/client.js') 
+    script(type="text/javascript" src='/commander/app/controller.js') 
+    script(type="text/javascript" src='/commander/app/tcmanager.js') 
+    script(type="text/javascript" src='/commander/app/ui/adi.js')
+    script(type="text/javascript" src='/commander/app/ui/adsb.js')
+    script(type="text/javascript" src='/commander/app/ui/display.js') 
+    script(type="text/javascript" src='/commander/app/ui/navtree.js') 
+    script(type="text/javascript" src='/commander/app/ui/layout.js') 
+    script(type="text/javascript" src='/commander/app/ui/modal.js') 
+    script(type="text/javascript" src='/commander/app/ui/misc.js')
+    script(type="text/javascript" src='/commander/app/ui/dataplot.js')   
+    script(type="text/javascript" src='/commander/app/ui/widget.js')

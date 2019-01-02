@@ -31,49 +31,61 @@
  *
  *****************************************************************************/
 
-var createError = require( 'http-errors' );
-var express = require( 'express' );
-var path = require( 'path' );
-var cookieParser = require( 'cookie-parser' );
-var logger = require( 'morgan' );
-var socket_io = require( 'socket.io' );
-var fs = require( 'fs' );
+var convict = require( 'convict' );
 
-var indexRouter = require( './routes/index' );
+/**
+ * Define config-database schema
+ * @type {Object}
+ */
+var config = convict( {
+  env: {
+    doc: 'The application environment.',
+    format: [ 'production', 'development', 'test' ],
+    default: 'development',
+    env: 'NODE_ENV'
+  },
+  CFE_SB_PACKET_TIME_FORMAT: {
+    doc: 'CFE SB time format.',
+    format: [ 'CFE_SB_TIME_32_16_SUBS', 'CFE_SB_TIME_32_32_SUBS', 'CFE_SB_TIME_32_32_M_20' ],
+    default: 'CFE_SB_TIME_32_16_SUBS'
+  },
+  CFE_TIME_EPOCH_YEAR: {
+    doc: 'CFE Time epoch year.',
+    format: 'int',
+    default: 1980
+  },
+  CFE_TIME_EPOCH_DAY: {
+    doc: 'CFE Time epoch year.',
+    format: 'int',
+    default: 1
+  },
+  CFE_TIME_EPOCH_HOUR: {
+    doc: 'CFE Time epoch year.',
+    format: 'int',
+    default: 0
+  },
+  CFE_TIME_EPOCH_MINUTE: {
+    doc: 'CFE Time epoch year.',
+    format: 'int',
+    default: 0
+  },
+  CFE_TIME_EPOCH_SECOND: {
+    doc: 'CFE Time epoch year.',
+    format: 'int',
+    default: 0
+  },
+  msgDefs: [ {
+    file: {
+      doc: 'Input file.',
+      format: String,
+      default: ''
+    }
+  } ],
+  queryConfigStreamID: {
+    doc: 'Stream ID for configuration queries',
+    format: String,
+    default: ''
+  }
+} );
 
-
-const util = require( 'util' );
-
-global.CDR_WORKSPACE = process.env.CDR_WORKSPACE || path.join( __dirname, '/workspace' );
-global.CDR_INSTALL_DIR = __dirname;
-
-global.NODE_APP = express();
-
-/* View engine setup */
-global.NODE_APP.set( 'views', [ path.join( __dirname, 'workspace' ), path.join( __dirname, 'views' ) ] );
-global.NODE_APP.set( 'view engine', 'pug' );
-
-global.NODE_APP.use( logger( 'dev' ) );
-global.NODE_APP.use( express.json() );
-global.NODE_APP.use( express.urlencoded( {
-  extended: false
-} ) );
-global.NODE_APP.use( cookieParser() );
-global.NODE_APP.use( express.static( path.join( __dirname, 'public' ) ) );
-global.NODE_APP.use( '/scripts', express.static( __dirname + '/node_modules/' ) );
-global.NODE_APP.use( '/js', express.static( __dirname + '/public/js/' ) );
-global.NODE_APP.use( '/sage', express.static( path.join( __dirname, 'sage' ) ) );
-global.NODE_APP.use( '/commander', express.static( path.join( __dirname, 'commander' ) ) );
-/* jsdoc */
-global.NODE_APP.use( '/client-docs', express.static( __dirname + '/documents/jsdoc/client-docs/' ) );
-global.NODE_APP.use( '/server-docs', express.static( __dirname + '/documents/jsdoc/server-docs/' ) );
-
-global.NODE_APP.use( '/', indexRouter );
-
-global.PANELS_TREE = [];
-global.LAYOUTS_TREE = [];
-global.CONTENT_TREE = {};
-
-var commander = require( CDR_WORKSPACE );
-
-module.exports = global.NODE_APP;
+module.exports = config;
