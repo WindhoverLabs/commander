@@ -527,14 +527,14 @@ function PlayPlots( elm ) {
   var key = nodeElm.getAttribute( 'plot-key' );
 
   if ( key === undefined | key === null ) {
-    if ( dataPlotDef != {} ) {
+    if ( dataPlotDef != {} & typeof dataPlotDef == 'object' ) {
       if ( dataPlotDef.hasOwnProperty( 'data' ) ) {
         if ( dataPlotDef[ 'data' ].length != 0 ) {
 
           var generatedKey = cu.makeKey();
           nodeElm.setAttribute( 'plot-key', generatedKey );
-          dataplot_subscriptions[ generatedKey ] = new CmdrTimeSeriesDataplot( nodeElm, dataPlotDef, {}, true )
-          dataplot_subscriptions[ generatedKey ].start()
+          dataplot_subscriptions[ generatedKey ] = new CmdrTimeSeriesDataplot( nodeElm, dataPlotDef, {}, true );
+          dataplot_subscriptions[ generatedKey ].start();
         }
       }
     }
@@ -597,71 +597,72 @@ function DisplayControlForQuerySelector( elm ) {
 function getMsgIdAndMacrosFromConfigDb( apl ) {
   var dataPlotDef = apl.data( 'PlotDef' );
   var opsPaths = [];
-  for ( var i in dataPlotDef.data ) {
-    opsPaths.push( dataPlotDef.data[ i ].label );
-  }
-  session.callPlugin( 'sch', 'getMessageIDsAndMacrosFromMsgName', {
-    opsPaths: opsPaths
-  }, function( msg ) {
-    var tcArticle = apl.closest( 'article' ).next();
-    var tcTbody = $( tcArticle ).find( '#cdr-dataplot-tc' );
-    var msgCount = tcTbody.data( 'msgcount' );
-    /* remove previously added msgs*/
-    if ( msgCount > 0 ) {
-      for ( var i = 0; i < msgCount; ++i ) {
-        tcTbody.children().last().remove();
+  if ( dataPlotDef !== undefined ) {
+    for ( var i in dataPlotDef.data ) {
+      opsPaths.push( dataPlotDef.data[ i ].label );
+    }
+    session.callPlugin( 'sch', 'getMessageIDsAndMacrosFromMsgName', {
+      opsPaths: opsPaths
+    }, function( msg ) {
+      var tcArticle = apl.closest( 'article' ).next();
+      var tcTbody = $( tcArticle ).find( '#cdr-dataplot-tc' );
+      var msgCount = tcTbody.data( 'msgcount' );
+      /* remove previously added msgs*/
+      if ( msgCount > 0 ) {
+        for ( var i = 0; i < msgCount; ++i ) {
+          tcTbody.children().last().remove();
+        }
+        msgCount = 0;
       }
-      msgCount = 0;
-    }
-    for ( var i in msg ) {
-      var each = msg[ i ];
-      var cmdAddMsgFlow = {
-        cmd: {
-          name: '/TO/TO_AddMessageFlowCmd_t',
-          argument: [ {
-            name: 'MsgID',
-            value: each.msgID
-          }, {
-            name: 'MsgLimit',
-            value: 1
-          }, {
-            name: 'ChannelIdx',
-            value: 0
-          } ]
-        },
-        indicator: 'cmd'
-      };
-      var cmdRemoveMsgFlow = {
-        cmd: {
-          name: '/TO/TO_RemoveMessageFlowCmd_t',
-          argument: [ {
-            name: 'MsgID',
-            value: each.msgID
-          }, {
-            name: 'ChannelIdx',
-            value: 0
-          } ]
-        },
-        indicator: 'cmd'
-      };
-      tcTbody.append(
-        '<tr><td>' + each.macro + '</td><td>' +
-        '<div class="btn-group">' +
-        '<div class="button btn cdr-outline-primary" data-cdr=' + JSON.stringify( cmdAddMsgFlow ) + '>' +
-        'Add' +
-        '</div>' +
-        '<div class="button btn cdr-outline-primary" data-cdr=' + JSON.stringify( cmdRemoveMsgFlow ) + '>' +
-        'Remove' +
-        '</div>' +
-        '</div>' +
-        '</td></tr>'
-      );
-      msgCount += 1;
-    }
-    tcTbody.data( 'msgcount', msgCount )
-    forceLoadCommands( tcTbody );
-  } )
-
+      for ( var i in msg ) {
+        var each = msg[ i ];
+        var cmdAddMsgFlow = {
+          cmd: {
+            name: '/TO/TO_AddMessageFlowCmd_t',
+            argument: [ {
+              name: 'MsgID',
+              value: each.msgID
+            }, {
+              name: 'MsgLimit',
+              value: 1
+            }, {
+              name: 'ChannelIdx',
+              value: 0
+            } ]
+          },
+          indicator: 'cmd'
+        };
+        var cmdRemoveMsgFlow = {
+          cmd: {
+            name: '/TO/TO_RemoveMessageFlowCmd_t',
+            argument: [ {
+              name: 'MsgID',
+              value: each.msgID
+            }, {
+              name: 'ChannelIdx',
+              value: 0
+            } ]
+          },
+          indicator: 'cmd'
+        };
+        tcTbody.append(
+          '<tr><td>' + each.macro + '</td><td>' +
+          '<div class="btn-group">' +
+          '<div class="button btn cdr-outline-primary" data-cdr=' + JSON.stringify( cmdAddMsgFlow ) + '>' +
+          'Add' +
+          '</div>' +
+          '<div class="button btn cdr-outline-primary" data-cdr=' + JSON.stringify( cmdRemoveMsgFlow ) + '>' +
+          'Remove' +
+          '</div>' +
+          '</div>' +
+          '</td></tr>'
+        );
+        msgCount += 1;
+      }
+      tcTbody.data( 'msgcount', msgCount )
+      forceLoadCommands( tcTbody );
+    } )
+  }
 }
 
 /**
