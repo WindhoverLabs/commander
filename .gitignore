@@ -75,3 +75,6 @@ semantic/src/themes
 semantic/tasks
 !semantic/dist/semantic.min.css
 !semantic/dist/semantic.min.js
+
+# gyp build
+build

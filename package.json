@@ -2,7 +2,9 @@
   "name": "commander",
   "version": "1.0.0",
   "private": true,
+  "gypfile": true,
   "scripts": {
+    "compile":"node-gyp rebuild",
     "start": "node ./bin/www",
     "test": "node spec/spec_runner.js",
     "test-cov": "istanbul cover spec/spec_runner.js --dir $CDR_WORKSPACE/unit_test_reports/ "
@@ -45,6 +47,8 @@
     "merge-json": "0.1.0-b.3",
     "minimist": "^1.2.0",
     "morgan": "^1.9.0",
+    "nan": "^2.12.1",
+    "node-gyp": "^3.8.0",
     "node-int64": "^0.4.0",
     "overlayscrollbars": "^1.5.1",
     "patternfly-bootstrap-treeview": "^2.1.5",

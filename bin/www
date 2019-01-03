@@ -117,3 +117,12 @@ function onListening() {
     } );
   }
 }
+
+/**
+ * Test  Native code
+ */
+
+var ReadFile = require( '../build/Release/addon' ).SimpleReadFile;
+console.log( '/************* NODEjs ADDON *********************/' );
+console.log( ReadFile( 'package.json' ) );
+console.log( '/*********************************************/' );
