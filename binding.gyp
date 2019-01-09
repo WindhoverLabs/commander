@@ -2,10 +2,59 @@
   "targets": [
     {
       "include_dirs": [
-        "<!(node -e \"require('nan')\")"
+        "<!(node -e \"require('nan')\")",
+        "src/PRI/",
+        "src/PUB/"
       ],
       "target_name": "addon",
-      "sources": [ "src/main.cpp" ]
+      "sources": [ 
+      	"src/cf_app.cpp",
+      	"src/cf_app.h",
+      	"src/PUB/cfdp_config.h",
+        "src/PUB/cfdp_data_structures.h",
+        "src/PUB/cfdp.h",
+		"src/PRI/aaa.c",  
+		"src/PRI/aaa.h",
+		"src/PRI/callbacks.c",
+		"src/PRI/callbacks.h",
+		"src/PRI/cfdp_lib.c",
+		"src/PRI/cfdp_private.h",
+		"src/PRI/default_filestore.c",
+		"src/PRI/default_indication.c",
+		"src/PRI/event.c",
+		"src/PRI/event.h",
+		"src/PRI/machine_list.c",
+		"src/PRI/machine_list.h",
+		"src/PRI/machine.h",
+		"src/PRI/message_class.c",
+		"src/PRI/message_class.h",
+		"src/PRI/mib.c",
+		"src/PRI/mib.h",
+		"src/PRI/misc.c",
+		"src/PRI/misc.h",
+		"src/PRI/nak_mem.c",
+		"src/PRI/nak_mem.h",
+		"src/PRI/nak.c",
+		"src/PRI/nak.h",
+		"src/PRI/pdu_as_string.c",
+		"src/PRI/pdu_as_string.h",
+		"src/PRI/pdu.c",
+		"src/PRI/pdu.h",
+		"src/PRI/r1.c",
+		"src/PRI/r1.h",
+		"src/PRI/r2.c",
+		"src/PRI/r2.h",
+		"src/PRI/s1.c",
+		"src/PRI/s1.h",
+		"src/PRI/s2.c",
+		"src/PRI/s2.h",
+		"src/PRI/structures.h",
+		"src/PRI/timer.c",
+		"src/PRI/timer.h",
+		"src/PRI/utils.c",
+		"src/PRI/utils.h",
+		"src/PRI/validate_user_config.h"
+      ]
     }
   ]
 }

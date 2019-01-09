@@ -122,7 +122,10 @@ function onListening() {
  * Test  Native code
  */
 
-var ReadFile = require( '../build/Release/addon' ).SimpleReadFile;
-console.log( '/************* NODEjs ADDON *********************/' );
-console.log( ReadFile( 'package.json' ) );
-console.log( '/*********************************************/' );
+var cf = require( '../build/Release/addon' );
+console.log( '************************************************' );
+console.log( '*************** NODEJS ADDON *******************' );
+console.log( '************************************************' );
+cf.CF_AppInit();
+console.log( '************************************************' );
+console.log( '************************************************' );
