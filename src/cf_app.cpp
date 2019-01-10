@@ -323,25 +323,27 @@ u_int_4 CF_FileSize(const char *Name)
 
 int CF_ErrorEvent(const char *Format, ...)
 {
-    va_list         ArgPtr;
-    char            BigBuf[CFE_EVS_MAX_MESSAGE_LENGTH];
-    uint32_t          Status,i;
-
-    va_start (ArgPtr, Format);
-    vsnprintf(BigBuf,CFE_EVS_MAX_MESSAGE_LENGTH,Format,ArgPtr);
-    va_end (ArgPtr);
-
-    for (i=0;i<CFE_EVS_MAX_MESSAGE_LENGTH;i++){
-      if(BigBuf[i] == '\n'){
-          BigBuf[i] = '\0';
-          break;
-      }
-    }
+//    va_list         ArgPtr;
+//    char            BigBuf[CFE_EVS_MAX_MESSAGE_LENGTH];
+//    uint32_t          Status,i;
+//
+//    va_start (ArgPtr, Format);
+    printf("Test");
     printf("ERR: ");
-    printf(BigBuf);
-    printf("\n");
-
-    return(Status);
+//    vsnprintf(BigBuf,CFE_EVS_MAX_MESSAGE_LENGTH,Format,ArgPtr);
+//    va_end (ArgPtr);
+//
+//    for (i=0;i<CFE_EVS_MAX_MESSAGE_LENGTH;i++){
+//      if(BigBuf[i] == '\n'){
+//          BigBuf[i] = '\0';
+//          break;
+//      }
+//    }
+//    printf("ERR: ");
+//    printf(BigBuf);
+//    printf("\n");
+//
+//    return(Status);
 
 }
 
@@ -352,6 +354,8 @@ int CF_DebugEvent(const char *Format, ...)
     uint32_t          Status,i;
 
     va_start (ArgPtr, Format);
+    printf("Test");
+    printf("DEB: ");
     vsnprintf(BigBuf,CFE_EVS_MAX_MESSAGE_LENGTH,Format,ArgPtr);
     va_end (ArgPtr);
 
@@ -361,7 +365,7 @@ int CF_DebugEvent(const char *Format, ...)
           break;
       }
     }
-    printf("DEBUG: ");
+    printf("**DEBUG: ");
     printf(BigBuf);
     printf("\n");
 
@@ -376,6 +380,7 @@ int CF_InfoEvent(const char *Format, ...)
     uint32_t          Status,i;
 
     va_start (ArgPtr, Format);
+
     vsnprintf(BigBuf,CFE_EVS_MAX_MESSAGE_LENGTH,Format,ArgPtr);
     va_end (ArgPtr);
 
@@ -400,6 +405,8 @@ int CF_WarningEvent(const char *Format, ...)
     uint32_t          Status,i;
 
     va_start (ArgPtr, Format);
+    printf("Test");
+    printf("WAR: ");
     vsnprintf(BigBuf,CFE_EVS_MAX_MESSAGE_LENGTH,Format,ArgPtr);
     va_end (ArgPtr);
 
@@ -416,6 +423,21 @@ int CF_WarningEvent(const char *Format, ...)
     return(Status);
 
 }
+void CF_Indication (INDICATION_TYPE IndType, TRANS_STATUS TransInfo){
+	printf("CF_INDICATION\n");
+}
+
+boolean CF_PduOutputReady (PDU_TYPE PduType, TRANSACTION TransInfo,ID DestinationId){
+	printf("CF_PduOutputReady\n");
+	return (YES);
+
+}
+
+void CF_PduOutputSend (TRANSACTION TransInfo,ID DestinationId, CFDP_DATA *PduPtr){
+	printf("CF_IPduOutputsend\n");
+
+}
+
 
 int CF_SetMibParams(){
 
@@ -428,10 +450,10 @@ int CF_SetMibParams(){
 		AppData.UpQ[i].EntryCnt  = 0;
 	}
 
-//    register_indication (CF_Indication);
+    register_indication (CF_Indication);
     register_pdu_output_open (CF_PduOutputOpen);
-//    register_pdu_output_ready (CF_PduOutputReady);
-//    register_pdu_output_send (CF_PduOutputSend);
+    register_pdu_output_ready (CF_PduOutputReady);
+    register_pdu_output_send (CF_PduOutputSend);
     register_printf_debug(CF_DebugEvent);
     register_printf_info(CF_InfoEvent);
     register_printf_warning(CF_WarningEvent);
@@ -580,8 +602,49 @@ NAN_METHOD(CF_AppInit) {
 
 }
 
+NAN_METHOD(RegisterCallbackOn) {
+
+	v8::Local<v8::String> 	cbIndicator = v8::Local<v8::String>::Cast(info[0]);
+	v8::Local<v8::Function>  cbFunc 		= v8::Local<v8::Function>::Cast(info[1]);
+//	Nan::Callback cb(cbFunc);
+//	printf("is Function %d ",info[1].IsArray());
+
+//	Nan::Maybe<int> *function = Nan::To<int> * (info[1]);
+	register_printf_info(cbFunc);
+//	Nan::Callback cb(cbFunc);
+
+//	switch(cbIndicator){
+//
+//	case 'info':
+//		printf("%x \n",&cbFunc);
+//	case 'debug':
+//		printf("%x \n",&cbFunc);
+//	case 'error':
+//		printf("%x \n",&cbFunc);
+//	case 'warning':
+//		printf("%x \n",&cbFunc);
+//	default:
+//		printf("Unknown Indicator received.");
+//		break;
+//
+//	}
+
+
+
+//	v8::Local<v8::Value> args[argc];
+//	args[0] = Nan::New("test").ToLocalChecked();
+//
+//	v8::Local<v8::Value> jsReturnValue1 = cb.Call(1, args);
+
+
+
+
+
+}
+
 NAN_MODULE_INIT(Initialize) {
     NAN_EXPORT(target, CF_AppInit);
+    NAN_EXPORT(target, RegisterCallbackOn);
 }
 
 NODE_MODULE(addon, Initialize);

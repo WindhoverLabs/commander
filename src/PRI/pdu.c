@@ -496,8 +496,10 @@ boolean pdu__is_this_pdu_acceptable (PDU *pdu)
   /* Get our entity-id */
   my_id = mib__get_my_id ();
 
+
   /* Extract the (appropriate) entity-id from the pdu-header */
   if (pdu->content[0] & 0x08)
+
     /* The direction of this pdu is "towards the file sender" --
      * i.e. we are the source of the transaction.
      * So extract the source-id from the pdu.
@@ -507,6 +509,7 @@ boolean pdu__is_this_pdu_acceptable (PDU *pdu)
       /* (The source-id always starts at byte 4 of the header) */
       for (i=0; i<entity_id_length; i++)
         pdu_id.value[i] = pdu->content[i+4];
+
     }
   else
     /* The direction of this pdu is "towards the file receiver" --

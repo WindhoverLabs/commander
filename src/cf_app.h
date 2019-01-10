@@ -147,6 +147,11 @@ int CF_InfoEvent(const char *Format, ...);
 
 int CF_WarningEvent(const char *Format, ...);
 
+void CF_Indication (INDICATION_TYPE IndType, TRANS_STATUS TransInfo);
+
+boolean CF_PduOutputReady (PDU_TYPE PduType, TRANSACTION TransInfo,ID DestinationId);
+
+void CF_PduOutputSend (TRANSACTION TransInfo,ID DestinationId, CFDP_DATA *PduPtr);
 
 
 

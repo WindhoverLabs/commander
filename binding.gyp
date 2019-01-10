@@ -6,6 +6,7 @@
         "src/PRI/",
         "src/PUB/"
       ],
+      "cflags":["-fpermissive"],
       "target_name": "addon",
       "sources": [ 
       	"src/cf_app.cpp",
