@@ -122,26 +122,19 @@ function onListening() {
  * Test  Native code
  */
 
-var cf = require( '../build/Release/addon' );
-var ffi = require( 'ffi' );
-var ref = require( 'ref' );
+var cf = require( '../build/Debug/addon' );
 
-var v8_int = ref.types.int;
-var v8_string = ref.types.CString;
 
 
 console.log( '************************************************' );
 console.log( '*************** NODEJS ADDON *******************' );
 console.log( '************************************************' );
 
-cf.CF_AppInit();
 
 
-var callback = ffi.Callback( v8_int, [ v8_string ], ( value ) => {
-  console.log( "INFOcc: ", value );
+cf.RegisterCallbackOn( 'info', ( value ) => {
+  console.log( "INFO: ", value );
 } );
-
-cf.RegisterCallbackOn( 'info', callback );
 
 cf.RegisterCallbackOn( 'debug', ( value ) => {
   console.log( "DEBUG: ", value );
@@ -154,6 +147,9 @@ cf.RegisterCallbackOn( 'error', ( value ) => {
 cf.RegisterCallbackOn( 'warning', ( value ) => {
   console.log( "WARN: ", value );
 } );
+
+cf.AppInit();
+
 
 
 console.log( '************************************************' );

@@ -4,8 +4,24 @@
 #include <string>
 #include <typeinfo>
 #include <stdarg.h>
-
+#include <node.h>
+#include <v8.h>
 #include "cf_app.h"
+
+
+typedef struct
+{
+	Nan::Persistent<v8::Function> function;
+
+}CF_PrintCallbackData;
+
+CF_PrintCallbackData PrintInfo;
+
+CF_PrintCallbackData PrintDebug;
+
+CF_PrintCallbackData PrintError;
+
+CF_PrintCallbackData PrintWarning;
 
 
 int CF_TableInit (){
@@ -321,108 +337,7 @@ u_int_4 CF_FileSize(const char *Name)
     return(FileSize);
 }
 
-int CF_ErrorEvent(const char *Format, ...)
-{
-//    va_list         ArgPtr;
-//    char            BigBuf[CFE_EVS_MAX_MESSAGE_LENGTH];
-//    uint32_t          Status,i;
-//
-//    va_start (ArgPtr, Format);
-    printf("Test");
-    printf("ERR: ");
-//    vsnprintf(BigBuf,CFE_EVS_MAX_MESSAGE_LENGTH,Format,ArgPtr);
-//    va_end (ArgPtr);
-//
-//    for (i=0;i<CFE_EVS_MAX_MESSAGE_LENGTH;i++){
-//      if(BigBuf[i] == '\n'){
-//          BigBuf[i] = '\0';
-//          break;
-//      }
-//    }
-//    printf("ERR: ");
-//    printf(BigBuf);
-//    printf("\n");
-//
-//    return(Status);
 
-}
-
-int CF_DebugEvent(const char *Format, ...)
-{
-    va_list         ArgPtr;
-    char            BigBuf[CFE_EVS_MAX_MESSAGE_LENGTH];
-    uint32_t          Status,i;
-
-    va_start (ArgPtr, Format);
-    printf("Test");
-    printf("DEB: ");
-    vsnprintf(BigBuf,CFE_EVS_MAX_MESSAGE_LENGTH,Format,ArgPtr);
-    va_end (ArgPtr);
-
-    for (i=0;i<CFE_EVS_MAX_MESSAGE_LENGTH;i++){
-      if(BigBuf[i] == '\n'){
-          BigBuf[i] = '\0';
-          break;
-      }
-    }
-    printf("**DEBUG: ");
-    printf(BigBuf);
-    printf("\n");
-
-    return(Status);
-
-}
-
-int CF_InfoEvent(const char *Format, ...)
-{
-    va_list         ArgPtr;
-    char            BigBuf[CFE_EVS_MAX_MESSAGE_LENGTH];
-    uint32_t          Status,i;
-
-    va_start (ArgPtr, Format);
-
-    vsnprintf(BigBuf,CFE_EVS_MAX_MESSAGE_LENGTH,Format,ArgPtr);
-    va_end (ArgPtr);
-
-    for (i=0;i<CFE_EVS_MAX_MESSAGE_LENGTH;i++){
-      if(BigBuf[i] == '\n'){
-          BigBuf[i] = '\0';
-          break;
-      }
-    }
-    printf("INFO: ");
-    printf(BigBuf);
-    printf("\n");
-
-    return(Status);
-
-}
-
-int CF_WarningEvent(const char *Format, ...)
-{
-    va_list         ArgPtr;
-    char            BigBuf[CFE_EVS_MAX_MESSAGE_LENGTH];
-    uint32_t          Status,i;
-
-    va_start (ArgPtr, Format);
-    printf("Test");
-    printf("WAR: ");
-    vsnprintf(BigBuf,CFE_EVS_MAX_MESSAGE_LENGTH,Format,ArgPtr);
-    va_end (ArgPtr);
-
-    for (i=0;i<CFE_EVS_MAX_MESSAGE_LENGTH;i++){
-      if(BigBuf[i] == '\n'){
-          BigBuf[i] = '\0';
-          break;
-      }
-    }
-    printf("WAR: ");
-    printf(BigBuf);
-    printf("\n");
-
-    return(Status);
-
-}
 void CF_Indication (INDICATION_TYPE IndType, TRANS_STATUS TransInfo){
 	printf("CF_INDICATION\n");
 }
@@ -438,6 +353,134 @@ void CF_PduOutputSend (TRANSACTION TransInfo,ID DestinationId, CFDP_DATA *PduPtr
 
 }
 
+using namespace v8;
+
+Persistent <Function> LogInfo;
+Persistent <Function> LogError;
+Persistent <Function> LogDebug;
+Persistent <Function> LogWarning;
+
+
+
+int CF_InfoEvent(const char *Format, ...)
+{
+    va_list         ArgPtr;
+    char 			BigBuf[CFE_EVS_MAX_MESSAGE_LENGTH];
+    uint32_t        Status,i;
+
+    va_start (ArgPtr, Format);
+    vsnprintf(BigBuf,CFE_EVS_MAX_MESSAGE_LENGTH,Format,ArgPtr);
+    va_end (ArgPtr);
+
+    for (i=0;i<CFE_EVS_MAX_MESSAGE_LENGTH;i++){
+      if(BigBuf[i] == '\n'){
+    	  BigBuf[i] = '\0';
+          break;
+      }
+    }
+
+    Isolate *isolate = Isolate::GetCurrent();
+
+	const int argc = 1;
+	v8::Local<v8::Value> argv[argc];
+
+	std::string str(BigBuf);
+	argv[0] = Nan::New(BigBuf).ToLocalChecked();
+
+	Local<Function>::New(isolate, LogInfo)->Call(isolate->GetCurrentContext()->Global(), argc, argv);
+
+    return(Status);
+}
+
+int CF_ErrorEvent(const char *Format, ...)
+{
+    va_list         ArgPtr;
+    char 			BigBuf[CFE_EVS_MAX_MESSAGE_LENGTH];
+    uint32_t        Status,i;
+
+//    va_start (ArgPtr, Format);
+//    vsnprintf(BigBuf,CFE_EVS_MAX_MESSAGE_LENGTH,Format,ArgPtr);
+//    va_end (ArgPtr);
+
+    for (i=0;i<CFE_EVS_MAX_MESSAGE_LENGTH;i++){
+      if(BigBuf[i] == '\n'){
+    	  BigBuf[i] = '\0';
+          break;
+      }
+    }
+
+    Isolate *isolate = Isolate::GetCurrent();
+
+	const int argc = 1;
+	v8::Local<v8::Value> argv[argc];
+
+	std::string str(BigBuf);
+	argv[0] = Nan::New(BigBuf).ToLocalChecked();
+
+//	Local<Function>::New(isolate, LogError)->Call(isolate->GetCurrentContext()->Global(), argc, argv);
+
+    return(Status);
+}
+
+int CF_DebugEvent(const char *Format, ...)
+{
+    va_list         ArgPtr;
+    char 			BigBuf[CFE_EVS_MAX_MESSAGE_LENGTH];
+    uint32_t        Status,i;
+
+    va_start (ArgPtr, Format);
+    vsnprintf(BigBuf,CFE_EVS_MAX_MESSAGE_LENGTH,Format,ArgPtr);
+    va_end (ArgPtr);
+
+    for (i=0;i<CFE_EVS_MAX_MESSAGE_LENGTH;i++){
+      if(BigBuf[i] == '\n'){
+    	  BigBuf[i] = '\0';
+          break;
+      }
+    }
+
+    Isolate *isolate = Isolate::GetCurrent();
+
+	const int argc = 1;
+	v8::Local<v8::Value> argv[argc];
+
+	std::string str(BigBuf);
+	argv[0] = Nan::New(BigBuf).ToLocalChecked();
+
+	Local<Function>::New(isolate, LogDebug)->Call(isolate->GetCurrentContext()->Global(), argc, argv);
+
+    return(Status);
+}
+
+int CF_WarningEvent(const char *Format, ...)
+{
+    va_list         ArgPtr;
+    char 			BigBuf[CFE_EVS_MAX_MESSAGE_LENGTH];
+    uint32_t        Status,i;
+
+    va_start (ArgPtr, Format);
+    vsnprintf(BigBuf,CFE_EVS_MAX_MESSAGE_LENGTH,Format,ArgPtr);
+    va_end (ArgPtr);
+
+    for (i=0;i<CFE_EVS_MAX_MESSAGE_LENGTH;i++){
+      if(BigBuf[i] == '\n'){
+    	  BigBuf[i] = '\0';
+          break;
+      }
+    }
+
+    Isolate *isolate = Isolate::GetCurrent();
+
+	const int argc = 1;
+	v8::Local<v8::Value> argv[argc];
+
+	std::string str(BigBuf);
+	argv[0] = Nan::New(BigBuf).ToLocalChecked();
+
+	Local<Function>::New(isolate, LogWarning)->Call(isolate->GetCurrentContext()->Global(), argc, argv);
+
+    return(Status);
+}
 
 int CF_SetMibParams(){
 
@@ -568,83 +611,36 @@ int CF_SetMibParams(){
 }
 
 
-
-
-
-NAN_METHOD(CF_AppInit) {
-
-
-
-	int Status = SUCCESS;
-
-	Status = CF_TableInit();
-	if(!Status){
-		printf("Table Initialization Failed\n");
-		return;
-	}
-
-	Status = CF_SetMibParams();
-	if(!Status){
-		printf("MIB Parameters Not Set Properly\n");
-		return;
-	}
-
-	Status = CF_RegisterCallbacks();
-	if(!Status){
-		printf("Callback Registration Failed\n");
-		return;
-	}
-	Status = CF_ChannelInit();
-	if(!Status){
-		printf("Channel Initialization Failed\n");
-		return;
-	}
-
+std::string Util_GetStdString(v8::Local<v8::String> str)
+{
+	v8::String::Utf8Value temp(str->ToString());
+	return(std::string(*temp));
 }
 
-NAN_METHOD(RegisterCallbackOn) {
-
-	v8::Local<v8::String> 	cbIndicator = v8::Local<v8::String>::Cast(info[0]);
-	v8::Local<v8::Function>  cbFunc 		= v8::Local<v8::Function>::Cast(info[1]);
-//	Nan::Callback cb(cbFunc);
-//	printf("is Function %d ",info[1].IsArray());
-
-//	Nan::Maybe<int> *function = Nan::To<int> * (info[1]);
-	register_printf_info(cbFunc);
-//	Nan::Callback cb(cbFunc);
-
-//	switch(cbIndicator){
-//
-//	case 'info':
-//		printf("%x \n",&cbFunc);
-//	case 'debug':
-//		printf("%x \n",&cbFunc);
-//	case 'error':
-//		printf("%x \n",&cbFunc);
-//	case 'warning':
-//		printf("%x \n",&cbFunc);
-//	default:
-//		printf("Unknown Indicator received.");
-//		break;
-//
-//	}
 
 
+void RegisterCallbackOn(const FunctionCallbackInfo<Value> &args)
+{
+	std::string CbIndicator = Util_GetStdString(args[0]->ToString());
 
-//	v8::Local<v8::Value> args[argc];
-//	args[0] = Nan::New("test").ToLocalChecked();
-//
-//	v8::Local<v8::Value> jsReturnValue1 = cb.Call(1, args);
+	Isolate * isolate = args.GetIsolate();
 
+	if(CbIndicator == "info"){
 
-
-
-
+		LogInfo.Reset(isolate,args[1].As<Function>());
+	}
 }
 
-NAN_MODULE_INIT(Initialize) {
-    NAN_EXPORT(target, CF_AppInit);
-    NAN_EXPORT(target, RegisterCallbackOn);
+void AppInit(const FunctionCallbackInfo<Value> &args)
+{
+	CF_SetMibParams();
+}
+
+void Initialize(Local<Object> exports)
+{
+	NODE_SET_METHOD(exports, "RegisterCallbackOn", RegisterCallbackOn);
+	NODE_SET_METHOD(exports, "AppInit", AppInit);
+
 }
 
 NODE_MODULE(addon, Initialize);

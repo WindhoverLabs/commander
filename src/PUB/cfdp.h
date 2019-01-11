@@ -51,6 +51,7 @@ extern "C" {
 #include <string.h>
 #include <unistd.h>
 
+
 /* The following message classes are defined... */
 
 /* If enabled, a message is output each time an Indication occurs */

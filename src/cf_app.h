@@ -2,6 +2,11 @@
 extern "C" {
 #endif
 
+
+
+
+#include <string.h>
+#include <iostream>
 #include <cstdint>
 #include "cfdp_data_structures.h"
 #include "cfdp_config.h"
@@ -85,6 +90,8 @@ typedef struct
 }CF_ChannelData;
 
 
+
+
 typedef struct
 {
 	CF_HkPacket 		HK;
@@ -99,6 +106,9 @@ typedef struct
 }CF_AppData;
 
 CF_AppData AppData;
+
+
+
 
 int CF_TableInit (void);
 int CF_ChannelInit(void);
@@ -153,7 +163,7 @@ boolean CF_PduOutputReady (PDU_TYPE PduType, TRANSACTION TransInfo,ID Destinatio
 
 void CF_PduOutputSend (TRANSACTION TransInfo,ID DestinationId, CFDP_DATA *PduPtr);
 
-
+std::string Util_GetStdString(v8::Local<v8::String>);
 
 
 

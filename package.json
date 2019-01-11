@@ -4,7 +4,7 @@
   "private": true,
   "gypfile": true,
   "scripts": {
-    "compile": "node-gyp rebuild",
+    "compile": "node-gyp --debug configure rebuild",
     "start": "node ./bin/www",
     "test": "node spec/spec_runner.js",
     "test-cov": "istanbul cover spec/spec_runner.js --dir $CDR_WORKSPACE/unit_test_reports/ "
