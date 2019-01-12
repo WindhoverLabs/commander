@@ -525,10 +525,12 @@ boolean pdu__is_this_pdu_acceptable (PDU *pdu)
     }
 
   /* The 2 entity-ids should match */
+  char * the_string = 0;
   if (!cfdp_are_these_ids_equal (my_id, pdu_id))
     {
+	  the_string= cfdp_id_as_string (pdu_id);
       e_msg__ ("cfdp_engine: PDU rejected due to invalid dest id (%s).\n",
-               cfdp_id_as_string (pdu_id));
+               the_string);
       return (NO);
     }
 

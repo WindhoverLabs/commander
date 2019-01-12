@@ -55,6 +55,9 @@ boolean utils__strncat (char *string1, const char *string2,
  * RETURN STATUS:  1 if entire string was concatenated; otherwise, 0.
  */
 
+char *cfdp_id_as_string (ID);
+
+
 #endif
 #ifdef __cplusplus
 }

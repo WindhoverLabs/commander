@@ -852,6 +852,7 @@ char *cfdp_condition_as_string (CONDITION_CODE cc)
   return (string);
 }
 
+char      string1 [MAX_AS_STRING_LENGTH+1];
 
 
 /*=r=************************************************************************/
@@ -859,7 +860,7 @@ char *cfdp_id_as_string (ID id)
 {
   int              i;
   char             substring [8];
-  static char      string [MAX_AS_STRING_LENGTH+1];
+//  static char      string [MAX_AS_STRING_LENGTH+1];
   /*------------------------------------------------------------*/
 
   /* Screen for valid input */
@@ -879,15 +880,15 @@ char *cfdp_id_as_string (ID id)
     }
 
   /* Generate the 'dotted-decimal' format (e.g. "128.183.53") */
-  memset (string, 0, sizeof(string));
-  sprintf (string, "%u", id.value[0]);
+  memset (string1, 0, sizeof(string1));
+  sprintf (string1, "%u", id.value[0]);
   for (i=1; i<id.length; i++)
     {
-      sprintf (substring, ".%u", (u_int_2) id.value[i]);
-      APPEND (string, substring);
+      sprintf (substring, ".%u", (u_int_1) id.value[i]);
+      APPEND (string1, substring);
     }
 
-  return (string);
+  return (string1);
 }
 
 

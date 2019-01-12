@@ -12,6 +12,17 @@ extern "C" {
 #include "cfdp_config.h"
 #include "cfdp.h"
 
+#define CFDP_MAX_CFG_VALUE_CHARS 	16
+#define CFDP_MAX_PATH_LEN			256
+#define CFDP_NUM_UPLINK_QUEUES		1
+#define CFDP_QUEUES_PER_CHAN		3
+#define CFDP_MAX_PLAYBACK_CHANNELS  2
+#define CFDP_MAX_TRANSID_CHARS    	20 /* 255.255_9999999 */
+#define CFDP_MAX_PARAM_LENGTH		256
+#define CFDP_MAX_PARAM_ENUM_LENGTH	128
+#define CFDP_MAX_ENUM_COUNT			64
+#define CFDP_TELEM_PICK_LIST_COUNT	22
+
 #define SUCCESS                				(1)
 #define OS_MAX_PATH_LEN        				(64)
 #define CF_MAX_CFG_VALUE_CHARS 				(16)
@@ -20,6 +31,90 @@ extern "C" {
 #define CF_MAX_PLAYBACK_CHANNELS            (2)
 
 #define CF_NUM_UPLINK_QUEUES    2
+
+#define CFDP_EVENT_MESSAGE_LENGTH 		250
+#define CFDP_NUM_ENG_CYCLES_PER_WAKEUP	10
+#define CFDP_MAX_ERR_STRING_CHARS		32
+
+
+#define CFDP_SUCCESS            (0)  /**< \brief CF return code for success */
+#define CFDP_ERROR              (-1) /**< \brief CF return code for general error */
+#define CFDP_BAD_MSG_LENGTH_RC  (-2) /**< \brief CF return code for unexpected cmd length */
+
+#define CFDP_INVALID              0xFFFFFFFF
+
+#define CFDP_DONT_CARE            0
+#define CFDP_UNKNOWN              0
+#define CFDP_TRANS_SUCCESS        1
+#define CFDP_TRANS_FAIL           2
+
+#define CFDP_ENTRY_UNUSED         0
+#define CFDP_ENTRY_IN_USE         1
+
+#define CFDP_DISABLED             0
+#define CFDP_ENABLED              1
+
+#define CFDP_FALSE                0
+#define CFDP_TRUE                 1
+
+#define CFDP_CLOSED               0
+#define CFDP_OPEN                 1
+
+#define CFDP_FILE_NOT_ACTIVE      0
+#define CFDP_FILE_IS_ACTIVE       1
+
+#define CFDP_NOT_IN_PROGRESS      0
+#define CFDP_IN_PROGRESS          1
+
+#define CFDP_UP_ACTIVEQ           0
+#define CFDP_UP_HISTORYQ          1
+
+#define CFDP_PB_PENDINGQ          0
+#define CFDP_PB_ACTIVEQ           1
+#define CFDP_PB_HISTORYQ          2
+
+#define CFDP_PENDINGQ             0
+#define CFDP_ACTIVEQ              1
+#define CFDP_HISTORYQ             2
+
+#define CFDP_ENTRY_UNUSED         0
+#define CFDP_ENTRY_IN_USE         1
+
+#define CFDP_NOT_ISSUED           0
+#define CFDP_WAS_ISSUED           1
+
+#define CFDP_DELETE_FILE          0
+#define CFDP_KEEP_FILE            1
+
+#define CFDP_PLAYBACKFILECMD      1
+#define CFDP_PLAYBACKDIRCMD       2
+#define CFDP_POLLDIRECTORY        3
+
+#define CFDP_ALL                  0
+#define CFDP_UPLINK               1
+#define CFDP_PLAYBACK             2
+
+#define CFDP_INCOMING             1
+#define CFDP_OUTGOING             2
+
+#define CFDP_TLM                  0
+#define CFDP_CMD                  1
+
+#define CFDP_CLASS_1              1
+#define CFDP_CLASS_2              2
+
+#define CFDP_QUEUES_PER_CHAN      3
+
+#define CFDP_STAT_UNKNOWN         		0
+#define CFDP_STAT_SUCCESS         		1
+#define CFDP_STAT_CANCELLED       		2
+#define CFDP_STAT_ABANDON         		3
+#define CFDP_STAT_NO_META         		4
+#define CFDP_STAT_PENDING         		5
+#define CFDP_STAT_ALRDY_ACTIVE    		6
+#define CFDP_STAT_PUT_REQ_ISSUED  		7
+#define CFDP_STAT_PUT_REQ_FAIL    		8
+#define CFDP_STAT_ACTIVE          		9
 
 typedef struct
 {
@@ -107,6 +202,8 @@ typedef struct
 
 CF_AppData AppData;
 
+static CF_ChannelData		Chan[CFDP_MAX_PLAYBACK_CHANNELS];
+
 
 
 
@@ -164,6 +261,8 @@ boolean CF_PduOutputReady (PDU_TYPE PduType, TRANSACTION TransInfo,ID Destinatio
 void CF_PduOutputSend (TRANSACTION TransInfo,ID DestinationId, CFDP_DATA *PduPtr);
 
 std::string Util_GetStdString(v8::Local<v8::String>);
+
+CF_QueueEntry* FindUpNodeByTransID(uint32_t , char *, uint32_t );
 
 
 
