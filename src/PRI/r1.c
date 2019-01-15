@@ -382,6 +382,7 @@ void r1__state_table (MACHINE *m, int event,
                */
               nak__data_received (&m->nak, mp->fd_offset, 
                                   mp->fd_offset + mp->fd_length);
+//              fclose_callback (m->fp);
             }            
           else
             /* Our CFDP partner violated the CFDP protocol.  Their Metadata
@@ -410,6 +411,7 @@ void r1__state_table (MACHINE *m, int event,
                 ;
               else
                 fclose_callback (m->fp);
+              	printf("closed*********");
               m->is_there_an_open_file = NO;
 
               if (!aaa__is_file_size_valid (m))

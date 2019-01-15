@@ -422,17 +422,17 @@ boolean pdu__is_this_pdu_acceptable (PDU *pdu)
   /* (Pull out some information from the pdu-header) */
   data_field_length = (pdu->content[1] * 256) + pdu->content[2];
   int j;
-  for(j =0; j< 25;j++){
-	  printf("pdu->content[%d] %x\n",j, pdu->content[j]);
-  }
-  printf("data_field_length %u\n", data_field_length);
+//  for(j =0; j< 25;j++){
+//	  printf("pdu->content[%d] %x\n",j, pdu->content[j]);
+//  }
+//  printf("data_field_length %u\n", data_field_length);
 //  printf("pdu->content[1] %x\n",pdu->content[1]);
   entity_id_length = ((pdu->content[3] & 0x70) >> 4) + 1;
-  printf("entity_id_length %u\n", entity_id_length);
+//  printf("entity_id_length %u\n", entity_id_length);
   trans_id_length = (pdu->content[3] & 0x07) + 1;
-  printf("entity_id_length %u\n",j, entity_id_length);
+//  printf("entity_id_length %u\n",j, entity_id_length);
   length_of_pdu_header = 4 + (2 * entity_id_length) + trans_id_length;
-  printf("length_of_pdu_header %u\n", length_of_pdu_header);
+//  printf("length_of_pdu_header %u\n", length_of_pdu_header);
   /* A valid pdu must be as long as the "header + data_field" */
   if (pdu->length < (length_of_pdu_header + data_field_length))
     {

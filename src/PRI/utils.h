@@ -56,6 +56,18 @@ boolean utils__strncat (char *string1, const char *string2,
  */
 
 char *cfdp_id_as_string (ID);
+char * cfdp_indication_type_as_string(INDICATION_TYPE);
+char *cfdp_trans_as_string (TRANSACTION );
+char *cfdp_condition_as_string (CONDITION_CODE );
+char *cfdp_mib_as_string (void);
+char *cfdp_response_as_string (RESPONSE );
+char *cfdp_role_as_string (ROLE );
+
+
+
+
+
+
 
 
 #endif

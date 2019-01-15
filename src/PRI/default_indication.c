@@ -30,8 +30,6 @@ extern "C" {
 #include "cfdp.h"
 #include "cfdp_private.h"
 
-
-
 /*=r=************************************************************************/
 static void m__transaction (const TRANS_STATUS *info)
 {
@@ -364,7 +362,8 @@ static void m__generic_indication (INDICATION_TYPE type,
 
   /* Build a simple message */
   strcpy (msg,":::");
-  APPEND (msg, cfdp_indication_type_as_string (type));
+  char * indication_as_string = cfdp_indication_type_as_string (type);
+  APPEND (msg, indication_as_string);
   APPEND (msg, "  ");
   sprintf (substring, "trans %s.\n", cfdp_trans_as_string (info->trans));
   APPEND (msg, substring);

@@ -130,7 +130,24 @@ console.log( '************************************************' );
 console.log( '*************** NODEJS ADDON *******************' );
 console.log( '************************************************' );
 
+CF_CONFIG = {
+		
+		"MIB_PARAMS":{
+			
+			"ACK_TIMEOUT"				: "10",
+			"ACK_LIMIT"					: "2",
+			"NAK_TIMEOUT"				: "5",
+			"NAK_LIMIT"					: "3",
+			"INACTIVITY_TIMEOUT"		: "20",
+			"OUTGOING_FILE_CHUNK_SIZE"	: "64",
+			"SAVE_INCOMPLETE_FILES"		: "no",
+			"MY_ID"						: "0.23"
+		}
+		
+};
 
+
+cf.SetConfiguration(CF_CONFIG);
 
 cf.RegisterCallbackOn( 'info', ( value ) => {
   console.log( "INFO: ", value );
@@ -150,6 +167,12 @@ cf.RegisterCallbackOn( 'warning', ( value ) => {
 
 cf.AppInit();
 
+
+
+
+setInterval(()=>{
+	cf.CycleTransaction();
+},2000);
 
 
 console.log( '************************************************' );

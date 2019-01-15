@@ -204,6 +204,7 @@ CF_AppData AppData;
 
 static CF_ChannelData		Chan[CFDP_MAX_PLAYBACK_CHANNELS];
 
+char BaseDir[CFDP_MAX_PATH_LEN];
 
 
 
@@ -263,6 +264,7 @@ void CF_PduOutputSend (TRANSACTION TransInfo,ID DestinationId, CFDP_DATA *PduPtr
 std::string Util_GetStdString(v8::Local<v8::String>);
 
 CF_QueueEntry* FindUpNodeByTransID(uint32_t , char *, uint32_t );
+
 
 
 

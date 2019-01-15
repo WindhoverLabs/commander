@@ -147,7 +147,7 @@ extern "C" {
 /* If the default 'temp_file_name' callback routine is used, all temp
  * files will start with this prefix.  
  */
-#define DEFAULT_TEMP_FILE_NAME_PREFIX   "/ram/cftmp"
+#define DEFAULT_TEMP_FILE_NAME_PREFIX   "cftmp"
 
 /* The library will provide this much storage capacity for temporary file
  * names.  If the default 'temp_file_name' callback routine is used, this 
