@@ -34,10 +34,6 @@ extern "C" {
 #ifndef H_CFDP_CONFIG
 #define H_CFDP_CONFIG 1
 
-//#include "osconfig.h"
-//#include "cf_platform_cfg.h"
-//#include "cf_defs.h"
-
 /**************************/
 /*** Generic data types ***/
 /**************************/

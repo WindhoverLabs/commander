@@ -411,7 +411,6 @@ void r1__state_table (MACHINE *m, int event,
                 ;
               else
                 fclose_callback (m->fp);
-              	printf("closed*********");
               m->is_there_an_open_file = NO;
 
               if (!aaa__is_file_size_valid (m))

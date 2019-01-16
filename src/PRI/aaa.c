@@ -369,8 +369,6 @@ boolean aaa__is_file_checksum_valid (MACHINE *m)
      TRANS_STATUS      *mp = &(m->publik);   /* useful shorthand */
    /*------------------------------------------------------------*/
 
-     printf("sizeof(mp->file_checksum_as_calculated) = %u  sizeof(m->eof.file_checksum) = %u\n", sizeof(mp->file_checksum_as_calculated), sizeof(m->eof.file_checksum));
-
      /* Calculate a checksum on the received (temporary) file */
      mp->file_checksum_as_calculated = 
        aaa__calculate_file_checksum (mp->temp_file_name);

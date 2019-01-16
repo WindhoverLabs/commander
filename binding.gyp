@@ -14,6 +14,7 @@
       	"src/PUB/cfdp_config.h",
         "src/PUB/cfdp_data_structures.h",
         "src/PUB/cfdp.h",
+        "src/PUB/definition.h",
 		"src/PRI/aaa.c",  
 		"src/PRI/aaa.h",
 		"src/PRI/callbacks.c",
