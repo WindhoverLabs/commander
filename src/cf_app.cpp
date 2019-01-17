@@ -12,9 +12,9 @@ void Indication (INDICATION_TYPE IndType, TRANS_STATUS TransInfo)
 {
 		QueueEntry 	*queueEntryPtr = NULL;
 	    int32_t		chan;
-	    char        localFinalStatBuf[CFDP_MAX_ERR_STRING_CHARS];
-	    char        localCondCodeBuf[CFDP_MAX_ERR_STRING_CHARS];
-	    char        entityIDBuf[CFDP_MAX_CFG_VALUE_CHARS];
+	    char        localFinalStatBuf[CF_MAX_ERR_STRING_CHARS];
+	    char        localCondCodeBuf[CF_MAX_ERR_STRING_CHARS];
+	    char        entityIDBuf[CF_MAX_CFG_VALUE_CHARS];
 
 	    /*initialization*/
 	    TransInfo.md.source_file_name[MAX_FILE_NAME_LENGTH - 1] = '\0';
@@ -42,14 +42,14 @@ void Indication (INDICATION_TYPE IndType, TRANS_STATUS TransInfo)
 	                    else
 	                        queueEntryPtr->Class = 2;
 
-	                    queueEntryPtr->Status   = CFDP_STAT_ACTIVE;
+	                    queueEntryPtr->Status   = CF_STAT_ACTIVE;
 	                    queueEntryPtr->CondCode = 0;
 	                    queueEntryPtr->Priority = 0xFF;
 	                    /* TODO:  Fix this.  Replace it with something more dynamic. */
 	                    queueEntryPtr->ChanNum  = 0;
 	                    queueEntryPtr->Source   = 0xFF;
-	                    queueEntryPtr->Warning  = CFDP_NOT_ISSUED;
-	                    queueEntryPtr->NodeType = CFDP_UPLINK;
+	                    queueEntryPtr->Warning  = CF_NOT_ISSUED;
+	                    queueEntryPtr->NodeType = CF_UPLINK;
 	                    queueEntryPtr->TransNum = TransInfo.trans.number;
 	                    sprintf(&queueEntryPtr->SrcEntityId[0],"%d.%d",
 	                            TransInfo.trans.source_id.value[0],
@@ -60,7 +60,7 @@ void Indication (INDICATION_TYPE IndType, TRANS_STATUS TransInfo)
 	                    strcpy(&queueEntryPtr->DstFile[0],"UNKNOWN");
 
 	                    /* Place Node on Uplink Active Queue */
-	                    // AddFileToUpQueue(CFDP_UP_ACTIVEQ, queueEntryPtr);
+	                    // AddFileToUpQueue(CF_UP_ACTIVEQ, queueEntryPtr);
 	                    InfoEvent("CFDP::AddFileToUpQueue");
 	                }
 	                else
@@ -85,18 +85,18 @@ void Indication (INDICATION_TYPE IndType, TRANS_STATUS TransInfo)
 
 	                    queueEntryPtr->TransNum = TransInfo.trans.number;
 
-	                    Chan[queueEntryPtr->ChanNum].DataBlast = CFDP_IN_PROGRESS;
+	                    Chan[queueEntryPtr->ChanNum].DataBlast = CF_IN_PROGRESS;
 	                    Chan[queueEntryPtr->ChanNum].TransNumBlasting = TransInfo.trans.number;
 
 	                    /* move node from pending queue to active queue */
 	                    /*
 	                    RemoveFileFromPbQueue(queueEntryPtr->ChanNum,
-	                                                CFDP_PB_PENDINGQ,
+	                                                CF_PB_PENDINGQ,
 	                                                queueEntryPtr);
-	                    AddFileToPbQueue(queueEntryPtr->ChanNum, CFDP_PB_ACTIVEQ,
+	                    AddFileToPbQueue(queueEntryPtr->ChanNum, CF_PB_ACTIVEQ,
 	                                                queueEntryPtr);
 	                    */
-	                    queueEntryPtr->Status = CFDP_STAT_ACTIVE;
+	                    queueEntryPtr->Status = CF_STAT_ACTIVE;
 
 	                }
 
@@ -124,20 +124,20 @@ void Indication (INDICATION_TYPE IndType, TRANS_STATUS TransInfo)
 	            /*  find corresponding queue entry (created in mach allocated  */
 	            /*  indication) then fill in src and dest filenames */
 
-	            queueEntryPtr = FindUpNodeByTransID(CFDP_UP_ACTIVEQ, entityIDBuf, TransInfo.trans.number);
+	            queueEntryPtr = FindUpNodeByTransID(CF_UP_ACTIVEQ, entityIDBuf, TransInfo.trans.number);
 
 	            if(queueEntryPtr != NULL)
 	            {
-	                strncpy(&queueEntryPtr->SrcFile[0],TransInfo.md.source_file_name, CFDP_MAX_PATH_LEN);
-	                strncpy(&queueEntryPtr->DstFile[0],TransInfo.md.dest_file_name, CFDP_MAX_PATH_LEN);
+	                strncpy(&queueEntryPtr->SrcFile[0],TransInfo.md.source_file_name, CF_MAX_PATH_LEN);
+	                strncpy(&queueEntryPtr->DstFile[0],TransInfo.md.dest_file_name, CF_MAX_PATH_LEN);
 	            }
 
 	            break;
 
 	        case IND_EOF_SENT:
 	            /* Find Channel Number, search the given queue for all channels */
-	            // chan = GetChanNumFromTransId(CFDP_PB_ACTIVEQ, TransInfo.trans.number);
-	            if(chan != CFDP_ERROR)
+	            // chan = GetChanNumFromTransId(CF_PB_ACTIVEQ, TransInfo.trans.number);
+	            if(chan != CF_ERROR)
 	            {
 	            	/* Start transfer of next file on queue (if queue has another file) */
 	                // StartNextFile(chan);
@@ -162,14 +162,14 @@ void Indication (INDICATION_TYPE IndType, TRANS_STATUS TransInfo)
 	                    sprintf(entityIDBuf,"%d.%d",TransInfo.trans.source_id.value[0],
 	                                        TransInfo.trans.source_id.value[1]);
 
-	                    queueEntryPtr = FindUpNodeByTransID(CFDP_UP_ACTIVEQ, entityIDBuf, TransInfo.trans.number);
+	                    queueEntryPtr = FindUpNodeByTransID(CF_UP_ACTIVEQ, entityIDBuf, TransInfo.trans.number);
 	                    if(queueEntryPtr != NULL)
 	                    {
-	                        queueEntryPtr->Status = CFDP_STAT_SUCCESS;
+	                        queueEntryPtr->Status = CF_STAT_SUCCESS;
 	                    }
 
 //	                    Up.SuccessCounter++;
-	                    // strncpy(&Up.LastFileUplinked[0], &TransInfo.md.dest_file_name[0], CFDP_MAX_PATH_LEN);
+	                    // strncpy(&Up.LastFileUplinked[0], &TransInfo.md.dest_file_name[0], CF_MAX_PATH_LEN);
 	                    // MoveUpNodeActiveToHistory(entityIDBuf, TransInfo.trans.number);
 
 	                	InfoEvent( "Incoming trans success %d.%d_%d,dest %s",
@@ -181,20 +181,20 @@ void Indication (INDICATION_TYPE IndType, TRANS_STATUS TransInfo)
 	                else
 	                {
 	                    /* successful file-send transaction processing */
-	                    // chan = GetChanNumFromTransId(CFDP_PB_ACTIVEQ, TransInfo.trans.number);
+	                    // chan = GetChanNumFromTransId(CF_PB_ACTIVEQ, TransInfo.trans.number);
 
-	                    if(chan != CFDP_ERROR)
+	                    if(chan != CF_ERROR)
 	                    {
 	                        // Chan[chan].SuccessCounter++;
-	                    	// queueEntryPtr = FindPbNodeByTransNum(chan, CFDP_PB_ACTIVEQ, TransInfo.trans.number);
+	                    	// queueEntryPtr = FindPbNodeByTransNum(chan, CF_PB_ACTIVEQ, TransInfo.trans.number);
 	                        queueEntryPtr = 0;
 	                    	if(queueEntryPtr != NULL)
 	                        {
-	                            queueEntryPtr->Status = CFDP_STAT_SUCCESS;
+	                            queueEntryPtr->Status = CF_STAT_SUCCESS;
 	                        }
 	                    }
 
-	                    // if(queueEntryPtr->Preserve == CFDP_DELETE_FILE)
+	                    // if(queueEntryPtr->Preserve == CF_DELETE_FILE)
 	                    // {
 	                    //     OS_remove(&TransInfo.md.source_file_name[0]);
 	                    // }
@@ -224,13 +224,13 @@ void Indication (INDICATION_TYPE IndType, TRANS_STATUS TransInfo)
 	                /*
 	            	GetFinalStatString(localFinalStatBuf,
 	                                      TransInfo.final_status,
-	                                      CFDP_MAX_ERR_STRING_CHARS);
+	                                      CF_MAX_ERR_STRING_CHARS);
 					*/
 	                /* for error event below */
 	                /*
 	            	GetCondCodeString(localCondCodeBuf,
 	                                     TransInfo.condition_code,
-	                                     CFDP_MAX_ERR_STRING_CHARS);
+	                                     CF_MAX_ERR_STRING_CHARS);
 					*/
 
 	                /* failed file-receive transaction processing */
@@ -242,7 +242,7 @@ void Indication (INDICATION_TYPE IndType, TRANS_STATUS TransInfo)
 	                    sprintf(entityIDBuf,"%d.%d",TransInfo.trans.source_id.value[0],
 	                                        TransInfo.trans.source_id.value[1]);
 
-	                    queueEntryPtr = FindUpNodeByTransID(CFDP_UP_ACTIVEQ, entityIDBuf, TransInfo.trans.number);
+	                    queueEntryPtr = FindUpNodeByTransID(CF_UP_ACTIVEQ, entityIDBuf, TransInfo.trans.number);
 
 	                    if(queueEntryPtr != NULL)
 	                    {
@@ -264,10 +264,10 @@ void Indication (INDICATION_TYPE IndType, TRANS_STATUS TransInfo)
 	                else
 	                {
 	                    /* failed file-send transaction processing */
-	                    // chan = GetChanNumFromTransId(CFDP_PB_ACTIVEQ, TransInfo.trans.number);''
+	                    // chan = GetChanNumFromTransId(CF_PB_ACTIVEQ, TransInfo.trans.number);''
 
 	                    // Chan[chan].FailedCounter++;
-	                    // queueEntryPtr = FindPbNodeByTransNum(chan, CFDP_PB_ACTIVEQ, TransInfo.trans.number);
+	                    // queueEntryPtr = FindPbNodeByTransNum(chan, CF_PB_ACTIVEQ, TransInfo.trans.number);
 	                    queueEntryPtr = 0;
 	                    if(queueEntryPtr != NULL)
 	                    {
@@ -291,7 +291,7 @@ void Indication (INDICATION_TYPE IndType, TRANS_STATUS TransInfo)
 	                    /* abandon or gnd-side cancel */
 	                    if(TransInfo.trans.number == Chan[chan].TransNumBlasting)
 	                    {
-	                    	Chan[chan].DataBlast = CFDP_NOT_IN_PROGRESS;
+	                    	Chan[chan].DataBlast = CF_NOT_IN_PROGRESS;
 	                    	Chan[chan].TransNumBlasting = 0;
 
 	                    //    if(AppData.Tbl->OuCh[Chan].DequeueEnable == ENABLED){
@@ -383,7 +383,7 @@ QueueEntry* FindUpNodeByTransID(uint32_t queue, char *srcEntityID, uint32_t tran
     {
         if(qNodePtr->TransNum == trans)
         {
-            if(strncmp(srcEntityID, qNodePtr->SrcEntityId, CFDP_MAX_CFG_VALUE_CHARS) == 0)
+            if(strncmp(srcEntityID, qNodePtr->SrcEntityId, CF_MAX_CFG_VALUE_CHARS) == 0)
                 return qNodePtr;
         }
         qNodePtr = qNodePtr->Next;
@@ -392,26 +392,65 @@ QueueEntry* FindUpNodeByTransID(uint32_t queue, char *srcEntityID, uint32_t tran
     return NULL;
 }
 
-boolean PduOutputOpen (ID SourceId, ID DestinationId)
+boolean isPduOutputOpen (ID SourceId, ID DestinationId)
 {
-	InfoEvent("PDU | Output is Open?");
+    Isolate *isolate = Isolate::GetCurrent();
+
+	const int argc = 1;
+
+	v8::Local<v8::Value> argv[argc];
+
+	argv[0] = Boolean::New(isolate, true);
+
+	Local<Function> Func = Local<Function>::New(isolate, pduOutputOpen.Function);
+
+	if(pduOutputOpen.IsDefined)
+	{
+		Func->Call(isolate->GetCurrentContext()->Global(), argc, argv);
+
+	}
+
 	return (YES);
 }
 
-boolean PduOutputReady (PDU_TYPE PduType, TRANSACTION TransInfo,ID DestinationId){
+boolean isPduOutputReady (PDU_TYPE PduType, TRANSACTION TransInfo,ID DestinationId){
 
-	InfoEvent("PDU | Output is Ready?");
+    Isolate *isolate = Isolate::GetCurrent();
 
-	int32_t 	Chan;
-	char	SrcEntityIdBuf[CF_MAX_CFG_VALUE_CHARS];
+	const int argc = 1;
+
+	v8::Local<v8::Value> argv[argc];
+
+	argv[0] = Boolean::New(isolate, true);
+
+	Local<Function> Func = Local<Function>::New(isolate, pduOutputReady.Function);
+
+	if(pduOutputReady.IsDefined)
+	{
+		Func->Call(isolate->GetCurrentContext()->Global(), argc, argv);
+
+	}
 
 	return (YES);
 }
 
-void PduOutputSend (TRANSACTION TransInfo,ID DestinationId, CFDP_DATA *PduPtr){
+void SendPduOutput (TRANSACTION TransInfo,ID DestinationId, CFDP_DATA *PduPtr){
 
-	InfoEvent("PDU | Output send?");
-	return (YES);
+    Isolate *isolate = Isolate::GetCurrent();
+
+	const int argc = 1;
+	v8::Local<v8::Value> argv[argc];
+
+	argv[0] = Nan::NewBuffer(PduPtr->content, PduPtr->length).ToLocalChecked();
+
+	Local<Function> Func = Local<Function>::New(isolate, PduOutputSend.Function);
+
+	if(PduOutputSend.IsDefined)
+	{
+		Func->Call(isolate->GetCurrentContext()->Global(), argc, argv);
+
+	}
+
 }
 
 int32_t Seek(int32_t  filedes, int32_t offset, uint32_t whence)
@@ -424,35 +463,35 @@ int32_t Seek(int32_t  filedes, int32_t offset, uint32_t whence)
     return (fseek((uint32_t)filedes,offset,whence));
 }
 
-CFDP_FILE * FileOpen(const char *Name, const char *Mode){
+CF_FILE * FileOpen(const char *Name, const char *Mode){
 
 	FILE	*fileHandle;
-	char temp[CFDP_MAX_PATH_LEN];
+	char temp[CF_MAX_PATH_LEN];
 
-	strncpy(temp, AppData.BaseDir, CFDP_MAX_PATH_LEN);
-	strncat(temp, Name, CFDP_MAX_PATH_LEN);
+	strncpy(temp, AppData.BaseDir, CF_MAX_PATH_LEN);
+	strncat(temp, Name, CF_MAX_PATH_LEN);
     fileHandle = fopen(temp, Mode);
     return fileHandle;
 }
 
-size_t FileRead(void *Buffer, size_t Size,size_t Count, CFDP_FILE *File)
+size_t FileRead(void *Buffer, size_t Size,size_t Count, CF_FILE *File)
 {
 	size_t out_size = fread(Buffer, Size, Count, File);
 	return out_size;
 }
 
-size_t FileWrite(const void *Buffer, size_t Size,size_t Count, CFDP_FILE *File)
+size_t FileWrite(const void *Buffer, size_t Size,size_t Count, CF_FILE *File)
 {
 	size_t out_size = fwrite(Buffer, Size, Count, File);
 	return out_size;
 }
 
-int FileClose(CFDP_FILE *File)
+int FileClose(CF_FILE *File)
 {
 	return fclose(File);
 }
 
-int FileSeek(CFDP_FILE *File, long int Offset, int Whence)
+int FileSeek(CF_FILE *File, long int Offset, int Whence)
 {
     int     	ReturnVal;
     uint16_t  	WhenceVal;
@@ -490,22 +529,22 @@ int FileSeek(CFDP_FILE *File, long int Offset, int Whence)
 
 int RemoveFile(const char *Name)
 {
-	char temp[CFDP_MAX_PATH_LEN];
+	char temp[CF_MAX_PATH_LEN];
 
-	strncpy(temp, AppData.BaseDir, CFDP_MAX_PATH_LEN);
-	strncat(temp, Name, CFDP_MAX_PATH_LEN);
+	strncpy(temp, AppData.BaseDir, CF_MAX_PATH_LEN);
+	strncat(temp, Name, CF_MAX_PATH_LEN);
 	return remove(temp);
 }
 
 int RenameFile(const char *TempFileName, const char *NewName)
 {
-	char tempOld[CFDP_MAX_PATH_LEN];
-	char tempNew[CFDP_MAX_PATH_LEN];
+	char tempOld[CF_MAX_PATH_LEN];
+	char tempNew[CF_MAX_PATH_LEN];
 
-	strncpy(tempOld, AppData.BaseDir, CFDP_MAX_PATH_LEN);
-	strncat(tempOld, TempFileName, CFDP_MAX_PATH_LEN);
+	strncpy(tempOld, AppData.BaseDir, CF_MAX_PATH_LEN);
+	strncat(tempOld, TempFileName, CF_MAX_PATH_LEN);
 
-	strncat(tempNew, NewName, CFDP_MAX_PATH_LEN);
+	strncat(tempNew, NewName, CF_MAX_PATH_LEN);
 
 	return rename(tempOld, tempNew);
 }
@@ -513,10 +552,10 @@ int RenameFile(const char *TempFileName, const char *NewName)
 u_int_4 FileSize(const char *Name)
 {
 	struct stat st;
-	char temp[CFDP_MAX_PATH_LEN];
+	char temp[CF_MAX_PATH_LEN];
 
-	strncpy(temp, AppData.BaseDir, CFDP_MAX_PATH_LEN);
-	strncat(temp, Name, CFDP_MAX_PATH_LEN);
+	strncpy(temp, AppData.BaseDir, CF_MAX_PATH_LEN);
+	strncat(temp, Name, CF_MAX_PATH_LEN);
 	stat(temp, &st);
 	return st.st_size;
 }
@@ -688,9 +727,9 @@ int WarningEvent(const char *Format, ...)
 void RegisterCallbacks(){
 
     register_indication (Indication);
-    register_pdu_output_open (PduOutputOpen);
-    register_pdu_output_ready (PduOutputReady);
-    register_pdu_output_send (PduOutputSend);
+    register_pdu_output_open (isPduOutputOpen);
+    register_pdu_output_ready (isPduOutputReady);
+    register_pdu_output_send (SendPduOutput);
 
     register_printf_debug(DebugEvent);
     register_printf_info(InfoEvent);
@@ -708,59 +747,6 @@ void RegisterCallbacks(){
 
 }
 
-int ChannelInit()
-{
-	uint32_t i,j;
-
-	/*
-	AppData.Hk.App.BufferPoolHandle = AppData.Mem.PoolHdl;
-
-	AppData.Hk.App.MaxMemNeeded  = (AppData.Tbl->UplinkHistoryQDepth * sizeof(CF_QueueEntry_t)) +
-	                    (CF_MAX_SIMULTANEOUS_TRANSACTIONS * sizeof(CF_QueueEntry_t));
-	*/
-
-	for( i = 0; i< CF_MAX_PLAYBACK_CHANNELS; i++ )
-	{
-		AppData.Chan[i].DataBlast = CFDP_NOT_IN_PROGRESS;
-		AppData.Chan[i].PendQTimer       = 0;
-		AppData.Chan[i].PollDirTimer     = 0;
-		AppData.Chan[i].TransNumBlasting = 0;
-
-		AppData.Hk.Chan[i].PollDirsChecked = 0;
-		AppData.Hk.Chan[i].PendingQChecked = 0;
-		AppData.Hk.Chan[i].RedLightCntr  = 0;
-		AppData.Hk.Chan[i].RedLightCntr  = 0;
-		AppData.Hk.Chan[i].PDUsSent      = 0;
-		AppData.Hk.Chan[i].FilesSent     = 0;
-		AppData.Hk.Chan[i].SuccessCounter = 0;
-		AppData.Hk.Chan[i].FailedCounter = 0;
-
-		AppData.Chan[i].HandshakeSemId = CFDP_INVALID;
-
-		/* initialize pending queue, active queue and history queue variables */
-		for( j=0;j<CFDP_QUEUES_PER_CHAN;j++ )
-		{
-			AppData.Chan[i].PbQ[j].HeadPtr   = NULL;
-			AppData.Chan[i].PbQ[j].TailPtr   = NULL;
-			AppData.Chan[i].PbQ[j].EntryCnt  = 0;
-		}
-
-		/*
-		if(AppData.Tbl->OuCh[i].EntryInUse == CF_ENTRY_IN_USE)
-		{
-
-		ChanMemNeeded = (AppData.Tbl->OuCh[i].PendingQDepth * sizeof(CF_QueueEntry_t)) +
-				(AppData.Tbl->OuCh[i].HistoryQDepth * sizeof(CF_QueueEntry_t));
-
-		AppData.Hk.App.MaxMemNeeded += ChanMemNeeded;
-
-		}
-		*/
-	}
-
-
-}
-
 std::string GetStdString(v8::Local<v8::String> str)
 {
 	v8::String::Utf8Value temp(str->ToString());
@@ -775,7 +761,7 @@ void SetCallbackData(CallbackData * cd, Isolate * isolate, v8::Local<v8::Value> 
 
 }
 
-void GivePduToEngine(const FunctionCallbackInfo<Value> &args)
+void GivePdu(const FunctionCallbackInfo<Value> &args)
 {
 	Isolate* isolate = args.GetIsolate();
 
@@ -804,10 +790,150 @@ void GivePduToEngine(const FunctionCallbackInfo<Value> &args)
 	cfdp_give_pdu(AppData.RawPduInputBuf);
 }
 
-void Cycle(const FunctionCallbackInfo<Value> &args){
+void RequestPdu(const FunctionCallbackInfo<Value> &args)
+{
+	char ReqString[MAX_REQUEST_STRING_LENGTH];
+
+	std::string Class 			= GetStdString(args[0]->ToString());
+	std::string PeerEntityId 	= GetStdString(args[1]->ToString());
+	std::string SrcFilename 	= GetStdString(args[2]->ToString());
+	std::string DstFilename 	= GetStdString(args[3]->ToString());
+
+	strcpy(ReqString,"PUT ");
+	strcat(ReqString,"-");
+	strcat(ReqString,Class.c_str());
+	strcat(ReqString," ");
+	strcat(&ReqString[0],SrcFilename.c_str());
+	strcat(&ReqString[0]," ");
+	strcat(&ReqString[0],PeerEntityId.c_str());
+	strcat(&ReqString[0]," ");
+	strcat(&ReqString[0],DstFilename.c_str());
+
+	if(!cfdp_give_request(ReqString))
+	{
+        ErrorEvent("Engine put request returned error for %s",SrcFilename.c_str());
+	}
+	else
+	{
+		InfoEvent("Engine put request returned success for %s",SrcFilename.c_str());
+	}
+
+}
+
+void GetSummaryStatus(const FunctionCallbackInfo<Value> &args)
+{
+	Isolate* isolate = args.GetIsolate();
+
+	Local<Object> obj = Object::New(isolate);
+
+	SUMMARY_STATUS Summary;
+
+	Summary = cfdp_summary_status();
+
+	obj->Set(String::NewFromUtf8(isolate, "are_any_partners_frozen"),
+							Boolean::New(isolate, Summary.are_any_partners_frozen));
+	obj->Set(String::NewFromUtf8(isolate, "how_many_senders"),
+							Number::New(isolate, Summary.how_many_senders));
+	obj->Set(String::NewFromUtf8(isolate, "how_many_receivers"),
+							Number::New(isolate, Summary.how_many_receivers));
+	obj->Set(String::NewFromUtf8(isolate, "how_many_frozen"),
+							Number::New(isolate, Summary.how_many_frozen));
+	obj->Set(String::NewFromUtf8(isolate, "how_many_suspended"),
+							Number::New(isolate, Summary.are_any_partners_frozen));
+	obj->Set(String::NewFromUtf8(isolate, "total_files_sent"),
+							Number::New(isolate, Summary.how_many_senders));
+	obj->Set(String::NewFromUtf8(isolate, "total_files_received"),
+							Number::New(isolate, Summary.how_many_receivers));
+	obj->Set(String::NewFromUtf8(isolate, "total_unsuccessful_senders"),
+							Number::New(isolate, Summary.how_many_frozen));
+	obj->Set(String::NewFromUtf8(isolate, "total_unsuccessful_receivers"),
+							Number::New(isolate, Summary.how_many_receivers));
+
+
+	args.GetReturnValue().Set(obj);
+}
+
+void GetIdFromString(const FunctionCallbackInfo<Value> &args)
+{
+	ID OutId;
+	std::string DottedValString = GetStdString(args[0]->ToString());
+
+	if( !cfdp_id_from_string(DottedValString.c_str(), &OutId) )
+	{
+		ErrorEvent("ID cannot be retrieved for (%s)",DottedValString.c_str());
+	}
+}
+
+void GetTransactionStatus(const FunctionCallbackInfo<Value> &args)
+{
+
+	TRANSACTION Trans;
+	TRANS_STATUS * OutTransStatus;
+
+	Trans.number 			= args[0]->NumberValue();
+	Trans.source_id.length 	= args[1]->NumberValue();
+
+	unsigned char* 	buffer 	= (unsigned char*) node::Buffer::Data(args[2]->ToObject());
+
+	memset(&Trans.source_id.value[0], 0, sizeof(Trans.source_id.value));
+	memcpy(&Trans.source_id.value[0], buffer, Trans.source_id.length);
+
+	if( !cfdp_transaction_status(Trans, OutTransStatus) )
+	{
+		ErrorEvent("Transaction status cannot be retrieved for Trans# %s",Trans.number);
+	}
+
+	Isolate* isolate = args.GetIsolate();
+
+	Local<Object> obj = Object::New(isolate);
+
+
+	obj->Set(String::NewFromUtf8(isolate, "abandoned"),
+							Boolean::New(isolate, OutTransStatus->abandoned));
+	obj->Set(String::NewFromUtf8(isolate, "attempts"),
+							Number::New(isolate, OutTransStatus->attempts));
+	obj->Set(String::NewFromUtf8(isolate, "cancelled"),
+							Boolean::New(isolate, OutTransStatus->cancelled));
+	obj->Set(String::NewFromUtf8(isolate, "external_file_xfer"),
+							Boolean::New(isolate, OutTransStatus->external_file_xfer));
+	obj->Set(String::NewFromUtf8(isolate, "fd_offset"),
+							Number::New(isolate, OutTransStatus->fd_offset));
+	obj->Set(String::NewFromUtf8(isolate, "fd_length"),
+							Number::New(isolate, OutTransStatus->fd_length));
+	obj->Set(String::NewFromUtf8(isolate, "file_checksum_as_calculated"),
+							Number::New(isolate, OutTransStatus->file_checksum_as_calculated));
+	obj->Set(String::NewFromUtf8(isolate, "finished"),
+							Boolean::New(isolate, OutTransStatus->finished));
+	obj->Set(String::NewFromUtf8(isolate, "frozen"),
+							Boolean::New(isolate, OutTransStatus->frozen));
+	obj->Set(String::NewFromUtf8(isolate, "has_md_been_received"),
+							Boolean::New(isolate, OutTransStatus->has_md_been_received));
+	obj->Set(String::NewFromUtf8(isolate, "how_many_naks"),
+							Number::New(isolate, OutTransStatus->how_many_naks));
+	obj->Set(String::NewFromUtf8(isolate, "is_this_trans_solely_for_ack_fin"),
+							Boolean::New(isolate, OutTransStatus->is_this_trans_solely_for_ack_fin));
+	obj->Set(String::NewFromUtf8(isolate, "phase"),
+							Number::New(isolate, OutTransStatus->phase));
+	obj->Set(String::NewFromUtf8(isolate, "received_file_size"),
+							Number::New(isolate, OutTransStatus->received_file_size));
+	obj->Set(String::NewFromUtf8(isolate, "start_time"),
+							Number::New(isolate, OutTransStatus->start_time));
+	obj->Set(String::NewFromUtf8(isolate, "suspended"),
+							Boolean::New(isolate, OutTransStatus->suspended));
+	obj->Set(String::NewFromUtf8(isolate, "temp_file_name"),
+							String::NewFromUtf8(isolate, OutTransStatus->temp_file_name));
+
+
+	args.GetReturnValue().Set(obj);
+
+}
+
+void Cycle(const FunctionCallbackInfo<Value> &args)
+{
 
 	cfdp_cycle_each_transaction();
 }
+
 
 void RegisterCallbackOn(const FunctionCallbackInfo<Value> &args)
 {
@@ -831,8 +957,21 @@ void RegisterCallbackOn(const FunctionCallbackInfo<Value> &args)
 	{
 		SetCallbackData(&LogWarning, isolate, args[1]);
 	}
+	else if(CbIndicator == "pduOutputOpen")
+	{
+		SetCallbackData(&pduOutputOpen, isolate, args[1]);
+	}
+	else if(CbIndicator == "pduOutputReady")
+	{
+		SetCallbackData(&pduOutputReady, isolate, args[1]);
+	}
+	else if(CbIndicator == "pduOutputSend")
+	{
+		SetCallbackData(&PduOutputSend, isolate, args[1]);
+	}
 
 }
+
 
 void SetConfig(const FunctionCallbackInfo<Value> &args)
 {
@@ -896,43 +1035,12 @@ void SetMibParams(const FunctionCallbackInfo<Value> &args)
 
 void AppInit(const FunctionCallbackInfo<Value> &args)
 {
-	uint32_t i;
+
 	/* Set temp base directory */
-    strncpy(AppData.BaseDir, Config.TempBaseDir, CFDP_MAX_PATH_LEN);
+    strncpy(AppData.BaseDir, Config.TempBaseDir, CF_MAX_PATH_LEN);
 
     /* Register all callbacks */
 	RegisterCallbacks();
-
-    /* initialize uplink queues */
-    for(i=0;i<NUM_UPLINK_QUEUES;i++)
-    {
-    	AppData.UpQ[i].HeadPtr   = NULL;
-    	AppData.UpQ[i].TailPtr   = NULL;
-    	AppData.UpQ[i].EntryCnt  = 0;
-    }
-
-    /* Initialize channel */
-    ChannelInit();
-
-    /* Initialize Housekeeping Counters */
-    AppData.Hk.App.WakeupForFileProc   = 0;
-    AppData.Hk.App.EngineCycleCount    = 0;
-    AppData.Hk.App.QNodesAllocated     = 0;
-    AppData.Hk.App.QNodesDeallocated   = 0;
-    AppData.Hk.App.MemInUse            = 0;
-    AppData.Hk.App.PeakMemInUse        = 0;
-    AppData.Hk.App.MemAllocated        = CF_MEMORY_POOL_BYTES;
-    AppData.Hk.App.PDUsReceived        = 0;
-    AppData.Hk.App.PDUsRejected        = 0;
-    AppData.Hk.App.TotalAbandonTrans   = 0;
-    AppData.Hk.App.LastFailedTrans[0]  = '\0';
-
-    AppData.Hk.Up.MetaCount            = 0;
-    AppData.Hk.Up.SuccessCounter       = 0;
-    AppData.Hk.Up.FailedCounter        = 0;
-    AppData.Hk.Up.LastFileUplinked[0]  = '\0';
-
-    AppData.Hk.AutoSuspend.EnFlag      = CFDP_DISABLED;
 
 }
 
@@ -947,7 +1055,15 @@ void Initialize(Local<Object> exports)
 
 	NODE_SET_METHOD(exports, "RegisterCallbackOn", RegisterCallbackOn);
 
-	NODE_SET_METHOD(exports, "GivePduToEngine", GivePduToEngine);
+	NODE_SET_METHOD(exports, "GivePdu", GivePdu);
+
+	NODE_SET_METHOD(exports, "RequestPdu", RequestPdu);
+
+	NODE_SET_METHOD(exports, "GetSummaryStatus", GetSummaryStatus);
+
+	NODE_SET_METHOD(exports, "GetIdFromString", GetIdFromString);
+
+	NODE_SET_METHOD(exports, "GetTransactionStatus", GetTransactionStatus);
 
 	NODE_SET_METHOD(exports, "Cycle", Cycle);
 

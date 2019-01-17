@@ -1,99 +1,99 @@
 /* CFDP */
-#define CFDP_MAX_CFG_VALUE_CHARS 	16
-#define CFDP_MAX_PATH_LEN			256
-#define CFDP_NUM_UPLINK_QUEUES		1
-#define CFDP_QUEUES_PER_CHAN		3
-#define CFDP_MAX_PLAYBACK_CHANNELS  2
-#define CFDP_MAX_TRANSID_CHARS    	20 /* 255.255_9999999 */
-#define CFDP_MAX_PARAM_LENGTH		256
-#define CFDP_MAX_PARAM_ENUM_LENGTH	128
-#define CFDP_MAX_ENUM_COUNT			64
-#define CFDP_TELEM_PICK_LIST_COUNT	22
+#define CF_MAX_CFG_VALUE_CHARS 	16
+#define CF_MAX_PATH_LEN			256
+#define CF_NUM_UPLINK_QUEUES		1
+#define CF_QUEUES_PER_CHAN		3
+#define CF_MAX_PLAYBACK_CHANNELS  2
+#define CF_MAX_TRANSID_CHARS    	20 /* 255.255_9999999 */
+#define CF_MAX_PARAM_LENGTH		256
+#define CF_MAX_PARAM_ENUM_LENGTH	128
+#define CF_MAX_ENUM_COUNT			64
+#define CF_TELEM_PICK_LIST_COUNT	22
 
-#define CFDP_EVENT_MESSAGE_LENGTH 		250
-#define CFDP_NUM_ENG_CYCLES_PER_WAKEUP	10
-#define CFDP_MAX_ERR_STRING_CHARS		32
+#define CF_EVENT_MESSAGE_LENGTH 		250
+#define CF_NUM_ENG_CYCLES_PER_WAKEUP	10
+#define CF_MAX_ERR_STRING_CHARS		32
 
-#define CFDP_SUCCESS              0
-#define CFDP_ERROR               -1
-#define CFDP_BAD_MSG_LENGTH_RC   -2
+#define CF_SUCCESS              0
+#define CF_ERROR               -1
+#define CF_BAD_MSG_LENGTH_RC   -2
 
-#define CFDP_INVALID              0xFFFFFFFF
+#define CF_INVALID              0xFFFFFFFF
 
-#define CFDP_DONT_CARE            0
-#define CFDP_UNKNOWN              0
-#define CFDP_TRANS_SUCCESS        1
-#define CFDP_TRANS_FAIL           2
+#define CF_DONT_CARE            0
+#define CF_UNKNOWN              0
+#define CF_TRANS_SUCCESS        1
+#define CF_TRANS_FAIL           2
 
-#define CFDP_ENTRY_UNUSED         0
-#define CFDP_ENTRY_IN_USE         1
+#define CF_ENTRY_UNUSED         0
+#define CF_ENTRY_IN_USE         1
 
-#define CFDP_DISABLED             0
-#define CFDP_ENABLED              1
+#define CF_DISABLED             0
+#define CF_ENABLED              1
 
-#define CFDP_FALSE                0
-#define CFDP_TRUE                 1
+#define CF_FALSE                0
+#define CF_TRUE                 1
 
-#define CFDP_CLOSED               0
-#define CFDP_OPEN                 1
+#define CF_CLOSED               0
+#define CF_OPEN                 1
 
-#define CFDP_FILE_NOT_ACTIVE      0
-#define CFDP_FILE_IS_ACTIVE       1
+#define CF_FILE_NOT_ACTIVE      0
+#define CF_FILE_IS_ACTIVE       1
 
-#define CFDP_NOT_IN_PROGRESS      0
-#define CFDP_IN_PROGRESS          1
+#define CF_NOT_IN_PROGRESS      0
+#define CF_IN_PROGRESS          1
 
-#define CFDP_UP_ACTIVEQ           0
-#define CFDP_UP_HISTORYQ          1
+#define CF_UP_ACTIVEQ           0
+#define CF_UP_HISTORYQ          1
 
-#define CFDP_PB_PENDINGQ          0
-#define CFDP_PB_ACTIVEQ           1
-#define CFDP_PB_HISTORYQ          2
+#define CF_PB_PENDINGQ          0
+#define CF_PB_ACTIVEQ           1
+#define CF_PB_HISTORYQ          2
 
-#define CFDP_PENDINGQ             0
-#define CFDP_ACTIVEQ              1
-#define CFDP_HISTORYQ             2
+#define CF_PENDINGQ             0
+#define CF_ACTIVEQ              1
+#define CF_HISTORYQ             2
 
-#define CFDP_ENTRY_UNUSED         0
-#define CFDP_ENTRY_IN_USE         1
+#define CF_ENTRY_UNUSED         0
+#define CF_ENTRY_IN_USE         1
 
-#define CFDP_NOT_ISSUED           0
-#define CFDP_WAS_ISSUED           1
+#define CF_NOT_ISSUED           0
+#define CF_WAS_ISSUED           1
 
-#define CFDP_DELETE_FILE          0
-#define CFDP_KEEP_FILE            1
+#define CF_DELETE_FILE          0
+#define CF_KEEP_FILE            1
 
-#define CFDP_PLAYBACKFILECMD      1
-#define CFDP_PLAYBACKDIRCMD       2
-#define CFDP_POLLDIRECTORY        3
+#define CF_PLAYBACKFILECMD      1
+#define CF_PLAYBACKDIRCMD       2
+#define CF_POLLDIRECTORY        3
 
-#define CFDP_ALL                  0
-#define CFDP_UPLINK               1
-#define CFDP_PLAYBACK             2
+#define CF_ALL                  0
+#define CF_UPLINK               1
+#define CF_PLAYBACK             2
 
-#define CFDP_INCOMING             1
-#define CFDP_OUTGOING             2
+#define CF_INCOMING             1
+#define CF_OUTGOING             2
 
-#define CFDP_TLM                  0
-#define CFDP_CMD                  1
+#define CF_TLM                  0
+#define CF_CMD                  1
 
-#define CFDP_CLASS_1              1
-#define CFDP_CLASS_2              2
+#define CF_CLASS_1              1
+#define CF_CLASS_2              2
 
-#define CFDP_QUEUES_PER_CHAN      3
+#define CF_QUEUES_PER_CHAN      3
 
-#define CFDP_STAT_UNKNOWN         		0
-#define CFDP_STAT_SUCCESS         		1
-#define CFDP_STAT_CANCELLED       		2
-#define CFDP_STAT_ABANDON         		3
-#define CFDP_STAT_NO_META         		4
-#define CFDP_STAT_PENDING         		5
-#define CFDP_STAT_ALRDY_ACTIVE    		6
-#define CFDP_STAT_PUT_REQ_ISSUED  		7
-#define CFDP_STAT_PUT_REQ_FAIL    		8
-#define CFDP_STAT_ACTIVE          		9
+#define CF_STAT_UNKNOWN         		0
+#define CF_STAT_SUCCESS         		1
+#define CF_STAT_CANCELLED       		2
+#define CF_STAT_ABANDON         		3
+#define CF_STAT_NO_META         		4
+#define CF_STAT_PENDING         		5
+#define CF_STAT_ALRDY_ACTIVE    		6
+#define CF_STAT_PUT_REQ_ISSUED  		7
+#define CF_STAT_PUT_REQ_FAIL    		8
+#define CF_STAT_ACTIVE          		9
 
-#define CFDP_FILE FILE
+#define CF_FILE FILE
 
 /* OS */
 #define OS_PACK         __attribute__ ((packed))

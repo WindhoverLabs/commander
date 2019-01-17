@@ -94,7 +94,7 @@ typedef struct
 	Queue				UpQ[NUM_UPLINK_QUEUES];
 	ChannelData			Chan[MAX_PLAYBACK_CHANNELS];
 	CFDP_DATA			RawPduInputBuf;
-	char 				BaseDir[CFDP_MAX_PATH_LEN];
+	char 				BaseDir[CF_MAX_PATH_LEN];
 
 }CF_AppData;
 
@@ -103,32 +103,40 @@ CF_AppData AppData;
 
 CF_Config Config;
 
-static ChannelData		Chan[CFDP_MAX_PLAYBACK_CHANNELS];
+static ChannelData		Chan[CF_MAX_PLAYBACK_CHANNELS];
 
 
 QueueEntry* FindUpNodeByTransID(uint32_t , char *, uint32_t );
 
 void Indication (INDICATION_TYPE IndType, TRANS_STATUS TransInfo);
 
-boolean PduOutputReady (PDU_TYPE PduType, TRANSACTION TransInfo,ID DestinationId);
+boolean isPduOutputReady (PDU_TYPE PduType, TRANSACTION TransInfo,ID DestinationId);
 
-void PduOutputSend (TRANSACTION TransInfo,ID DestinationId, CFDP_DATA *PduPtr);
+void SendPduOutput (TRANSACTION TransInfo,ID DestinationId, CFDP_DATA *PduPtr);
 
-boolean PduOutputOpen (ID , ID );
+boolean isPduOutputOpen (ID , ID );
 
 boolean cfdp_give_pdu (CFDP_DATA pdu);
 
+boolean cfdp_give_request (const char *);
+
+SUMMARY_STATUS cfdp_summary_status (void);
+
+boolean cfdp_id_from_string (const char *, ID *);
+
+boolean cfdp_transaction_status (TRANSACTION , TRANS_STATUS *);
+
 void cfdp_cycle_each_transaction (void);
 
-CFDP_FILE * FileOpen(const char *, const char *);
+CF_FILE * FileOpen(const char *, const char *);
 
-size_t FileRead(void *, size_t ,size_t , CFDP_FILE *);
+size_t FileRead(void *, size_t ,size_t , CF_FILE *);
 
-size_t FileWrite(const void *, size_t ,size_t , CFDP_FILE *);
+size_t FileWrite(const void *, size_t ,size_t , CF_FILE *);
 
-int FileClose(CFDP_FILE *);
+int FileClose(CF_FILE *);
 
-int FileSeek(CFDP_FILE *, long int , int );
+int FileSeek(CF_FILE *, long int , int );
 
 int32_t Seek(int32_t  , int32_t , uint32_t );
 
@@ -147,8 +155,6 @@ int InfoEvent(const char *Format, ...);
 int WarningEvent(const char *Format, ...);
 
 void RegisterCallbacks(void);
-
-int ChannelInit(void);
 
 
 using namespace v8;
@@ -169,6 +175,13 @@ CallbackData LogError;
 CallbackData LogDebug;
 
 CallbackData LogWarning;
+
+CallbackData pduOutputOpen;
+
+CallbackData pduOutputReady;
+
+CallbackData PduOutputSend;
+
 
 std::string Util_GetStdString(v8::Local<v8::String>);
 
