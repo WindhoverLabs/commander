@@ -1,408 +1,123 @@
 #include <nan.h>
 #include <fstream>
-#include <iostream>
 #include <string>
-#include <typeinfo>
 #include <stdarg.h>
 #include "cf_app.h"
 
-using namespace v8;
 
 void Indication (INDICATION_TYPE IndType, TRANS_STATUS TransInfo)
 {
-		QueueEntry 	*queueEntryPtr = NULL;
-	    int32_t		chan;
-	    char        localFinalStatBuf[CF_MAX_ERR_STRING_CHARS];
-	    char        localCondCodeBuf[CF_MAX_ERR_STRING_CHARS];
-	    char        entityIDBuf[CF_MAX_CFG_VALUE_CHARS];
 
-	    /*initialization*/
-	    TransInfo.md.source_file_name[MAX_FILE_NAME_LENGTH - 1] = '\0';
-	    TransInfo.md.dest_file_name[MAX_FILE_NAME_LENGTH - 1] = '\0';
-
-	    switch(IndType)
-	    {
-	        case IND_TRANSACTION:
-	            break;
-
-	        case IND_MACHINE_ALLOCATED:
-	            /* if uplink trans, build new node */
-	            if((TransInfo.role ==  CLASS_1_RECEIVER) ||
-	               (TransInfo.role ==  CLASS_2_RECEIVER))
-	            {
-	                /* Build up a new Node */
-	            	QueueEntry 	*queueEntry = new QueueEntry;
-	                queueEntryPtr = queueEntry;
-
-	                if(queueEntryPtr != NULL)
-	                {
-	                    /* fill-in queue entry */
-	                    if(TransInfo.role ==  CLASS_1_RECEIVER)
-	                        queueEntryPtr->Class = 1;
-	                    else
-	                        queueEntryPtr->Class = 2;
-
-	                    queueEntryPtr->Status   = CF_STAT_ACTIVE;
-	                    queueEntryPtr->CondCode = 0;
-	                    queueEntryPtr->Priority = 0xFF;
-	                    /* TODO:  Fix this.  Replace it with something more dynamic. */
-	                    queueEntryPtr->ChanNum  = 0;
-	                    queueEntryPtr->Source   = 0xFF;
-	                    queueEntryPtr->Warning  = CF_NOT_ISSUED;
-	                    queueEntryPtr->NodeType = CF_UPLINK;
-	                    queueEntryPtr->TransNum = TransInfo.trans.number;
-	                    sprintf(&queueEntryPtr->SrcEntityId[0],"%d.%d",
-	                            TransInfo.trans.source_id.value[0],
-	                            TransInfo.trans.source_id.value[1]);
-
-	                    /* filenames not known until the metadata rcvd indication */
-	                    strcpy(&queueEntryPtr->SrcFile[0],"UNKNOWN");
-	                    strcpy(&queueEntryPtr->DstFile[0],"UNKNOWN");
-
-	                    /* Place Node on Uplink Active Queue */
-	                    // AddFileToUpQueue(CF_UP_ACTIVEQ, queueEntryPtr);
-	                    InfoEvent("CFDP::AddFileToUpQueue");
-	                }
-	                else
-	                {
-	                	ErrorEvent( "AllocQueueEntry returned NULL.");
-	                }
-	            }
-	            else
-	            {
-	                /* file-send transaction */
-	                // queueEntryPtr = FindNodeAtFrontOfQueue(TransInfo);
-	            	queueEntryPtr = 0;
-	            	InfoEvent("CFDP::FindNodeAtFrontOfQueue");
-
-	                if(queueEntryPtr != NULL)
-	                {
-	                	InfoEvent( "Outgoing trans started %d.%d_%d,src %s",
-	                                    TransInfo.trans.source_id.value[0],
-	                                    TransInfo.trans.source_id.value[1],
-	                                    TransInfo.trans.number,
-	                                    &TransInfo.md.source_file_name[0]);
-
-	                    queueEntryPtr->TransNum = TransInfo.trans.number;
-
-	                    Chan[queueEntryPtr->ChanNum].DataBlast = CF_IN_PROGRESS;
-	                    Chan[queueEntryPtr->ChanNum].TransNumBlasting = TransInfo.trans.number;
-
-	                    /* move node from pending queue to active queue */
-	                    /*
-	                    RemoveFileFromPbQueue(queueEntryPtr->ChanNum,
-	                                                CF_PB_PENDINGQ,
-	                                                queueEntryPtr);
-	                    AddFileToPbQueue(queueEntryPtr->ChanNum, CF_PB_ACTIVEQ,
-	                                                queueEntryPtr);
-	                    */
-	                    queueEntryPtr->Status = CF_STAT_ACTIVE;
-
-	                }
-
-
-	            }/* end if */
-
-	            break;
-
-	        case IND_METADATA_SENT:
-	            break;
-
-	        case IND_METADATA_RECV:
-//	            Up.MetaCount++;
-
-	            sprintf(entityIDBuf,"%d.%d",TransInfo.trans.source_id.value[0],
-	                                        TransInfo.trans.source_id.value[1]);
-
-	            /* file-receive transaction */
-            	InfoEvent( "Incoming trans started %d.%d_%d,dest %s",
-	                                TransInfo.trans.source_id.value[0],
-	                                TransInfo.trans.source_id.value[1],
-	                                TransInfo.trans.number,
-	                                TransInfo.md.dest_file_name);
-
-	            /*  find corresponding queue entry (created in mach allocated  */
-	            /*  indication) then fill in src and dest filenames */
-
-	            queueEntryPtr = FindUpNodeByTransID(CF_UP_ACTIVEQ, entityIDBuf, TransInfo.trans.number);
-
-	            if(queueEntryPtr != NULL)
-	            {
-	                strncpy(&queueEntryPtr->SrcFile[0],TransInfo.md.source_file_name, CF_MAX_PATH_LEN);
-	                strncpy(&queueEntryPtr->DstFile[0],TransInfo.md.dest_file_name, CF_MAX_PATH_LEN);
-	            }
-
-	            break;
-
-	        case IND_EOF_SENT:
-	            /* Find Channel Number, search the given queue for all channels */
-	            // chan = GetChanNumFromTransId(CF_PB_ACTIVEQ, TransInfo.trans.number);
-	            if(chan != CF_ERROR)
-	            {
-	            	/* Start transfer of next file on queue (if queue has another file) */
-	                // StartNextFile(chan);
-	            }
-
-	            break;
-
-	        case IND_EOF_RECV:
-	            break;
-
-	        case IND_TRANSACTION_FINISHED:
-	            break;
-
-	        case IND_MACHINE_DEALLOCATED:
-	            /* do transaction-success processing */
-	            if(TransInfo.final_status == FINAL_STATUS_SUCCESSFUL)
-	            {
-	                /* successful file-receive transaction processing */
-	                if( (TransInfo.role ==  CLASS_1_RECEIVER) ||
-	                    (TransInfo.role ==  CLASS_2_RECEIVER) )
-	                {
-	                    sprintf(entityIDBuf,"%d.%d",TransInfo.trans.source_id.value[0],
-	                                        TransInfo.trans.source_id.value[1]);
-
-	                    queueEntryPtr = FindUpNodeByTransID(CF_UP_ACTIVEQ, entityIDBuf, TransInfo.trans.number);
-	                    if(queueEntryPtr != NULL)
-	                    {
-	                        queueEntryPtr->Status = CF_STAT_SUCCESS;
-	                    }
-
-//	                    Up.SuccessCounter++;
-	                    // strncpy(&Up.LastFileUplinked[0], &TransInfo.md.dest_file_name[0], CF_MAX_PATH_LEN);
-	                    // MoveUpNodeActiveToHistory(entityIDBuf, TransInfo.trans.number);
-
-	                	InfoEvent( "Incoming trans success %d.%d_%d,dest %s",
-	                                TransInfo.trans.source_id.value[0],
-	                                TransInfo.trans.source_id.value[1],
-	                                TransInfo.trans.number,
-	                                &TransInfo.md.dest_file_name[0]);
-	                }
-	                else
-	                {
-	                    /* successful file-send transaction processing */
-	                    // chan = GetChanNumFromTransId(CF_PB_ACTIVEQ, TransInfo.trans.number);
-
-	                    if(chan != CF_ERROR)
-	                    {
-	                        // Chan[chan].SuccessCounter++;
-	                    	// queueEntryPtr = FindPbNodeByTransNum(chan, CF_PB_ACTIVEQ, TransInfo.trans.number);
-	                        queueEntryPtr = 0;
-	                    	if(queueEntryPtr != NULL)
-	                        {
-	                            queueEntryPtr->Status = CF_STAT_SUCCESS;
-	                        }
-	                    }
-
-	                    // if(queueEntryPtr->Preserve == CF_DELETE_FILE)
-	                    // {
-	                    //     OS_remove(&TransInfo.md.source_file_name[0]);
-	                    // }
-
-	                    // MoveDwnNodeActiveToHistory(TransInfo.trans.number);
-
-	                	InfoEvent( "Outgoing trans success %d.%d_%d,src %s",
-	                                    TransInfo.trans.source_id.value[0],
-	                                    TransInfo.trans.source_id.value[1],
-	                                    TransInfo.trans.number,
-	                                    &TransInfo.md.source_file_name[0]);
-	                }
-	            }
-	            else
-	            {
-	                /* do transaction-failed processing */
-	                /*
-	            	sprintf(&App.LastFailedTrans[0],"%d.%d_%lu",
-	                        TransInfo.trans.source_id.value[0],
-	                        TransInfo.trans.source_id.value[1],
-	                        TransInfo.trans.number);
-					*/
-	                /* increment the corresponding telemetry counter */
-	                // IncrFaultCtr(&TransInfo);
-
-	                /* for error event below */
-	                /*
-	            	GetFinalStatString(localFinalStatBuf,
-	                                      TransInfo.final_status,
-	                                      CF_MAX_ERR_STRING_CHARS);
-					*/
-	                /* for error event below */
-	                /*
-	            	GetCondCodeString(localCondCodeBuf,
-	                                     TransInfo.condition_code,
-	                                     CF_MAX_ERR_STRING_CHARS);
-					*/
-
-	                /* failed file-receive transaction processing */
-	                if( (TransInfo.role ==  CLASS_1_RECEIVER) ||
-	                    (TransInfo.role ==  CLASS_2_RECEIVER) )
-	                {
-//	                    Up.FailedCounter++;
-
-	                    sprintf(entityIDBuf,"%d.%d",TransInfo.trans.source_id.value[0],
-	                                        TransInfo.trans.source_id.value[1]);
-
-	                    queueEntryPtr = FindUpNodeByTransID(CF_UP_ACTIVEQ, entityIDBuf, TransInfo.trans.number);
-
-	                    if(queueEntryPtr != NULL)
-	                    {
-	                        queueEntryPtr->Status = TransInfo.final_status;
-	                        queueEntryPtr->CondCode = TransInfo.condition_code;
-	                    }
-
-	                    // MoveUpNodeActiveToHistory(entityIDBuf, TransInfo.trans.number);
-
-	                	InfoEvent( "Incoming trans %d.%d_%d %s,CondCode %s,dest %s",
-	                                TransInfo.trans.source_id.value[0],
-	                                TransInfo.trans.source_id.value[1],
-	                                TransInfo.trans.number,
-	                                localFinalStatBuf,
-	                                localCondCodeBuf,
-	                                TransInfo.md.dest_file_name);
-
-	                }
-	                else
-	                {
-	                    /* failed file-send transaction processing */
-	                    // chan = GetChanNumFromTransId(CF_PB_ACTIVEQ, TransInfo.trans.number);''
-
-	                    // Chan[chan].FailedCounter++;
-	                    // queueEntryPtr = FindPbNodeByTransNum(chan, CF_PB_ACTIVEQ, TransInfo.trans.number);
-	                    queueEntryPtr = 0;
-	                    if(queueEntryPtr != NULL)
-	                    {
-	                        queueEntryPtr->Status = TransInfo.final_status;
-	                        queueEntryPtr->CondCode = TransInfo.condition_code;
-	                    }
-
-	                    // MoveDwnNodeActiveToHistory(TransInfo.trans.number);
-
-	                	InfoEvent( "Outgoing trans %d.%d_%d %s,CondCode %s,Src %s,Ch %d ",
-	                                TransInfo.trans.source_id.value[0],
-	                                TransInfo.trans.source_id.value[1],
-	                                TransInfo.trans.number,
-	                                localFinalStatBuf,
-	                                localCondCodeBuf,
-	                                TransInfo.md.source_file_name,
-	                                chan);
-
-	                    /* if trans was aborted before EOF was sent, need to  */
-	                    /* start the next file. This could happen via flight-side */
-	                    /* abandon or gnd-side cancel */
-	                    if(TransInfo.trans.number == Chan[chan].TransNumBlasting)
-	                    {
-	                    	Chan[chan].DataBlast = CF_NOT_IN_PROGRESS;
-	                    	Chan[chan].TransNumBlasting = 0;
-
-	                    //    if(AppData.Tbl->OuCh[Chan].DequeueEnable == ENABLED){
-	                    //        StartNextFile(Chan);
-	                    //    }/* end if */
-
-	                    }/* end if */
-	                } /* end if */
-
-	            }/* end if */
-
-	            break;
-
-	        case IND_ACK_TIMER_EXPIRED:
-	        	WarningEvent( "Ack Timer Expired %d.%d_%d,%s",
-	                              TransInfo.trans.source_id.value[0],
-	                              TransInfo.trans.source_id.value[1],
-	                              TransInfo.trans.number,
-	                              &TransInfo.md.source_file_name[0]);
-	            break;
-
-	        case IND_INACTIVITY_TIMER_EXPIRED:
-	        	WarningEvent( "Inactivity Timer Expired %d.%d_%d,%s",
-	                              TransInfo.trans.source_id.value[0],
-	                              TransInfo.trans.source_id.value[1],
-	                              TransInfo.trans.number,
-	                              &TransInfo.md.source_file_name[0]);
-	            break;
-
-	        case IND_NAK_TIMER_EXPIRED:
-	        	WarningEvent( "Nack Timer Expired %d.%d_%d,%s",
-	                              TransInfo.trans.source_id.value[0],
-	                              TransInfo.trans.source_id.value[1],
-	                              TransInfo.trans.number,
-	                              &TransInfo.md.source_file_name[0]);
-	            break;
-
-	        case IND_SUSPENDED:
-	        	WarningEvent( "Transaction Suspended %d.%d_%d,%s",
-	                              TransInfo.trans.source_id.value[0],
-	                              TransInfo.trans.source_id.value[1],
-	                              TransInfo.trans.number,
-	                              &TransInfo.md.source_file_name[0]);
-	            break;
-
-	        case IND_RESUMED:
-	        	WarningEvent( "Transaction Resumed %d.%d_%d,%s",
-	                              TransInfo.trans.source_id.value[0],
-	                              TransInfo.trans.source_id.value[1],
-	                              TransInfo.trans.number,
-	                              &TransInfo.md.source_file_name[0]);
-	            break;
-
-	        case IND_REPORT:
-	            break;
-
-	        case IND_FAULT:
-	        	WarningEvent( "Fault %d,%d.%d_%d,%s",
-	                              TransInfo.condition_code,
-	                              TransInfo.trans.source_id.value[0],
-	                              TransInfo.trans.source_id.value[1],
-	                              TransInfo.trans.number,
-	                              &TransInfo.md.source_file_name[0]);
-	            break;
-
-	        case IND_ABANDONED:
-	        	WarningEvent( "Indication:Transaction Abandon %d.%d_%d,%s",
-	                              TransInfo.trans.source_id.value[0],
-	                              TransInfo.trans.source_id.value[1],
-	                              TransInfo.trans.number,
-	                              &TransInfo.md.source_file_name[0]);
-
-//	            TotalAbandonTrans++;
-	            break;
-
-	        default:
-	        	ErrorEvent( "Unexpected indication type %d.", IndType);
-	            break;
-
-	    }/* end switch */
-	}
-
-QueueEntry* FindUpNodeByTransID(uint32_t queue, char *srcEntityID, uint32_t trans)
-{
-	QueueEntry *qNodePtr;
-
-    qNodePtr = AppData.UpQ[queue].HeadPtr;
-    while(qNodePtr != NULL)
-    {
-        if(qNodePtr->TransNum == trans)
-        {
-            if(strncmp(srcEntityID, qNodePtr->SrcEntityId, CF_MAX_CFG_VALUE_CHARS) == 0)
-                return qNodePtr;
-        }
-        qNodePtr = qNodePtr->Next;
-    }
-
-    return NULL;
-}
-
-boolean isPduOutputOpen (ID SourceId, ID DestinationId)
-{
     Isolate *isolate = Isolate::GetCurrent();
+    int i;
+	v8::Local<v8::Object> mdObj = v8::Object::New(isolate);
+
+	mdObj->Set(v8::String::NewFromUtf8(isolate, "file_transfer"),v8::Boolean::New(isolate, TransInfo.md.file_transfer));
+	mdObj->Set(v8::String::NewFromUtf8(isolate, "segmentation_control"),v8::Boolean::New(isolate, TransInfo.md.segmentation_control));
+	mdObj->Set(v8::String::NewFromUtf8(isolate, "file_size"),v8::Number::New(isolate, TransInfo.md.file_size));
+	mdObj->Set(v8::String::NewFromUtf8(isolate, "source_file_name"),v8::String::NewFromUtf8(isolate, TransInfo.md.source_file_name));
+	mdObj->Set(v8::String::NewFromUtf8(isolate, "dest_file_name"),v8::String::NewFromUtf8(isolate, TransInfo.md.dest_file_name));
+
+	v8::Local<Object> patnerIdObj = v8::Object::New(isolate);
+
+	patnerIdObj->Set(v8::String::NewFromUtf8(isolate, "length"),v8::Number::New(isolate, TransInfo.partner_id.length));
+
+	v8::Local<Array> partner_id_val = v8::Array::New(isolate,TransInfo.partner_id.length);
+	for( i = 0; i < TransInfo.partner_id.length; i++)
+	{
+		v8::Local<v8::Value> elm = v8::Number::New(isolate,TransInfo.partner_id.value[i]);
+		partner_id_val->Set(i, elm);
+	}
+	patnerIdObj->Set(v8::String::NewFromUtf8(isolate, "value"),partner_id_val);
+
+
+	Local<Object> obj = Nan::New<Object>();
+
+	obj->Set(v8::String::NewFromUtf8(isolate, "IndType"),v8::String::NewFromUtf8(isolate, IndicationType[IndType]));
+	obj->Set(v8::String::NewFromUtf8(isolate, "abandoned"),v8::Boolean::New(isolate, TransInfo.abandoned));
+	obj->Set(v8::String::NewFromUtf8(isolate, "attempts"),v8::Number::New(isolate, TransInfo.attempts));
+	obj->Set(v8::String::NewFromUtf8(isolate, "cancelled"),v8::Boolean::New(isolate, TransInfo.cancelled));
+	obj->Set(v8::String::NewFromUtf8(isolate, "external_file_xfer"),v8::Boolean::New(isolate, TransInfo.external_file_xfer));
+	obj->Set(v8::String::NewFromUtf8(isolate, "fd_offset"),v8::Number::New(isolate, TransInfo.fd_offset));
+	obj->Set(v8::String::NewFromUtf8(isolate, "fd_length"),v8::Number::New(isolate, TransInfo.fd_length));
+	obj->Set(v8::String::NewFromUtf8(isolate, "file_checksum_as_calculated"),v8::Number::New(isolate, TransInfo.file_checksum_as_calculated));
+	obj->Set(v8::String::NewFromUtf8(isolate, "finished"),v8::Boolean::New(isolate, TransInfo.finished));
+	obj->Set(v8::String::NewFromUtf8(isolate, "frozen"),v8::Boolean::New(isolate, TransInfo.frozen));
+	obj->Set(v8::String::NewFromUtf8(isolate, "has_md_been_received"),v8::Boolean::New(isolate, TransInfo.has_md_been_received));
+	obj->Set(v8::String::NewFromUtf8(isolate, "how_many_naks"),v8::Number::New(isolate, TransInfo.how_many_naks));
+	obj->Set(v8::String::NewFromUtf8(isolate, "is_this_trans_solely_for_ack_fin"),v8::Boolean::New(isolate, TransInfo.is_this_trans_solely_for_ack_fin));
+	obj->Set(v8::String::NewFromUtf8(isolate, "phase"),v8::Number::New(isolate, TransInfo.phase));
+	obj->Set(v8::String::NewFromUtf8(isolate, "received_file_size"),v8::Number::New(isolate, TransInfo.received_file_size));
+	obj->Set(v8::String::NewFromUtf8(isolate, "start_time"),v8::Number::New(isolate, TransInfo.start_time));
+	obj->Set(v8::String::NewFromUtf8(isolate, "suspended"),v8::Boolean::New(isolate, TransInfo.suspended));
+	obj->Set(v8::String::NewFromUtf8(isolate, "temp_file_name"),v8::String::NewFromUtf8(isolate, TransInfo.temp_file_name));
+
+	obj->Set(v8::String::NewFromUtf8(isolate, "condition_code"),v8::String::NewFromUtf8(isolate, ConditionCode[TransInfo.condition_code]));
+	obj->Set(v8::String::NewFromUtf8(isolate, "delivery_code"),v8::String::NewFromUtf8(isolate, DeliveryCode[TransInfo.delivery_code]));
+	obj->Set(v8::String::NewFromUtf8(isolate, "final_status"),v8::String::NewFromUtf8(isolate, FinalStatus[TransInfo.final_status]));
+	obj->Set(v8::String::NewFromUtf8(isolate, "role"),v8::String::NewFromUtf8(isolate, Role[TransInfo.role]));
+	obj->Set(v8::String::NewFromUtf8(isolate, "state"),v8::String::NewFromUtf8(isolate, State[TransInfo.state]));
+
+	obj->Set(v8::String::NewFromUtf8(isolate, "md"),mdObj);
+	obj->Set(v8::String::NewFromUtf8(isolate, "partner_id"),patnerIdObj);
 
 	const int argc = 1;
 
 	v8::Local<v8::Value> argv[argc];
 
-	argv[0] = Boolean::New(isolate, true);
+	argv[0] = obj;
+
+	Local<Function> Func = Local<Function>::New(isolate, IndicationHandle.Function);
+
+	if(IndicationHandle.IsDefined)
+	{
+		Func->Call(isolate->GetCurrentContext()->Global(), argc, argv);
+
+	}
+
+}
+
+boolean isPduOutputOpen (ID SourceId, ID DestinationId)
+{
+    Isolate *isolate = Isolate::GetCurrent();
+    int i;
+	v8::Local<Object> obj = v8::Object::New(isolate);
+
+	obj->Set(v8::String::NewFromUtf8(isolate, "srcLength"),v8::Number::New(isolate, SourceId.length));
+	obj->Set(v8::String::NewFromUtf8(isolate, "dstLength"),v8::Number::New(isolate, DestinationId.length));
+
+
+	v8::Local<Array> Outval1 = v8::Array::New(isolate,SourceId.length);
+	v8::Local<Array> Outval2 = v8::Array::New(isolate,DestinationId.length);
+
+	for( i = 0; i < SourceId.length; i++)
+	{
+		v8::Local<v8::Value> elm = v8::Number::New(isolate,SourceId.value[i]);
+		Outval1->Set(i, elm);
+	}
+
+
+
+	for( i = 0; i < DestinationId.length; i++)
+	{
+		v8::Local<v8::Value> elm = v8::Number::New(isolate,DestinationId.value[i]);
+		Outval2->Set(i, elm);
+	}
+
+	obj->Set(v8::String::NewFromUtf8(isolate, "srcValue"),Outval1);
+	obj->Set(v8::String::NewFromUtf8(isolate, "dstValue"),Outval2);
+
+
+
+	const int argc = 1;
+
+	v8::Local<v8::Value> argv[argc];
+
+	argv[0] = obj;
 
 	Local<Function> Func = Local<Function>::New(isolate, pduOutputOpen.Function);
+
+
 
 	if(pduOutputOpen.IsDefined)
 	{
@@ -417,11 +132,41 @@ boolean isPduOutputReady (PDU_TYPE PduType, TRANSACTION TransInfo,ID Destination
 
     Isolate *isolate = Isolate::GetCurrent();
 
+	v8::Local<Object> obj = v8::Object::New(isolate);
+
+	obj->Set(v8::String::NewFromUtf8(isolate, "pduType"),v8::String::NewFromUtf8(isolate, PduTypeEMap[PduType]));
+
+    int i;
+
+	obj->Set(v8::String::NewFromUtf8(isolate, "transSrcLength"),v8::Number::New(isolate, TransInfo.source_id.length));
+	obj->Set(v8::String::NewFromUtf8(isolate, "dstLength"),v8::Number::New(isolate, DestinationId.length));
+
+
+	v8::Local<Array> Outval1 = v8::Array::New(isolate,TransInfo.source_id.length);
+	v8::Local<Array> Outval2 = v8::Array::New(isolate,DestinationId.length);
+
+	for( i = 0; i < TransInfo.source_id.length; i++)
+	{
+		v8::Local<v8::Value> elm = v8::Number::New(isolate,TransInfo.source_id.value[i]);
+		Outval1->Set(i, elm);
+	}
+
+
+
+	for( i = 0; i < DestinationId.length; i++)
+	{
+		v8::Local<v8::Value> elm = v8::Number::New(isolate,DestinationId.value[i]);
+		Outval2->Set(i, elm);
+	}
+
+	obj->Set(v8::String::NewFromUtf8(isolate, "transSrcValue"),Outval1);
+	obj->Set(v8::String::NewFromUtf8(isolate, "dstValue"),Outval2);
+
 	const int argc = 1;
 
 	v8::Local<v8::Value> argv[argc];
 
-	argv[0] = Boolean::New(isolate, true);
+	argv[0] = obj;
 
 	Local<Function> Func = Local<Function>::New(isolate, pduOutputReady.Function);
 
@@ -465,13 +210,51 @@ int32_t Seek(int32_t  filedes, int32_t offset, uint32_t whence)
 
 CF_FILE * FileOpen(const char *Name, const char *Mode){
 
-	FILE	*fileHandle;
-	char temp[CF_MAX_PATH_LEN];
+	Work * work = new Work();
+	work->request.data = work;
+//	FILE	*fileHandle;
+//	char temp[CF_MAX_PATH_LEN];
 
-	strncpy(temp, AppData.BaseDir, CF_MAX_PATH_LEN);
-	strncat(temp, Name, CF_MAX_PATH_LEN);
-    fileHandle = fopen(temp, Mode);
-    return fileHandle;
+
+//	work.Mode = Mode;
+	strncpy(work->tempStrA, Mode, CF_MAX_PATH_LEN);
+	strncpy(work->tempStrB, AppData.BaseDir, CF_MAX_PATH_LEN);
+	strncat(work->tempStrB, Name, CF_MAX_PATH_LEN);
+
+//	/* create an async work token */
+//	uv_work_t *req = 0;
+//
+//    /* create an async work token */
+//    req = new uv_work_t;
+//    req->data = &hdl;
+
+
+
+    uv_queue_work(uv_default_loop(),&work->request,
+    		FileOpenWorker,FileOpenWorkerShutdown);
+
+    Work * a = (Work *)work->request.data;
+
+    return a->file;
+}
+void FileOpenWorker(uv_work_t * req)
+{
+
+	Work  handle;
+	memset(&handle,0,sizeof(handle));
+	memcpy(&handle,(Work*)req->data,sizeof(handle));
+
+	handle.file = fopen(handle.tempStrB, handle.tempStrA);
+	req->data = &handle;
+
+
+}
+
+void FileOpenWorkerShutdown(uv_work_t * req)
+{
+	Work * a = (Work *)req->data;
+	fclose(a->file);
+
 }
 
 size_t FileRead(void *Buffer, size_t Size,size_t Count, CF_FILE *File)
@@ -489,6 +272,7 @@ size_t FileWrite(const void *Buffer, size_t Size,size_t Count, CF_FILE *File)
 int FileClose(CF_FILE *File)
 {
 	return fclose(File);
+//	return 0;
 }
 
 int FileSeek(CF_FILE *File, long int Offset, int Whence)
@@ -763,12 +547,12 @@ void SetCallbackData(CallbackData * cd, Isolate * isolate, v8::Local<v8::Value> 
 
 void GivePdu(const FunctionCallbackInfo<Value> &args)
 {
+
 	Isolate* isolate = args.GetIsolate();
 
 	if(args.Length() < 1 || !args[0]->IsObject()) {
 
-	    isolate->ThrowException(Exception::TypeError(
-	    String::NewFromUtf8(isolate, "Byte buffer object expected")));
+		ErrorEvent("Invalid arguments, expected [ByteBuffer<Object>, ByteBufferLength<Number>]");
 	    return;
 
 	}
@@ -781,11 +565,12 @@ void GivePdu(const FunctionCallbackInfo<Value> &args)
 
 	if(AppData.RawPduInputBuf.length > CF_INCOMING_PDU_BUF_SIZE){
 
-		ErrorEvent("PDU Rcv Error:length %d exceeds INCOMING_PDU_BUF_SIZE %d",AppData.RawPduInputBuf.length,CF_INCOMING_PDU_BUF_SIZE);
+		ErrorEvent("PDU length %d exceeds INCOMING_PDU_BUF_SIZE %d",AppData.RawPduInputBuf.length,CF_INCOMING_PDU_BUF_SIZE);
 
 	}
 
 	memcpy(&AppData.RawPduInputBuf.content[0], buffer, AppData.RawPduInputBuf.length);
+
 
 	cfdp_give_pdu(AppData.RawPduInputBuf);
 }
@@ -794,13 +579,25 @@ void RequestPdu(const FunctionCallbackInfo<Value> &args)
 {
 	char ReqString[MAX_REQUEST_STRING_LENGTH];
 
+	if(args.Length() < 1
+			|| args.Length() > 4
+			|| !args[0]->IsNumber()
+			|| !args[1]->IsString()
+			|| !args[2]->IsString()
+			|| !args[3]->IsString()) {
+
+		ErrorEvent("Invalid arguments, expected [Class<Number>, PeerEntityId<String>, SrcFilename<String>, DstFilename<String>]");
+		return;
+
+	}
+
 	std::string Class 			= GetStdString(args[0]->ToString());
 	std::string PeerEntityId 	= GetStdString(args[1]->ToString());
 	std::string SrcFilename 	= GetStdString(args[2]->ToString());
 	std::string DstFilename 	= GetStdString(args[3]->ToString());
 
 	strcpy(ReqString,"PUT ");
-	strcat(ReqString,"-");
+	strcat(ReqString,"-class");
 	strcat(ReqString,Class.c_str());
 	strcat(ReqString," ");
 	strcat(&ReqString[0],SrcFilename.c_str());
@@ -813,10 +610,6 @@ void RequestPdu(const FunctionCallbackInfo<Value> &args)
 	{
         ErrorEvent("Engine put request returned error for %s",SrcFilename.c_str());
 	}
-	else
-	{
-		InfoEvent("Engine put request returned success for %s",SrcFilename.c_str());
-	}
 
 }
 
@@ -824,30 +617,30 @@ void GetSummaryStatus(const FunctionCallbackInfo<Value> &args)
 {
 	Isolate* isolate = args.GetIsolate();
 
-	Local<Object> obj = Object::New(isolate);
+	v8::Local<Object> obj = v8::Object::New(isolate);
 
 	SUMMARY_STATUS Summary;
 
 	Summary = cfdp_summary_status();
 
-	obj->Set(String::NewFromUtf8(isolate, "are_any_partners_frozen"),
-							Boolean::New(isolate, Summary.are_any_partners_frozen));
-	obj->Set(String::NewFromUtf8(isolate, "how_many_senders"),
-							Number::New(isolate, Summary.how_many_senders));
-	obj->Set(String::NewFromUtf8(isolate, "how_many_receivers"),
-							Number::New(isolate, Summary.how_many_receivers));
-	obj->Set(String::NewFromUtf8(isolate, "how_many_frozen"),
-							Number::New(isolate, Summary.how_many_frozen));
-	obj->Set(String::NewFromUtf8(isolate, "how_many_suspended"),
-							Number::New(isolate, Summary.are_any_partners_frozen));
-	obj->Set(String::NewFromUtf8(isolate, "total_files_sent"),
-							Number::New(isolate, Summary.how_many_senders));
-	obj->Set(String::NewFromUtf8(isolate, "total_files_received"),
-							Number::New(isolate, Summary.how_many_receivers));
-	obj->Set(String::NewFromUtf8(isolate, "total_unsuccessful_senders"),
-							Number::New(isolate, Summary.how_many_frozen));
-	obj->Set(String::NewFromUtf8(isolate, "total_unsuccessful_receivers"),
-							Number::New(isolate, Summary.how_many_receivers));
+	obj->Set(v8::String::NewFromUtf8(isolate, "are_any_partners_frozen"),
+			v8::Boolean::New(isolate, Summary.are_any_partners_frozen));
+	obj->Set(v8::String::NewFromUtf8(isolate, "how_many_senders"),
+			v8::Number::New(isolate, Summary.how_many_senders));
+	obj->Set(v8::String::NewFromUtf8(isolate, "how_many_receivers"),
+			v8::Number::New(isolate, Summary.how_many_receivers));
+	obj->Set(v8::String::NewFromUtf8(isolate, "how_many_frozen"),
+			v8::Number::New(isolate, Summary.how_many_frozen));
+	obj->Set(v8::String::NewFromUtf8(isolate, "how_many_suspended"),
+			v8::Number::New(isolate, Summary.are_any_partners_frozen));
+	obj->Set(v8::String::NewFromUtf8(isolate, "total_files_sent"),
+			v8::Number::New(isolate, Summary.how_many_senders));
+	obj->Set(v8::String::NewFromUtf8(isolate, "total_files_received"),
+			v8::Number::New(isolate, Summary.how_many_receivers));
+	obj->Set(v8::String::NewFromUtf8(isolate, "total_unsuccessful_senders"),
+			v8::Number::New(isolate, Summary.how_many_frozen));
+	obj->Set(v8::String::NewFromUtf8(isolate, "total_unsuccessful_receivers"),
+			v8::Number::New(isolate, Summary.how_many_receivers));
 
 
 	args.GetReturnValue().Set(obj);
@@ -855,20 +648,52 @@ void GetSummaryStatus(const FunctionCallbackInfo<Value> &args)
 
 void GetIdFromString(const FunctionCallbackInfo<Value> &args)
 {
+	int i;
+
+	Isolate* isolate = args.GetIsolate();
+
+	v8::Local<Object> obj = v8::Object::New(isolate);
+
 	ID OutId;
+
 	std::string DottedValString = GetStdString(args[0]->ToString());
 
 	if( !cfdp_id_from_string(DottedValString.c_str(), &OutId) )
 	{
 		ErrorEvent("ID cannot be retrieved for (%s)",DottedValString.c_str());
+		return;
 	}
+
+	obj->Set(v8::String::NewFromUtf8(isolate, "length"),v8::Number::New(isolate, OutId.length));
+
+	v8::Local<Array> Outval = v8::Array::New(isolate,OutId.length);
+
+	for( i = 0; i < OutId.length; i++)
+	{
+		v8::Local<v8::Value> elm = v8::Number::New(isolate,OutId.value[i]);
+		Outval->Set(i, elm);
+	}
+
+	obj->Set(v8::String::NewFromUtf8(isolate, "value"),Outval);
+
+	args.GetReturnValue().Set(obj);
 }
 
 void GetTransactionStatus(const FunctionCallbackInfo<Value> &args)
 {
-
 	TRANSACTION Trans;
-	TRANS_STATUS * OutTransStatus;
+
+
+	if(args.Length() < 1
+			|| args.Length() > 3
+			|| !args[0]->IsNumber()
+			|| !args[1]->IsNumber()
+			|| !args[2]->IsObject()) {
+
+		ErrorEvent("Invalid arguments, expected [TransactionNumber<Number>, TransactionSourceIdLength<Number>, TransactionSourceIdValueBuffer<Object>]");
+		return;
+
+	}
 
 	Trans.number 			= args[0]->NumberValue();
 	Trans.source_id.length 	= args[1]->NumberValue();
@@ -878,62 +703,92 @@ void GetTransactionStatus(const FunctionCallbackInfo<Value> &args)
 	memset(&Trans.source_id.value[0], 0, sizeof(Trans.source_id.value));
 	memcpy(&Trans.source_id.value[0], buffer, Trans.source_id.length);
 
-	if( !cfdp_transaction_status(Trans, OutTransStatus) )
+	boolean Status = cfdp_transaction_status(Trans, &ts_q);
+	if( !Status )
 	{
-		ErrorEvent("Transaction status cannot be retrieved for Trans# %s",Trans.number);
+		ErrorEvent("Transaction status cannot be retrieved for Transaction # %d",Trans.number);
+		return;
+	}
+	else{
+
+		tsCallbackHandle();
 	}
 
-	Isolate* isolate = args.GetIsolate();
+}
 
-	Local<Object> obj = Object::New(isolate);
+void tsCallbackHandle()
+{
+    Isolate *isolate = Isolate::GetCurrent();
+    int i;
+	const int argc = 1;
+	v8::Local<v8::Value> argv[argc];
 
+	v8::Local<v8::Object> mdObj = v8::Object::New(isolate);
 
-	obj->Set(String::NewFromUtf8(isolate, "abandoned"),
-							Boolean::New(isolate, OutTransStatus->abandoned));
-	obj->Set(String::NewFromUtf8(isolate, "attempts"),
-							Number::New(isolate, OutTransStatus->attempts));
-	obj->Set(String::NewFromUtf8(isolate, "cancelled"),
-							Boolean::New(isolate, OutTransStatus->cancelled));
-	obj->Set(String::NewFromUtf8(isolate, "external_file_xfer"),
-							Boolean::New(isolate, OutTransStatus->external_file_xfer));
-	obj->Set(String::NewFromUtf8(isolate, "fd_offset"),
-							Number::New(isolate, OutTransStatus->fd_offset));
-	obj->Set(String::NewFromUtf8(isolate, "fd_length"),
-							Number::New(isolate, OutTransStatus->fd_length));
-	obj->Set(String::NewFromUtf8(isolate, "file_checksum_as_calculated"),
-							Number::New(isolate, OutTransStatus->file_checksum_as_calculated));
-	obj->Set(String::NewFromUtf8(isolate, "finished"),
-							Boolean::New(isolate, OutTransStatus->finished));
-	obj->Set(String::NewFromUtf8(isolate, "frozen"),
-							Boolean::New(isolate, OutTransStatus->frozen));
-	obj->Set(String::NewFromUtf8(isolate, "has_md_been_received"),
-							Boolean::New(isolate, OutTransStatus->has_md_been_received));
-	obj->Set(String::NewFromUtf8(isolate, "how_many_naks"),
-							Number::New(isolate, OutTransStatus->how_many_naks));
-	obj->Set(String::NewFromUtf8(isolate, "is_this_trans_solely_for_ack_fin"),
-							Boolean::New(isolate, OutTransStatus->is_this_trans_solely_for_ack_fin));
-	obj->Set(String::NewFromUtf8(isolate, "phase"),
-							Number::New(isolate, OutTransStatus->phase));
-	obj->Set(String::NewFromUtf8(isolate, "received_file_size"),
-							Number::New(isolate, OutTransStatus->received_file_size));
-	obj->Set(String::NewFromUtf8(isolate, "start_time"),
-							Number::New(isolate, OutTransStatus->start_time));
-	obj->Set(String::NewFromUtf8(isolate, "suspended"),
-							Boolean::New(isolate, OutTransStatus->suspended));
-	obj->Set(String::NewFromUtf8(isolate, "temp_file_name"),
-							String::NewFromUtf8(isolate, OutTransStatus->temp_file_name));
+	mdObj->Set(v8::String::NewFromUtf8(isolate, "file_transfer"),v8::Boolean::New(isolate, ts_q.md.file_transfer));
+	mdObj->Set(v8::String::NewFromUtf8(isolate, "segmentation_control"),v8::Boolean::New(isolate, ts_q.md.segmentation_control));
+	mdObj->Set(v8::String::NewFromUtf8(isolate, "file_size"),v8::Number::New(isolate, ts_q.md.file_size));
+	mdObj->Set(v8::String::NewFromUtf8(isolate, "source_file_name"),v8::String::NewFromUtf8(isolate, ts_q.md.source_file_name));
+	mdObj->Set(v8::String::NewFromUtf8(isolate, "dest_file_name"),v8::String::NewFromUtf8(isolate, ts_q.md.dest_file_name));
+
+	v8::Local<Object> patnerIdObj = v8::Object::New(isolate);
+
+	patnerIdObj->Set(v8::String::NewFromUtf8(isolate, "length"),v8::Number::New(isolate, ts_q.partner_id.length));
+
+	v8::Local<Array> partner_id_val = v8::Array::New(isolate,ts_q.partner_id.length);
+	for( i = 0; i < ts_q.partner_id.length; i++)
+	{
+		v8::Local<v8::Value> elm = v8::Number::New(isolate,ts_q.partner_id.value[i]);
+		partner_id_val->Set(i, elm);
+	}
+	patnerIdObj->Set(v8::String::NewFromUtf8(isolate, "value"),partner_id_val);
 
 
-	args.GetReturnValue().Set(obj);
+	Local<Object> obj = Nan::New<Object>();
+
+	obj->Set(v8::String::NewFromUtf8(isolate, "abandoned"),v8::Boolean::New(isolate, ts_q.abandoned));
+	obj->Set(v8::String::NewFromUtf8(isolate, "attempts"),v8::Number::New(isolate, ts_q.attempts));
+	obj->Set(v8::String::NewFromUtf8(isolate, "cancelled"),v8::Boolean::New(isolate, ts_q.cancelled));
+	obj->Set(v8::String::NewFromUtf8(isolate, "external_file_xfer"),v8::Boolean::New(isolate, ts_q.external_file_xfer));
+	obj->Set(v8::String::NewFromUtf8(isolate, "fd_offset"),v8::Number::New(isolate, ts_q.fd_offset));
+	obj->Set(v8::String::NewFromUtf8(isolate, "fd_length"),v8::Number::New(isolate, ts_q.fd_length));
+	obj->Set(v8::String::NewFromUtf8(isolate, "file_checksum_as_calculated"),v8::Number::New(isolate, ts_q.file_checksum_as_calculated));
+	obj->Set(v8::String::NewFromUtf8(isolate, "finished"),v8::Boolean::New(isolate, ts_q.finished));
+	obj->Set(v8::String::NewFromUtf8(isolate, "frozen"),v8::Boolean::New(isolate, ts_q.frozen));
+	obj->Set(v8::String::NewFromUtf8(isolate, "has_md_been_received"),v8::Boolean::New(isolate, ts_q.has_md_been_received));
+	obj->Set(v8::String::NewFromUtf8(isolate, "how_many_naks"),v8::Number::New(isolate, ts_q.how_many_naks));
+	obj->Set(v8::String::NewFromUtf8(isolate, "is_this_trans_solely_for_ack_fin"),v8::Boolean::New(isolate, ts_q.is_this_trans_solely_for_ack_fin));
+	obj->Set(v8::String::NewFromUtf8(isolate, "phase"),v8::Number::New(isolate, ts_q.phase));
+	obj->Set(v8::String::NewFromUtf8(isolate, "received_file_size"),v8::Number::New(isolate, ts_q.received_file_size));
+	obj->Set(v8::String::NewFromUtf8(isolate, "start_time"),v8::Number::New(isolate, ts_q.start_time));
+	obj->Set(v8::String::NewFromUtf8(isolate, "suspended"),v8::Boolean::New(isolate, ts_q.suspended));
+	obj->Set(v8::String::NewFromUtf8(isolate, "temp_file_name"),v8::String::NewFromUtf8(isolate, ts_q.temp_file_name));
+
+	obj->Set(v8::String::NewFromUtf8(isolate, "condition_code"),v8::String::NewFromUtf8(isolate, ConditionCode[ts_q.condition_code]));
+	obj->Set(v8::String::NewFromUtf8(isolate, "delivery_code"),v8::String::NewFromUtf8(isolate, DeliveryCode[ts_q.delivery_code]));
+	obj->Set(v8::String::NewFromUtf8(isolate, "final_status"),v8::String::NewFromUtf8(isolate, FinalStatus[ts_q.final_status]));
+	obj->Set(v8::String::NewFromUtf8(isolate, "role"),v8::String::NewFromUtf8(isolate, Role[ts_q.role]));
+	obj->Set(v8::String::NewFromUtf8(isolate, "state"),v8::String::NewFromUtf8(isolate, State[ts_q.state]));
+
+	obj->Set(v8::String::NewFromUtf8(isolate, "md"),mdObj);
+	obj->Set(v8::String::NewFromUtf8(isolate, "partner_id"),patnerIdObj);
+
+	argv[0] = obj;
+
+	Local<Function> Func = Local<Function>::New(isolate, TransactionStatusHandle.Function);
+
+
+	if(TransactionStatusHandle.IsDefined)
+	{
+		Func->Call(isolate->GetCurrentContext()->Global(), argc, argv);
+	}
 
 }
 
 void Cycle(const FunctionCallbackInfo<Value> &args)
 {
-
 	cfdp_cycle_each_transaction();
 }
-
 
 void RegisterCallbackOn(const FunctionCallbackInfo<Value> &args)
 {
@@ -969,9 +824,16 @@ void RegisterCallbackOn(const FunctionCallbackInfo<Value> &args)
 	{
 		SetCallbackData(&PduOutputSend, isolate, args[1]);
 	}
+	else if(CbIndicator == "indication")
+	{
+		SetCallbackData(&IndicationHandle, isolate, args[1]);
+	}
+	else if(CbIndicator == "showTransactionStatus")
+	{
+		SetCallbackData(&TransactionStatusHandle, isolate, args[1]);
+	}
 
 }
-
 
 void SetConfig(const FunctionCallbackInfo<Value> &args)
 {
@@ -979,8 +841,7 @@ void SetConfig(const FunctionCallbackInfo<Value> &args)
 
 	if(args.Length() < 1 || !args[0]->IsObject()) {
 
-	    isolate->ThrowException(Exception::TypeError(
-	    String::NewFromUtf8(isolate, "Config object expected")));
+		ErrorEvent("Invalid arguments, expected [Configuration<Object>]");
 	    return;
 
 	}
@@ -1003,11 +864,7 @@ void SetConfig(const FunctionCallbackInfo<Value> &args)
 		Config.TempBaseDir = val.c_str ();
 
 	}
-	else if (key =="TEMP_FILE_NAME_PREFIX")
-	{
-		Config.TempFileNamePrefix = val.c_str ();
 
-	}
 
   }
 
@@ -1020,8 +877,7 @@ void SetMibParams(const FunctionCallbackInfo<Value> &args)
 
 	if(args.Length() < 1 || args.Length() > 2 || !args[0]->IsString() || !args[1]->IsString()) {
 
-	    isolate->ThrowException(Exception::TypeError(
-	    String::NewFromUtf8(isolate, "Key-Value pair expected")));
+		ErrorEvent("Invalid arguments, expected [Key<String>, Value<String>]");
 	    return;
 
 	  }
@@ -1033,16 +889,35 @@ void SetMibParams(const FunctionCallbackInfo<Value> &args)
 
 }
 
+void GetMibParams(const FunctionCallbackInfo<Value> &args)
+{
+	Isolate* isolate = args.GetIsolate();
+	char    value[CF_MAX_CFG_VALUE_CHARS];
+
+
+	if(args.Length() < 1 || args.Length() > 1 || !args[0]->IsString()) {
+		ErrorEvent("Invalid arguments, expected [Key<String>]");
+		return;
+	 }
+
+	std::string str_key = GetStdString(args[0]->ToString());
+
+	cfdp_get_mib_parameter(str_key.c_str (), &value[0] );
+
+
+	args.GetReturnValue().Set(v8::String::NewFromUtf8(isolate, value));
+
+}
+
 void AppInit(const FunctionCallbackInfo<Value> &args)
 {
 
-	/* Set temp base directory */
     strncpy(AppData.BaseDir, Config.TempBaseDir, CF_MAX_PATH_LEN);
 
-    /* Register all callbacks */
 	RegisterCallbacks();
 
 }
+
 
 void Initialize(Local<Object> exports)
 {
@@ -1050,6 +925,8 @@ void Initialize(Local<Object> exports)
 	NODE_SET_METHOD(exports, "AppInit", AppInit);
 
 	NODE_SET_METHOD(exports, "SetMibParams", SetMibParams);
+
+	NODE_SET_METHOD(exports, "GetMibParams", GetMibParams);
 
 	NODE_SET_METHOD(exports, "SetConfig", SetConfig);
 
@@ -1069,5 +946,6 @@ void Initialize(Local<Object> exports)
 
 
 }
+
 
 NODE_MODULE(addon, Initialize);
