@@ -8,9 +8,11 @@ extern "C" {
 #include <cstdint>
 #include <v8.h>
 #include <node.h>
+#include <uv.h>
 #include "cfdp_data_structures.h"
 #include "cfdp_config.h"
 #include "cfdp.h"
+
 
 using namespace v8;
 
@@ -43,12 +45,11 @@ typedef struct
 {
 	uv_work_t  request;
 	Persistent<Function> callback;
-	FILE * file;
 	char   tempStrA[CF_MAX_PATH_LEN];
 	char   tempStrB[CF_MAX_PATH_LEN];
 	char   tempStrC[CF_MAX_PATH_LEN];
 
-}Work;
+} Worker;
 
 static const char * PduTypeEMap[] = {
 		  "FILE_DIR_PDU",
@@ -164,7 +165,17 @@ CallbackData IndicationHandle;
 
 CallbackData TransactionStatusHandle;
 
+boolean CycleStopSignal = false;
+
+Isolate * isolate;
+
+
+
 /* CFDP */
+void CycleWorker(uv_work_t * );
+
+void CycleShutdown(uv_work_t * );
+
 boolean cfdp_give_pdu (CFDP_DATA pdu);
 
 boolean cfdp_give_request (const char *);
@@ -181,10 +192,6 @@ boolean cfdp_get_mib_parameter (const char *, char *);
 
 
 /* CFV8 API */
-void FileOpenWorker(uv_work_t *);
-
-void FileOpenWorkerShutdown(uv_work_t *);
-
 
 void tsCallbackHandle(void);
 

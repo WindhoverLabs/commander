@@ -8,8 +8,13 @@
 void Indication (INDICATION_TYPE IndType, TRANS_STATUS TransInfo)
 {
 
-    Isolate *isolate = Isolate::GetCurrent();
+	/* Current thread locks isolate */
+	v8::Locker lockerChild(isolate);
+	/* Isolate scope call*/
+	Isolate::Scope isolate_scope(isolate);
+
     int i;
+
 	v8::Local<v8::Object> mdObj = v8::Object::New(isolate);
 
 	mdObj->Set(v8::String::NewFromUtf8(isolate, "file_transfer"),v8::Boolean::New(isolate, TransInfo.md.file_transfer));
@@ -75,12 +80,20 @@ void Indication (INDICATION_TYPE IndType, TRANS_STATUS TransInfo)
 
 	}
 
+	/* Unlock this isolate */
+	v8::Unlocker unlockerChild(isolate);
+
 }
 
 boolean isPduOutputOpen (ID SourceId, ID DestinationId)
 {
-    Isolate *isolate = Isolate::GetCurrent();
+	/* Current thread locks isolate */
+	v8::Locker lockerChild(isolate);
+	/* Isolate scope call*/
+	Isolate::Scope isolate_scope(isolate);
+
     int i;
+
 	v8::Local<Object> obj = v8::Object::New(isolate);
 
 	obj->Set(v8::String::NewFromUtf8(isolate, "srcLength"),v8::Number::New(isolate, SourceId.length));
@@ -125,12 +138,30 @@ boolean isPduOutputOpen (ID SourceId, ID DestinationId)
 
 	}
 
+	/* Unlock this isolate */
+	v8::Unlocker unlockerChild(isolate);
+
+
 	return (YES);
 }
 
-boolean isPduOutputReady (PDU_TYPE PduType, TRANSACTION TransInfo,ID DestinationId){
-
-    Isolate *isolate = Isolate::GetCurrent();
+boolean isPduOutputReady (PDU_TYPE PduType, TRANSACTION TransInfo,ID DestinationId)
+{
+	isolate = Isolate::GetCurrent();
+//	if(temp==0){
+//		isolate->Exit();
+//		/* Unlock this isolate */
+//		v8::Unlocker unlockerChild(isolate);
+//	}
+//
+//	isolate->Enter();
+//	/* Current thread locks isolate */
+//	v8::Locker lockerChild(isolate);
+//
+//	/* Isolate scope call*/
+//	Isolate::Scope isolate_scope(isolate);
+////
+	v8::HandleScope handle_scope(isolate);
 
 	v8::Local<Object> obj = v8::Object::New(isolate);
 
@@ -169,21 +200,34 @@ boolean isPduOutputReady (PDU_TYPE PduType, TRANSACTION TransInfo,ID Destination
 	argv[0] = obj;
 
 	Local<Function> Func = Local<Function>::New(isolate, pduOutputReady.Function);
+	Local<Context> 	context = 	isolate->GetCurrentContext();
+	Local<Object> 	global = 	context->Global();
+
 
 	if(pduOutputReady.IsDefined)
 	{
-		Func->Call(isolate->GetCurrentContext()->Global(), argc, argv);
+
+		Func->Call(global, argc, argv);
 
 	}
+isolate->Enter();
+	/* Unlock this isolate */
+//	v8::Unlocker unlockerChild(isolate);
+
 
 	return (YES);
 }
 
-void SendPduOutput (TRANSACTION TransInfo,ID DestinationId, CFDP_DATA *PduPtr){
+void SendPduOutput (TRANSACTION TransInfo,ID DestinationId, CFDP_DATA *PduPtr)
+{
 
-    Isolate *isolate = Isolate::GetCurrent();
+	/* Current thread locks isolate */
+	v8::Locker lockerChild(isolate);
+	/* Isolate scope call*/
+	Isolate::Scope isolate_scope(isolate);
 
 	const int argc = 1;
+
 	v8::Local<v8::Value> argv[argc];
 
 	argv[0] = Nan::NewBuffer(PduPtr->content, PduPtr->length).ToLocalChecked();
@@ -195,6 +239,9 @@ void SendPduOutput (TRANSACTION TransInfo,ID DestinationId, CFDP_DATA *PduPtr){
 		Func->Call(isolate->GetCurrentContext()->Global(), argc, argv);
 
 	}
+
+	/* Unlock this isolate */
+	v8::Unlocker unlockerChild(isolate);
 
 }
 
@@ -210,52 +257,18 @@ int32_t Seek(int32_t  filedes, int32_t offset, uint32_t whence)
 
 CF_FILE * FileOpen(const char *Name, const char *Mode){
 
-	Work * work = new Work();
-	work->request.data = work;
-//	FILE	*fileHandle;
-//	char temp[CF_MAX_PATH_LEN];
+
+	FILE	*	fileHandle;
+	char 		temp[CF_MAX_PATH_LEN];
 
 
-//	work.Mode = Mode;
-	strncpy(work->tempStrA, Mode, CF_MAX_PATH_LEN);
-	strncpy(work->tempStrB, AppData.BaseDir, CF_MAX_PATH_LEN);
-	strncat(work->tempStrB, Name, CF_MAX_PATH_LEN);
+	strncpy(temp, AppData.BaseDir, CF_MAX_PATH_LEN);
+	strncat(temp, Name, CF_MAX_PATH_LEN);
 
-//	/* create an async work token */
-//	uv_work_t *req = 0;
-//
-//    /* create an async work token */
-//    req = new uv_work_t;
-//    req->data = &hdl;
-
-
-
-    uv_queue_work(uv_default_loop(),&work->request,
-    		FileOpenWorker,FileOpenWorkerShutdown);
-
-    Work * a = (Work *)work->request.data;
-
-    return a->file;
-}
-void FileOpenWorker(uv_work_t * req)
-{
-
-	Work  handle;
-	memset(&handle,0,sizeof(handle));
-	memcpy(&handle,(Work*)req->data,sizeof(handle));
-
-	handle.file = fopen(handle.tempStrB, handle.tempStrA);
-	req->data = &handle;
-
-
+	fileHandle = fopen(temp, Mode);
+	return fileHandle;
 }
 
-void FileOpenWorkerShutdown(uv_work_t * req)
-{
-	Work * a = (Work *)req->data;
-	fclose(a->file);
-
-}
 
 size_t FileRead(void *Buffer, size_t Size,size_t Count, CF_FILE *File)
 {
@@ -272,7 +285,6 @@ size_t FileWrite(const void *Buffer, size_t Size,size_t Count, CF_FILE *File)
 int FileClose(CF_FILE *File)
 {
 	return fclose(File);
-//	return 0;
 }
 
 int FileSeek(CF_FILE *File, long int Offset, int Whence)
@@ -360,14 +372,18 @@ int InfoEvent(const char *Format, ...)
           break;
       }
     }
+	/* Current thread locks isolate */
+	v8::Locker lockerChild(isolate);
+	/* Isolate scope call*/
+	Isolate::Scope isolate_scope(isolate);
 
-    Isolate *isolate = Isolate::GetCurrent();
+
 
 	const int argc = 1;
 	v8::Local<v8::Value> argv[argc];
 
 	std::string str(BigBuf);
-	argv[0] = Nan::New(BigBuf).ToLocalChecked();
+	argv[0] = v8::String::NewFromUtf8(isolate, BigBuf);
 
 	Local<Function> Func = Local<Function>::New(isolate, LogInfo.Function);
 
@@ -380,6 +396,10 @@ int InfoEvent(const char *Format, ...)
 	{
 		printf("INFO : %s\n", &BigBuf);
 	}
+
+
+	/* Unlock this isolate */
+	v8::Unlocker unlockerChild(isolate);
 
 
     return(Status);
@@ -402,13 +422,16 @@ int ErrorEvent(const char *Format, ...)
       }
     }
 
-    Isolate *isolate = Isolate::GetCurrent();
+	/* Current thread locks isolate */
+	v8::Locker lockerChild(isolate);
+	/* Isolate scope call*/
+	Isolate::Scope isolate_scope(isolate);
 
 	const int argc = 1;
 	v8::Local<v8::Value> argv[argc];
 
 	std::string str(BigBuf);
-	argv[0] = Nan::New(BigBuf).ToLocalChecked();
+	argv[0] = v8::String::NewFromUtf8(isolate, BigBuf);
 
 	Local<Function> Func = Local<Function>::New(isolate, LogError.Function);
 
@@ -422,6 +445,10 @@ int ErrorEvent(const char *Format, ...)
 	{
 		printf("ERR : %s\n", &BigBuf);
 	}
+
+	/* Unlock this isolate */
+	v8::Unlocker unlockerChild(isolate);
+
 
     return(Status);
 }
@@ -443,13 +470,16 @@ int DebugEvent(const char *Format, ...)
       }
     }
 
-    Isolate *isolate = Isolate::GetCurrent();
+	/* Current thread locks isolate */
+	v8::Locker lockerChild(isolate);
+	/* Isolate scope call*/
+	Isolate::Scope isolate_scope(isolate);
 
 	const int argc = 1;
 	v8::Local<v8::Value> argv[argc];
 
 	std::string str(BigBuf);
-	argv[0] = Nan::New(BigBuf).ToLocalChecked();
+	argv[0] = v8::String::NewFromUtf8(isolate, BigBuf);
 
 	Local<Function> Func = Local<Function>::New(isolate, LogDebug.Function);
 
@@ -462,6 +492,11 @@ int DebugEvent(const char *Format, ...)
 	{
 		printf("DEBUG : %s\n", &BigBuf);
 	}
+
+	/* Unlock this isolate */
+	v8::Unlocker unlockerChild(isolate);
+
+
 
     return(Status);
 }
@@ -483,13 +518,16 @@ int WarningEvent(const char *Format, ...)
       }
     }
 
-    Isolate *isolate = Isolate::GetCurrent();
+	/* Current thread locks isolate */
+	v8::Locker lockerChild(isolate);
+	/* Isolate scope call*/
+	Isolate::Scope isolate_scope(isolate);
 
 	const int argc = 1;
 	v8::Local<v8::Value> argv[argc];
 
 	std::string str(BigBuf);
-	argv[0] = Nan::New(BigBuf).ToLocalChecked();
+	argv[0] = v8::String::NewFromUtf8(isolate, BigBuf);
 
 	Local<Function> Func = Local<Function>::New(isolate, LogWarning.Function);
 
@@ -504,6 +542,9 @@ int WarningEvent(const char *Format, ...)
 	{
 		printf("WARN : %s\n", &BigBuf);
 	}
+
+	/* Unlock this isolate */
+	v8::Unlocker unlockerChild(isolate);
 
     return(Status);
 }
@@ -533,15 +574,24 @@ void RegisterCallbacks(){
 
 std::string GetStdString(v8::Local<v8::String> str)
 {
+
+
 	v8::String::Utf8Value temp(str->ToString());
+
+
 	return(std::string(*temp));
+
+
 }
 
 void SetCallbackData(CallbackData * cd, Isolate * isolate, v8::Local<v8::Value> val)
 {
 
+
 	cd->Function.Reset(isolate,val.As<Function>());
 	cd->IsDefined = true;
+
+
 
 }
 
@@ -549,6 +599,11 @@ void GivePdu(const FunctionCallbackInfo<Value> &args)
 {
 
 	Isolate* isolate = args.GetIsolate();
+
+	/* Current thread locks isolate */
+	v8::Locker lockerChild(isolate);
+	/* Isolate scope call*/
+	Isolate::Scope isolate_scope(isolate);
 
 	if(args.Length() < 1 || !args[0]->IsObject()) {
 
@@ -573,11 +628,19 @@ void GivePdu(const FunctionCallbackInfo<Value> &args)
 
 
 	cfdp_give_pdu(AppData.RawPduInputBuf);
+
+	/* Unlock this isolate */
+	v8::Unlocker unlockerChild(isolate);
 }
 
 void RequestPdu(const FunctionCallbackInfo<Value> &args)
 {
 	char ReqString[MAX_REQUEST_STRING_LENGTH];
+
+	/* Current thread locks isolate */
+	v8::Locker lockerChild(isolate);
+	/* Isolate scope call*/
+	Isolate::Scope isolate_scope(isolate);
 
 	if(args.Length() < 1
 			|| args.Length() > 4
@@ -605,17 +668,25 @@ void RequestPdu(const FunctionCallbackInfo<Value> &args)
 	strcat(&ReqString[0],PeerEntityId.c_str());
 	strcat(&ReqString[0]," ");
 	strcat(&ReqString[0],DstFilename.c_str());
-
+	InfoEvent("Engine put request returned Success for %s",&ReqString);
 	if(!cfdp_give_request(ReqString))
 	{
         ErrorEvent("Engine put request returned error for %s",SrcFilename.c_str());
 	}
+
+	/* Unlock this isolate */
+	v8::Unlocker unlockerChild(isolate);
 
 }
 
 void GetSummaryStatus(const FunctionCallbackInfo<Value> &args)
 {
 	Isolate* isolate = args.GetIsolate();
+
+	/* Current thread locks isolate */
+	v8::Locker lockerChild(isolate);
+	/* Isolate scope call*/
+	Isolate::Scope isolate_scope(isolate);
 
 	v8::Local<Object> obj = v8::Object::New(isolate);
 
@@ -644,6 +715,9 @@ void GetSummaryStatus(const FunctionCallbackInfo<Value> &args)
 
 
 	args.GetReturnValue().Set(obj);
+
+	/* Unlock this isolate */
+	v8::Unlocker unlockerChild(isolate);
 }
 
 void GetIdFromString(const FunctionCallbackInfo<Value> &args)
@@ -651,6 +725,11 @@ void GetIdFromString(const FunctionCallbackInfo<Value> &args)
 	int i;
 
 	Isolate* isolate = args.GetIsolate();
+
+	/* Current thread locks isolate */
+	v8::Locker lockerChild(isolate);
+	/* Isolate scope call*/
+	Isolate::Scope isolate_scope(isolate);
 
 	v8::Local<Object> obj = v8::Object::New(isolate);
 
@@ -677,11 +756,19 @@ void GetIdFromString(const FunctionCallbackInfo<Value> &args)
 	obj->Set(v8::String::NewFromUtf8(isolate, "value"),Outval);
 
 	args.GetReturnValue().Set(obj);
+
+	/* Unlock this isolate */
+	v8::Unlocker unlockerChild(isolate);
 }
 
 void GetTransactionStatus(const FunctionCallbackInfo<Value> &args)
 {
 	TRANSACTION Trans;
+
+	/* Current thread locks isolate */
+	v8::Locker lockerChild(isolate);
+	/* Isolate scope call*/
+	Isolate::Scope isolate_scope(isolate);
 
 
 	if(args.Length() < 1
@@ -714,11 +801,19 @@ void GetTransactionStatus(const FunctionCallbackInfo<Value> &args)
 		tsCallbackHandle();
 	}
 
+	/* Unlock this isolate */
+	v8::Unlocker unlockerChild(isolate);
+
 }
 
 void tsCallbackHandle()
 {
-    Isolate *isolate = Isolate::GetCurrent();
+
+	/* Current thread locks isolate */
+	v8::Locker lockerChild(isolate);
+	/* Isolate scope call*/
+	Isolate::Scope isolate_scope(isolate);
+
     int i;
 	const int argc = 1;
 	v8::Local<v8::Value> argv[argc];
@@ -783,18 +878,83 @@ void tsCallbackHandle()
 		Func->Call(isolate->GetCurrentContext()->Global(), argc, argv);
 	}
 
+
+	/* Unlock this isolate */
+	v8::Unlocker unlockerChild(isolate);
+
+
 }
 
-void Cycle(const FunctionCallbackInfo<Value> &args)
+void StartCycle(const FunctionCallbackInfo<Value> &args)
 {
-	cfdp_cycle_each_transaction();
+	InfoEvent("Cycling cfdp engine");
+
+	Worker * worker = new Worker();
+
+	worker->request.data = worker;
+	CycleStopSignal = false;
+
+
+	uv_queue_work(uv_default_loop(),&worker->request,CycleWorker,CycleShutdown);
+
+
 }
+
+void StopCycle(const FunctionCallbackInfo<Value> &args)
+{
+	InfoEvent("Shutdown called on cycle transaction");
+
+	CycleStopSignal = true;
+
+}
+
+void CycleWorker(uv_work_t * request)
+{
+
+	while(!CycleStopSignal){
+
+		sleep(1);
+
+		{
+		  isolate->Exit();
+		  v8::Unlocker unlocker(isolate);
+
+		  // Code not using V8 goes here while V8 can run in another thread.
+
+		} // Destructor called here.
+		isolate->Enter();
+		v8::Locker locker(isolate);
+		Isolate::Scope isolate_scope(isolate);
+		cfdp_cycle_each_transaction();
+	    {
+	      isolate->Exit();
+	      v8::Unlocker unlocker(isolate);
+	      // V8 not locked.
+	    }
+//	    isolate->Enter();
+
+	}
+
+}
+
+void CycleShutdown(uv_work_t * request)
+{
+
+}
+
 
 void RegisterCallbackOn(const FunctionCallbackInfo<Value> &args)
 {
+	Isolate* isolate = args.GetIsolate();
+
+	/* Current thread locks isolate */
+	v8::Locker lockerChild(isolate);
+	/* Isolate scope call*/
+	Isolate::Scope isolate_scope(isolate);
+
 	std::string CbIndicator = GetStdString(args[0]->ToString());
 
-	Isolate * isolate = args.GetIsolate();
+
 
 	if(CbIndicator == "info")
 	{
@@ -833,11 +993,19 @@ void RegisterCallbackOn(const FunctionCallbackInfo<Value> &args)
 		SetCallbackData(&TransactionStatusHandle, isolate, args[1]);
 	}
 
+	/* Unlock this isolate */
+	v8::Unlocker unlockerChild(isolate);
+
 }
 
 void SetConfig(const FunctionCallbackInfo<Value> &args)
 {
 	Isolate* isolate = args.GetIsolate();
+
+	/* Current thread locks isolate */
+	v8::Locker lockerChild(isolate);
+	/* Isolate scope call*/
+	Isolate::Scope isolate_scope(isolate);
 
 	if(args.Length() < 1 || !args[0]->IsObject()) {
 
@@ -858,6 +1026,7 @@ void SetConfig(const FunctionCallbackInfo<Value> &args)
 	std::string key = GetStdString(localKey->ToString());
 	std::string val = GetStdString(localVal->ToString());
 
+
 	if ( key == "TEMP_BASE_DIR")
 	{
 
@@ -867,6 +1036,8 @@ void SetConfig(const FunctionCallbackInfo<Value> &args)
 
 
   }
+	/* Unlock this isolate */
+	v8::Unlocker unlockerChild(isolate);
 
 }
 
@@ -874,6 +1045,11 @@ void SetMibParams(const FunctionCallbackInfo<Value> &args)
 {
 
 	Isolate* isolate = args.GetIsolate();
+
+	/* Current thread locks isolate */
+	v8::Locker lockerChild(isolate);
+	/* Isolate scope call*/
+	Isolate::Scope isolate_scope(isolate);
 
 	if(args.Length() < 1 || args.Length() > 2 || !args[0]->IsString() || !args[1]->IsString()) {
 
@@ -887,11 +1063,20 @@ void SetMibParams(const FunctionCallbackInfo<Value> &args)
 
 	cfdp_set_mib_parameter (str_key.c_str (), str_val.c_str ());
 
+	/* Unlock this isolate */
+	v8::Unlocker unlockerChild(isolate);
+
 }
 
 void GetMibParams(const FunctionCallbackInfo<Value> &args)
 {
 	Isolate* isolate = args.GetIsolate();
+
+	/* Current thread locks isolate */
+	v8::Locker lockerChild(isolate);
+	/* Isolate scope call*/
+	Isolate::Scope isolate_scope(isolate);
+
 	char    value[CF_MAX_CFG_VALUE_CHARS];
 
 
@@ -907,14 +1092,25 @@ void GetMibParams(const FunctionCallbackInfo<Value> &args)
 
 	args.GetReturnValue().Set(v8::String::NewFromUtf8(isolate, value));
 
+	/* Unlock this isolate */
+	v8::Unlocker unlockerChild(isolate);
+
 }
 
 void AppInit(const FunctionCallbackInfo<Value> &args)
 {
 
+	isolate = args.GetIsolate();
+
+	v8::HandleScope handleScope(isolate);
+
+
     strncpy(AppData.BaseDir, Config.TempBaseDir, CF_MAX_PATH_LEN);
 
 	RegisterCallbacks();
+
+	/* Unlock this isolate */
+	v8::Unlocker unlockerChild(isolate);
 
 }
 
@@ -942,7 +1138,10 @@ void Initialize(Local<Object> exports)
 
 	NODE_SET_METHOD(exports, "GetTransactionStatus", GetTransactionStatus);
 
-	NODE_SET_METHOD(exports, "Cycle", Cycle);
+	NODE_SET_METHOD(exports, "StartCycle", StartCycle);
+
+	NODE_SET_METHOD(exports, "StopCycle", StopCycle);
+
 
 
 }
