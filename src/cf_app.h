@@ -166,15 +166,68 @@ CallbackData IndicationHandle;
 CallbackData TransactionStatusHandle;
 
 boolean CycleStopSignal = false;
+boolean invoke_cycle = true;
+
+boolean SendPdToEngine = false;
 
 Isolate * isolate;
 
+typedef enum
+{
+  NO_SCH = 0,
+  IS_PDU_OPEN= 1,
+  IS_PDU_READY= 2,
+  PDU_SEND= 3,
+  INDICATION= 4
+} SCH_CB;
+
+
+typedef struct {
+	PDU_TYPE 	ptype;
+	TRANSACTION tinfo;
+	ID			destid;
+} PduReady;
+
+typedef struct {
+	ID			srcid;
+	ID			destid;
+} PduOpen;
+
+typedef struct {
+	TRANSACTION tinfo;
+	ID			destid;
+	CFDP_DATA *	pduptr;
+} PduSend;
+
+typedef struct {
+	INDICATION_TYPE 	indtype;
+	TRANS_STATUS 		tinfo;
+} Indicate;
+
+
+PduReady 	isPduReadyPacket;
+PduOpen 	isPduOpenPacket;
+PduSend 	pduSendPacket;
+Indicate 	indicationPacket;
+
+
+uv_loop_t *loop;
+uv_async_t async;
 
 
 /* CFDP */
+void PduOutputOpenCb(void);
+void PduOutputSendCb(void);
+void PduOutputReadyCb(void);
+void IndicationCb(void);
+
+void print_progress(uv_async_t *);
+
 void CycleWorker(uv_work_t * );
 
 void CycleShutdown(uv_work_t * );
+
+void CyclePduGiveWorker(uv_work_t * );
 
 boolean cfdp_give_pdu (CFDP_DATA pdu);
 

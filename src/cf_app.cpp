@@ -8,138 +8,43 @@
 void Indication (INDICATION_TYPE IndType, TRANS_STATUS TransInfo)
 {
 
-	/* Current thread locks isolate */
-	v8::Locker lockerChild(isolate);
-	/* Isolate scope call*/
-	Isolate::Scope isolate_scope(isolate);
+	memset(&indicationPacket, 0, sizeof(indicationPacket));
 
-    int i;
+	indicationPacket.indtype = IndType;
+	memcpy(&indicationPacket.tinfo, &TransInfo, sizeof(TransInfo));
 
-	v8::Local<v8::Object> mdObj = v8::Object::New(isolate);
 
-	mdObj->Set(v8::String::NewFromUtf8(isolate, "file_transfer"),v8::Boolean::New(isolate, TransInfo.md.file_transfer));
-	mdObj->Set(v8::String::NewFromUtf8(isolate, "segmentation_control"),v8::Boolean::New(isolate, TransInfo.md.segmentation_control));
-	mdObj->Set(v8::String::NewFromUtf8(isolate, "file_size"),v8::Number::New(isolate, TransInfo.md.file_size));
-	mdObj->Set(v8::String::NewFromUtf8(isolate, "source_file_name"),v8::String::NewFromUtf8(isolate, TransInfo.md.source_file_name));
-	mdObj->Set(v8::String::NewFromUtf8(isolate, "dest_file_name"),v8::String::NewFromUtf8(isolate, TransInfo.md.dest_file_name));
 
-	v8::Local<Object> patnerIdObj = v8::Object::New(isolate);
-
-	patnerIdObj->Set(v8::String::NewFromUtf8(isolate, "length"),v8::Number::New(isolate, TransInfo.partner_id.length));
-
-	v8::Local<Array> partner_id_val = v8::Array::New(isolate,TransInfo.partner_id.length);
-	for( i = 0; i < TransInfo.partner_id.length; i++)
+	if( async.loop != 0)
 	{
-		v8::Local<v8::Value> elm = v8::Number::New(isolate,TransInfo.partner_id.value[i]);
-		partner_id_val->Set(i, elm);
+		SCH_CB signal = INDICATION;
+	    async.data = (void*) &signal;
+	    uv_async_send(&async);
 	}
-	patnerIdObj->Set(v8::String::NewFromUtf8(isolate, "value"),partner_id_val);
-
-
-	Local<Object> obj = Nan::New<Object>();
-
-	obj->Set(v8::String::NewFromUtf8(isolate, "IndType"),v8::String::NewFromUtf8(isolate, IndicationType[IndType]));
-	obj->Set(v8::String::NewFromUtf8(isolate, "abandoned"),v8::Boolean::New(isolate, TransInfo.abandoned));
-	obj->Set(v8::String::NewFromUtf8(isolate, "attempts"),v8::Number::New(isolate, TransInfo.attempts));
-	obj->Set(v8::String::NewFromUtf8(isolate, "cancelled"),v8::Boolean::New(isolate, TransInfo.cancelled));
-	obj->Set(v8::String::NewFromUtf8(isolate, "external_file_xfer"),v8::Boolean::New(isolate, TransInfo.external_file_xfer));
-	obj->Set(v8::String::NewFromUtf8(isolate, "fd_offset"),v8::Number::New(isolate, TransInfo.fd_offset));
-	obj->Set(v8::String::NewFromUtf8(isolate, "fd_length"),v8::Number::New(isolate, TransInfo.fd_length));
-	obj->Set(v8::String::NewFromUtf8(isolate, "file_checksum_as_calculated"),v8::Number::New(isolate, TransInfo.file_checksum_as_calculated));
-	obj->Set(v8::String::NewFromUtf8(isolate, "finished"),v8::Boolean::New(isolate, TransInfo.finished));
-	obj->Set(v8::String::NewFromUtf8(isolate, "frozen"),v8::Boolean::New(isolate, TransInfo.frozen));
-	obj->Set(v8::String::NewFromUtf8(isolate, "has_md_been_received"),v8::Boolean::New(isolate, TransInfo.has_md_been_received));
-	obj->Set(v8::String::NewFromUtf8(isolate, "how_many_naks"),v8::Number::New(isolate, TransInfo.how_many_naks));
-	obj->Set(v8::String::NewFromUtf8(isolate, "is_this_trans_solely_for_ack_fin"),v8::Boolean::New(isolate, TransInfo.is_this_trans_solely_for_ack_fin));
-	obj->Set(v8::String::NewFromUtf8(isolate, "phase"),v8::Number::New(isolate, TransInfo.phase));
-	obj->Set(v8::String::NewFromUtf8(isolate, "received_file_size"),v8::Number::New(isolate, TransInfo.received_file_size));
-	obj->Set(v8::String::NewFromUtf8(isolate, "start_time"),v8::Number::New(isolate, TransInfo.start_time));
-	obj->Set(v8::String::NewFromUtf8(isolate, "suspended"),v8::Boolean::New(isolate, TransInfo.suspended));
-	obj->Set(v8::String::NewFromUtf8(isolate, "temp_file_name"),v8::String::NewFromUtf8(isolate, TransInfo.temp_file_name));
-
-	obj->Set(v8::String::NewFromUtf8(isolate, "condition_code"),v8::String::NewFromUtf8(isolate, ConditionCode[TransInfo.condition_code]));
-	obj->Set(v8::String::NewFromUtf8(isolate, "delivery_code"),v8::String::NewFromUtf8(isolate, DeliveryCode[TransInfo.delivery_code]));
-	obj->Set(v8::String::NewFromUtf8(isolate, "final_status"),v8::String::NewFromUtf8(isolate, FinalStatus[TransInfo.final_status]));
-	obj->Set(v8::String::NewFromUtf8(isolate, "role"),v8::String::NewFromUtf8(isolate, Role[TransInfo.role]));
-	obj->Set(v8::String::NewFromUtf8(isolate, "state"),v8::String::NewFromUtf8(isolate, State[TransInfo.state]));
-
-	obj->Set(v8::String::NewFromUtf8(isolate, "md"),mdObj);
-	obj->Set(v8::String::NewFromUtf8(isolate, "partner_id"),patnerIdObj);
-
-	const int argc = 1;
-
-	v8::Local<v8::Value> argv[argc];
-
-	argv[0] = obj;
-
-	Local<Function> Func = Local<Function>::New(isolate, IndicationHandle.Function);
-
-	if(IndicationHandle.IsDefined)
-	{
-		Func->Call(isolate->GetCurrentContext()->Global(), argc, argv);
-
+	else{
+		IndicationCb();
 	}
-
-	/* Unlock this isolate */
-	v8::Unlocker unlockerChild(isolate);
 
 }
 
 boolean isPduOutputOpen (ID SourceId, ID DestinationId)
 {
-	/* Current thread locks isolate */
-	v8::Locker lockerChild(isolate);
-	/* Isolate scope call*/
-	Isolate::Scope isolate_scope(isolate);
 
-    int i;
+	memset(&isPduOpenPacket, 0, sizeof(isPduReadyPacket));
 
-	v8::Local<Object> obj = v8::Object::New(isolate);
+	memcpy(&isPduOpenPacket.srcid, &SourceId, sizeof(SourceId));
+	memcpy(&isPduOpenPacket.destid, &DestinationId, sizeof(DestinationId));
 
-	obj->Set(v8::String::NewFromUtf8(isolate, "srcLength"),v8::Number::New(isolate, SourceId.length));
-	obj->Set(v8::String::NewFromUtf8(isolate, "dstLength"),v8::Number::New(isolate, DestinationId.length));
-
-
-	v8::Local<Array> Outval1 = v8::Array::New(isolate,SourceId.length);
-	v8::Local<Array> Outval2 = v8::Array::New(isolate,DestinationId.length);
-
-	for( i = 0; i < SourceId.length; i++)
+	if( async.loop != 0)
 	{
-		v8::Local<v8::Value> elm = v8::Number::New(isolate,SourceId.value[i]);
-		Outval1->Set(i, elm);
+		SCH_CB signal = IS_PDU_OPEN;
+	    async.data = (void*) &signal;
+	    uv_async_send(&async);
+	}
+	else{
+		PduOutputOpenCb();
 	}
 
-
-
-	for( i = 0; i < DestinationId.length; i++)
-	{
-		v8::Local<v8::Value> elm = v8::Number::New(isolate,DestinationId.value[i]);
-		Outval2->Set(i, elm);
-	}
-
-	obj->Set(v8::String::NewFromUtf8(isolate, "srcValue"),Outval1);
-	obj->Set(v8::String::NewFromUtf8(isolate, "dstValue"),Outval2);
-
-
-
-	const int argc = 1;
-
-	v8::Local<v8::Value> argv[argc];
-
-	argv[0] = obj;
-
-	Local<Function> Func = Local<Function>::New(isolate, pduOutputOpen.Function);
-
-
-
-	if(pduOutputOpen.IsDefined)
-	{
-		Func->Call(isolate->GetCurrentContext()->Global(), argc, argv);
-
-	}
-
-	/* Unlock this isolate */
-	v8::Unlocker unlockerChild(isolate);
 
 
 	return (YES);
@@ -147,73 +52,25 @@ boolean isPduOutputOpen (ID SourceId, ID DestinationId)
 
 boolean isPduOutputReady (PDU_TYPE PduType, TRANSACTION TransInfo,ID DestinationId)
 {
-	isolate = Isolate::GetCurrent();
-//	if(temp==0){
-//		isolate->Exit();
-//		/* Unlock this isolate */
-//		v8::Unlocker unlockerChild(isolate);
-//	}
-//
-//	isolate->Enter();
-//	/* Current thread locks isolate */
-//	v8::Locker lockerChild(isolate);
-//
-//	/* Isolate scope call*/
-//	Isolate::Scope isolate_scope(isolate);
-////
-	v8::HandleScope handle_scope(isolate);
 
-	v8::Local<Object> obj = v8::Object::New(isolate);
+	memset(&isPduReadyPacket, 0, sizeof(isPduReadyPacket));
 
-	obj->Set(v8::String::NewFromUtf8(isolate, "pduType"),v8::String::NewFromUtf8(isolate, PduTypeEMap[PduType]));
-
-    int i;
-
-	obj->Set(v8::String::NewFromUtf8(isolate, "transSrcLength"),v8::Number::New(isolate, TransInfo.source_id.length));
-	obj->Set(v8::String::NewFromUtf8(isolate, "dstLength"),v8::Number::New(isolate, DestinationId.length));
+	memcpy(&isPduReadyPacket.ptype, &PduType, sizeof(PduType));
+	memcpy(&isPduReadyPacket.tinfo, &TransInfo, sizeof(TransInfo));
+	memcpy(&isPduReadyPacket.destid, &DestinationId, sizeof(DestinationId));
 
 
-	v8::Local<Array> Outval1 = v8::Array::New(isolate,TransInfo.source_id.length);
-	v8::Local<Array> Outval2 = v8::Array::New(isolate,DestinationId.length);
 
-	for( i = 0; i < TransInfo.source_id.length; i++)
+
+	if( async.loop != 0)
 	{
-		v8::Local<v8::Value> elm = v8::Number::New(isolate,TransInfo.source_id.value[i]);
-		Outval1->Set(i, elm);
+		SCH_CB signal = IS_PDU_READY;
+	    async.data = (void*) &signal;
+	    uv_async_send(&async);
 	}
-
-
-
-	for( i = 0; i < DestinationId.length; i++)
-	{
-		v8::Local<v8::Value> elm = v8::Number::New(isolate,DestinationId.value[i]);
-		Outval2->Set(i, elm);
+	else{
+		PduOutputReadyCb();
 	}
-
-	obj->Set(v8::String::NewFromUtf8(isolate, "transSrcValue"),Outval1);
-	obj->Set(v8::String::NewFromUtf8(isolate, "dstValue"),Outval2);
-
-	const int argc = 1;
-
-	v8::Local<v8::Value> argv[argc];
-
-	argv[0] = obj;
-
-	Local<Function> Func = Local<Function>::New(isolate, pduOutputReady.Function);
-	Local<Context> 	context = 	isolate->GetCurrentContext();
-	Local<Object> 	global = 	context->Global();
-
-
-	if(pduOutputReady.IsDefined)
-	{
-
-		Func->Call(global, argc, argv);
-
-	}
-isolate->Enter();
-	/* Unlock this isolate */
-//	v8::Unlocker unlockerChild(isolate);
-
 
 	return (YES);
 }
@@ -221,27 +78,23 @@ isolate->Enter();
 void SendPduOutput (TRANSACTION TransInfo,ID DestinationId, CFDP_DATA *PduPtr)
 {
 
-	/* Current thread locks isolate */
-	v8::Locker lockerChild(isolate);
-	/* Isolate scope call*/
-	Isolate::Scope isolate_scope(isolate);
+	memset(&pduSendPacket, 0, sizeof(pduSendPacket));
 
-	const int argc = 1;
+	memcpy(&pduSendPacket.tinfo, &TransInfo, sizeof(TransInfo));
+	memcpy(&pduSendPacket.destid, &DestinationId, sizeof(DestinationId));
+	pduSendPacket.pduptr = PduPtr;
 
-	v8::Local<v8::Value> argv[argc];
 
-	argv[0] = Nan::NewBuffer(PduPtr->content, PduPtr->length).ToLocalChecked();
 
-	Local<Function> Func = Local<Function>::New(isolate, PduOutputSend.Function);
-
-	if(PduOutputSend.IsDefined)
+	if( async.loop != 0)
 	{
-		Func->Call(isolate->GetCurrentContext()->Global(), argc, argv);
-
+		SCH_CB signal = PDU_SEND;
+	    async.data = (void*) &signal;
+	    uv_async_send(&async);
 	}
-
-	/* Unlock this isolate */
-	v8::Unlocker unlockerChild(isolate);
+	else{
+		PduOutputSendCb();
+	}
 
 }
 
@@ -372,34 +225,34 @@ int InfoEvent(const char *Format, ...)
           break;
       }
     }
-	/* Current thread locks isolate */
-	v8::Locker lockerChild(isolate);
-	/* Isolate scope call*/
-	Isolate::Scope isolate_scope(isolate);
+//	/* Current thread locks isolate */
+//	v8::Locker lockerChild(isolate);
+//	/* Isolate scope call*/
+//	Isolate::Scope isolate_scope(isolate);
 
 
 
-	const int argc = 1;
-	v8::Local<v8::Value> argv[argc];
-
-	std::string str(BigBuf);
-	argv[0] = v8::String::NewFromUtf8(isolate, BigBuf);
-
-	Local<Function> Func = Local<Function>::New(isolate, LogInfo.Function);
-
-	if(LogInfo.IsDefined)
-	{
-		Func->Call(isolate->GetCurrentContext()->Global(), argc, argv);
-		Status = 1;
-	}
-	else
-	{
+//	const int argc = 1;
+//	v8::Local<v8::Value> argv[argc];
+//
+//	std::string str(BigBuf);
+//	argv[0] = v8::String::NewFromUtf8(isolate, BigBuf);
+//
+//	Local<Function> Func = Local<Function>::New(isolate, LogInfo.Function);
+//
+//	if(LogInfo.IsDefined)
+//	{
+//		Func->Call(isolate->GetCurrentContext()->Global(), argc, argv);
+//		Status = 1;
+//	}
+//	else
+//	{
 		printf("INFO : %s\n", &BigBuf);
-	}
+//	}
 
 
 	/* Unlock this isolate */
-	v8::Unlocker unlockerChild(isolate);
+//	v8::Unlocker unlockerChild(isolate);
 
 
     return(Status);
@@ -422,32 +275,32 @@ int ErrorEvent(const char *Format, ...)
       }
     }
 
-	/* Current thread locks isolate */
-	v8::Locker lockerChild(isolate);
-	/* Isolate scope call*/
-	Isolate::Scope isolate_scope(isolate);
+//	/* Current thread locks isolate */
+//	v8::Locker lockerChild(isolate);
+//	/* Isolate scope call*/
+//	Isolate::Scope isolate_scope(isolate);
 
-	const int argc = 1;
-	v8::Local<v8::Value> argv[argc];
-
-	std::string str(BigBuf);
-	argv[0] = v8::String::NewFromUtf8(isolate, BigBuf);
-
-	Local<Function> Func = Local<Function>::New(isolate, LogError.Function);
-
-	if(LogError.IsDefined)
-	{
-		Func->Call(isolate->GetCurrentContext()->Global(), argc, argv);
-		Status = 1;
-
-	}
-	else
-	{
+//	const int argc = 1;
+//	v8::Local<v8::Value> argv[argc];
+//
+//	std::string str(BigBuf);
+//	argv[0] = v8::String::NewFromUtf8(isolate, BigBuf);
+//
+//	Local<Function> Func = Local<Function>::New(isolate, LogError.Function);
+//
+//	if(LogError.IsDefined)
+//	{
+//		Func->Call(isolate->GetCurrentContext()->Global(), argc, argv);
+//		Status = 1;
+//
+//	}
+//	else
+//	{
 		printf("ERR : %s\n", &BigBuf);
-	}
+//	}
 
 	/* Unlock this isolate */
-	v8::Unlocker unlockerChild(isolate);
+//	v8::Unlocker unlockerChild(isolate);
 
 
     return(Status);
@@ -470,31 +323,31 @@ int DebugEvent(const char *Format, ...)
       }
     }
 
-	/* Current thread locks isolate */
-	v8::Locker lockerChild(isolate);
-	/* Isolate scope call*/
-	Isolate::Scope isolate_scope(isolate);
+//	/* Current thread locks isolate */
+//	v8::Locker lockerChild(isolate);
+//	/* Isolate scope call*/
+//	Isolate::Scope isolate_scope(isolate);
 
-	const int argc = 1;
-	v8::Local<v8::Value> argv[argc];
-
-	std::string str(BigBuf);
-	argv[0] = v8::String::NewFromUtf8(isolate, BigBuf);
-
-	Local<Function> Func = Local<Function>::New(isolate, LogDebug.Function);
-
-	if(LogDebug.IsDefined)
-	{
-		Func->Call(isolate->GetCurrentContext()->Global(), argc, argv);
-		Status = 1;
-	}
-	else
-	{
+//	const int argc = 1;
+//	v8::Local<v8::Value> argv[argc];
+//
+//	std::string str(BigBuf);
+//	argv[0] = v8::String::NewFromUtf8(isolate, BigBuf);
+//
+//	Local<Function> Func = Local<Function>::New(isolate, LogDebug.Function);
+//
+//	if(LogDebug.IsDefined)
+//	{
+//		Func->Call(isolate->GetCurrentContext()->Global(), argc, argv);
+//		Status = 1;
+//	}
+//	else
+//	{
 		printf("DEBUG : %s\n", &BigBuf);
-	}
+//	}
 
 	/* Unlock this isolate */
-	v8::Unlocker unlockerChild(isolate);
+//	v8::Unlocker unlockerChild(isolate);
 
 
 
@@ -519,32 +372,32 @@ int WarningEvent(const char *Format, ...)
     }
 
 	/* Current thread locks isolate */
-	v8::Locker lockerChild(isolate);
-	/* Isolate scope call*/
-	Isolate::Scope isolate_scope(isolate);
+//	v8::Locker lockerChild(isolate);
+//	/* Isolate scope call*/
+//	Isolate::Scope isolate_scope(isolate);
 
-	const int argc = 1;
-	v8::Local<v8::Value> argv[argc];
-
-	std::string str(BigBuf);
-	argv[0] = v8::String::NewFromUtf8(isolate, BigBuf);
-
-	Local<Function> Func = Local<Function>::New(isolate, LogWarning.Function);
-
-
-	if(LogWarning.IsDefined)
-	{
-		Func->Call(isolate->GetCurrentContext()->Global(), argc, argv);
-		Status = 1;
-
-	}
-	else
-	{
+//	const int argc = 1;
+//	v8::Local<v8::Value> argv[argc];
+//
+//	std::string str(BigBuf);
+//	argv[0] = v8::String::NewFromUtf8(isolate, BigBuf);
+//
+//	Local<Function> Func = Local<Function>::New(isolate, LogWarning.Function);
+//
+//
+//	if(LogWarning.IsDefined)
+//	{
+//		Func->Call(isolate->GetCurrentContext()->Global(), argc, argv);
+//		Status = 1;
+//
+//	}
+//	else
+//	{
 		printf("WARN : %s\n", &BigBuf);
-	}
+//	}
 
 	/* Unlock this isolate */
-	v8::Unlocker unlockerChild(isolate);
+//	v8::Unlocker unlockerChild(isolate);
 
     return(Status);
 }
@@ -600,10 +453,10 @@ void GivePdu(const FunctionCallbackInfo<Value> &args)
 
 	Isolate* isolate = args.GetIsolate();
 
-	/* Current thread locks isolate */
-	v8::Locker lockerChild(isolate);
-	/* Isolate scope call*/
-	Isolate::Scope isolate_scope(isolate);
+//	/* Current thread locks isolate */
+//	v8::Locker lockerChild(isolate);
+//	/* Isolate scope call*/
+//	Isolate::Scope isolate_scope(isolate);
 
 	if(args.Length() < 1 || !args[0]->IsObject()) {
 
@@ -627,20 +480,30 @@ void GivePdu(const FunctionCallbackInfo<Value> &args)
 	memcpy(&AppData.RawPduInputBuf.content[0], buffer, AppData.RawPduInputBuf.length);
 
 
-	cfdp_give_pdu(AppData.RawPduInputBuf);
 
-	/* Unlock this isolate */
-	v8::Unlocker unlockerChild(isolate);
+
+	Worker * worker = new Worker();
+	worker->request.data = worker;
+
+	uv_queue_work(uv_default_loop(),&worker->request,CyclePduGiveWorker,NULL);
+
+
+
+
+}
+void CyclePduGiveWorker(uv_work_t * request)
+{
+	cfdp_give_pdu(AppData.RawPduInputBuf);
 }
 
 void RequestPdu(const FunctionCallbackInfo<Value> &args)
 {
 	char ReqString[MAX_REQUEST_STRING_LENGTH];
 
-	/* Current thread locks isolate */
-	v8::Locker lockerChild(isolate);
-	/* Isolate scope call*/
-	Isolate::Scope isolate_scope(isolate);
+//	/* Current thread locks isolate */
+//	v8::Locker lockerChild(isolate);
+//	/* Isolate scope call*/
+//	Isolate::Scope isolate_scope(isolate);
 
 	if(args.Length() < 1
 			|| args.Length() > 4
@@ -674,8 +537,8 @@ void RequestPdu(const FunctionCallbackInfo<Value> &args)
         ErrorEvent("Engine put request returned error for %s",SrcFilename.c_str());
 	}
 
-	/* Unlock this isolate */
-	v8::Unlocker unlockerChild(isolate);
+//	/* Unlock this isolate */
+//	v8::Unlocker unlockerChild(isolate);
 
 }
 
@@ -683,10 +546,10 @@ void GetSummaryStatus(const FunctionCallbackInfo<Value> &args)
 {
 	Isolate* isolate = args.GetIsolate();
 
-	/* Current thread locks isolate */
-	v8::Locker lockerChild(isolate);
-	/* Isolate scope call*/
-	Isolate::Scope isolate_scope(isolate);
+//	/* Current thread locks isolate */
+//	v8::Locker lockerChild(isolate);
+//	/* Isolate scope call*/
+//	Isolate::Scope isolate_scope(isolate);
 
 	v8::Local<Object> obj = v8::Object::New(isolate);
 
@@ -716,8 +579,8 @@ void GetSummaryStatus(const FunctionCallbackInfo<Value> &args)
 
 	args.GetReturnValue().Set(obj);
 
-	/* Unlock this isolate */
-	v8::Unlocker unlockerChild(isolate);
+//	/* Unlock this isolate */
+//	v8::Unlocker unlockerChild(isolate);
 }
 
 void GetIdFromString(const FunctionCallbackInfo<Value> &args)
@@ -726,10 +589,10 @@ void GetIdFromString(const FunctionCallbackInfo<Value> &args)
 
 	Isolate* isolate = args.GetIsolate();
 
-	/* Current thread locks isolate */
-	v8::Locker lockerChild(isolate);
-	/* Isolate scope call*/
-	Isolate::Scope isolate_scope(isolate);
+//	/* Current thread locks isolate */
+//	v8::Locker lockerChild(isolate);
+//	/* Isolate scope call*/
+//	Isolate::Scope isolate_scope(isolate);
 
 	v8::Local<Object> obj = v8::Object::New(isolate);
 
@@ -757,18 +620,18 @@ void GetIdFromString(const FunctionCallbackInfo<Value> &args)
 
 	args.GetReturnValue().Set(obj);
 
-	/* Unlock this isolate */
-	v8::Unlocker unlockerChild(isolate);
+//	/* Unlock this isolate */
+//	v8::Unlocker unlockerChild(isolate);
 }
 
 void GetTransactionStatus(const FunctionCallbackInfo<Value> &args)
 {
 	TRANSACTION Trans;
 
-	/* Current thread locks isolate */
-	v8::Locker lockerChild(isolate);
-	/* Isolate scope call*/
-	Isolate::Scope isolate_scope(isolate);
+//	/* Current thread locks isolate */
+//	v8::Locker lockerChild(isolate);
+//	/* Isolate scope call*/
+//	Isolate::Scope isolate_scope(isolate);
 
 
 	if(args.Length() < 1
@@ -801,18 +664,18 @@ void GetTransactionStatus(const FunctionCallbackInfo<Value> &args)
 		tsCallbackHandle();
 	}
 
-	/* Unlock this isolate */
-	v8::Unlocker unlockerChild(isolate);
+//	/* Unlock this isolate */
+//	v8::Unlocker unlockerChild(isolate);
 
 }
 
 void tsCallbackHandle()
 {
 
-	/* Current thread locks isolate */
-	v8::Locker lockerChild(isolate);
-	/* Isolate scope call*/
-	Isolate::Scope isolate_scope(isolate);
+//	/* Current thread locks isolate */
+//	v8::Locker lockerChild(isolate);
+//	/* Isolate scope call*/
+//	Isolate::Scope isolate_scope(isolate);
 
     int i;
 	const int argc = 1;
@@ -879,14 +742,16 @@ void tsCallbackHandle()
 	}
 
 
-	/* Unlock this isolate */
-	v8::Unlocker unlockerChild(isolate);
+//	/* Unlock this isolate */
+//	v8::Unlocker unlockerChild(isolate);
 
 
 }
 
 void StartCycle(const FunctionCallbackInfo<Value> &args)
 {
+	loop = uv_default_loop();
+
 	InfoEvent("Cycling cfdp engine");
 
 	Worker * worker = new Worker();
@@ -894,11 +759,247 @@ void StartCycle(const FunctionCallbackInfo<Value> &args)
 	worker->request.data = worker;
 	CycleStopSignal = false;
 
+	uv_async_init(loop, &async, print_progress);
 
-	uv_queue_work(uv_default_loop(),&worker->request,CycleWorker,CycleShutdown);
+	uv_queue_work(loop,&worker->request,CycleWorker,CycleShutdown);
 
+//	uv_run(loop, UV_RUN_DEFAULT);
 
 }
+
+void print_progress(uv_async_t *handle) {
+
+	SCH_CB signal = *((SCH_CB*) handle->data);
+
+	switch(signal)
+	{
+		case IS_PDU_OPEN:
+		{
+
+			PduOutputOpenCb();
+			break;
+		}
+		case IS_PDU_READY:
+		{
+			PduOutputReadyCb();
+			break;
+		}
+		case PDU_SEND:
+		{
+
+			PduOutputSendCb();
+			break;
+		}
+		case INDICATION:
+		{
+			IndicationCb();
+			break;
+		}
+		case NO_SCH:
+		{
+			break;
+		}
+		default:
+		{
+			break;
+		}
+
+	}
+
+}
+
+
+
+void PduOutputOpenCb()
+{
+    int i;
+    v8::HandleScope handleScope(isolate);
+
+	v8::Local<Object> obj = v8::Object::New(isolate);
+
+	obj->Set(v8::String::NewFromUtf8(isolate, "srcLength"),v8::Number::New(isolate, isPduOpenPacket.srcid.length));
+	obj->Set(v8::String::NewFromUtf8(isolate, "dstLength"),v8::Number::New(isolate, isPduOpenPacket.destid.length));
+
+
+	v8::Local<Array> Outval1 = v8::Array::New(isolate,isPduOpenPacket.srcid.length);
+	v8::Local<Array> Outval2 = v8::Array::New(isolate,isPduOpenPacket.destid.length);
+
+	for( i = 0; i < isPduOpenPacket.srcid.length; i++)
+	{
+		v8::Local<v8::Value> elm = v8::Number::New(isolate,isPduOpenPacket.srcid.value[i]);
+		Outval1->Set(i, elm);
+	}
+
+
+
+	for( i = 0; i < isPduOpenPacket.destid.length; i++)
+	{
+		v8::Local<v8::Value> elm = v8::Number::New(isolate,isPduOpenPacket.destid.value[i]);
+		Outval2->Set(i, elm);
+	}
+
+	obj->Set(v8::String::NewFromUtf8(isolate, "srcValue"),Outval1);
+	obj->Set(v8::String::NewFromUtf8(isolate, "dstValue"),Outval2);
+
+
+
+	const int argc = 1;
+
+	v8::Local<v8::Value> argv[argc];
+
+	argv[0] = obj;
+
+	Local<Function> Func = Local<Function>::New(isolate, pduOutputOpen.Function);
+
+
+
+	if(pduOutputOpen.IsDefined)
+	{
+		Func->Call(isolate->GetCurrentContext()->Global(), argc, argv);
+
+	}
+}
+void PduOutputSendCb()
+{
+	v8::HandleScope handleScope(isolate);
+	const int argc = 1;
+
+	v8::Local<v8::Value> argv[argc];
+
+	argv[0] = Nan::NewBuffer(pduSendPacket.pduptr->content, pduSendPacket.pduptr->length).ToLocalChecked();
+
+	Local<Function> Func = Local<Function>::New(isolate, PduOutputSend.Function);
+
+	if(PduOutputSend.IsDefined)
+	{
+		Func->Call(isolate->GetCurrentContext()->Global(), argc, argv);
+
+	}
+}
+void PduOutputReadyCb()
+{
+
+	v8::HandleScope handleScope(isolate);
+
+	v8::Local<Object> obj = v8::Object::New(isolate);
+
+	obj->Set(v8::String::NewFromUtf8(isolate, "pduType"),v8::String::NewFromUtf8(isolate, PduTypeEMap[isPduReadyPacket.ptype]));
+
+	int i;
+
+	obj->Set(v8::String::NewFromUtf8(isolate, "transSrcLength"),v8::Number::New(isolate, isPduReadyPacket.tinfo.source_id.length));
+	obj->Set(v8::String::NewFromUtf8(isolate, "dstLength"),v8::Number::New(isolate, isPduReadyPacket.destid.length));
+
+
+	v8::Local<Array> Outval1 = v8::Array::New(isolate,isPduReadyPacket.tinfo.source_id.length);
+	v8::Local<Array> Outval2 = v8::Array::New(isolate,isPduReadyPacket.destid.length);
+
+	for( i = 0; i < isPduReadyPacket.tinfo.source_id.length; i++)
+	{
+		v8::Local<v8::Value> elm = v8::Number::New(isolate,isPduReadyPacket.tinfo.source_id.value[i]);
+		Outval1->Set(i, elm);
+	}
+
+
+
+	for( i = 0; i < isPduReadyPacket.destid.length; i++)
+	{
+		v8::Local<v8::Value> elm = v8::Number::New(isolate,isPduReadyPacket.destid.value[i]);
+		Outval2->Set(i, elm);
+	}
+
+	obj->Set(v8::String::NewFromUtf8(isolate, "transSrcValue"),Outval1);
+	obj->Set(v8::String::NewFromUtf8(isolate, "dstValue"),Outval2);
+
+	const int argc = 1;
+
+	v8::Local<v8::Value> argv[argc];
+
+	argv[0] = obj;
+
+	Local<Function> Func = Local<Function>::New(isolate, pduOutputReady.Function);
+	Local<Context> 	context = 	isolate->GetCurrentContext();
+	Local<Object> 	global = 	context->Global();
+
+
+	if(pduOutputReady.IsDefined)
+	{
+
+		Func->Call(global, argc, argv);
+
+	}
+}
+void IndicationCb()
+{
+	int i;
+	v8::HandleScope handleScope(isolate);
+	v8::Local<v8::Object> mdObj = v8::Object::New(isolate);
+
+	mdObj->Set(v8::String::NewFromUtf8(isolate, "file_transfer"),v8::Boolean::New(isolate, indicationPacket.tinfo.md.file_transfer));
+	mdObj->Set(v8::String::NewFromUtf8(isolate, "segmentation_control"),v8::Boolean::New(isolate, indicationPacket.tinfo.md.segmentation_control));
+	mdObj->Set(v8::String::NewFromUtf8(isolate, "file_size"),v8::Number::New(isolate, indicationPacket.tinfo.md.file_size));
+	mdObj->Set(v8::String::NewFromUtf8(isolate, "source_file_name"),v8::String::NewFromUtf8(isolate, indicationPacket.tinfo.md.source_file_name));
+	mdObj->Set(v8::String::NewFromUtf8(isolate, "dest_file_name"),v8::String::NewFromUtf8(isolate, indicationPacket.tinfo.md.dest_file_name));
+
+	v8::Local<Object> patnerIdObj = v8::Object::New(isolate);
+
+	patnerIdObj->Set(v8::String::NewFromUtf8(isolate, "length"),v8::Number::New(isolate, indicationPacket.tinfo.partner_id.length));
+
+	v8::Local<Array> partner_id_val = v8::Array::New(isolate,indicationPacket.tinfo.partner_id.length);
+	for( i = 0; i < indicationPacket.tinfo.partner_id.length; i++)
+	{
+		v8::Local<v8::Value> elm = v8::Number::New(isolate,indicationPacket.tinfo.partner_id.value[i]);
+		partner_id_val->Set(i, elm);
+	}
+	patnerIdObj->Set(v8::String::NewFromUtf8(isolate, "value"),partner_id_val);
+
+
+	Local<Object> obj = Nan::New<Object>();
+
+	obj->Set(v8::String::NewFromUtf8(isolate, "IndType"),v8::String::NewFromUtf8(isolate, IndicationType[indicationPacket.indtype]));
+	obj->Set(v8::String::NewFromUtf8(isolate, "abandoned"),v8::Boolean::New(isolate, indicationPacket.tinfo.abandoned));
+	obj->Set(v8::String::NewFromUtf8(isolate, "attempts"),v8::Number::New(isolate, indicationPacket.tinfo.attempts));
+	obj->Set(v8::String::NewFromUtf8(isolate, "cancelled"),v8::Boolean::New(isolate, indicationPacket.tinfo.cancelled));
+	obj->Set(v8::String::NewFromUtf8(isolate, "external_file_xfer"),v8::Boolean::New(isolate, indicationPacket.tinfo.external_file_xfer));
+	obj->Set(v8::String::NewFromUtf8(isolate, "fd_offset"),v8::Number::New(isolate, indicationPacket.tinfo.fd_offset));
+	obj->Set(v8::String::NewFromUtf8(isolate, "fd_length"),v8::Number::New(isolate, indicationPacket.tinfo.fd_length));
+	obj->Set(v8::String::NewFromUtf8(isolate, "file_checksum_as_calculated"),v8::Number::New(isolate, indicationPacket.tinfo.file_checksum_as_calculated));
+	obj->Set(v8::String::NewFromUtf8(isolate, "finished"),v8::Boolean::New(isolate, indicationPacket.tinfo.finished));
+	obj->Set(v8::String::NewFromUtf8(isolate, "frozen"),v8::Boolean::New(isolate, indicationPacket.tinfo.frozen));
+	obj->Set(v8::String::NewFromUtf8(isolate, "has_md_been_received"),v8::Boolean::New(isolate, indicationPacket.tinfo.has_md_been_received));
+	obj->Set(v8::String::NewFromUtf8(isolate, "how_many_naks"),v8::Number::New(isolate, indicationPacket.tinfo.how_many_naks));
+	obj->Set(v8::String::NewFromUtf8(isolate, "is_this_trans_solely_for_ack_fin"),v8::Boolean::New(isolate, indicationPacket.tinfo.is_this_trans_solely_for_ack_fin));
+	obj->Set(v8::String::NewFromUtf8(isolate, "phase"),v8::Number::New(isolate, indicationPacket.tinfo.phase));
+	obj->Set(v8::String::NewFromUtf8(isolate, "received_file_size"),v8::Number::New(isolate, indicationPacket.tinfo.received_file_size));
+	obj->Set(v8::String::NewFromUtf8(isolate, "start_time"),v8::Number::New(isolate, indicationPacket.tinfo.start_time));
+	obj->Set(v8::String::NewFromUtf8(isolate, "suspended"),v8::Boolean::New(isolate, indicationPacket.tinfo.suspended));
+	obj->Set(v8::String::NewFromUtf8(isolate, "temp_file_name"),v8::String::NewFromUtf8(isolate, indicationPacket.tinfo.temp_file_name));
+
+	obj->Set(v8::String::NewFromUtf8(isolate, "condition_code"),v8::String::NewFromUtf8(isolate, ConditionCode[indicationPacket.tinfo.condition_code]));
+	obj->Set(v8::String::NewFromUtf8(isolate, "delivery_code"),v8::String::NewFromUtf8(isolate, DeliveryCode[indicationPacket.tinfo.delivery_code]));
+	obj->Set(v8::String::NewFromUtf8(isolate, "final_status"),v8::String::NewFromUtf8(isolate, FinalStatus[indicationPacket.tinfo.final_status]));
+	obj->Set(v8::String::NewFromUtf8(isolate, "role"),v8::String::NewFromUtf8(isolate, Role[indicationPacket.tinfo.role]));
+	obj->Set(v8::String::NewFromUtf8(isolate, "state"),v8::String::NewFromUtf8(isolate, State[indicationPacket.tinfo.state]));
+
+	obj->Set(v8::String::NewFromUtf8(isolate, "md"),mdObj);
+	obj->Set(v8::String::NewFromUtf8(isolate, "partner_id"),patnerIdObj);
+
+	const int argc = 1;
+
+	v8::Local<v8::Value> argv[argc];
+
+	argv[0] = obj;
+
+	Local<Function> Func = Local<Function>::New(isolate, IndicationHandle.Function);
+
+	if(IndicationHandle.IsDefined)
+	{
+		Func->Call(isolate->GetCurrentContext()->Global(), argc, argv);
+
+	}
+}
+
+
 
 void StopCycle(const FunctionCallbackInfo<Value> &args)
 {
@@ -911,29 +1012,19 @@ void StopCycle(const FunctionCallbackInfo<Value> &args)
 void CycleWorker(uv_work_t * request)
 {
 
+
 	while(!CycleStopSignal){
 
 		sleep(1);
 
-		{
-		  isolate->Exit();
-		  v8::Unlocker unlocker(isolate);
+		if(invoke_cycle){
+			cfdp_cycle_each_transaction();
+//			invoke_cycle = false;
+		}
 
-		  // Code not using V8 goes here while V8 can run in another thread.
-
-		} // Destructor called here.
-		isolate->Enter();
-		v8::Locker locker(isolate);
-		Isolate::Scope isolate_scope(isolate);
-		cfdp_cycle_each_transaction();
-	    {
-	      isolate->Exit();
-	      v8::Unlocker unlocker(isolate);
-	      // V8 not locked.
-	    }
-//	    isolate->Enter();
 
 	}
+
 
 }
 
@@ -947,10 +1038,10 @@ void RegisterCallbackOn(const FunctionCallbackInfo<Value> &args)
 {
 	Isolate* isolate = args.GetIsolate();
 
-	/* Current thread locks isolate */
-	v8::Locker lockerChild(isolate);
-	/* Isolate scope call*/
-	Isolate::Scope isolate_scope(isolate);
+//	/* Current thread locks isolate */
+//	v8::Locker lockerChild(isolate);
+//	/* Isolate scope call*/
+//	Isolate::Scope isolate_scope(isolate);
 
 	std::string CbIndicator = GetStdString(args[0]->ToString());
 
@@ -993,8 +1084,8 @@ void RegisterCallbackOn(const FunctionCallbackInfo<Value> &args)
 		SetCallbackData(&TransactionStatusHandle, isolate, args[1]);
 	}
 
-	/* Unlock this isolate */
-	v8::Unlocker unlockerChild(isolate);
+//	/* Unlock this isolate */
+//	v8::Unlocker unlockerChild(isolate);
 
 }
 
@@ -1002,10 +1093,10 @@ void SetConfig(const FunctionCallbackInfo<Value> &args)
 {
 	Isolate* isolate = args.GetIsolate();
 
-	/* Current thread locks isolate */
-	v8::Locker lockerChild(isolate);
-	/* Isolate scope call*/
-	Isolate::Scope isolate_scope(isolate);
+//	/* Current thread locks isolate */
+//	v8::Locker lockerChild(isolate);
+//	/* Isolate scope call*/
+//	Isolate::Scope isolate_scope(isolate);
 
 	if(args.Length() < 1 || !args[0]->IsObject()) {
 
@@ -1036,8 +1127,8 @@ void SetConfig(const FunctionCallbackInfo<Value> &args)
 
 
   }
-	/* Unlock this isolate */
-	v8::Unlocker unlockerChild(isolate);
+//	/* Unlock this isolate */
+//	v8::Unlocker unlockerChild(isolate);
 
 }
 
@@ -1046,10 +1137,10 @@ void SetMibParams(const FunctionCallbackInfo<Value> &args)
 
 	Isolate* isolate = args.GetIsolate();
 
-	/* Current thread locks isolate */
-	v8::Locker lockerChild(isolate);
-	/* Isolate scope call*/
-	Isolate::Scope isolate_scope(isolate);
+//	/* Current thread locks isolate */
+//	v8::Locker lockerChild(isolate);
+//	/* Isolate scope call*/
+//	Isolate::Scope isolate_scope(isolate);
 
 	if(args.Length() < 1 || args.Length() > 2 || !args[0]->IsString() || !args[1]->IsString()) {
 
@@ -1064,18 +1155,18 @@ void SetMibParams(const FunctionCallbackInfo<Value> &args)
 	cfdp_set_mib_parameter (str_key.c_str (), str_val.c_str ());
 
 	/* Unlock this isolate */
-	v8::Unlocker unlockerChild(isolate);
+//	v8::Unlocker unlockerChild(isolate);
 
 }
 
 void GetMibParams(const FunctionCallbackInfo<Value> &args)
 {
 	Isolate* isolate = args.GetIsolate();
-
-	/* Current thread locks isolate */
-	v8::Locker lockerChild(isolate);
-	/* Isolate scope call*/
-	Isolate::Scope isolate_scope(isolate);
+//
+//	/* Current thread locks isolate */
+//	v8::Locker lockerChild(isolate);
+//	/* Isolate scope call*/
+//	Isolate::Scope isolate_scope(isolate);
 
 	char    value[CF_MAX_CFG_VALUE_CHARS];
 
@@ -1093,7 +1184,7 @@ void GetMibParams(const FunctionCallbackInfo<Value> &args)
 	args.GetReturnValue().Set(v8::String::NewFromUtf8(isolate, value));
 
 	/* Unlock this isolate */
-	v8::Unlocker unlockerChild(isolate);
+//	v8::Unlocker unlockerChild(isolate);
 
 }
 
@@ -1102,7 +1193,7 @@ void AppInit(const FunctionCallbackInfo<Value> &args)
 
 	isolate = args.GetIsolate();
 
-	v8::HandleScope handleScope(isolate);
+//	v8::HandleScope handleScope(isolate);
 
 
     strncpy(AppData.BaseDir, Config.TempBaseDir, CF_MAX_PATH_LEN);
@@ -1110,7 +1201,7 @@ void AppInit(const FunctionCallbackInfo<Value> &args)
 	RegisterCallbacks();
 
 	/* Unlock this isolate */
-	v8::Unlocker unlockerChild(isolate);
+//	v8::Unlocker unlockerChild(isolate);
 
 }
 
