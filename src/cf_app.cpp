@@ -15,11 +15,13 @@ void Indication (INDICATION_TYPE IndType, TRANS_STATUS TransInfo)
 
 
 
-	if( async.loop != 0)
+	if( async.loop != 0 & Isolate::GetCurrent() == 0)
 	{
 		SCH_CB signal = INDICATION;
 	    async.data = (void*) &signal;
+
 	    uv_async_send(&async);
+	    uv_sem_wait( &sem);
 	}
 	else{
 		IndicationCb();
@@ -35,11 +37,13 @@ boolean isPduOutputOpen (ID SourceId, ID DestinationId)
 	memcpy(&isPduOpenPacket.srcid, &SourceId, sizeof(SourceId));
 	memcpy(&isPduOpenPacket.destid, &DestinationId, sizeof(DestinationId));
 
-	if( async.loop != 0)
+	if( async.loop != 0 & Isolate::GetCurrent() == 0)
 	{
 		SCH_CB signal = IS_PDU_OPEN;
 	    async.data = (void*) &signal;
+
 	    uv_async_send(&async);
+	    uv_sem_wait( &sem);
 	}
 	else{
 		PduOutputOpenCb();
@@ -62,11 +66,16 @@ boolean isPduOutputReady (PDU_TYPE PduType, TRANSACTION TransInfo,ID Destination
 
 
 
-	if( async.loop != 0)
+	if( async.loop != 0 & Isolate::GetCurrent() == 0)
 	{
 		SCH_CB signal = IS_PDU_READY;
 	    async.data = (void*) &signal;
+
+
 	    uv_async_send(&async);
+	    uv_sem_wait( &sem);
+
+
 	}
 	else{
 		PduOutputReadyCb();
@@ -86,11 +95,12 @@ void SendPduOutput (TRANSACTION TransInfo,ID DestinationId, CFDP_DATA *PduPtr)
 
 
 
-	if( async.loop != 0)
+	if( async.loop != 0 & Isolate::GetCurrent() == 0)
 	{
 		SCH_CB signal = PDU_SEND;
 	    async.data = (void*) &signal;
 	    uv_async_send(&async);
+	    uv_sem_wait( &sem);
 	}
 	else{
 		PduOutputSendCb();
@@ -114,8 +124,10 @@ CF_FILE * FileOpen(const char *Name, const char *Mode){
 	FILE	*	fileHandle;
 	char 		temp[CF_MAX_PATH_LEN];
 
+	if (*Name != '/'){
+		strncpy(temp, AppData.BaseDir, CF_MAX_PATH_LEN);
+	}
 
-	strncpy(temp, AppData.BaseDir, CF_MAX_PATH_LEN);
 	strncat(temp, Name, CF_MAX_PATH_LEN);
 
 	fileHandle = fopen(temp, Mode);
@@ -180,7 +192,10 @@ int RemoveFile(const char *Name)
 {
 	char temp[CF_MAX_PATH_LEN];
 
-	strncpy(temp, AppData.BaseDir, CF_MAX_PATH_LEN);
+//	strncpy(temp, AppData.BaseDir, CF_MAX_PATH_LEN);
+	if (*Name != '/'){
+		strncpy(temp, AppData.BaseDir, CF_MAX_PATH_LEN);
+	}
 	strncat(temp, Name, CF_MAX_PATH_LEN);
 	return remove(temp);
 }
@@ -191,6 +206,7 @@ int RenameFile(const char *TempFileName, const char *NewName)
 	char tempNew[CF_MAX_PATH_LEN];
 
 	strncpy(tempOld, AppData.BaseDir, CF_MAX_PATH_LEN);
+
 	strncat(tempOld, TempFileName, CF_MAX_PATH_LEN);
 
 	strncat(tempNew, NewName, CF_MAX_PATH_LEN);
@@ -202,8 +218,12 @@ u_int_4 FileSize(const char *Name)
 {
 	struct stat st;
 	char temp[CF_MAX_PATH_LEN];
+	memset(&temp,'\0',sizeof(temp));
 
-	strncpy(temp, AppData.BaseDir, CF_MAX_PATH_LEN);
+//	strncpy(temp, AppData.BaseDir, CF_MAX_PATH_LEN);
+	if (*Name != '/'){
+		strncpy(temp, AppData.BaseDir, CF_MAX_PATH_LEN);
+	}
 	strncat(temp, Name, CF_MAX_PATH_LEN);
 	stat(temp, &st);
 	return st.st_size;
@@ -453,11 +473,6 @@ void GivePdu(const FunctionCallbackInfo<Value> &args)
 
 	Isolate* isolate = args.GetIsolate();
 
-//	/* Current thread locks isolate */
-//	v8::Locker lockerChild(isolate);
-//	/* Isolate scope call*/
-//	Isolate::Scope isolate_scope(isolate);
-
 	if(args.Length() < 1 || !args[0]->IsObject()) {
 
 		ErrorEvent("Invalid arguments, expected [ByteBuffer<Object>, ByteBufferLength<Number>]");
@@ -481,29 +496,27 @@ void GivePdu(const FunctionCallbackInfo<Value> &args)
 
 
 
-
 	Worker * worker = new Worker();
 	worker->request.data = worker;
-
 	uv_queue_work(uv_default_loop(),&worker->request,CyclePduGiveWorker,NULL);
+//	uv_sem_wait( &semgpdu);
 
 
 
 
 }
+
 void CyclePduGiveWorker(uv_work_t * request)
 {
+	printf("=====================+>buffer length %s \n",AppData.RawPduInputBuf.content);
+
 	cfdp_give_pdu(AppData.RawPduInputBuf);
+//	uv_sem_post( &semgpdu);
 }
 
 void RequestPdu(const FunctionCallbackInfo<Value> &args)
 {
 	char ReqString[MAX_REQUEST_STRING_LENGTH];
-
-//	/* Current thread locks isolate */
-//	v8::Locker lockerChild(isolate);
-//	/* Isolate scope call*/
-//	Isolate::Scope isolate_scope(isolate);
 
 	if(args.Length() < 1
 			|| args.Length() > 4
@@ -537,19 +550,12 @@ void RequestPdu(const FunctionCallbackInfo<Value> &args)
         ErrorEvent("Engine put request returned error for %s",SrcFilename.c_str());
 	}
 
-//	/* Unlock this isolate */
-//	v8::Unlocker unlockerChild(isolate);
-
 }
 
 void GetSummaryStatus(const FunctionCallbackInfo<Value> &args)
 {
 	Isolate* isolate = args.GetIsolate();
 
-//	/* Current thread locks isolate */
-//	v8::Locker lockerChild(isolate);
-//	/* Isolate scope call*/
-//	Isolate::Scope isolate_scope(isolate);
 
 	v8::Local<Object> obj = v8::Object::New(isolate);
 
@@ -579,8 +585,6 @@ void GetSummaryStatus(const FunctionCallbackInfo<Value> &args)
 
 	args.GetReturnValue().Set(obj);
 
-//	/* Unlock this isolate */
-//	v8::Unlocker unlockerChild(isolate);
 }
 
 void GetIdFromString(const FunctionCallbackInfo<Value> &args)
@@ -588,11 +592,6 @@ void GetIdFromString(const FunctionCallbackInfo<Value> &args)
 	int i;
 
 	Isolate* isolate = args.GetIsolate();
-
-//	/* Current thread locks isolate */
-//	v8::Locker lockerChild(isolate);
-//	/* Isolate scope call*/
-//	Isolate::Scope isolate_scope(isolate);
 
 	v8::Local<Object> obj = v8::Object::New(isolate);
 
@@ -620,19 +619,11 @@ void GetIdFromString(const FunctionCallbackInfo<Value> &args)
 
 	args.GetReturnValue().Set(obj);
 
-//	/* Unlock this isolate */
-//	v8::Unlocker unlockerChild(isolate);
 }
 
 void GetTransactionStatus(const FunctionCallbackInfo<Value> &args)
 {
 	TRANSACTION Trans;
-
-//	/* Current thread locks isolate */
-//	v8::Locker lockerChild(isolate);
-//	/* Isolate scope call*/
-//	Isolate::Scope isolate_scope(isolate);
-
 
 	if(args.Length() < 1
 			|| args.Length() > 3
@@ -664,18 +655,11 @@ void GetTransactionStatus(const FunctionCallbackInfo<Value> &args)
 		tsCallbackHandle();
 	}
 
-//	/* Unlock this isolate */
-//	v8::Unlocker unlockerChild(isolate);
 
 }
 
 void tsCallbackHandle()
 {
-
-//	/* Current thread locks isolate */
-//	v8::Locker lockerChild(isolate);
-//	/* Isolate scope call*/
-//	Isolate::Scope isolate_scope(isolate);
 
     int i;
 	const int argc = 1;
@@ -741,11 +725,6 @@ void tsCallbackHandle()
 		Func->Call(isolate->GetCurrentContext()->Global(), argc, argv);
 	}
 
-
-//	/* Unlock this isolate */
-//	v8::Unlocker unlockerChild(isolate);
-
-
 }
 
 void StartCycle(const FunctionCallbackInfo<Value> &args)
@@ -806,12 +785,15 @@ void print_progress(uv_async_t *handle) {
 
 	}
 
+	uv_sem_post( &sem);
+
 }
 
 
 
 void PduOutputOpenCb()
 {
+	isolate = Isolate::GetCurrent();
     int i;
     v8::HandleScope handleScope(isolate);
 
@@ -861,6 +843,7 @@ void PduOutputOpenCb()
 }
 void PduOutputSendCb()
 {
+	isolate = Isolate::GetCurrent();
 	v8::HandleScope handleScope(isolate);
 	const int argc = 1;
 
@@ -879,6 +862,7 @@ void PduOutputSendCb()
 void PduOutputReadyCb()
 {
 
+	isolate = Isolate::GetCurrent();
 	v8::HandleScope handleScope(isolate);
 
 	v8::Local<Object> obj = v8::Object::New(isolate);
@@ -931,6 +915,7 @@ void PduOutputReadyCb()
 }
 void IndicationCb()
 {
+	isolate = Isolate::GetCurrent();
 	int i;
 	v8::HandleScope handleScope(isolate);
 	v8::Local<v8::Object> mdObj = v8::Object::New(isolate);
@@ -999,8 +984,6 @@ void IndicationCb()
 	}
 }
 
-
-
 void StopCycle(const FunctionCallbackInfo<Value> &args)
 {
 	InfoEvent("Shutdown called on cycle transaction");
@@ -1012,40 +995,26 @@ void StopCycle(const FunctionCallbackInfo<Value> &args)
 void CycleWorker(uv_work_t * request)
 {
 
-
 	while(!CycleStopSignal){
 
 		sleep(1);
-
-		if(invoke_cycle){
-			cfdp_cycle_each_transaction();
-//			invoke_cycle = false;
-		}
-
+		cfdp_cycle_each_transaction();
 
 	}
-
 
 }
 
 void CycleShutdown(uv_work_t * request)
 {
-
+	uv_sem_destroy( &sem);
+//	uv_sem_destroy( &semgpdu);
 }
-
 
 void RegisterCallbackOn(const FunctionCallbackInfo<Value> &args)
 {
 	Isolate* isolate = args.GetIsolate();
 
-//	/* Current thread locks isolate */
-//	v8::Locker lockerChild(isolate);
-//	/* Isolate scope call*/
-//	Isolate::Scope isolate_scope(isolate);
-
 	std::string CbIndicator = GetStdString(args[0]->ToString());
-
-
 
 	if(CbIndicator == "info")
 	{
@@ -1084,19 +1053,11 @@ void RegisterCallbackOn(const FunctionCallbackInfo<Value> &args)
 		SetCallbackData(&TransactionStatusHandle, isolate, args[1]);
 	}
 
-//	/* Unlock this isolate */
-//	v8::Unlocker unlockerChild(isolate);
-
 }
 
 void SetConfig(const FunctionCallbackInfo<Value> &args)
 {
 	Isolate* isolate = args.GetIsolate();
-
-//	/* Current thread locks isolate */
-//	v8::Locker lockerChild(isolate);
-//	/* Isolate scope call*/
-//	Isolate::Scope isolate_scope(isolate);
 
 	if(args.Length() < 1 || !args[0]->IsObject()) {
 
@@ -1127,8 +1088,6 @@ void SetConfig(const FunctionCallbackInfo<Value> &args)
 
 
   }
-//	/* Unlock this isolate */
-//	v8::Unlocker unlockerChild(isolate);
 
 }
 
@@ -1136,11 +1095,6 @@ void SetMibParams(const FunctionCallbackInfo<Value> &args)
 {
 
 	Isolate* isolate = args.GetIsolate();
-
-//	/* Current thread locks isolate */
-//	v8::Locker lockerChild(isolate);
-//	/* Isolate scope call*/
-//	Isolate::Scope isolate_scope(isolate);
 
 	if(args.Length() < 1 || args.Length() > 2 || !args[0]->IsString() || !args[1]->IsString()) {
 
@@ -1154,22 +1108,13 @@ void SetMibParams(const FunctionCallbackInfo<Value> &args)
 
 	cfdp_set_mib_parameter (str_key.c_str (), str_val.c_str ());
 
-	/* Unlock this isolate */
-//	v8::Unlocker unlockerChild(isolate);
-
 }
 
 void GetMibParams(const FunctionCallbackInfo<Value> &args)
 {
 	Isolate* isolate = args.GetIsolate();
-//
-//	/* Current thread locks isolate */
-//	v8::Locker lockerChild(isolate);
-//	/* Isolate scope call*/
-//	Isolate::Scope isolate_scope(isolate);
 
 	char    value[CF_MAX_CFG_VALUE_CHARS];
-
 
 	if(args.Length() < 1 || args.Length() > 1 || !args[0]->IsString()) {
 		ErrorEvent("Invalid arguments, expected [Key<String>]");
@@ -1180,28 +1125,23 @@ void GetMibParams(const FunctionCallbackInfo<Value> &args)
 
 	cfdp_get_mib_parameter(str_key.c_str (), &value[0] );
 
-
 	args.GetReturnValue().Set(v8::String::NewFromUtf8(isolate, value));
-
-	/* Unlock this isolate */
-//	v8::Unlocker unlockerChild(isolate);
 
 }
 
 void AppInit(const FunctionCallbackInfo<Value> &args)
 {
 
-	isolate = args.GetIsolate();
-
-//	v8::HandleScope handleScope(isolate);
-
-
+	/* Set base directory path to store temporary holding files */
     strncpy(AppData.BaseDir, Config.TempBaseDir, CF_MAX_PATH_LEN);
 
+    /* Registers all callbacks with cfdp library */
 	RegisterCallbacks();
 
-	/* Unlock this isolate */
-//	v8::Unlocker unlockerChild(isolate);
+	uv_sem_init(&sem, 0);
+//	uv_sem_init(&semgpdu, 0);
+
+//	AppInitialized = true;
 
 }
 

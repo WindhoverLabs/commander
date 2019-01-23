@@ -215,19 +215,24 @@ var test_3 = new Buffer([0x04, 0x00, 0x0a, 0x13, 0x00, 0x18, 0x00, 0x00, 0x00, 0
 //cf.GivePdu(test_3,test_3.length);
 
 
-//
+
 
 
 cf.StartCycle();
 
-//cf.GivePdu(test_1,test_1.length);
-//cf.GivePdu(test_2,test_2.length);
-//cf.GivePdu(test_3,test_3.length);
+cf.GivePdu(test_1,test_1.length);
+cf.GivePdu(test_2,test_2.length);
+cf.GivePdu(test_3,test_3.length);
 
-setTimeout(()=>{
-cf.RequestPdu(1,"0.22","cftesting/hello.txt","cftesting/");
-
-},2000);
+//setTimeout(()=>{
+//console.log()
+//console.log()
+//console.log()
+//console.log()
+//console.log()
+//cf.RequestPdu(1,"0.22","/tmp/src/hello.txt","cftesting/");
+//
+//},5000);
 
 
 
@@ -244,7 +249,7 @@ cf.RequestPdu(1,"0.22","cftesting/hello.txt","cftesting/");
 
 setTimeout(()=>{
 	cf.StopCycle();
-},10000);
+},50000);
 
 
 console.log( '************************************************' );

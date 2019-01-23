@@ -213,6 +213,8 @@ Indicate 	indicationPacket;
 
 uv_loop_t *loop;
 uv_async_t async;
+uv_sem_t	sem;
+uv_sem_t	semgpdu;
 
 
 /* CFDP */
