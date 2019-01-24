@@ -125,7 +125,7 @@ CF_FILE * FileOpen(const char *Name, const char *Mode){
 	char 		temp[CF_MAX_PATH_LEN];
 
 	if (*Name != '/'){
-		strncpy(temp, AppData.BaseDir, CF_MAX_PATH_LEN);
+		strncpy(temp, BaseDir, CF_MAX_PATH_LEN);
 	}
 
 	strncat(temp, Name, CF_MAX_PATH_LEN);
@@ -192,9 +192,9 @@ int RemoveFile(const char *Name)
 {
 	char temp[CF_MAX_PATH_LEN];
 
-//	strncpy(temp, AppData.BaseDir, CF_MAX_PATH_LEN);
+//	strncpy(temp, BaseDir, CF_MAX_PATH_LEN);
 	if (*Name != '/'){
-		strncpy(temp, AppData.BaseDir, CF_MAX_PATH_LEN);
+		strncpy(temp, BaseDir, CF_MAX_PATH_LEN);
 	}
 	strncat(temp, Name, CF_MAX_PATH_LEN);
 	return remove(temp);
@@ -205,7 +205,7 @@ int RenameFile(const char *TempFileName, const char *NewName)
 	char tempOld[CF_MAX_PATH_LEN];
 	char tempNew[CF_MAX_PATH_LEN];
 
-	strncpy(tempOld, AppData.BaseDir, CF_MAX_PATH_LEN);
+	strncpy(tempOld, BaseDir, CF_MAX_PATH_LEN);
 
 	strncat(tempOld, TempFileName, CF_MAX_PATH_LEN);
 
@@ -220,14 +220,104 @@ u_int_4 FileSize(const char *Name)
 	char temp[CF_MAX_PATH_LEN];
 	memset(&temp,'\0',sizeof(temp));
 
-//	strncpy(temp, AppData.BaseDir, CF_MAX_PATH_LEN);
+//	strncpy(temp, BaseDir, CF_MAX_PATH_LEN);
 	if (*Name != '/'){
-		strncpy(temp, AppData.BaseDir, CF_MAX_PATH_LEN);
+		strncpy(temp, BaseDir, CF_MAX_PATH_LEN);
 	}
 	strncat(temp, Name, CF_MAX_PATH_LEN);
 	stat(temp, &st);
 	return st.st_size;
 }
+
+void LogInfoSignal(char * buf)
+{
+	isolate = Isolate::GetCurrent();
+	v8::HandleScope handleScope(isolate);
+
+	const int argc = 1;
+	v8::Local<v8::Value> argv[argc];
+
+	std::string str(buf);
+	argv[0] = v8::String::NewFromUtf8(isolate, str.c_str());
+
+	Local<Function> Func = Local<Function>::New(isolate, LogInfo.Function);
+
+	if(LogInfo.IsDefined)
+	{
+		Func->Call(isolate->GetCurrentContext()->Global(), argc, argv);
+	}
+	else
+	{
+		printf("INFO : %s\n", buf);
+	}
+}
+void LogDebugSignal(char *buf)
+{
+	isolate = Isolate::GetCurrent();
+	v8::HandleScope handleScope(isolate);
+
+	const int argc = 1;
+	v8::Local<v8::Value> argv[argc];
+
+	std::string str(buf);
+	argv[0] = v8::String::NewFromUtf8(isolate, str.c_str());
+
+	Local<Function> Func = Local<Function>::New(isolate, LogDebug.Function);
+
+	if(LogInfo.IsDefined)
+	{
+		Func->Call(isolate->GetCurrentContext()->Global(), argc, argv);
+	}
+	else
+	{
+		printf("DEBUG : %s\n", buf);
+	}
+}
+void LogWarningSignal(char *buf)
+{
+	isolate = Isolate::GetCurrent();
+	v8::HandleScope handleScope(isolate);
+
+	const int argc = 1;
+	v8::Local<v8::Value> argv[argc];
+
+	std::string str(buf);
+	argv[0] = v8::String::NewFromUtf8(isolate, str.c_str());
+
+	Local<Function> Func = Local<Function>::New(isolate, LogWarning.Function);
+
+	if(LogInfo.IsDefined)
+	{
+		Func->Call(isolate->GetCurrentContext()->Global(), argc, argv);
+	}
+	else
+	{
+		printf("WARN : %s\n", buf);
+	}
+}
+void LogErrorSignal(char *buf)
+{
+	isolate = Isolate::GetCurrent();
+	v8::HandleScope handleScope(isolate);
+
+	const int argc = 1;
+	v8::Local<v8::Value> argv[argc];
+
+	std::string str(buf);
+	argv[0] = v8::String::NewFromUtf8(isolate, str.c_str());
+
+	Local<Function> Func = Local<Function>::New(isolate, LogError.Function);
+
+	if(LogInfo.IsDefined)
+	{
+		Func->Call(isolate->GetCurrentContext()->Global(), argc, argv);
+	}
+	else
+	{
+		printf("ERROR : %s\n", buf);
+	}
+}
+
 
 int InfoEvent(const char *Format, ...)
 {
@@ -245,35 +335,19 @@ int InfoEvent(const char *Format, ...)
           break;
       }
     }
-//	/* Current thread locks isolate */
-//	v8::Locker lockerChild(isolate);
-//	/* Isolate scope call*/
-//	Isolate::Scope isolate_scope(isolate);
 
-
-
-//	const int argc = 1;
-//	v8::Local<v8::Value> argv[argc];
-//
-//	std::string str(BigBuf);
-//	argv[0] = v8::String::NewFromUtf8(isolate, BigBuf);
-//
-//	Local<Function> Func = Local<Function>::New(isolate, LogInfo.Function);
-//
-//	if(LogInfo.IsDefined)
-//	{
-//		Func->Call(isolate->GetCurrentContext()->Global(), argc, argv);
-//		Status = 1;
-//	}
-//	else
-//	{
-		printf("INFO : %s\n", &BigBuf);
-//	}
-
-
-	/* Unlock this isolate */
-//	v8::Unlocker unlockerChild(isolate);
-
+    if( async.loop != 0 & Isolate::GetCurrent() == 0)
+	{
+    	Log info;
+    	info.BigBufPtr = (char *)&BigBuf;
+    	info.signal = LOG_INFO;
+	    async.data = (void*) &info;
+	    uv_async_send(&async);
+	    uv_sem_wait( &sem);
+	}
+	else{
+		LogInfoSignal((char *)&BigBuf);
+	}
 
     return(Status);
 }
@@ -295,32 +369,18 @@ int ErrorEvent(const char *Format, ...)
       }
     }
 
-//	/* Current thread locks isolate */
-//	v8::Locker lockerChild(isolate);
-//	/* Isolate scope call*/
-//	Isolate::Scope isolate_scope(isolate);
-
-//	const int argc = 1;
-//	v8::Local<v8::Value> argv[argc];
-//
-//	std::string str(BigBuf);
-//	argv[0] = v8::String::NewFromUtf8(isolate, BigBuf);
-//
-//	Local<Function> Func = Local<Function>::New(isolate, LogError.Function);
-//
-//	if(LogError.IsDefined)
-//	{
-//		Func->Call(isolate->GetCurrentContext()->Global(), argc, argv);
-//		Status = 1;
-//
-//	}
-//	else
-//	{
-		printf("ERR : %s\n", &BigBuf);
-//	}
-
-	/* Unlock this isolate */
-//	v8::Unlocker unlockerChild(isolate);
+    if( async.loop != 0 & Isolate::GetCurrent() == 0)
+	{
+    	Log info;
+    	info.BigBufPtr = (char *)&BigBuf;
+    	info.signal = LOG_ERROR;
+	    async.data = (void*) &info;
+	    uv_async_send(&async);
+	    uv_sem_wait( &sem);
+	}
+	else{
+		LogErrorSignal((char *)&BigBuf);
+	}
 
 
     return(Status);
@@ -343,33 +403,18 @@ int DebugEvent(const char *Format, ...)
       }
     }
 
-//	/* Current thread locks isolate */
-//	v8::Locker lockerChild(isolate);
-//	/* Isolate scope call*/
-//	Isolate::Scope isolate_scope(isolate);
-
-//	const int argc = 1;
-//	v8::Local<v8::Value> argv[argc];
-//
-//	std::string str(BigBuf);
-//	argv[0] = v8::String::NewFromUtf8(isolate, BigBuf);
-//
-//	Local<Function> Func = Local<Function>::New(isolate, LogDebug.Function);
-//
-//	if(LogDebug.IsDefined)
-//	{
-//		Func->Call(isolate->GetCurrentContext()->Global(), argc, argv);
-//		Status = 1;
-//	}
-//	else
-//	{
-		printf("DEBUG : %s\n", &BigBuf);
-//	}
-
-	/* Unlock this isolate */
-//	v8::Unlocker unlockerChild(isolate);
-
-
+    if( async.loop != 0 & Isolate::GetCurrent() == 0)
+	{
+    	Log info;
+    	info.BigBufPtr = (char *)&BigBuf;
+    	info.signal = LOG_DEBUG;
+	    async.data = (void*) &info;
+	    uv_async_send(&async);
+	    uv_sem_wait( &sem);
+	}
+	else{
+		LogDebugSignal((char *)&BigBuf);
+	}
 
     return(Status);
 }
@@ -391,33 +436,18 @@ int WarningEvent(const char *Format, ...)
       }
     }
 
-	/* Current thread locks isolate */
-//	v8::Locker lockerChild(isolate);
-//	/* Isolate scope call*/
-//	Isolate::Scope isolate_scope(isolate);
-
-//	const int argc = 1;
-//	v8::Local<v8::Value> argv[argc];
-//
-//	std::string str(BigBuf);
-//	argv[0] = v8::String::NewFromUtf8(isolate, BigBuf);
-//
-//	Local<Function> Func = Local<Function>::New(isolate, LogWarning.Function);
-//
-//
-//	if(LogWarning.IsDefined)
-//	{
-//		Func->Call(isolate->GetCurrentContext()->Global(), argc, argv);
-//		Status = 1;
-//
-//	}
-//	else
-//	{
-		printf("WARN : %s\n", &BigBuf);
-//	}
-
-	/* Unlock this isolate */
-//	v8::Unlocker unlockerChild(isolate);
+    if( async.loop != 0 & Isolate::GetCurrent() == 0)
+	{
+    	Log info;
+    	info.BigBufPtr = (char *)&BigBuf;
+    	info.signal = LOG_WARNING;
+	    async.data = (void*) &info;
+	    uv_async_send(&async);
+	    uv_sem_wait( &sem);
+	}
+	else{
+		LogWarningSignal((char *)&BigBuf);
+	}
 
     return(Status);
 }
@@ -482,37 +512,23 @@ void GivePdu(const FunctionCallbackInfo<Value> &args)
 
 	unsigned char* 	buffer 	= (unsigned char*) node::Buffer::Data(args[0]->ToObject());
 
-	memset(&AppData.RawPduInputBuf.content[0], 0, sizeof(AppData.RawPduInputBuf));
+	memset(&RawPduInputBuf.content[0], 0, sizeof(RawPduInputBuf));
 
-	AppData.RawPduInputBuf.length = args[1]->Uint32Value();
+	RawPduInputBuf.length = args[1]->Uint32Value();
 
-	if(AppData.RawPduInputBuf.length > CF_INCOMING_PDU_BUF_SIZE){
+	if(RawPduInputBuf.length > CF_INCOMING_PDU_BUF_SIZE){
 
-		ErrorEvent("PDU length %d exceeds INCOMING_PDU_BUF_SIZE %d",AppData.RawPduInputBuf.length,CF_INCOMING_PDU_BUF_SIZE);
+		ErrorEvent("PDU length %d exceeds INCOMING_PDU_BUF_SIZE %d",RawPduInputBuf.length,CF_INCOMING_PDU_BUF_SIZE);
 
 	}
 
-	memcpy(&AppData.RawPduInputBuf.content[0], buffer, AppData.RawPduInputBuf.length);
+	memcpy(&RawPduInputBuf.content[0], buffer, RawPduInputBuf.length);
 
 
-
-	Worker * worker = new Worker();
-	worker->request.data = worker;
-	uv_queue_work(uv_default_loop(),&worker->request,CyclePduGiveWorker,NULL);
-//	uv_sem_wait( &semgpdu);
-
-
-
+	cfdp_give_pdu(RawPduInputBuf);
 
 }
 
-void CyclePduGiveWorker(uv_work_t * request)
-{
-	printf("=====================+>buffer length %s \n",AppData.RawPduInputBuf.content);
-
-	cfdp_give_pdu(AppData.RawPduInputBuf);
-//	uv_sem_post( &semgpdu);
-}
 
 void RequestPdu(const FunctionCallbackInfo<Value> &args)
 {
@@ -749,7 +765,6 @@ void StartCycle(const FunctionCallbackInfo<Value> &args)
 void print_progress(uv_async_t *handle) {
 
 	SCH_CB signal = *((SCH_CB*) handle->data);
-
 	switch(signal)
 	{
 		case IS_PDU_OPEN:
@@ -780,6 +795,37 @@ void print_progress(uv_async_t *handle) {
 		}
 		default:
 		{
+			Log log = *((Log*) handle->data);
+
+			switch(log.signal){
+				case LOG_INFO:
+				{
+					LogInfoSignal(log.BigBufPtr);
+					break;
+				}
+				case LOG_DEBUG:
+				{
+					LogDebugSignal(log.BigBufPtr);
+					break;
+				}
+				case LOG_WARNING:
+				{
+					LogWarningSignal(log.BigBufPtr);
+					break;
+				}
+				case LOG_ERROR:
+				{
+					LogErrorSignal(log.BigBufPtr);
+					break;
+				}
+				default:
+				{
+					printf("Logging Error/n");
+					break;
+				}
+
+			}
+
 			break;
 		}
 
@@ -788,7 +834,6 @@ void print_progress(uv_async_t *handle) {
 	uv_sem_post( &sem);
 
 }
-
 
 
 void PduOutputOpenCb()
@@ -1007,7 +1052,7 @@ void CycleWorker(uv_work_t * request)
 void CycleShutdown(uv_work_t * request)
 {
 	uv_sem_destroy( &sem);
-//	uv_sem_destroy( &semgpdu);
+	uv_sem_destroy( &semgpdu);
 }
 
 void RegisterCallbackOn(const FunctionCallbackInfo<Value> &args)
@@ -1133,13 +1178,13 @@ void AppInit(const FunctionCallbackInfo<Value> &args)
 {
 
 	/* Set base directory path to store temporary holding files */
-    strncpy(AppData.BaseDir, Config.TempBaseDir, CF_MAX_PATH_LEN);
+    strncpy(BaseDir, Config.TempBaseDir, CF_MAX_PATH_LEN);
 
     /* Registers all callbacks with cfdp library */
 	RegisterCallbacks();
 
 	uv_sem_init(&sem, 0);
-//	uv_sem_init(&semgpdu, 0);
+	uv_sem_init(&semgpdu, 0);
 
 //	AppInitialized = true;
 

@@ -163,11 +163,11 @@ cf.RegisterCallbackOn( 'warning', ( value ) => {
 } );
 
 cf.RegisterCallbackOn( 'pduOutputOpen', ( value ) => {
-	  console.log( "########",value );
+	  console.log( "PDU-OPEN: Src=",value.srcValue.join(".")," Dest=",value.dstValue.join(".") );
 } );
 
 cf.RegisterCallbackOn( 'pduOutputReady', ( value ) => {
-	console.log( "$$$$$$",value );
+	console.log( "PDU-READY: Transac=",value.transSrcValue.join(".")," Dest=",value.dstValue.join(".") );
 } );
 
 cf.RegisterCallbackOn( 'pduOutputSend', ( buffer ) => {
@@ -224,15 +224,15 @@ cf.GivePdu(test_1,test_1.length);
 cf.GivePdu(test_2,test_2.length);
 cf.GivePdu(test_3,test_3.length);
 
-//setTimeout(()=>{
-//console.log()
-//console.log()
-//console.log()
-//console.log()
-//console.log()
-//cf.RequestPdu(1,"0.22","/tmp/src/hello.txt","cftesting/");
-//
-//},5000);
+setTimeout(()=>{
+console.log()
+console.log()
+console.log()
+console.log()
+console.log()
+cf.RequestPdu(1,"0.22","/tmp/src/hello.txt","cftesting/");
+
+},5000);
 
 
 

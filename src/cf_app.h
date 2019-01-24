@@ -36,8 +36,7 @@ typedef struct
 {
 
 
-	CFDP_DATA			RawPduInputBuf;
-	char 				BaseDir[CF_MAX_PATH_LEN];
+
 
 }CF_AppData;
 
@@ -140,6 +139,8 @@ static const char * FinalStatus[] = {
 };
 
 
+CFDP_DATA			RawPduInputBuf;
+char 				BaseDir[CF_MAX_PATH_LEN];
 
 TRANS_STATUS ts_q;
 
@@ -178,9 +179,17 @@ typedef enum
   IS_PDU_OPEN= 1,
   IS_PDU_READY= 2,
   PDU_SEND= 3,
-  INDICATION= 4
+  INDICATION= 4,
+  LOG_INFO = 5,
+  LOG_DEBUG = 6,
+  LOG_WARNING = 7,
+  LOG_ERROR = 8
 } SCH_CB;
 
+typedef struct {
+	char  * BigBufPtr;
+	SCH_CB  signal;
+} Log;
 
 typedef struct {
 	PDU_TYPE 	ptype;
@@ -211,10 +220,16 @@ PduSend 	pduSendPacket;
 Indicate 	indicationPacket;
 
 
+
+
 uv_loop_t *loop;
 uv_async_t async;
 uv_sem_t	sem;
+
+uv_async_t asyncgpdu;
 uv_sem_t	semgpdu;
+
+boolean pduWorkerActive = false;
 
 
 /* CFDP */
@@ -222,6 +237,11 @@ void PduOutputOpenCb(void);
 void PduOutputSendCb(void);
 void PduOutputReadyCb(void);
 void IndicationCb(void);
+void LogInfoSignal(char *);
+void LogDebugSignal(char *);
+void LogWarningSignal(char *);
+void LogErrorSignal(char *);
+
 
 void print_progress(uv_async_t *);
 
@@ -229,7 +249,6 @@ void CycleWorker(uv_work_t * );
 
 void CycleShutdown(uv_work_t * );
 
-void CyclePduGiveWorker(uv_work_t * );
 
 boolean cfdp_give_pdu (CFDP_DATA pdu);
 
