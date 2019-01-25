@@ -1,6 +1,24 @@
+/*
+ * CF Addon Application
+ */
+
+/* Indicates application success status */
+#define CF_SUCCESS							1
+/* Indicates application failure status */
+#define	CF_FAIL								0
+/* Maximum allows length for storing paths */
+#define CF_MAX_PATH_LEN						256
+/* Maximum allowed length for storing configuration parameter values */
+#define CF_MAX_CFG_VALUE_CHARS 				16
+/* Maximum allowed size of incoming pdu */
+#define CF_INCOMING_PDU_BUF_SIZE            512
+
+
+
+
+
 /* CFDP */
 #define CF_MAX_CFG_VALUE_CHARS 	16
-#define CF_MAX_PATH_LEN			256
 #define CF_NUM_UPLINK_QUEUES		1
 #define CF_QUEUES_PER_CHAN		3
 #define CF_MAX_PLAYBACK_CHANNELS  2
@@ -14,8 +32,8 @@
 #define CF_NUM_ENG_CYCLES_PER_WAKEUP	10
 #define CF_MAX_ERR_STRING_CHARS		32
 
-#define CF_SUCCESS              0
-#define CF_ERROR               -1
+//#define CF_SUCCESS              0
+//#define CF_ERROR               -1
 #define CF_BAD_MSG_LENGTH_RC   -2
 
 #define CF_INVALID              0xFFFFFFFF
@@ -138,7 +156,6 @@
 #define CF_MEMORY_POOL_BYTES                32768
 
 #define CF_PDU_HDR_BYTES        			12
-#define CF_INCOMING_PDU_BUF_SIZE            512
 #define CF_PDUHDR_FIXED_FIELD_BYTES 		4
 #define CF_FD_ZERO_REPLACEMENT 				0x7FFFFFFF
 #define CF_RENAME_BUF    					1024

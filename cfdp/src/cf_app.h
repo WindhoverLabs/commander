@@ -2,7 +2,6 @@
 extern "C" {
 #endif
 
-
 #include <string.h>
 #include <iostream>
 #include <cstdint>
@@ -13,32 +12,59 @@ extern "C" {
 #include "cfdp_config.h"
 #include "cfdp.h"
 
-
 using namespace v8;
+
+
+typedef enum
+{
+  UNDEFINED_CB 		= 0,
+  IS_PDU_OPEN_CB	= 1,
+  IS_PDU_READY_CB	= 2,
+  PDU_SEND_CB		= 3,
+  INDICATION_CB		= 4,
+  LOG_INFO_CB 		= 5,
+  LOG_DEBUG_CB		= 6,
+  LOG_WARNING_CB	= 7,
+  LOG_ERROR_CB		= 8
+
+} CF_MTCB;
+
+typedef enum
+{
+  UNDEFINED			= 0,
+  SET_CONFIG		= 1,
+  SET_MIB			= 2,
+  GET_MIB			= 3,
+  SET_CALLBACK		= 4,
+  GET_TRANS_STATUS 	= 6,
+  GET_ID_TO_STR		= 7,
+  GIVE_PDU			= 8,
+  REQ_PDU			= 9,
+  SEND_PDU			= 10,
+  READY_PDU			= 11,
+  OPEN_PDU			= 12,
+  INDICATION		= 13,
+  INFO_EVT			= 14,
+  DEBUG_EVT			= 15,
+  WARN_EVT			= 16,
+  ERROR_EVT			= 17,
+  TRANS_CYCLE		= 18,
+  ASYNC_EVT_CAPTURE	= 19
+
+} CF_EVENT;
 
 typedef struct
 {
-
 	boolean IsDefined = false;
 	Persistent <Function> Function;
 
 } CallbackData;
-
-
 
 typedef struct
 {
 	const char * TempBaseDir 		= DEFAULT_TEMP_BASE_DIR;
 
 } CF_Config;
-
-typedef struct
-{
-
-
-
-
-}CF_AppData;
 
 typedef struct
 {
@@ -49,6 +75,44 @@ typedef struct
 	char   tempStrC[CF_MAX_PATH_LEN];
 
 } Worker;
+
+typedef struct
+{
+	char  * BigBufPtr;
+	CF_MTCB  signal;
+
+} Log;
+
+typedef struct
+{
+	PDU_TYPE 	ptype;
+	TRANSACTION tinfo;
+	ID			destid;
+
+} PduReady;
+
+typedef struct
+{
+	ID			srcid;
+	ID			destid;
+
+} PduOpen;
+
+typedef struct
+{
+	TRANSACTION tinfo;
+	ID			destid;
+	CFDP_DATA *	pduptr;
+
+} PduSend;
+
+typedef struct
+{
+	INDICATION_TYPE 	indtype;
+	TRANS_STATUS 		tinfo;
+
+} Indicate;
+
 
 static const char * PduTypeEMap[] = {
 		  "FILE_DIR_PDU",
@@ -139,12 +203,27 @@ static const char * FinalStatus[] = {
 };
 
 
+
+
 CFDP_DATA			RawPduInputBuf;
-char 				BaseDir[CF_MAX_PATH_LEN];
+/**
+ *	\brief Stores the base directory path for CFDP's temporary storage
+ */
+char 				TempStorageBaseDir[CF_MAX_PATH_LEN];
+
+boolean 			AppInitialized  = false;
+
+boolean 			ShutdownTransCycle = false;
 
 TRANS_STATUS ts_q;
 
-CF_AppData AppData;
+Isolate * isolate;
+
+uv_loop_t *loop;
+
+uv_async_t async;
+
+uv_sem_t	sem;
 
 CF_Config Config;
 
@@ -166,90 +245,86 @@ CallbackData IndicationHandle;
 
 CallbackData TransactionStatusHandle;
 
-boolean CycleStopSignal = false;
-boolean invoke_cycle = true;
+PduReady	isPduReadyPacket;
 
-boolean SendPdToEngine = false;
-
-Isolate * isolate;
-
-typedef enum
-{
-  NO_SCH = 0,
-  IS_PDU_OPEN= 1,
-  IS_PDU_READY= 2,
-  PDU_SEND= 3,
-  INDICATION= 4,
-  LOG_INFO = 5,
-  LOG_DEBUG = 6,
-  LOG_WARNING = 7,
-  LOG_ERROR = 8
-} SCH_CB;
-
-typedef struct {
-	char  * BigBufPtr;
-	SCH_CB  signal;
-} Log;
-
-typedef struct {
-	PDU_TYPE 	ptype;
-	TRANSACTION tinfo;
-	ID			destid;
-} PduReady;
-
-typedef struct {
-	ID			srcid;
-	ID			destid;
-} PduOpen;
-
-typedef struct {
-	TRANSACTION tinfo;
-	ID			destid;
-	CFDP_DATA *	pduptr;
-} PduSend;
-
-typedef struct {
-	INDICATION_TYPE 	indtype;
-	TRANS_STATUS 		tinfo;
-} Indicate;
-
-
-PduReady 	isPduReadyPacket;
 PduOpen 	isPduOpenPacket;
+
 PduSend 	pduSendPacket;
+
 Indicate 	indicationPacket;
 
 
 
 
-uv_loop_t *loop;
-uv_async_t async;
-uv_sem_t	sem;
 
-uv_async_t asyncgpdu;
-uv_sem_t	semgpdu;
+std::string Util_GetStdString(v8::Local<v8::String>);
 
-boolean pduWorkerActive = false;
+void SetCallbackData(CallbackData * , Isolate * , v8::Local<v8::Value> );
 
-
-/* CFDP */
-void PduOutputOpenCb(void);
-void PduOutputSendCb(void);
-void PduOutputReadyCb(void);
-void IndicationCb(void);
 void LogInfoSignal(char *);
+
 void LogDebugSignal(char *);
+
 void LogWarningSignal(char *);
+
 void LogErrorSignal(char *);
 
+void IsPduOutputOpenCb(void);
 
-void print_progress(uv_async_t *);
+void SendPduOutputCb(void);
+
+void isPduOutputReadyCb(void);
+
+void IndicationCb(void);
+
+void AsyncEventCapture(uv_async_t *);
 
 void CycleWorker(uv_work_t * );
 
 void CycleShutdown(uv_work_t * );
 
+int InfoEvent(const char *Format, ...);
 
+int ErrorEvent(const char *Format, ...);
+
+int DebugEvent(const char *Format, ...);
+
+int WarningEvent(const char *Format, ...);
+
+void Indication (INDICATION_TYPE IndType, TRANS_STATUS TransInfo);
+
+boolean IsPduOutputOpen (ID , ID );
+
+boolean isPduOutputReady (PDU_TYPE PduType, TRANSACTION TransInfo,ID DestinationId);
+
+void SendPduOutput (TRANSACTION TransInfo,ID DestinationId, CFDP_DATA *PduPtr);
+
+int32_t Seek(int32_t  , int32_t , uint32_t );
+
+CF_FILE * FileOpen(const char *, const char *);
+
+size_t FileRead(void *, size_t ,size_t , CF_FILE *);
+
+size_t FileWrite(const void *, size_t ,size_t , CF_FILE *);
+
+int FileClose(CF_FILE *);
+
+int FileSeek(CF_FILE *, long int , int );
+
+int RemoveFile(const char *);
+
+int RenameFile(const char *, const char *);
+
+u_int_4 FileSize(const char *);
+
+void TransStatusCallback(void);
+
+uint8_t ValidateRequiredCbRegistration(void);
+
+void RegisterCallbacks(void);
+
+
+/* CFDP */
 boolean cfdp_give_pdu (CFDP_DATA pdu);
 
 boolean cfdp_give_request (const char *);
@@ -263,52 +338,6 @@ boolean cfdp_transaction_status (TRANSACTION , TRANS_STATUS *);
 void cfdp_cycle_each_transaction (void);
 
 boolean cfdp_get_mib_parameter (const char *, char *);
-
-
-/* CFV8 API */
-
-void tsCallbackHandle(void);
-
-void Indication (INDICATION_TYPE IndType, TRANS_STATUS TransInfo);
-
-boolean isPduOutputReady (PDU_TYPE PduType, TRANSACTION TransInfo,ID DestinationId);
-
-void SendPduOutput (TRANSACTION TransInfo,ID DestinationId, CFDP_DATA *PduPtr);
-
-boolean isPduOutputOpen (ID , ID );
-
-CF_FILE * FileOpen(const char *, const char *);
-
-size_t FileRead(void *, size_t ,size_t , CF_FILE *);
-
-size_t FileWrite(const void *, size_t ,size_t , CF_FILE *);
-
-int FileClose(CF_FILE *);
-
-int FileSeek(CF_FILE *, long int , int );
-
-int32_t Seek(int32_t  , int32_t , uint32_t );
-
-int RemoveFile(const char *);
-
-int RenameFile(const char *, const char *);
-
-u_int_4 FileSize(const char *);
-
-int ErrorEvent(const char *Format, ...);
-
-int DebugEvent(const char *Format, ...);
-
-int InfoEvent(const char *Format, ...);
-
-int WarningEvent(const char *Format, ...);
-
-void RegisterCallbacks(void);
-
-std::string Util_GetStdString(v8::Local<v8::String>);
-
-void SetCallbackData(CallbackData * , Isolate * , v8::Local<v8::Value> );
-
 
 
 #ifdef __cplusplus
