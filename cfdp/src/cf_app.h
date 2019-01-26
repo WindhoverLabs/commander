@@ -254,9 +254,6 @@ PduSend 	pduSendPacket;
 Indicate 	indicationPacket;
 
 
-
-
-
 std::string Util_GetStdString(v8::Local<v8::String>);
 
 void SetCallbackData(CallbackData * , Isolate * , v8::Local<v8::Value> );

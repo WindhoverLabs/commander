@@ -1,12 +1,12 @@
 /* FILE: cfdp_config.h -- configuration of the CFDP library.
  *
- *  Copyright � 2007-2014 United States Government as represented by the 
- *  Administrator of the National Aeronautics and Space Administration. 
- *  All Other Rights Reserved.  
+ *  Copyright � 2007-2014 United States Government as represented by the
+ *  Administrator of the National Aeronautics and Space Administration.
+ *  All Other Rights Reserved.
  *
  *  This software was created at NASA's Goddard Space Flight Center.
- *  This software is governed by the NASA Open Source Agreement and may be 
- *  used, distributed and modified only pursuant to the terms of that 
+ *  This software is governed by the NASA Open Source Agreement and may be
+ *  used, distributed and modified only pursuant to the terms of that
  *  agreement.
  *
  * LAST MODIFIED:  2007_06_11
@@ -16,7 +16,7 @@
  *   Use this file to configure the CFDP library.
  * CHANGES:
  *   2006_08_21 Tim Ray
- *     - Boiled 5 Filedata-size parameters down to 2.  
+ *     - Boiled 5 Filedata-size parameters down to 2.
  *   2006_09_08 Tim Ray
  *     - Put "#ifndef" around each generic data type (to use the lib in
  *       ASIST).
@@ -95,22 +95,22 @@ extern "C" {
 
 /* Background:  The entity-id identifies a particular CFDP entity.
  * A typical Goddard mission will have 2 CFDP entities - one on the spacecraft
- * and one on the ground.  
+ * and one on the ground.
  *   This parameter tells the library how many bytes to allow for storage of
  * entity-ids.  CFDP allows the entity-id to be anywhere from 1 to 8 bytes
  * in length.  The safest value for this parameter is 8, but if memory
- * usage is an issue, it can be set to a smaller value (if there are only two 
+ * usage is an issue, it can be set to a smaller value (if there are only two
  * entities, a one-byte entity-id is sufficient).
  */
 #define MAX_ID_LENGTH                   2
 
-/* This parameter indicates the amount of storage required (in bytes) to 
- * hold the largest chunk of file-data that will ever be contained in a 
+/* This parameter indicates the amount of storage required (in bytes) to
+ * hold the largest chunk of file-data that will ever be contained in a
  * single incoming or outgoing Filedata PDU.
  * (CFDP limits this to just under 64K bytes, but any particular mission
  * may have a further limitation).
  */
-#define MAX_FILE_CHUNK_SIZE             64
+#define MAX_FILE_CHUNK_SIZE             2048
 
 /* This parameter indicates the amount of storage required (in bytes) to hold
  * the largest possible CFDP PDU.  The largest possible PDU will contain
@@ -141,13 +141,13 @@ extern "C" {
 #define CFDP_FILE FILE
 
 /* If the default 'temp_file_name' callback routine is used, all temp
- * files will start with this prefix.  
+ * files will start with this prefix.
  */
 #define DEFAULT_TEMP_FILE_NAME_PREFIX   "cftmp"
 
 /* The library will provide this much storage capacity for temporary file
- * names.  If the default 'temp_file_name' callback routine is used, this 
- * value must be at least 5 (characters) more than the string-length of the 
+ * names.  If the default 'temp_file_name' callback routine is used, this
+ * value must be at least 5 (characters) more than the string-length of the
  * default temp file name prefix.
  */
 #define MAX_TEMP_FILE_NAME_LENGTH       20
@@ -163,7 +163,7 @@ extern "C" {
  * (refer to chapter 8 of the CFDP Blue Book at www.ccsds.org).
  * This section provides default values for all configuration parameters.
  * (timeouts are in seconds; lengths are in bytes).
- * Note:  These default values can be overridden at run-time.  The 
+ * Note:  These default values can be overridden at run-time.  The
  * mechanism for doing that is defined in 'cfdp_provides.h'.
  */
 
@@ -187,7 +187,7 @@ extern "C" {
 #define DEFAULT_NAK_TIMEOUT 5
 
 /* This parameter determines how many bytes of Filedata are contained
- * in each outgoing Filedata PDU.  If you think of CFDP as transmitting 
+ * in each outgoing Filedata PDU.  If you think of CFDP as transmitting
  * a big file in multiple chunks, this is the "chunk size".
  */
 #define DEFAULT_OUTGOING_FILE_CHUNK_SIZE    50
@@ -208,7 +208,7 @@ extern "C" {
 #define MSG_INDICATIONS 1
 
 /* To monitor memory allocation */
-#define MSG_DEBUG_MEMORY_USE 0 
+#define MSG_DEBUG_MEMORY_USE 0
 
 /* To monitor assembly/disassembly of NAKs (lists of file gaps) */
 #define MSG_DEBUG_NAK 0
@@ -218,8 +218,8 @@ extern "C" {
 
 /* To monitor the Kernel's autonomous responses to incoming PDUs (i.e.
  * when the Kernel responds directly rather than passing the PDU to a
- * state machine).  These occur when an incoming PDU references a 
- * transaction for which there is no existing state machine, and no reason 
+ * state machine).  These occur when an incoming PDU references a
+ * transaction for which there is no existing state machine, and no reason
  * to start a new one.
  */
 #define MSG_KERNEL_AUTONOMOUS 0
@@ -258,7 +258,7 @@ extern "C" {
  * Once CFDP is operational, they can be 'disabled' (i.e. they still fire,
  * but the program is not exited).
  * Note:  Other than through assertions, the CFDP library does not ever
- * perform an exit.  
+ * perform an exit.
  */
 
 /* Set this parameter to '1' for 'yes' or '0' for 'no'. */

@@ -14,6 +14,7 @@ std::string GetStdString(v8::Local<v8::String> str)
 
 void SetCallbackData(CallbackData * cd, Isolate * isolate, v8::Local<v8::Value> val)
 {
+	v8::HandleScope handleScope(isolate);
 	cd->Function.Reset(isolate,val.As<Function>());
 	cd->IsDefined = true;
 }
@@ -153,7 +154,20 @@ void SendPduOutputCb()
 
 	v8::Local<v8::Value> argv[argc];
 
-	argv[0] = Nan::NewBuffer(pduSendPacket.pduptr->content, pduSendPacket.pduptr->length).ToLocalChecked();
+
+	// argv[0] = Nan::NewBuffer((unsigned char*)pduSendPacket.pduptr->content, (unsigned char*)pduSendPacket.pduptr->length).ToLocalChecked();
+
+	v8::Local<Array> Outval = v8::Array::New(isolate, pduSendPacket.pduptr->length);
+
+  int i;
+
+	for( i = 0; i < pduSendPacket.pduptr->length; i++)
+	{
+		v8::Local<v8::Value> elm = v8::Number::New(isolate,pduSendPacket.pduptr->content[i]);
+		Outval->Set(i, elm);
+	}
+
+	argv[0] = Outval;
 
 	Local<Function> Func = Local<Function>::New(isolate, PduOutputSend.Function);
 
@@ -409,7 +423,7 @@ int InfoEvent(const char *Format, ...)
       }
     }
 
-    if( async.loop != 0 & Isolate::GetCurrent() == 0)
+    if( (async.loop != 0) & (Isolate::GetCurrent() == 0) )
 	{
     	Log info;
     	info.BigBufPtr = (char *)&BigBuf;
@@ -442,7 +456,7 @@ int ErrorEvent(const char *Format, ...)
       }
     }
 
-    if( async.loop != 0 & Isolate::GetCurrent() == 0)
+    if( (async.loop != 0) & (Isolate::GetCurrent() == 0) )
 	{
     	Log info;
     	info.BigBufPtr = (char *)&BigBuf;
@@ -476,7 +490,7 @@ int DebugEvent(const char *Format, ...)
       }
     }
 
-    if( async.loop != 0 & Isolate::GetCurrent() == 0)
+    if( (async.loop != 0) & (Isolate::GetCurrent() == 0) )
 	{
     	Log info;
     	info.BigBufPtr = (char *)&BigBuf;
@@ -509,7 +523,7 @@ int WarningEvent(const char *Format, ...)
       }
     }
 
-    if( async.loop != 0 & Isolate::GetCurrent() == 0)
+    if( (async.loop != 0) & (Isolate::GetCurrent() == 0) )
 	{
     	Log info;
     	info.BigBufPtr = (char *)&BigBuf;
@@ -533,7 +547,7 @@ void Indication (INDICATION_TYPE IndType, TRANS_STATUS TransInfo)
 	indicationPacket.indtype = IndType;
 	memcpy(&indicationPacket.tinfo, &TransInfo, sizeof(TransInfo));
 
-	if( async.loop != 0 & Isolate::GetCurrent() == 0)
+	if( (async.loop != 0) & (Isolate::GetCurrent() == 0) )
 	{
 		CF_MTCB signal = INDICATION_CB;
 	    async.data = (void*) &signal;
@@ -554,7 +568,7 @@ boolean IsPduOutputOpen (ID SourceId, ID DestinationId)
 	memcpy(&isPduOpenPacket.srcid, &SourceId, sizeof(SourceId));
 	memcpy(&isPduOpenPacket.destid, &DestinationId, sizeof(DestinationId));
 
-	if( async.loop != 0 & Isolate::GetCurrent() == 0)
+	if( (async.loop != 0) & (Isolate::GetCurrent() == 0) )
 	{
 		CF_MTCB signal = IS_PDU_OPEN_CB;
 	    async.data = (void*) &signal;
@@ -579,7 +593,7 @@ boolean isPduOutputReady (PDU_TYPE PduType, TRANSACTION TransInfo,ID Destination
 	memcpy(&isPduReadyPacket.tinfo, &TransInfo, sizeof(TransInfo));
 	memcpy(&isPduReadyPacket.destid, &DestinationId, sizeof(DestinationId));
 
-	if( async.loop != 0 & Isolate::GetCurrent() == 0)
+	if( (async.loop != 0) & (Isolate::GetCurrent() == 0) )
 	{
 		CF_MTCB signal = IS_PDU_READY_CB;
 	    async.data = (void*) &signal;
@@ -603,7 +617,7 @@ void SendPduOutput (TRANSACTION TransInfo,ID DestinationId, CFDP_DATA *PduPtr)
 	memcpy(&pduSendPacket.destid, &DestinationId, sizeof(DestinationId));
 	pduSendPacket.pduptr = PduPtr;
 
-	if( async.loop != 0 & Isolate::GetCurrent() == 0)
+	if( (async.loop != 0) & (Isolate::GetCurrent() == 0) )
 	{
 		CF_MTCB signal = PDU_SEND_CB;
 	    async.data = (void*) &signal;
@@ -630,6 +644,8 @@ CF_FILE * FileOpen(const char *Name, const char *Mode)
 {
 	FILE	*	fileHandle;
 	char 		temp[CF_MAX_PATH_LEN];
+	memset(&temp,'\0',sizeof(temp));
+
 
 	if ( *Name != '/' ){
 		strncpy(temp, TempStorageBaseDir, CF_MAX_PATH_LEN);
@@ -697,6 +713,7 @@ int FileSeek(CF_FILE *File, long int Offset, int Whence)
 int RemoveFile(const char *Name)
 {
 	char temp[CF_MAX_PATH_LEN];
+	memset(&temp,'\0',sizeof(temp));
 
 	/* if Name is a file name, not path name or did not start with `/` */
 	if ( *Name != '/' ){
@@ -710,12 +727,14 @@ int RenameFile(const char *TempFileName, const char *NewName)
 {
 	char tempOld[CF_MAX_PATH_LEN];
 	char tempNew[CF_MAX_PATH_LEN];
+	memset(&tempOld,'\0',sizeof(tempOld));
+	memset(&tempNew,'\0',sizeof(tempNew));
 
 	strncpy(tempOld, TempStorageBaseDir, CF_MAX_PATH_LEN);
 
 	strncat(tempOld, TempFileName, CF_MAX_PATH_LEN);
 
-	strncat(tempNew, NewName, CF_MAX_PATH_LEN);
+	strncpy(tempNew, NewName, CF_MAX_PATH_LEN);
 
 	return rename(tempOld, tempNew);
 }
@@ -752,12 +771,6 @@ void GivePdu(const FunctionCallbackInfo<Value> &args)
 	memset(&RawPduInputBuf.content[0], 0, sizeof(RawPduInputBuf));
 
 	RawPduInputBuf.length = args[1]->Uint32Value();
-
-	if(RawPduInputBuf.length > CF_INCOMING_PDU_BUF_SIZE)
-	{
-		ErrorEvent("EVT_%d | PDU length %d exceeds INCOMING_PDU_BUF_SIZE %d",GIVE_PDU, RawPduInputBuf.length, CF_INCOMING_PDU_BUF_SIZE);
-		return;
-	}
 
 	memcpy(&RawPduInputBuf.content[0], buffer, RawPduInputBuf.length);
 	cfdp_give_pdu(RawPduInputBuf);
@@ -1061,6 +1074,7 @@ void RegisterCallbacks(){
 void RegisterCallbackOn(const FunctionCallbackInfo<Value> &args)
 {
 	Isolate* isolate = args.GetIsolate();
+	v8::HandleScope handleScope(isolate);
 
 	std::string indicator = GetStdString(args[0]->ToString());
 
