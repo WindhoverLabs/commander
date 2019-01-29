@@ -40,6 +40,13 @@ var path = require( 'path' );
 var cf = require( '../build/Debug/cfdp' );
 var config = require( './config.js' );
 
+var Parser = require( "binary-parser" ).Parser;
+var Int64LE = require( 'int64-buffer' ).Int64LE;
+var Int64BE = require( 'int64-buffer' ).Int64BE;
+var Uint64LE = require( 'int64-buffer' ).Uint64LE;
+var Uint64BE = require( 'int64-buffer' ).Uint64BE;
+
+
 /**
  * Event id's
  * @type {Object}
@@ -94,6 +101,7 @@ function CFDP( workspace, configFile ) {
   } );
 
   this.configObj = config;
+
 };
 
 
@@ -188,87 +196,17 @@ CFDP.prototype.setInstanceEmitter = function( newInstanceEmitter ) {
     cb( [ query, data ] );
   } );
 
-  this.CreateTestCases();
+  this.instanceEmitter.on( config.get( 'cfdpInputStream' ), function( msg ) {
 
-  cf.StartCycle();
+    /* Send buffer to ground cfdp engine */
+    cf.GivePdu( msg.payload, msg.payload.length );
 
-
-
-  if ( fs.existsSync( destPath ) ) {
-    fs.readdir( destPath, ( err, files ) => {
-      if ( err ) throw err;
-
-      for ( const file of files ) {
-        fs.unlink( path.join( destPath, file ), err => {
-          // if ( err ) throw err;
-        } );
-      }
-    } );
-
-  } else {
-    fs.mkdir( destPath, {
-      recursive: true
-    }, ( err ) => {
-      if ( err ) {
-        this.logErrorEvent( EventEnum.MAKE_DIR, 'Failed to make directory `' + destPath + '`' );
-        fileCount = numberOfFiles;
-      }
-    } );
-  }
-
-
-
-  setTimeout( () => {
-
-    fs.readdir( originPath, ( err, files ) => {
-      if ( err ) throw err;
-
-      for ( const file of files ) {
-        cf.RequestPdu( 1, "0.25", path.join( originPath, file ), path.join( destPath, file ) );
-        // break;
-      }
-    } );
-
-
-  }, 5000 );
-
-
-
-
-  fs.unlink( 'cfdp/memusage.csv', err => {
-    if ( err ) {
-      console.error( err );
-    }
-    console.log( 'File has been Deleted' );
   } );
 
+  // this.CreateTestCases();
 
-  var usage = ""
-  setInterval( () => {
-    usage = process.memoryUsage().heapUsed / 1000 + "\n";
-    fs.appendFile( 'cfdp/memusage.csv', usage, ( err ) => {
-      if ( err ) throw err;
-      // logText = '';
+  // cf.StartCycle();
 
-    } )
-  }, 100 );
-
-
-  // setTimeout( () => {
-  //
-
-  //   while ( this.bufferCollection.length != 0 ) {
-  //     var buffer = this.bufferCollection.shift();
-  //     cf.GivePdu( buffer, buffer.length );
-  //   }
-  //
-  //
-  // }, 15000 );
-  //
-  //
-  //
-  //
-  //
   // // console.log( cf.GetSummaryStatus() );
   // // console.log( cf.GetIdFromString( "0.29" ) );
   // // cf.GetTransactionStatus( 1, 2, new Buffer( [ 0, 23 ] ) );
@@ -279,6 +217,8 @@ CFDP.prototype.setInstanceEmitter = function( newInstanceEmitter ) {
   //   cf.StopCycle();
   // }, 15000 );
 }
+
+
 
 var originPath = "/tmp/orgn";
 var destPath = "cftesting/";

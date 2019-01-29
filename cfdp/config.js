@@ -97,6 +97,11 @@ var config = convict( {
     doc: 'Stream ID for cfdp queries',
     format: String,
     default: ''
+  },
+  cfdpInputStream: {
+    doc: 'Stream ID for listening to binary data',
+    format: String,
+    default: ''
   }
 } );
 

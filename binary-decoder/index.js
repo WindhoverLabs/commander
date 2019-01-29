@@ -596,6 +596,12 @@ BinaryDecoder.prototype.processBinaryMessage = function( buffer ) {
 
     var message = this.ccsds.parse( buffer );
 
+    /* re-route cfdp data */
+    if (msgID == 8190) {
+      this.instanceEmit( config.get( 'cfdpOutputStream' ), message);
+      return;
+    }
+
     var msgTime = this.cfeTimeToJsTime( message.SecHdr.seconds, message.SecHdr.subSeconds );
 
     var def = this.getMsgDefByMsgID( msgID );
@@ -614,7 +620,7 @@ BinaryDecoder.prototype.processBinaryMessage = function( buffer ) {
             	/* TODO: Do nothing for now. */
             }
           }
-          
+
           var pbMsg = def.msgDef.proto_msg;
           var symbolName = pbMsg.substring( 0, pbMsg.length - 3 );
 
@@ -664,7 +670,7 @@ BinaryDecoder.prototype.getFieldValueAsPbType = function( buffer, fieldDef, bitO
         	/* This field is truncated. */
           	fieldLength = ( buffer.length - ( bitOffset / 8 ) );
           }
-            
+
           for ( var i = 0; i < fieldLength; ++i ) {
             value.push( buffer.readUInt8( ( bitOffset / 8 ) + i ) );
           }
@@ -678,7 +684,7 @@ BinaryDecoder.prototype.getFieldValueAsPbType = function( buffer, fieldDef, bitO
         	/* This field is truncated. */
           	fieldLength = ( buffer.length - ( bitOffset / 8 ) );
           }
-            
+
           for ( var i = 0; i < fieldDef.array_length; ++i ) {
             value.push( buffer.readInt8( ( bitOffset / 8 ) + i ) );
           }
@@ -687,11 +693,11 @@ BinaryDecoder.prototype.getFieldValueAsPbType = function( buffer, fieldDef, bitO
         case 'string':
         case 'char':
           /* I wish there was a way around this, but we cannot automatically
-           * determine the difference between a string and char array.  
+           * determine the difference between a string and char array.
            * Therefore, we will treat everything as a string.  However, some
            * messages may really have char arrays containing binary data.
-           * To make it worse, some of these are actually variable size at 
-           * runtime.  In other words, the flight software truncates them.  
+           * To make it worse, some of these are actually variable size at
+           * runtime.  In other words, the flight software truncates them.
            * So, to accomodate those, we are going to try to read the entire
            * length, or up to the end of the buffer.
            */
@@ -703,7 +709,7 @@ BinaryDecoder.prototype.getFieldValueAsPbType = function( buffer, fieldDef, bitO
         	/* This field is truncated. */
           	fieldLength = ( buffer.length - ( bitOffset / 8 ) );
           }
-          
+
           value = buffer.toString( 'utf8', bitOffset / 8, fieldLength );
           break;
 
@@ -943,7 +949,7 @@ BinaryDecoder.prototype.getFieldValue = function( buffer, fieldDef, bitOffset, r
         	/* This field is truncated. */
           	fieldLength = ( buffer.length - ( bitOffset / 8 ) );
           }
-            
+
           for ( var i = 0; i < fieldLength; ++i ) {
             value.push( buffer.readUInt8( ( bitOffset / 8 ) + i ) );
           }
@@ -965,11 +971,11 @@ BinaryDecoder.prototype.getFieldValue = function( buffer, fieldDef, bitOffset, r
         case 'string':
         case 'char':
           /* I wish there was a way around this, but we cannot automatically
-           * determine the difference between a string and char array.  
+           * determine the difference between a string and char array.
            * Therefore, we will treat everything as a string.  However, some
            * messages may really have char arrays containing binary data.
-           * To make it worse, some of these are actually variable size at 
-           * runtime.  In other words, the flight software truncates them.  
+           * To make it worse, some of these are actually variable size at
+           * runtime.  In other words, the flight software truncates them.
            * So, to accomodate those, we are going to try to read the entire
            * length, or up to the end of the buffer.
            */
@@ -981,7 +987,7 @@ BinaryDecoder.prototype.getFieldValue = function( buffer, fieldDef, bitOffset, r
       	    /* This field is truncated. */
         	fieldLength = ( buffer.length - ( bitOffset / 8 ) );
           }
-        
+
           value = buffer.toString( 'utf8', bitOffset / 8, fieldLength );
           break;
 
@@ -1096,7 +1102,7 @@ BinaryDecoder.prototype.getFieldValue = function( buffer, fieldDef, bitOffset, r
           }
       }
     } else {
-      switch ( fieldDef.airliner_type ) {        	
+      switch ( fieldDef.airliner_type ) {
         case 'char':
           value = buffer.readUInt8( bitOffset / 8 );
           break;
@@ -1346,4 +1352,4 @@ BinaryDecoder.prototype.logCriticalEvent = function( eventID, text ) {
     eventID: eventID,
     text: text
   } );
-} 
+}

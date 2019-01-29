@@ -102,6 +102,11 @@ var config = convict( {
     format: String,
     default: ''
   },
+  cfdpOutputStream: {
+    doc: 'Re-route cfdp data onto this stream',
+    format: String,
+    default: ''
+  }
 } );
 
 module.exports = config;
