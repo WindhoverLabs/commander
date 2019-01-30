@@ -150,6 +150,8 @@ void SendPduOutputCb()
 	isolate = Isolate::GetCurrent();
 	v8::HandleScope handleScope(isolate);
 
+	v8::Local<Object> obj = v8::Object::New(isolate);
+
 	const int argc = 1;
 
 	v8::Local<v8::Value> argv[argc];
@@ -159,7 +161,7 @@ void SendPduOutputCb()
 
 	v8::Local<Array> Outval = v8::Array::New(isolate, pduSendPacket.pduptr->length);
 
-  int i;
+	int i;
 
 	for( i = 0; i < pduSendPacket.pduptr->length; i++)
 	{
@@ -167,7 +169,12 @@ void SendPduOutputCb()
 		Outval->Set(i, elm);
 	}
 
-	argv[0] = Outval;
+	obj->Set(v8::String::NewFromUtf8(isolate, "pdu"),Outval);
+	obj->Set(v8::String::NewFromUtf8(isolate, "length"),v8::Number::New(isolate, pduSendPacket.pduptr->length));
+
+
+
+	argv[0] = obj;
 
 	Local<Function> Func = Local<Function>::New(isolate, PduOutputSend.Function);
 

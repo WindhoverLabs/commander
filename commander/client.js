@@ -475,6 +475,19 @@ CommanderClient.prototype.queryConfigDB = function( path, cb ) {
   };
 };
 
+/**
+ * CFDP client interface.
+ * @param  {String}   query indicates an opereration
+ * @param  {Object}   data  data required for operation
+ * @param  {Function} cb    callback with result
+ */
+CommanderClient.prototype.cfdpAPI = function( query, data, cb ) {
+  var self = this;
+  if ( this.isSocketConnected ) {
+    this.socket.emit( 'cfdpAPI', query, data, cb );
+  };
+}
+
 
 /**
  * Connect to socket

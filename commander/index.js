@@ -93,7 +93,8 @@ var publicFunctions = [
   'getWidgets',
   'getDefaultLayout',
   'getADSBJson',
-  'queryConfigDB'
+  'queryConfigDB',
+  'cfdpAPI'
 ];
 
 var config = require( './config.js' );
@@ -611,6 +612,21 @@ Commander.prototype.removeSubscriber = function( subscriberID ) {
   this.defaultInstance.emit( config.get( 'reqSubscribeStreamID' ), {
     cmd: 'removeSubscriber',
     subscriberID: subscriberID
+  } );
+}
+
+/**
+ * Interacts directly with CFDP Addon.
+ * @param  {String}   query indicates an opereration
+ * @param  {Object}   data  data required for operation
+ * @param  {Function} cb    callback with result
+ */
+Commander.prototype.cfdpAPI = function( query, data, cb ) {
+  var self = this;
+  this.defaultInstance.emit( config.get( 'CfdpClientStreamID' ), {
+    query: query,
+    data: data,
+    cb: cb
   } );
 }
 

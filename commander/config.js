@@ -74,6 +74,11 @@ var config = convict( {
     format: String,
     default: ''
   },
+  CfdpClientStreamID: {
+    doc: 'Stream ID for cfdp queries',
+    format: String,
+    default: ''
+  },
   instances: [ {
     name: {
       doc: 'Commander instance name.',

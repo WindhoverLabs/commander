@@ -149,7 +149,44 @@ CFDP.prototype.setInstanceEmitter = function( newInstanceEmitter ) {
     var op = "Transac=" + value.transSrcValue.join( "." ) + " Dest=" + value.dstValue.join( "." );
     this.logInfoEvent( EventEnum.PDU_EVENTS, op );
   } );
-  cf.RegisterCallbackOn( 'pduOutputSend', ( buffer ) => {
+  cf.RegisterCallbackOn( 'pduOutputSend', ( bufferObj ) => {
+    // console.log( buffer );
+    var buffer = bufferObj.pdu;
+    console.log( "#########", bufferObj.length );
+    var buffer1 = new Buffer( 512 );
+    buffer1.fill( 0x00 );
+    buffer1.writeUInt16BE( 4093, 0 );
+    buffer1.writeUInt16BE( 1, 2 );
+    buffer1.writeUInt16BE( 512 - 7, 4 );
+    buffer1.writeUInt8( 27, 6 );
+    buffer1.writeUInt8( 0, 7 );
+
+    /* PDU Header */
+    // buffer1.writeUInt8( buffer[ 0 ], 12 );
+    //
+    // buffer1.writeUInt8( buffer[ 2 ], 13 );
+    // buffer1.writeUInt8( buffer[ 1 ], 14 );
+    //
+    // buffer1.writeUInt8( buffer[ 3 ], 15 );
+    //
+    // buffer1.writeUInt8( buffer[ 5 ], 16 );
+    // buffer1.writeUInt8( buffer[ 4 ], 17 );
+    //
+    // buffer1.writeUInt8( buffer[ 9 ], 18 );
+    // buffer1.writeUInt8( buffer[ 8 ], 19 );
+    // buffer1.writeUInt8( buffer[ 7 ], 20 );
+    // buffer1.writeUInt8( buffer[ 6 ], 21 );
+    //
+    // buffer1.writeUInt8( buffer[ 10 ], 22 );
+    // buffer1.writeUInt8( buffer[ 11 ], 23 );
+
+    for ( var i = 0; i < buffer.length; i++ ) {
+      buffer1.writeUInt8( buffer[ i ], 12 + i );
+    }
+    console.log( buffer1 )
+
+    this.instanceEmit( config.get( 'cfdpOutputStream' ), buffer1 );
+
     // var st = "";
     // for ( var i = 0; i < buffer.length; i++ ) {
     //   if ( i != buffer.length - 1 ) {
@@ -159,20 +196,20 @@ CFDP.prototype.setInstanceEmitter = function( newInstanceEmitter ) {
     //   }
     // }
 
-    var st = "";
-    for ( var i = 0; i < buffer.length; i++ ) {
-      if ( i != buffer.length - 1 ) {
-        st += buffer[ i ].toString() + ", ";
-      } else {
-        st += buffer[ i ].toString();
-      }
-    }
-    buffer[ 11 ] = 23
-    buffer[ 5 ] = 25
-    var buff = new Buffer( buffer );
-    cf.GivePdu( buff, buff.length );
-
-    this.logInfoEvent( EventEnum.PDU_EVENTS, st );
+    // var st = "";
+    // for ( var i = 0; i < buffer.length; i++ ) {
+    //   if ( i != buffer.length - 1 ) {
+    //     st += buffer[ i ].toString() + ", ";
+    //   } else {
+    //     st += buffer[ i ].toString();
+    //   }
+    // }
+    // // buffer[ 11 ] = 23
+    // // buffer[ 5 ] = 25
+    // // var buff = new Buffer( buffer );
+    // // cf.GivePdu( buff, buff.length );
+    //
+    // this.logInfoEvent( EventEnum.PDU_EVENTS, st );
   } );
   cf.RegisterCallbackOn( 'showTransactionStatus', ( value ) => {
     //	  console.log(value );
@@ -192,8 +229,40 @@ CFDP.prototype.setInstanceEmitter = function( newInstanceEmitter ) {
   }
 
 
-  this.instanceEmitter.on( config.get( 'CfdpStreamID' ), function( query, data, cb ) {
-    cb( [ query, data ] );
+  this.instanceEmitter.on( config.get( 'CfdpClientStreamID' ), function( obj ) {
+    var outObj = {
+      msg: 'undefined',
+      value: undefined
+    }
+
+    if ( obj.cb == undefined ) {
+      return;
+    }
+
+    if ( obj.query.length == 0 ) {
+      obj.cb( outObj );
+      return;
+    }
+
+    switch ( obj.query ) {
+      case 'GET_MIB':
+        obj.cb( self.GetMibParams( outObj, obj.data ) );
+        break;
+      case 'SET_MIB':
+        obj.cb( self.SetMibParams( outObj, obj.data ) );
+        break;
+      case 'RESTART_ENGINE':
+        obj.cb( self.RestartEngine( outObj, obj.data ) );
+        break;
+      case 'STOP_ENGINE':
+        obj.cb( self.StopEngine( outObj, obj.data ) );
+        break;
+      case 'RECV_FROM_SPC_TO_GND':
+        obj.cb( self.RecvFromSpcToGnd( outObj, obj.data ) );
+        break;
+      default:
+        break;
+    }
   } );
 
   this.instanceEmitter.on( config.get( 'cfdpInputStream' ), function( msg ) {
@@ -205,7 +274,8 @@ CFDP.prototype.setInstanceEmitter = function( newInstanceEmitter ) {
 
   // this.CreateTestCases();
 
-  // cf.StartCycle();
+  cf.StartCycle();
+  self.TransCycleStarted = true;
 
   // // console.log( cf.GetSummaryStatus() );
   // // console.log( cf.GetIdFromString( "0.29" ) );
@@ -213,12 +283,62 @@ CFDP.prototype.setInstanceEmitter = function( newInstanceEmitter ) {
   // // console.log( "**************", cf.GetMibParams( "NAK_TIMEOUT" ) );
   // // console.log( "**************", cf.GetMibParams( "NAK_LIMIT" ) );
   //
-  // setTimeout( () => {
-  //   cf.StopCycle();
-  // }, 15000 );
 }
 
+CFDP.prototype.RestartEngine = function( outData, inData ) {
+  var self = this;
+  if ( !self.TransCycleStarted ) {
+    cf.StopCycle();
+    cf.StartCycle();
+    outData.msg = "SUCCESS";
+    self.TransCycleStarted = true;
+  } else {
+    outData.msg = "FAILIURE";
+  }
+  return outData;
 
+}
+
+CFDP.prototype.StopEngine = function( outData, inData ) {
+
+  cf.StopCycle();
+  self.TransCycleStarted = false;
+  outData.msg = "SUCCESS";
+  return outData;
+
+}
+
+CFDP.prototype.SetMibParams = function( outData, inData ) {
+  if ( inData.value.length == 2 ) {
+    if ( typeof( inData.value[ 0 ] ) == 'string' & typeof( inData.value[ 1 ] ) == 'string' ) {
+      cf.SetMibParams( inData.value[ 0 ], inData.value[ 1 ] );
+      outData.msg = "SUCCESS";
+    }
+  }
+  return outData;
+
+}
+
+CFDP.prototype.GetMibParams = function( outData, inData ) {
+  if ( inData.value.length == 1 ) {
+    if ( typeof( inData.value[ 0 ] ) == 'string' ) {
+
+      outData.msg = "SUCCESS";
+      outData.value = cf.GetMibParams( inData.value[ 0 ] );
+    }
+  }
+  return outData;
+}
+
+CFDP.prototype.RecvFromSpcToGnd = function( outData, inData ) {
+  if ( inData.value.length == 4 ) {
+    if ( inData.value[ 0 ] <= 2 & typeof( inData.value[ 1 ] ) == 'string' & typeof( inData.value[ 2 ] ) == 'string' & typeof( inData.value[ 3 ] ) == 'string' ) {
+      cf.RequestPdu( inData.value[ 0 ], inData.value[ 1 ], inData.value[ 2 ], inData.value[ 3 ] );
+      outData.msg = "SUCCESS";
+    }
+  }
+  return outData;
+}
 
 var originPath = "/tmp/orgn";
 var destPath = "cftesting/";

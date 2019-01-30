@@ -93,13 +93,18 @@ var config = convict( {
       default: '/tmp/cf/'
     }
   },
-  CfdpStreamID: {
+  CfdpClientStreamID: {
     doc: 'Stream ID for cfdp queries',
     format: String,
     default: ''
   },
   cfdpInputStream: {
     doc: 'Stream ID for listening to binary data',
+    format: String,
+    default: ''
+  },
+  cfdpOutputStream: {
+    doc: 'Stream ID for sending to binary data',
     format: String,
     default: ''
   }
