@@ -231,14 +231,15 @@ CFDP.prototype.setInstanceEmitter = function( newInstanceEmitter ) {
       case 'STOP_ENGINE':
         obj.cb( self.StopEngine( outObj, obj.data ) );
         break;
-      case 'RECV_FROM_SPC_TO_GND':
-        obj.cb( self.RecvFromSpcToGnd( outObj, obj.data ) );
+      case 'SEND_FROM_GND':
+        obj.cb( self.SendFromGnd( outObj, obj.data ) );
         break;
       case 'GET_ID_FROM_STR':
         obj.cb( self.GetIdFromString( outObj, obj.data ) );
         break;
       case 'GET_TRANS_STATUS':
-        obj.cb( self.GetTransactionStatus( outObj, obj.data ) );
+        cf.RegisterCallbackOn( 'showTransactionStatus',   obj.cb);
+        self.GetTransactionStatus( outObj, obj.data ) ;
         break;
       case 'GET_SUMMARY_STATUS':
         obj.cb( self.GetSummaryStatus( outObj, obj.data ) );
@@ -271,7 +272,7 @@ CFDP.prototype.GetIdFromString = function( outData, inData ) {
 
 CFDP.prototype.GetTransactionStatus = function( outData, inData ) {
   outData.msg = "SUCCESS";
-  outData.value = cf.GetTransactionStatus();
+  outData.value = cf.GetTransactionStatus( 1, 2, new Buffer( [ 0, 24 ] ));
   return outData;
 }
 
@@ -322,7 +323,7 @@ CFDP.prototype.GetMibParams = function( outData, inData ) {
   return outData;
 }
 
-CFDP.prototype.RecvFromSpcToGnd = function( outData, inData ) {
+CFDP.prototype.SendFromGnd = function( outData, inData ) {
   if ( inData.value.length == 4 ) {
     if ( inData.value[ 0 ] <= 2 & typeof( inData.value[ 1 ] ) == 'string' & typeof( inData.value[ 2 ] ) == 'string' & typeof( inData.value[ 3 ] ) == 'string' ) {
       cf.RequestPdu( inData.value[ 0 ], inData.value[ 1 ], inData.value[ 2 ], inData.value[ 3 ] );
