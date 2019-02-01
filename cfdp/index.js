@@ -40,13 +40,6 @@ var path = require( 'path' );
 var cf = require( '../build/Debug/cfdp' );
 var config = require( './config.js' );
 
-var Parser = require( "binary-parser" ).Parser;
-var Int64LE = require( 'int64-buffer' ).Int64LE;
-var Int64BE = require( 'int64-buffer' ).Int64BE;
-var Uint64LE = require( 'int64-buffer' ).Uint64LE;
-var Uint64BE = require( 'int64-buffer' ).Uint64BE;
-
-
 /**
  * Event id's
  * @type {Object}
@@ -132,34 +125,37 @@ CFDP.prototype.setInstanceEmitter = function( newInstanceEmitter ) {
   cf.RegisterCallbackOn( 'info', ( value ) => {
     this.logInfoEvent( EventEnum.LOG_EVENTS, value );
   } );
+
   cf.RegisterCallbackOn( 'debug', ( value ) => {
     this.logDebugEvent( EventEnum.LOG_EVENTS, value );
   } );
+
   cf.RegisterCallbackOn( 'error', ( value ) => {
     this.logErrorEvent( EventEnum.LOG_EVENTS, value );
   } );
+
   cf.RegisterCallbackOn( 'warning', ( value ) => {
     this.logCriticalEvent( EventEnum.LOG_EVENTS, value );
   } );
+
   cf.RegisterCallbackOn( 'pduOutputOpen', ( value ) => {
     var op = "Src=" + value.srcValue.join( "." ) + " Dest=" + value.dstValue.join( "." );
     this.logInfoEvent( EventEnum.PDU_EVENTS, op );
   } );
+
   cf.RegisterCallbackOn( 'pduOutputReady', ( value ) => {
     var op = "Transac=" + value.transSrcValue.join( "." ) + " Dest=" + value.dstValue.join( "." );
     this.logInfoEvent( EventEnum.PDU_EVENTS, op );
   } );
+
   cf.RegisterCallbackOn( 'pduOutputSend', ( bufferObj ) => {
-    // console.log( buffer );
-    var buffer = bufferObj.pdu;
-    console.log( "#########", bufferObj.length );
-    var buffer1 = new Buffer( 512 );
-    buffer1.fill( 0x00 );
-    buffer1.writeUInt16BE( 4093, 0 );
-    buffer1.writeUInt16BE( 1, 2 );
-    buffer1.writeUInt16BE( 512 - 7, 4 );
-    buffer1.writeUInt8( 27, 6 );
-    buffer1.writeUInt8( 0, 7 );
+    var buffer = new Buffer( 512 );
+    buffer.fill( 0x00 );
+    buffer.writeUInt16BE( 4093, 0 );
+    buffer.writeUInt16BE( 1, 2 );
+    buffer.writeUInt16BE( 512 - 7, 4 );
+    buffer.writeUInt8( 27, 6 );
+    buffer.writeUInt8( 0, 7 );
 
     /* PDU Header */
     // buffer1.writeUInt8( buffer[ 0 ], 12 );
@@ -180,37 +176,15 @@ CFDP.prototype.setInstanceEmitter = function( newInstanceEmitter ) {
     // buffer1.writeUInt8( buffer[ 10 ], 22 );
     // buffer1.writeUInt8( buffer[ 11 ], 23 );
 
-    for ( var i = 0; i < buffer.length; i++ ) {
-      buffer1.writeUInt8( buffer[ i ], 12 + i );
+    for ( var i = 0; i < bufferObj.length; i++ ) {
+      buffer.writeUInt8( bufferObj.pdu[ i ], 12 + i );
     }
-    console.log( buffer1 )
 
-    this.instanceEmit( config.get( 'cfdpOutputStream' ), buffer1 );
-
-    // var st = "";
-    // for ( var i = 0; i < buffer.length; i++ ) {
-    //   if ( i != buffer.length - 1 ) {
-    //     st += "0x" + buffer[ i ].toString( 16 ) + ", ";
-    //   } else {
-    //     st += "0x" + buffer[ i ].toString( 16 );
-    //   }
-    // }
-
-    // var st = "";
-    // for ( var i = 0; i < buffer.length; i++ ) {
-    //   if ( i != buffer.length - 1 ) {
-    //     st += buffer[ i ].toString() + ", ";
-    //   } else {
-    //     st += buffer[ i ].toString();
-    //   }
-    // }
-    // // buffer[ 11 ] = 23
-    // // buffer[ 5 ] = 25
-    // // var buff = new Buffer( buffer );
-    // // cf.GivePdu( buff, buff.length );
-    //
-    // this.logInfoEvent( EventEnum.PDU_EVENTS, st );
+    this.instanceEmit( config.get( 'cfdpOutputStream' ), buffer );
+    this.logDebugEvent( EventEnum.PDU_EVENTS, buffer );
   } );
+
+
   cf.RegisterCallbackOn( 'showTransactionStatus', ( value ) => {
     //	  console.log(value );
   } );
@@ -220,9 +194,9 @@ CFDP.prototype.setInstanceEmitter = function( newInstanceEmitter ) {
 
   /* Init CFDP Engine */
   cf.AppInit();
-  this.logInfoEvent( EventEnum.INITIALIZED, 'Initialized' );
 
-  /* Set MIB parmeters */
+
+  /* Set MIB parmeters from config */
   var mibParams = this.configObj.get( 'mibParameters' );
   for ( var key in mibParams ) {
     cf.SetMibParams( key, mibParams[ key ] );
@@ -260,29 +234,51 @@ CFDP.prototype.setInstanceEmitter = function( newInstanceEmitter ) {
       case 'RECV_FROM_SPC_TO_GND':
         obj.cb( self.RecvFromSpcToGnd( outObj, obj.data ) );
         break;
+      case 'GET_ID_FROM_STR':
+        obj.cb( self.GetIdFromString( outObj, obj.data ) );
+        break;
+      case 'GET_TRANS_STATUS':
+        obj.cb( self.GetTransactionStatus( outObj, obj.data ) );
+        break;
+      case 'GET_SUMMARY_STATUS':
+        obj.cb( self.GetSummaryStatus( outObj, obj.data ) );
+        break;
       default:
         break;
     }
   } );
 
   this.instanceEmitter.on( config.get( 'cfdpInputStream' ), function( msg ) {
-
     /* Send buffer to ground cfdp engine */
     cf.GivePdu( msg.payload, msg.payload.length );
-
   } );
-
-  // this.CreateTestCases();
 
   cf.StartCycle();
   self.TransCycleStarted = true;
+  this.logInfoEvent( EventEnum.INITIALIZED, 'Initialized' );
+}
 
-  // // console.log( cf.GetSummaryStatus() );
-  // // console.log( cf.GetIdFromString( "0.29" ) );
-  // // cf.GetTransactionStatus( 1, 2, new Buffer( [ 0, 23 ] ) );
-  // // console.log( "**************", cf.GetMibParams( "NAK_TIMEOUT" ) );
-  // // console.log( "**************", cf.GetMibParams( "NAK_LIMIT" ) );
-  //
+CFDP.prototype.GetIdFromString = function( outData, inData ) {
+  outData.msg = "FAILIURE";
+  if (inData.value.length == 1) {
+    if (typeof(inData.value[0]) == "string") {
+      outData.msg = "SUCCESS";
+      outData.value = cf.GetIdFromString( inData.value[0] );
+    }
+  }
+  return outData;
+}
+
+CFDP.prototype.GetTransactionStatus = function( outData, inData ) {
+  outData.msg = "SUCCESS";
+  outData.value = cf.GetTransactionStatus();
+  return outData;
+}
+
+CFDP.prototype.GetSummaryStatus = function( outData, inData ) {
+  outData.msg = "SUCCESS";
+  outData.value = cf.GetSummaryStatus();
+  return outData;
 }
 
 CFDP.prototype.RestartEngine = function( outData, inData ) {
@@ -296,16 +292,13 @@ CFDP.prototype.RestartEngine = function( outData, inData ) {
     outData.msg = "FAILIURE";
   }
   return outData;
-
 }
 
 CFDP.prototype.StopEngine = function( outData, inData ) {
-
   cf.StopCycle();
   self.TransCycleStarted = false;
   outData.msg = "SUCCESS";
   return outData;
-
 }
 
 CFDP.prototype.SetMibParams = function( outData, inData ) {
@@ -316,7 +309,6 @@ CFDP.prototype.SetMibParams = function( outData, inData ) {
     }
   }
   return outData;
-
 }
 
 CFDP.prototype.GetMibParams = function( outData, inData ) {
