@@ -31,8 +31,75 @@
  *
  *****************************************************************************/
 
-var ConfigDatabase = require( './index' );
+var CFDP = require( './index' );
 var TestConfig = require( '../config/test.json' );
 var Config = require( './config.js' );
 var Emitter = require( 'events' );
 var fs = require( 'fs' );
+
+describe( 'CFDP Ground', () => {
+
+  beforeAll( () => {
+    this.testConfig = TestConfig;
+    var workspace = global.CDR_WORKSPACE;
+    var configFile = global.CDR_WORKSPACE + this.testConfig.CFDP.configFile;
+    this.cfdp = new CFDP( workspace, configFile );
+    Config.loadFile( configFile );
+    this.emitter = new Emitter();
+    this.cfdp.setInstanceEmitter( this.emitter );
+    this.airlinerPath = AIRLINER_MSG_DEF_PATH;
+    this.airlinerPath = this.airlinerPath.split( '/' );
+    this.airlinerPath.pop();
+    this.airlinerPath.pop( 'exe' );
+    this.airlinerPath = this.airlinerPath.join( '/' );
+  } );
+
+  describe( 'Get MIB Params', () => {
+    beforeEach( () => {
+      this.outObj = {
+        msg: 'FAILIURE',
+        value: undefined
+      }
+    } );
+
+    it( 'Should get value when valid param is passed', () => {
+      var res = this.cfdp.GetMibParams( this.outObj, [ 'ACK_TIMEOUT' ] )
+      expect( res.msg ).toBe( "SUCCESS" );
+    } );
+
+    it( 'Should not get value when invalid param is passed', () => {
+      var res = this.cfdp.GetMibParams( this.outObj, [ 'ACK_TIMEOUT_FAIL' ] )
+      expect( res.msg ).toBe( "FAILIURE" );
+      res = this.cfdp.GetMibParams( this.outObj, [ 'ACK_TIMEOUT', '_FAIL' ] )
+      expect( res.msg ).toBe( "FAILIURE" );
+    } );
+
+
+  } );
+
+  describe( 'Set MIB Params', () => {
+    beforeEach( () => {
+      this.outObj = {
+        msg: 'FAILIURE',
+        value: undefined
+      }
+    } );
+
+    it( 'Should get value when valid param is passed', () => {
+      var res;
+
+      this.cfdp.SetMibParams( this.outObj, [ 'ACK_TIMEOUT', '6' ] )
+      res = this.cfdp.GetMibParams( this.outObj, [ 'ACK_TIMEOUT' ] )
+      expect( res.msg ).toBe( "SUCCESS" );
+      expect( res.value.mib_value ).toBe( "6" );
+
+      this.cfdp.SetMibParams( this.outObj, [ 'ACK_TIMEOUT', '8' ] )
+      res = this.cfdp.GetMibParams( this.outObj, [ 'ACK_TIMEOUT' ] )
+      expect( res.msg ).toBe( "SUCCESS" );
+      expect( res.value.mib_value ).toBe( "8" );
+
+    } );
+
+  } );
+
+} );

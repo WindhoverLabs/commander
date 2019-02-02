@@ -31,8 +31,7 @@
   },
   "VehicleConnector":{
     "configFile":"/etc/vehicle-connector-config.json"
-  }
-  ,
+  },
   "CFDP":{
     "configFile":"/etc/cfdp-config.json"
   }

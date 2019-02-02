@@ -57,17 +57,18 @@ var EventEnum = Object.freeze( {
   'COMMAND_DEFINITION': 10,
   'COMMAND_NOT_FOUND': 11,
   'MAKE_DIR': 12,
-  'MAKE_FILE': 13
+  'MAKE_FILE': 13,
+  'IMPROPER_REQ': 14
 } );
 
 var emit = Emitter.prototype.emit;
 
 exports = module.exports = CFDP;
+
 /**
  * Count listeners
  * @type {Function}
  */
-
 var listenerCount = Emitter.listenerCount ||
   function( emitter, type ) {
     return emitter.listeners( type ).length
@@ -80,48 +81,43 @@ var listenerCount = Emitter.listenerCount ||
  * @constructor
  */
 function CFDP( workspace, configFile ) {
-  var self = this;
-  this.configObj;
-  this.workspace = workspace;
-  this.instanceEmitter;
 
   /* Load environment dependent configuration */
   config.loadFile( configFile );
-
   /* Perform validation */
   config.validate( {
     allowed: 'strict'
   } );
+  /* Make it accessable by this instance's members */
+  this.config = config;
 
-  this.configObj = config;
+  /* test kit */
+  this.testkit = {}
+  this.testkit.originPath = "/tmp/orgn";
+  this.testkit.destPath = "/cf/log/";
+  this.testkit.numberOfFilesGenerated = 3;
+  this.testkit.fileSizeSpectrum = [ "b", "kb" ];
+  this.testkit.genFileList = [];
 
 };
 
 
-function stringGen( len ) {
-  var text = "";
-
-  var charset = "abcdefghijklmnopqrstuvwxyz0123456789 \n\r";
-
-  for ( var i = 0; i < len; i++ )
-    text += charset.charAt( Math.floor( Math.random() * charset.length ) );
-
-  return text;
-}
 
 /**
  * Configure and set instance emitter
  * @param  {Object} newInstanceEmitter instance of instance emitter
  */
 CFDP.prototype.setInstanceEmitter = function( newInstanceEmitter ) {
+
   var self = this;
   this.instanceEmitter = newInstanceEmitter;
-  this.bufferCollection = [];
+  this.outGoingFileChunkSize = parseInt( this.config.get( 'mibParameters' )[ 'OUTGOING_FILE_CHUNK_SIZE' ] ) + 100;
 
   /* Set CFDP API configuration */
-  cf.SetConfig( this.configObj.get( 'config' ) );
+  cf.SetConfig( this.config.get( 'config' ) );
 
   /* Register Required Callbacks */
+  /* End users may not be able to alter following callbacks */
   cf.RegisterCallbackOn( 'info', ( value ) => {
     this.logInfoEvent( EventEnum.LOG_EVENTS, value );
   } );
@@ -135,118 +131,50 @@ CFDP.prototype.setInstanceEmitter = function( newInstanceEmitter ) {
   } );
 
   cf.RegisterCallbackOn( 'warning', ( value ) => {
-    this.logCriticalEvent( EventEnum.LOG_EVENTS, value );
+    this.logInfoEvent( EventEnum.LOG_EVENTS, value );
   } );
 
-  cf.RegisterCallbackOn( 'pduOutputOpen', ( value ) => {
-    var op = "Src=" + value.srcValue.join( "." ) + " Dest=" + value.dstValue.join( "." );
-    this.logInfoEvent( EventEnum.PDU_EVENTS, op );
-  } );
+  cf.RegisterCallbackOn( 'pduOutputOpen', () => {} );
+  cf.RegisterCallbackOn( 'pduOutputReady', () => {} );
+  cf.RegisterCallbackOn( 'indication', () => {} );
 
-  cf.RegisterCallbackOn( 'pduOutputReady', ( value ) => {
-    var op = "Transac=" + value.transSrcValue.join( "." ) + " Dest=" + value.dstValue.join( "." );
-    this.logInfoEvent( EventEnum.PDU_EVENTS, op );
-  } );
 
   cf.RegisterCallbackOn( 'pduOutputSend', ( bufferObj ) => {
-    var buffer = new Buffer( 512 );
+
+
+    var buffer = new Buffer( self.outGoingFileChunkSize );
     buffer.fill( 0x00 );
+    /* CCSDS MSG ID for sending pdu to space - 4093*/
     buffer.writeUInt16BE( 4093, 0 );
+    /* Sequence Number */
     buffer.writeUInt16BE( 1, 2 );
-    buffer.writeUInt16BE( 512 - 7, 4 );
-    buffer.writeUInt8( 27, 6 );
+    /* Pdu length*/
+    buffer.writeUInt16BE( self.outGoingFileChunkSize - 7, 4 );
+    /* Has no command code and sub code */
+    buffer.writeUInt8( 0, 6 );
     buffer.writeUInt8( 0, 7 );
 
-    /* PDU Header */
-    // buffer1.writeUInt8( buffer[ 0 ], 12 );
-    //
-    // buffer1.writeUInt8( buffer[ 2 ], 13 );
-    // buffer1.writeUInt8( buffer[ 1 ], 14 );
-    //
-    // buffer1.writeUInt8( buffer[ 3 ], 15 );
-    //
-    // buffer1.writeUInt8( buffer[ 5 ], 16 );
-    // buffer1.writeUInt8( buffer[ 4 ], 17 );
-    //
-    // buffer1.writeUInt8( buffer[ 9 ], 18 );
-    // buffer1.writeUInt8( buffer[ 8 ], 19 );
-    // buffer1.writeUInt8( buffer[ 7 ], 20 );
-    // buffer1.writeUInt8( buffer[ 6 ], 21 );
-    //
-    // buffer1.writeUInt8( buffer[ 10 ], 22 );
-    // buffer1.writeUInt8( buffer[ 11 ], 23 );
-
+    /* Copy buffer */
     for ( var i = 0; i < bufferObj.length; i++ ) {
       buffer.writeUInt8( bufferObj.pdu[ i ], 12 + i );
     }
 
     this.instanceEmit( config.get( 'cfdpOutputStream' ), buffer );
     this.logDebugEvent( EventEnum.PDU_EVENTS, buffer );
-  } );
 
-
-  cf.RegisterCallbackOn( 'showTransactionStatus', ( value ) => {
-    //	  console.log(value );
-  } );
-  cf.RegisterCallbackOn( 'indication', ( value ) => {
-    //	  console.log(value);
   } );
 
   /* Init CFDP Engine */
   cf.AppInit();
 
-
-  /* Set MIB parmeters from config */
-  var mibParams = this.configObj.get( 'mibParameters' );
+  /* Set MIB parmeters from default config */
+  var mibParams = this.config.get( 'mibParameters' );
   for ( var key in mibParams ) {
     cf.SetMibParams( key, mibParams[ key ] );
   }
 
-
   this.instanceEmitter.on( config.get( 'CfdpClientStreamID' ), function( obj ) {
-    var outObj = {
-      msg: 'undefined',
-      value: undefined
-    }
-
-    if ( obj.cb == undefined ) {
-      return;
-    }
-
-    if ( obj.query.length == 0 ) {
-      obj.cb( outObj );
-      return;
-    }
-
-    switch ( obj.query ) {
-      case 'GET_MIB':
-        obj.cb( self.GetMibParams( outObj, obj.data ) );
-        break;
-      case 'SET_MIB':
-        obj.cb( self.SetMibParams( outObj, obj.data ) );
-        break;
-      case 'RESTART_ENGINE':
-        obj.cb( self.RestartEngine( outObj, obj.data ) );
-        break;
-      case 'STOP_ENGINE':
-        obj.cb( self.StopEngine( outObj, obj.data ) );
-        break;
-      case 'SEND_FROM_GND':
-        obj.cb( self.SendFromGnd( outObj, obj.data ) );
-        break;
-      case 'GET_ID_FROM_STR':
-        obj.cb( self.GetIdFromString( outObj, obj.data ) );
-        break;
-      case 'GET_TRANS_STATUS':
-        cf.RegisterCallbackOn( 'showTransactionStatus',   obj.cb);
-        self.GetTransactionStatus( outObj, obj.data ) ;
-        break;
-      case 'GET_SUMMARY_STATUS':
-        obj.cb( self.GetSummaryStatus( outObj, obj.data ) );
-        break;
-      default:
-        break;
-    }
+    self.handleClientRequest( obj );
   } );
 
   this.instanceEmitter.on( config.get( 'cfdpInputStream' ), function( msg ) {
@@ -254,34 +182,157 @@ CFDP.prototype.setInstanceEmitter = function( newInstanceEmitter ) {
     cf.GivePdu( msg.payload, msg.payload.length );
   } );
 
+  /* Start Cycling Trasactions */
   cf.StartCycle();
-  self.TransCycleStarted = true;
+  this.TransCycleStarted = true;
   this.logInfoEvent( EventEnum.INITIALIZED, 'Initialized' );
 }
 
-CFDP.prototype.GetIdFromString = function( outData, inData ) {
-  outData.msg = "FAILIURE";
-  if (inData.value.length == 1) {
-    if (typeof(inData.value[0]) == "string") {
+CFDP.prototype.handleClientRequest = function( obj ) {
+  var self = this;
+  var outObj = {
+    msg: 'FAILIURE',
+    value: undefined
+  }
+
+  if ( obj.query.length == 0 ) {
+    obj.cb( outObj );
+    return;
+  }
+
+  switch ( obj.query ) {
+
+    case 'GET_MIB':
+      obj.cb( self.GetMibParams( outObj, obj.data ) );
+      break;
+
+    case 'SET_MIB':
+      obj.cb( self.SetMibParams( outObj, obj.data ) );
+      break;
+
+    case 'RESTART_ENGINE':
+      obj.cb( self.RestartEngine( outObj, obj.data ) );
+      break;
+
+    case 'STOP_ENGINE':
+      obj.cb( self.StopEngine( outObj, obj.data ) );
+      break;
+
+    case 'SEND_FROM_GND':
+      obj.cb( self.SendFromGnd( outObj, obj.data ) );
+      break;
+
+    case 'GET_TRANS_STATUS':
+      obj.cb( self.GetTransactionStatus( outObj, obj.data ) );
+      break;
+
+    case 'GET_SUMMARY_STATUS':
+      obj.cb( self.GetSummaryStatus( outObj, obj.data ) );
+      break;
+
+    case 'REG_PDU_OPEN_CB':
+      if ( obj.cb == undefined ) {
+        self.logErrorEvent( EventEnum.IMPROPER_REQ, "No callback found" );
+        break;
+      }
+      cf.RegisterCallbackOn( 'pduOutputOpen', obj.cb );
+      break;
+
+    case 'REG_PDU_READY_CB':
+      if ( obj.cb == undefined ) {
+        self.logErrorEvent( EventEnum.IMPROPER_REQ, "No callback found" );
+        break;
+      }
+      cf.RegisterCallbackOn( 'pduOutputReady', obj.cb );
+      break;
+
+    case 'REG_TRANS_STATUS_CB':
+      if ( obj.cb == undefined ) {
+        self.logErrorEvent( EventEnum.IMPROPER_REQ, "No callback found" );
+        break;
+      }
+      cf.RegisterCallbackOn( 'showTransactionStatus', obj.cb );
+      break;
+
+    case 'REG_INDICATION_CB':
+      if ( obj.cb == undefined ) {
+        self.logErrorEvent( EventEnum.IMPROPER_REQ, "No callback found" );
+        break;
+      }
+      cf.RegisterCallbackOn( 'indication', obj.cb );
+      break;
+
+    case 'MAKE_TEST_CASES':
+      self.makeTestCases();
+      break;
+
+    case 'RUN_TEST':
+      self.runTest();
+      break;
+
+    case 'VALIDATE_TEST':
+      if ( obj.cb == undefined ) {
+        self.logErrorEvent( EventEnum.IMPROPER_REQ, "No callback found" );
+        break;
+      }
+      obj.cb( self.valTest() );
+      break;
+
+    default:
+      self.logErrorEvent( EventEnum.IMPROPER_REQ, "Unknown Query" );
+      break;
+  }
+}
+
+/**
+ * Gets value of MIB parameter
+ * @param  {Object} outData default response object
+ * @param  {Objext} inData  input object
+ * @return {Object}         response object
+ */
+CFDP.prototype.GetMibParams = function( outData, inData ) {
+  /* inData  is a list of arguments */
+  if ( inData.length == 1 ) {
+    if ( typeof( inData[ 0 ] ) == 'string' ) {
       outData.msg = "SUCCESS";
-      outData.value = cf.GetIdFromString( inData.value[0] );
+      outData.value = {}
+      outData.value.mib_name = ( inData[ 0 ].toUpperCase() );
+      outData.value.mib_value = cf.GetMibParams( inData[ 0 ] );
+      if ( outData.value.mib_value == '' ) {
+        outData.msg = "FAILIURE";
+        outData.value.mib_value = undefined;
+      }
     }
   }
   return outData;
 }
 
-CFDP.prototype.GetTransactionStatus = function( outData, inData ) {
-  outData.msg = "SUCCESS";
-  outData.value = cf.GetTransactionStatus( 1, 2, new Buffer( [ 0, 24 ] ));
+/**
+ * Sets MIB parameter
+ * @param  {Object} outData default response object
+ * @param  {Objext} inData  input object
+ * @return {Object}         response object
+ */
+CFDP.prototype.SetMibParams = function( outData, inData ) {
+  if ( inData.length == 2 ) {
+    if ( typeof( inData[ 0 ] ) == 'string' & typeof( inData[ 1 ] ) == 'string' ) {
+      var resp = cf.SetMibParams( inData[ 0 ], inData[ 1 ] );
+      if ( resp == 'PASS' ) {
+        outData.msg = "SUCCESS";
+      } else {
+        outData.msg = "FAILIURE"
+      }
+    }
+  }
   return outData;
 }
 
-CFDP.prototype.GetSummaryStatus = function( outData, inData ) {
-  outData.msg = "SUCCESS";
-  outData.value = cf.GetSummaryStatus();
-  return outData;
-}
-
+/**
+ * Restarts Transaction Cycle
+ * @param  {Object} outData default response object
+ * @param  {Objext} inData  input object
+ * @return {Object}         response object
+ */
 CFDP.prototype.RestartEngine = function( outData, inData ) {
   var self = this;
   if ( !self.TransCycleStarted ) {
@@ -295,6 +346,12 @@ CFDP.prototype.RestartEngine = function( outData, inData ) {
   return outData;
 }
 
+/**
+ * Stops Transaction Cycle
+ * @param  {Object} outData default response object
+ * @param  {Objext} inData  input object
+ * @return {Object}         response object
+ */
 CFDP.prototype.StopEngine = function( outData, inData ) {
   cf.StopCycle();
   self.TransCycleStarted = false;
@@ -302,57 +359,84 @@ CFDP.prototype.StopEngine = function( outData, inData ) {
   return outData;
 }
 
-CFDP.prototype.SetMibParams = function( outData, inData ) {
-  if ( inData.value.length == 2 ) {
-    if ( typeof( inData.value[ 0 ] ) == 'string' & typeof( inData.value[ 1 ] ) == 'string' ) {
-      cf.SetMibParams( inData.value[ 0 ], inData.value[ 1 ] );
-      outData.msg = "SUCCESS";
-    }
-  }
-  return outData;
-}
-
-CFDP.prototype.GetMibParams = function( outData, inData ) {
-  if ( inData.value.length == 1 ) {
-    if ( typeof( inData.value[ 0 ] ) == 'string' ) {
-
-      outData.msg = "SUCCESS";
-      outData.value = cf.GetMibParams( inData.value[ 0 ] );
-    }
-  }
-  return outData;
-}
-
+/**
+ * Sends files from ground to space
+ * @param  {Object} outData default response object
+ * @param  {Objext} inData  input object
+ * @return {Object}         response object
+ */
 CFDP.prototype.SendFromGnd = function( outData, inData ) {
-  if ( inData.value.length == 4 ) {
-    if ( inData.value[ 0 ] <= 2 & typeof( inData.value[ 1 ] ) == 'string' & typeof( inData.value[ 2 ] ) == 'string' & typeof( inData.value[ 3 ] ) == 'string' ) {
-      cf.RequestPdu( inData.value[ 0 ], inData.value[ 1 ], inData.value[ 2 ], inData.value[ 3 ] );
+  if ( inData.length == 4 ) {
+    if ( inData[ 0 ] <= 2 & typeof( inData[ 1 ] ) == 'string' & typeof( inData[ 2 ] ) == 'string' & typeof( inData[ 3 ] ) == 'string' ) {
+      cf.RequestPdu( inData[ 0 ], inData[ 1 ], inData[ 2 ], inData[ 3 ] );
       outData.msg = "SUCCESS";
     }
   }
   return outData;
 }
 
-var originPath = "/tmp/orgn";
-var destPath = "cftesting/";
-var numberOfFiles = 3;
-var fileSizes = [ "b", "kb" ];
+/**
+ * Get Status Summary
+ * @param  {Object} outData default response object
+ * @param  {Objext} inData  input object
+ * @return {Object}         response object
+ */
+CFDP.prototype.GetSummaryStatus = function( outData, inData ) {
+  outData.msg = "SUCCESS";
+  outData.value = cf.GetSummaryStatus();
+  return outData;
+}
 
+/**
+ * Signals engine to send transaction status on callback.
+ * @param  {Object} outData default response object
+ * @param  {Objext} inData  input object
+ * @return {Object}         response object
+ */
+CFDP.prototype.GetTransactionStatus = function( outData, inData ) {
+  outData.msg = "FAILIURE";
+  if ( inData.length == 2 ) {
+    if ( typeof( inData[ 0 ] ) == "number" & typeof( inData[ 1 ] ) == "string" ) {
+      var transIDObj = cf.GetIdFromString( inData[ 1 ] );
+      cf.GetTransactionStatus( inData[ 0 ], transIDObj.length, new Buffer( transIDObj.value ) );
+      outData.msg = "SUCCESS";
+    }
+  }
+  return outData;
+}
 
+/**
+ * Given a length will generate a string or a paragraph of that length
+ * @param  {Number} len length of the requested string
+ * @return {String}     response string
+ */
+function stringGen( len ) {
+  var text = "";
 
+  var charset = "abcdefghijklmnopqrstuvwxyz0123456789 \n\r";
 
-CFDP.prototype.CreateTestCases = function() {
+  for ( var i = 0; i < len; i++ )
+    text += charset.charAt( Math.floor( Math.random() * charset.length ) );
+
+  return text;
+}
+
+/**
+ * Makes necessary files to perform uplink test
+ */
+CFDP.prototype.makeTestCases = function() {
+  var self = this;
   var fileCount = 0
-  while ( fileCount < numberOfFiles ) {
+  // console.log( 'heloo', self.testkit.numberOfFilesGenerated )
 
-    if ( fs.existsSync( originPath ) ) {
+  while ( fileCount < self.testkit.numberOfFilesGenerated ) {
 
+    if ( fs.existsSync( self.testkit.originPath ) ) {
       if ( fileCount == 0 ) {
-        fs.readdir( originPath, ( err, files ) => {
-          if ( err ) throw err;
-
+        fs.readdir( self.testkit.originPath, ( err, files ) => {
+          // if ( err ) throw err;
           for ( const file of files ) {
-            fs.unlink( path.join( originPath, file ), err => {
+            fs.unlink( path.join( self.testkit.originPath, file ), err => {
               // if ( err ) throw err;
             } );
           }
@@ -361,7 +445,7 @@ CFDP.prototype.CreateTestCases = function() {
 
       var fileContent = "";
       var fileSize = 0;
-      var fileCapacity = fileSizes[ Math.floor( Math.random() * fileSizes.length ) ];
+      var fileCapacity = self.testkit.fileSizeSpectrum[ Math.floor( Math.random() * self.testkit.fileSizeSpectrum.length ) ];
       var maxFileSize = 5;
       var tempStr = "";
       var genName = "";
@@ -381,7 +465,7 @@ CFDP.prototype.CreateTestCases = function() {
         fileContent += tempStr
 
       }
-      genName = originPath + "/" + fileCapacity + "_" + fileSize + "_" + fileCapacity + ".txt";
+      genName = self.testkit.originPath + "/" + fileCapacity + "_" + fileSize + "_" + fileCapacity + ".txt";
 
       if ( genName != "" ) {
         fs.writeFile( genName, fileContent, ( err ) => {
@@ -393,21 +477,52 @@ CFDP.prototype.CreateTestCases = function() {
 
         } );
       }
-
-
       fileCount += 1
     } else {
-      fs.mkdir( originPath, {
+      fs.mkdir( self.testkit.originPath, {
         recursive: true
       }, ( err ) => {
         if ( err ) {
-          this.logErrorEvent( EventEnum.MAKE_DIR, 'Failed to make directory `' + originPath + '`' );
-          fileCount = numberOfFiles;
+          this.logErrorEvent( EventEnum.MAKE_DIR, 'Failed to make directory `' + self.testkit.originPath + '`' );
+          fileCount = self.testkit.numberOfFilesGenerated;
         }
       } );
     }
   }
 }
+
+/**
+ * Run a test to check cdfp ground node work
+ */
+CFDP.prototype.runTest = function() {
+  var self = this;
+  self.testkit.genFileList = [];
+  fs.readdir( self.testkit.originPath, ( err, files ) => {
+    if ( err ) throw err;
+
+    for ( const file of files ) {
+      cf.RequestPdu( 1, "0.24", path.join( self.testkit.originPath, file ), path.join( self.testkit.destPath, file ) );
+      self.testkit.genFileList.push( path.join( self.testkit.destPath, file ) );
+    }
+  } );
+}
+
+/**
+ * Validates the test that ran in this instance
+ */
+CFDP.prototype.valTest = function() {
+  var self = this;
+  var Status = 'SUCCESS'
+  for ( var i in self.testkit.genFileList ) {
+    if ( !fs.existsSync( self.testkit.genFileList[ i ] ) ) {
+      Status = 'FAILIURE'
+    }
+  }
+  return {
+    msg: Status
+  }
+}
+
 /**
  * Emit data
  * @param  {String}   streamID stream id

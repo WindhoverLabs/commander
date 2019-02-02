@@ -1174,13 +1174,15 @@ void SetMibParams(const FunctionCallbackInfo<Value> &args)
 	if(args.Length() < 1 || args.Length() > 2 || !args[0]->IsString() || !args[1]->IsString())
 	{
 		ErrorEvent("EVT_%d | Invalid arguments, expected [Key<String>, Value<String>]", SET_MIB);
-	    return;
+	  return;
 	}
 
 	std::string str_key = GetStdString(args[0]->ToString());
 	std::string str_val = GetStdString(args[1]->ToString());
 
 	cfdp_set_mib_parameter (str_key.c_str (), str_val.c_str ());
+
+	args.GetReturnValue().Set(v8::String::NewFromUtf8(isolate, "PASS"));
 
 }
 
@@ -1198,6 +1200,8 @@ void GetMibParams(const FunctionCallbackInfo<Value> &args)
 	 }
 
 	std::string str_key = GetStdString(args[0]->ToString());
+
+	memset(&paramValue[0], 0, sizeof(paramValue));
 
 	cfdp_get_mib_parameter(str_key.c_str (), &paramValue[0] );
 
